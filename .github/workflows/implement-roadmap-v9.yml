@@ -38,6 +38,8 @@ jobs:
           source=source.replace("const workflow=file('.github/workflows/implement-roadmap-v9.yml');if(fs.existsSync(workflow))fs.rmSync(workflow);const parts=file('.roadmap');if(fs.existsSync(parts))fs.rmSync(parts,{recursive:true,force:true});", "const workflow=file('.github/workflows/implement-roadmap-v9.yml');if(fs.existsSync(workflow))fs.rmSync(workflow);const parts=file('.roadmap');if(fs.existsSync(parts))fs.rmSync(parts,{recursive:true,force:true});const failure=file('ROADMAP_WORKFLOW_FAILURE.md');if(fs.existsSync(failure))fs.rmSync(failure);")
           source=re.sub(r'(?<!\\)\$\{card\.id\}', r'\\${card.id}', source)
           source=re.sub(r'(?<!\\)\$\{seed\}', r'\\${seed}', source)
+          source=re.sub(r'(?<!\\)\$\{value\}', r'\\${value}', source)
+          source=re.sub(r'(?<!\\)\$\{drafts\.length\}', r'\\${drafts.length}', source)
           path.write_text(source)
           PY
           node --check /tmp/apply-roadmap-v9.mjs
