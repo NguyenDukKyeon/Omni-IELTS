@@ -1,0 +1,120 @@
+name: Implement Roadmap v9
+
+on:
+  push:
+    branches: ['agent/roadmap-v9']
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    if: >-
+      !contains(github.event.head_commit.message, '[roadmap-implemented]') &&
+      !contains(github.event.head_commit.message, '[roadmap-failed]') &&
+      !contains(github.event.head_commit.message, '[roadmap-validation-failed]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Reassemble implementation script
+        run: |
+          cat .roadmap/gz/part* | base64 --decode | gzip -dc > /tmp/apply-roadmap-v9.mjs
+          node --check /tmp/apply-roadmap-v9.mjs
+
+      - name: Apply seven roadmap phases
+        id: apply
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          node /tmp/apply-roadmap-v9.mjs 2>&1 | tee /tmp/roadmap-apply.log
+
+      - name: Record apply failure
+        if: steps.apply.outcome == 'failure'
+        shell: bash
+        run: |
+          git reset --hard HEAD
+          {
+            echo '# Roadmap v9 apply failure'
+            echo
+            echo 'The generated implementation stopped before producing a complete patch.'
+            echo
+            echo '```text'
+            tail -n 240 /tmp/roadmap-apply.log
+            echo '```'
+          } > ROADMAP_WORKFLOW_FAILURE.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ROADMAP_WORKFLOW_FAILURE.md
+          git commit -m 'Record roadmap apply failure [roadmap-failed]'
+          git push origin HEAD:agent/roadmap-v9
+
+      - name: Stop after apply failure
+        if: steps.apply.outcome == 'failure'
+        run: exit 1
+
+      - name: Install dependencies
+        if: steps.apply.outcome == 'success'
+        run: npm ci --no-audit --no-fund
+
+      - name: Cross-check, test and build
+        id: validate
+        if: steps.apply.outcome == 'success'
+        continue-on-error: true
+        timeout-minutes: 14
+        shell: bash
+        run: |
+          set -o pipefail
+          {
+            find src server public scripts tests -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+            npm test
+            npm run check
+            npm run audit:roadmap
+            npm run build
+            npm run test:serve
+            npm run test:preview
+            npm run test:browser
+            npm run test:hardening
+          } 2>&1 | tee /tmp/roadmap-validation.log
+
+      - name: Record validation failure
+        if: steps.apply.outcome == 'success' && steps.validate.outcome == 'failure'
+        shell: bash
+        run: |
+          {
+            echo '# Roadmap v9 validation failure'
+            echo
+            echo 'The seven-phase patch was generated, but at least one required verification failed.'
+            echo
+            echo '```text'
+            tail -n 320 /tmp/roadmap-validation.log
+            echo '```'
+          } > ROADMAP_WORKFLOW_FAILURE.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Implement roadmap with validation report [roadmap-validation-failed]'
+          git push origin HEAD:agent/roadmap-v9
+
+      - name: Stop after validation failure
+        if: steps.apply.outcome == 'success' && steps.validate.outcome == 'failure'
+        run: exit 1
+
+      - name: Commit verified roadmap implementation
+        if: steps.apply.outcome == 'success' && steps.validate.outcome == 'success'
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Implement roadmap v9 [roadmap-implemented]'
+          git push origin HEAD:agent/roadmap-v9
