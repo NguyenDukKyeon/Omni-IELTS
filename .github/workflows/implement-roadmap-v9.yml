@@ -31,10 +31,13 @@ jobs:
           cat .roadmap/gz/part* | base64 --decode | gzip -dc > /tmp/apply-roadmap-v9.mjs
           python - <<'PY'
           from pathlib import Path
+          import re
           path=Path('/tmp/apply-roadmap-v9.mjs')
           source=path.read_text()
           source=source.replace("  c=replaceOnce(c,'      - run: npm run check\\n      - run: npm run build','      - run: npm run check\\n      - run: npm run audit:roadmap\\n      - run: npm run build','CI roadmap audit');", "  c=replaceOnce(c,'      - run: npm run build','      - run: npm run audit:roadmap\\n      - run: npm run build','CI roadmap audit');")
           source=source.replace("const workflow=file('.github/workflows/implement-roadmap-v9.yml');if(fs.existsSync(workflow))fs.rmSync(workflow);const parts=file('.roadmap');if(fs.existsSync(parts))fs.rmSync(parts,{recursive:true,force:true});", "const workflow=file('.github/workflows/implement-roadmap-v9.yml');if(fs.existsSync(workflow))fs.rmSync(workflow);const parts=file('.roadmap');if(fs.existsSync(parts))fs.rmSync(parts,{recursive:true,force:true});const failure=file('ROADMAP_WORKFLOW_FAILURE.md');if(fs.existsSync(failure))fs.rmSync(failure);")
+          source=re.sub(r'(?<!\\)\$\{card\.id\}', r'\\${card.id}', source)
+          source=re.sub(r'(?<!\\)\$\{seed\}', r'\\${seed}', source)
           path.write_text(source)
           PY
           node --check /tmp/apply-roadmap-v9.mjs
