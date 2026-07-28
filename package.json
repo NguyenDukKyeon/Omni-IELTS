@@ -1,0 +1,30 @@
+{
+  "name": "vocab-master-personal",
+  "version": "8.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 3000 --strictPort",
+    "build": "node scripts/build.mjs",
+    "start": "node server/server.mjs",
+    "serve": "node server/server.mjs",
+    "test": "node --test",
+    "check": "node scripts/check.mjs",
+    "test:serve": "node scripts/smoke.mjs",
+    "test:preview": "node scripts/preview-smoke.mjs",
+    "test:browser": "node scripts/browser-smoke.mjs",
+    "test:hardening": "node scripts/hardening-browser-smoke.mjs"
+  },
+  "dependencies": {
+    "ts-fsrs": "5.4.1",
+    "web-push": "3.6.7"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1",
+    "fake-indexeddb": "6.2.5",
+    "vite": "8.1.5"
+  },
+  "engines": {
+    "node": ">=20.19"
+  }
+}

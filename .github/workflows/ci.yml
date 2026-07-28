@@ -1,0 +1,119 @@
+name: CI
+on:
+  push:
+    branches: ['main', 'feat/indexeddb-backup']
+  pull_request:
+    branches: ['main']
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - name: Run tests
+        id: tests
+        continue-on-error: true
+        run: npm test > test-output.txt 2>&1
+      - name: Run cross-check
+        id: crosscheck
+        continue-on-error: true
+        if: steps.tests.outcome == 'success'
+        run: npm run check > check-output.txt 2>&1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-output
+          path: |
+            test-output.txt
+            check-output.txt
+          if-no-files-found: ignore
+      - name: Report verification failure
+        if: (steps.tests.outcome == 'failure' || steps.crosscheck.outcome == 'failure') && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const testOutput = fs.existsSync('test-output.txt') ? fs.readFileSync('test-output.txt', 'utf8') : '';
+            const checkOutput = fs.existsSync('check-output.txt') ? fs.readFileSync('check-output.txt', 'utf8') : '';
+            const output = `${testOutput}\n${checkOutput}`.slice(-12000);
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `<!-- indexeddb-ci-report -->\n### CI verification failure\n\n\`\`\`text\n${output}\n\`\`\``
+            });
+      - name: Fail on verification errors
+        if: steps.tests.outcome == 'failure' || steps.crosscheck.outcome == 'failure'
+        run: cat test-output.txt check-output.txt 2>/dev/null || true; exit 1
+      - run: npm run build
+      - run: npm run test:serve
+      - run: npm run test:preview
+      - name: Run browser interaction smoke
+        id: browser
+        continue-on-error: true
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -o pipefail
+          timeout --signal=TERM --kill-after=10s 100s npm run test:browser 2>&1 | tee browser-output.txt
+      - name: Upload browser smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-smoke-output
+          path: browser-output.txt
+          if-no-files-found: ignore
+      - name: Report browser smoke failure
+        if: steps.browser.outcome == 'failure' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.existsSync('browser-output.txt') ? fs.readFileSync('browser-output.txt', 'utf8').slice(-12000) : 'No browser output was produced.';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `<!-- browser-smoke-report -->\n### Browser interaction smoke failure\n\n\`\`\`text\n${output}\n\`\`\``
+            });
+      - name: Fail on browser interaction errors
+        if: steps.browser.outcome == 'failure'
+        run: cat browser-output.txt; exit 1
+      - name: Run hardening browser smoke
+        id: hardening
+        continue-on-error: true
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -o pipefail
+          timeout --signal=TERM --kill-after=10s 100s npm run test:hardening 2>&1 | tee hardening-output.txt
+      - name: Upload hardening diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardening-browser-output
+          path: hardening-output.txt
+          if-no-files-found: ignore
+      - name: Report hardening failure
+        if: steps.hardening.outcome == 'failure' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.existsSync('hardening-output.txt') ? fs.readFileSync('hardening-output.txt', 'utf8').slice(-12000) : 'No hardening output was produced.';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `<!-- hardening-smoke-report -->\n### Hardening browser smoke failure\n\n\`\`\`text\n${output}\n\`\`\``
+            });
+      - name: Fail on hardening browser errors
+        if: steps.hardening.outcome == 'failure'
+        run: cat hardening-output.txt; exit 1

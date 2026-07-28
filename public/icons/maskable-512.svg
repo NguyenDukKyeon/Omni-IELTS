@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Vocab Master">
+  <rect width="512" height="512" fill="#ff7657"/>
+  <circle cx="256" cy="256" r="172" fill="#fff8f2"/>
+  <path d="M181 153h150c25 0 45 20 45 45v150c0 25-20 45-45 45H181c-25 0-45-20-45-45V198c0-25 20-45 45-45Z" fill="#ff7657"/>
+  <path d="m183 198 57 158h35l54-158h-37l-34 111-37-111h-38Z" fill="white"/>
+  <circle cx="353" cy="349" r="43" fill="#65c8b8"/>
+  <path d="m335 349 13 13 23-29" fill="none" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#ff785a" />
+  <title>Vocab Master</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="bootStatus" role="status" aria-live="assertive" style="position:fixed;inset:16px;z-index:2147483647;display:none;place-items:center;padding:24px;border-radius:18px;background:#fff8f2;color:#312e39;font:600 14px/1.6 system-ui;text-align:center">Đang khởi động Vocab Master…</div>
+  <script>
+    (() => {
+      const panel = document.getElementById('bootStatus');
+      const hostname = location.hostname || '';
+      const referrer = document.referrer || '';
+      const isEmbedded = (() => {
+        try { return self !== top; } catch { return true; }
+      })();
+      const isLocal = /^(localhost|127(?:\.\d+){3}|0\.0\.0\.0)$/i.test(hostname);
+      const isAiStudioPreview =
+        new URLSearchParams(location.search).get('preview') === 'ai-studio' ||
+        (/^ais-dev-/i.test(hostname) && /\.run\.app$/i.test(hostname)) ||
+        (/\.run\.app$/i.test(hostname) && isEmbedded) ||
+        /aistudio\.google\.com|ai\.google\.dev/i.test(referrer);
+
+      const clearLocalPwaState = async () => {
+        if (!isLocal) return;
+        try {
+          const registrations = 'serviceWorker' in navigator
+            ? await navigator.serviceWorker.getRegistrations()
+            : [];
+          await Promise.all(registrations.map(registration => registration.unregister()));
+          if ('caches' in window) {
+            const names = await caches.keys();
+            await Promise.all(names.map(name => caches.delete(name)));
+          }
+          if (navigator.serviceWorker?.controller && !sessionStorage.getItem('vocab-local-sw-reset-v1')) {
+            sessionStorage.setItem('vocab-local-sw-reset-v1', 'true');
+            location.reload();
+          } else if (!navigator.serviceWorker?.controller) {
+            sessionStorage.removeItem('vocab-local-sw-reset-v1');
+          }
+        } catch (error) {
+          console.warn('[local] Không thể dọn PWA cache cũ', error);
+        }
+      };
+
+      if (!isAiStudioPreview) {
+        panel?.remove();
+        window.addEventListener('load', () => { void clearLocalPwaState(); }, { once: true });
+        return;
+      }
+
+      if (panel) panel.style.display = 'grid';
+      window.__VOCAB_SHOW_BOOT_ERROR__ = (title, detail) => {
+        if (!panel) return;
+        panel.style.display = 'block';
+        panel.style.overflow = 'auto';
+        panel.style.whiteSpace = 'pre-wrap';
+        panel.style.background = '#2b1012';
+        panel.style.color = '#fff';
+        panel.textContent = `${title}\n\n${String(detail || 'Không có thông tin lỗi.')}`;
+      };
+      window.addEventListener('error', event => {
+        window.__VOCAB_SHOW_BOOT_ERROR__('Lỗi khởi động giao diện', event.error?.stack || event.message || event.filename);
+      }, true);
+      window.addEventListener('unhandledrejection', event => {
+        window.__VOCAB_SHOW_BOOT_ERROR__('Lỗi bất đồng bộ khi khởi động', event.reason?.stack || event.reason);
+      });
+      setTimeout(() => {
+        if (!window.__VOCAB_BOOTED__) {
+          window.__VOCAB_SHOW_BOOT_ERROR__('Vocab Master chưa khởi động', 'Entry module không hoàn tất sau 8 giây. Mở Console để xem lỗi đầu tiên.');
+        }
+      }, 8000);
+    })();
+  </script>
+  <div class="app-shell" id="appShell">
+    <aside class="sidebar" aria-label="Điều hướng chính">
+      <a class="brand" href="#today">
+        <span class="brand-mark">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+            <path d="M2 17l10 5 10-5"></path>
+            <path d="M2 12l10 5 10-5"></path>
+          </svg>
+        </span>
+        <span class="brand-text"><strong>Vocab</strong> Master<span class="brand-badge">AI</span></span>
+      </a>
+
+      <nav class="side-nav">
+        <button class="nav-item active" data-route="today">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          </span>
+          <span class="nav-label">Hôm nay</span>
+        </button>
+        <button class="nav-item" data-route="capture">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+          </span>
+          <span class="nav-label">Thêm nội dung</span>
+        </button>
+        <button class="nav-item" data-route="library">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          </span>
+          <span class="nav-label">Thư viện</span>
+        </button>
+        <button class="nav-item" data-route="progress">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          </span>
+          <span class="nav-label">Tiến bộ</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-widget">
+        <div class="widget-header">
+          <span class="widget-icon">⚡</span>
+          <div class="widget-info">
+            <strong>Mục tiêu hôm nay</strong>
+            <small id="sidebarStreakText">Tiến độ 0%</small>
+          </div>
+        </div>
+        <div class="widget-bar">
+          <span id="sidebarProgressFill" style="width: 0%"></span>
+        </div>
+      </div>
+
+      <button class="profile-button" id="profileButton">
+        <div class="avatar-wrap">
+          <span class="avatar">VM</span>
+          <span class="online-indicator"></span>
+        </div>
+        <div class="profile-meta">
+          <strong>Người học</strong>
+          <small>Cài đặt & AI</small>
+        </div>
+        <span class="profile-chevron">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </span>
+      </button>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="mobile-brand">
+          <span class="brand-mark">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+              <path d="M2 17l10 5 10-5"></path>
+              <path d="M2 12l10 5 10-5"></path>
+            </svg>
+          </span>
+          <strong>Vocab Master</strong>
+        </div>
+        <div class="top-stats">
+          <!-- Streak Pill -->
+          <div class="top-stat-pill streak-pill" title="Chuỗi ngày học liên tục: Số ngày bạn đã hoàn thành bài học không ngắt quãng. Hãy duy trì lửa học!" tabindex="0">
+            <span class="pill-icon flame-icon">🔥</span>
+            <div class="pill-content">
+              <span class="pill-label">Chuỗi học</span>
+              <strong class="pill-value"><span id="streakValue">0</span> ngày</strong>
+            </div>
+          </div>
+
+          <!-- Daily Target Goal Pill -->
+          <div class="top-stat-pill goal-pill" title="Mục tiêu bài học hôm nay: Tỷ lệ hoàn thành số thẻ vựng chỉ tiêu trong ngày" tabindex="0">
+            <span class="pill-icon goal-icon">🎯</span>
+            <div class="pill-content">
+              <span class="pill-label">Mục tiêu</span>
+              <strong class="pill-value" id="dailyPercent">0%</strong>
+            </div>
+          </div>
+
+          <!-- Notification Reminder Button -->
+          <button class="top-stat-pill btn-pill notif-pill" id="notificationButton" title="Nhắc nhở học tập: Cài đặt giờ thông báo nhắc bài hàng ngày" aria-label="Nhắc nhở học tập">
+            <span class="pill-icon bell-icon">🔔</span>
+            <span class="pill-btn-label">Nhắc học</span>
+          </button>
+
+          <!-- User Profile & Settings Button -->
+          <button class="top-stat-pill btn-pill profile-pill" id="topProfileButton" title="Hồ sơ & Cài đặt: Tùy chỉnh giọng đọc, bài học và khóa Gemini AI" aria-label="Hồ sơ cá nhân & Cài đặt">
+            <div class="user-avatar-badge">VM</div>
+            <div class="pill-content">
+              <span class="pill-label">Hồ sơ</span>
+              <strong class="pill-value">Cài đặt ⚙️</strong>
+            </div>
+          </button>
+        </div>
+      </header>
+
+      <section class="route-view active" data-view="today">
+        <!-- Today Hero Greeting & Header -->
+        <div class="today-hero-header">
+          <div class="greeting-content">
+            <div class="greeting-badge">
+              <span class="pulse-dot"></span>
+              <span>LỘ TRÌNH CÁ NHÂN HÓA</span>
+            </div>
+            <h1 class="greeting-title">Hôm nay học nhẹ thôi!</h1>
+            <p class="greeting-subtitle">Một phiên tự xen khởi động, ôn cũ, từ mới, nghe, ngữ cảnh và chữa từ yếu.</p>
+          </div>
+
+          <!-- Summary Stat Cards -->
+          <div class="today-stats-grid">
+            <div class="today-stat-card review">
+              <div class="stat-icon-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              </div>
+              <div class="stat-meta">
+                <span class="stat-number" id="reviewCount">0</span>
+                <span class="stat-label">Lượt ôn cũ</span>
+              </div>
+            </div>
+
+            <div class="today-stat-card new">
+              <div class="stat-icon-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <div class="stat-meta">
+                <span class="stat-number" id="newCount">0</span>
+                <span class="stat-label">Từ mới</span>
+              </div>
+            </div>
+
+            <div class="today-stat-card weak">
+              <div class="stat-icon-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              </div>
+              <div class="stat-meta">
+                <span class="stat-number" id="weakCount">0</span>
+                <span class="stat-label">Từ yếu</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero Daily Plan Banner -->
+        <article class="daily-plan-card">
+          <div class="plan-content">
+            <div class="plan-header-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <span>KẾ HOẠCH HÔM NAY</span>
+            </div>
+            <h2><span id="sessionMinutes">10</span> phút để bứt phá</h2>
+            <p>Phiên học kết hợp đa kỹ năng, tối ưu hóa theo thuật toán ghi nhớ FSRS.</p>
+            <button class="primary-button light large" id="startToday">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Bắt đầu học ngay</span>
+            </button>
+          </div>
+
+          <div class="plan-ring-container">
+            <div class="plan-ring">
+              <svg viewBox="0 0 120 120">
+                <circle class="ring-track" cx="60" cy="60" r="48"></circle>
+                <circle class="ring-value" id="ringValue" cx="60" cy="60" r="48"></circle>
+              </svg>
+              <div class="ring-center-content">
+                <strong id="progressText">0/12</strong>
+                <span>hoàn thành</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Quick Practice Modes -->
+        <div class="quick-modes-section">
+          <div class="section-title-wrap">
+            <div>
+              <p class="eyebrow">TÙY CHỌN BỔ TRỢ</p>
+              <h3>Chế độ luyện tập nhanh</h3>
+            </div>
+          </div>
+
+          <div class="quick-actions-grid">
+            <button class="quick-action-card yellow" id="quickReview">
+              <div class="quick-card-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              </div>
+              <div class="quick-card-text">
+                <strong>Ôn nhanh 3 phút</strong>
+                <small>Flashcard ưu tiên từ vựng quan trọng</small>
+              </div>
+              <div class="quick-card-arrow">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </div>
+            </button>
+
+            <button class="quick-action-card purple" id="weakPractice">
+              <div class="quick-card-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+              </div>
+              <div class="quick-card-text">
+                <strong>Luyện từ yếu</strong>
+                <small>Cơ chế cramming tập trung từ hay quên</small>
+              </div>
+              <div class="quick-card-arrow">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </div>
+            </button>
+
+            <button class="quick-action-card indigo" id="openMorePractice">
+              <div class="quick-card-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              </div>
+              <div class="quick-card-text">
+                <strong>Phòng luyện tập</strong>
+                <small>Bài bổ trợ theo nhu cầu; phiên chính vẫn tự động</small>
+              </div>
+              <div class="quick-card-arrow">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Recommendation Section -->
+        <section class="section-block insight-section">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">ĐỀ XUẤT THÔNG MINH</p>
+              <h3>Bước nhỏ tiếp theo</h3>
+            </div>
+          </div>
+          
+          <article class="insight-row">
+            <div class="insight-icon-box" id="todayInsightIcon">🎧</div>
+            <div class="insight-body">
+              <strong id="todayInsightTitle">Đang phân tích kỹ năng</strong>
+              <p id="todayInsightText">Vocab Master dùng lịch FSRS riêng cho từng kỹ năng để chọn bài phù hợp.</p>
+            </div>
+            <button class="primary-button" id="todayInsightAction">Luyện ngay</button>
+          </article>
+        </section>
+      </section>
+
+      <section class="route-view" data-view="capture">
+        <!-- Capture Hero Header -->
+        <div class="capture-hero-header">
+          <div class="greeting-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            <span>TẠO THẺ MỚI</span>
+          </div>
+          <h1 class="greeting-title">Thêm từ hoặc Collocation</h1>
+          <p class="greeting-subtitle">Nhập từ vựng mới vào kho kiến thức cá nhân. Bạn có thể tự điền hoặc để AI tự động tra phiên âm, tạo ví dụ và phân loại CEFR.</p>
+        </div>
+
+        <div class="capture-grid-layout">
+          <!-- Main Form Card -->
+          <div class="capture-main-card">
+            <form class="capture-form" id="addWordForm">
+              
+              <!-- Section 1: Core Information -->
+              <div class="form-section">
+                <div class="form-section-title">
+                  <span class="section-num">1</span>
+                  <div>
+                    <h3>Thông tin cốt lõi</h3>
+                    <p>Từ vựng và ý nghĩa tiếng Việt cơ bản</p>
+                  </div>
+                </div>
+
+                <div class="form-row-grid">
+                  <div class="input-field-group full-width">
+                    <label for="wordInput">Từ hoặc cụm từ <span class="required-mark">*</span></label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">🔤</span>
+                      <input id="wordInput" required placeholder="Ví dụ: take into account, resilient, ubiquitous..." />
+                    </div>
+                  </div>
+
+                  <div class="input-field-group full-width">
+                    <label for="meaningInput">Nghĩa tiếng Việt <span class="required-mark">*</span></label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">🇻🇳</span>
+                      <input id="meaningInput" required placeholder="Ví dụ: tính đến, cân nhắc, có khả năng phục hồi..." />
+                    </div>
+                  </div>
+
+                  <div class="input-field-group">
+                    <label for="deckInput">Bộ từ (Deck)</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">📚</span>
+                      <input id="deckInput" list="deckOptions" value="Cá nhân" placeholder="Chọn hoặc nhập tên deck..." />
+                    </div>
+                  </div>
+
+                  <div class="input-field-group">
+                    <label for="cefrInput">Trình độ CEFR</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">📊</span>
+                      <select id="cefrInput">
+                        <option>—</option>
+                        <option>A1</option>
+                        <option>A2</option>
+                        <option>B1</option>
+                        <option>B2</option>
+                        <option>C1</option>
+                        <option>C2</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Form Divider -->
+              <div class="form-divider"></div>
+
+              <!-- Section 2: Context & Pronunciation -->
+              <div class="form-section">
+                <div class="form-section-title">
+                  <span class="section-num">2</span>
+                  <div>
+                    <h3>Ngữ cảnh & Phát âm</h3>
+                    <p>Giúp ghi nhớ sâu hơn và nói chuẩn xác</p>
+                  </div>
+                </div>
+
+                <div class="form-row-grid">
+                  <div class="input-field-group full-width">
+                    <label for="exampleInput">Câu ví dụ tiếng Anh</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">💬</span>
+                      <input id="exampleInput" placeholder="Ví dụ: We should take all costs into account before deciding." />
+                    </div>
+                  </div>
+
+                  <div class="input-field-group full-width">
+                    <label for="translationInput">Bản dịch câu ví dụ</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">🔠</span>
+                      <input id="translationInput" placeholder="Ví dụ: Chúng ta nên tính đến tất cả các chi phí trước khi quyết định." />
+                    </div>
+                  </div>
+
+                  <div class="input-field-group">
+                    <label for="pronunciationInput">Phiên âm IPA</label>
+                    <div class="input-with-icon">
+                      <span class="field-icon">🗣️</span>
+                      <input id="pronunciationInput" placeholder="Ví dụ: /teɪk ˌɪn.tuː əˈkaʊnt/" />
+                    </div>
+                  </div>
+                  <div class="input-field-group">
+                    <label for="cardTypeInput">Loại mục từ</label>
+                    <select id="cardTypeInput"><option value="word">Từ</option><option value="collocation">Collocation</option></select>
+                  </div>
+                  <div class="input-field-group">
+                    <label for="learningGoalInput">Mục tiêu học</label>
+                    <select id="learningGoalInput"><option value="passive">Nhận biết & tự nhớ</option><option value="active">Dùng chủ động</option></select>
+                  </div>
+                  <div class="input-field-group full-width">
+                    <label for="sourceContextInput">Ngữ cảnh bạn gặp từ này</label>
+                    <textarea id="sourceContextInput" rows="3" placeholder="Dán câu hoặc đoạn nguồn để giữ đúng nghĩa và tạo bài transfer sau này."></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Form Actions Bar -->
+              <div class="capture-actions-bar">
+                <div class="primary-actions-group">
+                  <button class="primary-button large" type="submit">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>Thêm vào thư viện</span>
+                  </button>
+                  <button class="ai-button large" type="button" id="aiEnrichButton">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <span>✨ AI bổ sung</span>
+                  </button>
+                  <button class="secondary-button large" type="button" id="openContextCapture">📄 Chọn từ từ đoạn văn</button>
+                </div>
+                <button class="secondary-button" type="button" id="showImport">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>Import danh sách</span>
+                </button>
+              </div>
+
+              <!-- AI Status Banner -->
+              <div class="ai-status-banner">
+                <span class="status-icon">💡</span>
+                <p class="form-note" id="aiStatus">AI chưa cấu hình. Mở Cài đặt & AI để nhập khóa Gemini.</p>
+              </div>
+
+            </form>
+          </div>
+
+          <!-- Side Helper Cards -->
+          <div class="capture-side-panel">
+            <!-- AI Magic Feature Card -->
+            <div class="side-card ai-feature-card">
+              <div class="side-card-header">
+                <div class="side-card-icon ai">✨</div>
+                <div>
+                  <h4>AI Tự động Hoàn thiện</h4>
+                  <small>Bản nháp có kiểm soát</small>
+                </div>
+              </div>
+              <p>Gemini tạo bản nháp IPA, nghĩa và ví dụ theo ngữ cảnh. Bạn luôn kiểm tra và xác nhận trước khi nội dung được lưu.</p>
+            </div>
+
+            <!-- Batch Import Card -->
+            <button type="button" class="side-card import-feature-card" id="openImportFromCard">
+              <div class="side-card-header">
+                <div class="side-card-icon import">📥</div>
+                <div>
+                  <h4>Import hàng loạt</h4>
+                  <small>Danh sách CSV, TSV, JSON</small>
+                </div>
+              </div>
+              <p>Tải lên file dữ liệu hoặc dán bảng từ vựng sẵn có để thêm hàng chục từ mới vào thư viện cùng lúc.</p>
+              <span class="side-card-link">Tải tệp hoặc dán dữ liệu ›</span>
+            </button>
+
+            <!-- FSRS Tip Card -->
+            <div class="side-card tip-card">
+              <div class="side-card-header">
+                <div class="side-card-icon tip">🧠</div>
+                <div>
+                  <h4>Mẹo ghi nhớ FSRS</h4>
+                  <small>Khoa học trí nhớ</small>
+                </div>
+              </div>
+              <p>Học từ vựng gắn liền với <strong>ngữ cảnh ví dụ</strong> giúp bộ não kích hoạt khả năng liên tưởng, tăng tỷ lệ nhớ lâu lên <strong>40%</strong>.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="route-view" data-view="library">
+        <!-- Library Hero Header -->
+        <div class="library-hero-header">
+          <div class="library-header-top">
+            <div>
+              <div class="greeting-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <span>KHO KIẾN THỨC</span>
+              </div>
+              <h1 class="greeting-title">Thư viện Từ vựng</h1>
+              <p class="greeting-subtitle">Quản lý toàn bộ từ vựng, cụm từ collocation và theo dõi chỉ số lưu giữ trí nhớ FSRS của từng thẻ.</p>
+            </div>
+            <button class="primary-button large" data-route-jump="capture">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Thêm từ mới</span>
+            </button>
+          </div>
+
+          <!-- Library Quick Stats Row -->
+          <div class="library-stats-row">
+            <div class="lib-stat-pill">
+              <span class="lib-stat-icon blue">📚</span>
+              <div>
+                <strong id="libStatTotal">0</strong>
+                <small>Tổng số thẻ</small>
+              </div>
+            </div>
+            <div class="lib-stat-pill">
+              <span class="lib-stat-icon green">⭐</span>
+              <div>
+                <strong id="libStatMastered">0</strong>
+                <small>Thành thạo</small>
+              </div>
+            </div>
+            <div class="lib-stat-pill">
+              <span class="lib-stat-icon yellow">🩹</span>
+              <div>
+                <strong id="libStatWeak">0</strong>
+                <small>Cần ôn luyện</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search & Controls Section -->
+        <div class="library-controls-card">
+          <div class="search-and-filter-row">
+            <div class="search-box-wrap">
+              <span class="search-icon">🔍</span>
+              <input id="librarySearch" placeholder="Tìm từ tiếng Anh, nghĩa tiếng Việt, ví dụ hoặc mẹo nhớ..." />
+            </div>
+            <button class="secondary-button filter-btn" id="filterButton">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+              <span>Bộ lọc Deck</span>
+            </button>
+          </div>
+
+          <div class="segmented-nav" role="tablist">
+            <button class="active" data-filter="all">
+              <span>Tất cả</span>
+              <small class="filter-count" id="countAll">0</small>
+            </button>
+            <button data-filter="word">
+              <span>Từ vựng</span>
+              <small class="filter-count" id="countWord">0</small>
+            </button>
+            <button data-filter="collocation">
+              <span>Collocation</span>
+              <small class="filter-count" id="countCollocation">0</small>
+            </button>
+            <button data-filter="weak">
+              <span>Từ yếu</span>
+              <small class="filter-count" id="countWeak">0</small>
+            </button>
+            <button data-filter="mastered">
+              <span>Thành thạo</span>
+              <small class="filter-count" id="countMastered">0</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- Main Word Cards Grid / List Container -->
+        <div class="library-grid-container" id="wordList"></div>
+      </section>
+
+      <section class="route-view" data-view="progress">
+        <!-- Progress Hero Header -->
+        <div class="progress-hero-header">
+          <div class="greeting-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>
+            <span>BÁO CÁO HỌC TẬP</span>
+          </div>
+          <h1 class="greeting-title">Tiến độ & Trí nhớ FSRS</h1>
+          <p class="greeting-subtitle">Theo dõi chuỗi ngày học, chỉ số duy trì trí nhớ thực tế và bản đồ hoạt động 12 tuần gần nhất.</p>
+        </div>
+
+        <!-- Metric Cards Row (4 cards) -->
+        <div class="progress-stats-grid">
+          <div class="prog-stat-card streak">
+            <div class="prog-stat-icon">🔥</div>
+            <div class="prog-stat-meta">
+              <strong id="daysMetric">0 ngày</strong>
+              <small>Chuỗi hiện tại</small>
+            </div>
+          </div>
+
+          <div class="prog-stat-card time">
+            <div class="prog-stat-icon">⏱️</div>
+            <div class="prog-stat-meta">
+              <strong id="minutesMetric">0 phút</strong>
+              <small>Thời gian tập trung</small>
+            </div>
+          </div>
+
+          <div class="prog-stat-card accuracy">
+            <div class="prog-stat-icon">🎯</div>
+            <div class="prog-stat-meta">
+              <strong id="accuracyMetric">0%</strong>
+              <small>Độ chính xác</small>
+            </div>
+          </div>
+
+          <div class="prog-stat-card activity">
+            <div class="prog-stat-icon">📈</div>
+            <div class="prog-stat-meta">
+              <strong id="reviewsLast7">0 lượt</strong>
+              <small>7 ngày gần đây</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle Main Grid: Knowledge Ring & Memory Levels -->
+        <div class="progress-main-grid">
+          <!-- Knowledge Strength Card -->
+          <article class="prog-card knowledge-strength-card">
+            <div class="prog-card-header">
+              <span class="prog-card-tag">THUẬT TOÁN FSRS</span>
+              <h3>Khả năng ghi nhớ ước tính</h3>
+            </div>
+            <div class="knowledge-ring-wrap">
+              <div class="knowledge-ring" id="knowledgeRing">
+                <div class="ring-inner-content">
+                  <strong id="knowledgeStrength">0%</strong>
+                  <span>mức lưu giữ</span>
+                </div>
+              </div>
+              <div class="knowledge-info">
+                <h4 id="knowledgeLabel">Chưa đủ dữ liệu</h4>
+                <p id="knowledgeDescription">Chỉ số dựa trên retrievability của từng kỹ năng đã được luyện, không chỉ đếm số từ.</p>
+              </div>
+            </div>
+          </article>
+
+          <!-- Memory Distribution Card -->
+          <article class="prog-card memory-distribution-card">
+            <div class="prog-card-header">
+              <span class="prog-card-tag">PHÂN BỐ TRÍ NHỚ</span>
+              <h3>Bản đồ trạng thái từ vựng</h3>
+            </div>
+            <div class="memory-grid">
+              <div class="memory-box level-new">
+                <span class="memory-box-icon">🌱</span>
+                <strong id="newWordsMetric">0</strong>
+                <small>Thẻ mới</small>
+              </div>
+              <div class="memory-box level-learning">
+                <span class="memory-box-icon">🌿</span>
+                <strong id="learningMetric">0</strong>
+                <small>Đang nhớ</small>
+              </div>
+              <div class="memory-box level-familiar">
+                <span class="memory-box-icon">🌳</span>
+                <strong id="familiarMetric">0</strong>
+                <small>Nhớ tốt</small>
+              </div>
+              <div class="memory-box level-mastered">
+                <span class="memory-box-icon">⭐</span>
+                <strong id="masteredMetric">0</strong>
+                <small>Thành thạo</small>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Heatmap Section Card -->
+        <article class="prog-card heatmap-card-section">
+          <div class="heatmap-card-header">
+            <div>
+              <span class="prog-card-tag">NHỊP HỌC HÀNG NGÀY</span>
+              <h3>Tần suất ôn tập 12 tuần qua</h3>
+            </div>
+            <div class="heatmap-legend">
+              <small>Ít</small>
+              <i data-level="0"></i>
+              <i data-level="1"></i>
+              <i data-level="2"></i>
+              <i data-level="3"></i>
+              <i data-level="4"></i>
+              <small>Nhiều</small>
+            </div>
+          </div>
+          <div class="heatmap" id="activityHeatmap" aria-label="Biểu đồ tần suất học 12 tuần"></div>
+        </article>
+
+        <div class="progress-main-grid">
+          <article class="prog-card"><div class="prog-card-header"><span class="prog-card-tag">DỰ BÁO 7 NGÀY</span><h3>Khối lượng ôn sắp tới</h3></div><div class="actionable-list" id="workloadForecast"></div></article>
+          <article class="prog-card"><div class="prog-card-header"><span class="prog-card-tag">MẪU LỖI</span><h3>Điểm cần tập trung</h3></div><div class="actionable-list" id="errorFingerprint"></div></article>
+        </div>
+
+        <!-- Recommendation Banner -->
+        <article class="prog-card recommendation-banner">
+          <div class="rec-banner-content">
+            <div class="rec-icon">🩹</div>
+            <div>
+              <span class="prog-card-tag">GỢI Ý TỐI ƯU</span>
+              <h3>Luyện tập các từ yếu</h3>
+              <p>Ưu tiên các từ đã bấm Again/Hard nhiều lần hoặc điểm retrievability giảm sâu.</p>
+            </div>
+          </div>
+          <button class="primary-button" id="progressPractice">
+            <span>Luyện từ yếu ngay</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+        </article>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Điều hướng mobile"><button class="active" data-route="today"><span>⌂</span><small>Hôm nay</small></button><button class="add-tab" data-route="capture"><span>＋</span><small>Thêm</small></button><button data-route="library"><span>▤</span><small>Thư viện</small></button><button data-route="progress"><span>◔</span><small>Tiến bộ</small></button></nav>
+  </div>
+
+  <dialog class="sheet wide" id="practiceSheet"><div class="sheet-handle"></div><div class="sheet-heading"><div><p class="eyebrow">LUYỆN THÊM</p><h2>Chọn một kỹ năng</h2><p class="muted">Chế độ riêng nằm ở đây để trang Hôm nay luôn gọn.</p></div><button class="icon-button" data-close-dialog aria-label="Đóng cửa sổ">×</button></div><div class="practice-grid expanded"><button data-practice="matching"><span class="practice-icon-3d puzzle">🧩</span><span><strong>Nối cặp</strong><small>Khởi động nhanh</small></span></button><button data-practice="typing"><span class="practice-icon-3d keyboard">⌨️</span><span><strong>Gõ chính tả</strong><small>Nghĩa/nghe → nhập từ</small></span></button><button data-practice="cloze"><span class="practice-icon-3d cloze">📑</span><span><strong>Điền ngữ cảnh</strong><small>Cloze câu và collocation</small></span></button><button data-practice="listening"><span class="practice-icon-3d audio">🎧</span><span><strong>Nghe</strong><small>Nhận diện + dictation</small></span></button><button data-practice="pronunciation"><span class="practice-icon-3d mic">🎙️</span><span><strong>Phát âm</strong><small>Coaching mức dễ hiểu; không đổi lịch FSRS</small></span></button><button data-practice="collocation"><span class="practice-icon-3d chain">🔗</span><span><strong>Collocation</strong><small>Điền đúng cụm từ</small></span></button><button data-practice="production"><span class="practice-icon-3d pencil">✍️</span><span><strong>Viết câu</strong><small>Dùng một từ trong câu</small></span></button><button data-practice="output"><span class="practice-icon-3d sparkles">✨</span><span><strong>Phản xạ AI</strong><small>Dùng 3–5 từ trong đoạn ngắn</small></span></button><button data-practice="weak"><span class="practice-icon-3d target">🩹</span><span><strong>Từ yếu</strong><small>Cramming deck tự động</small></span></button><button data-practice="test"><span class="practice-icon-3d flask">🧪</span><span><strong>Kiểm tra</strong><small>Không đổi lịch ôn</small></span></button><button id="chooseDeckButton"><span class="practice-icon-3d books">📚</span><span><strong>Chọn deck</strong><small>Học theo bộ từ</small></span></button></div></dialog>
+
+  <dialog class="sheet wide" id="importDialog"><div class="sheet-heading"><div><p class="eyebrow">IMPORT</p><h2>Nhập danh sách từ</h2></div><button class="icon-button" data-close-dialog aria-label="Đóng import">×</button></div><div class="import-layout"><div><label class="file-drop">📄 Chọn CSV, TSV, TXT hoặc JSON<input type="file" id="importFile" accept=".csv,.tsv,.txt,.json" /></label><label>Deck mặc định<input id="importDeck" value="Imported" /></label><label>Xử lý mục trùng<select id="importConflictStrategy"><option value="skip">Bỏ qua mục trùng hoàn toàn</option><option value="merge">Bổ sung trường còn thiếu</option></select></label><label>Dán dữ liệu<textarea id="importText" rows="11" placeholder="word,meaning,example&#10;reliable,đáng tin cậy,We need a reliable source."></textarea></label><p class="muted">CSV có header, dấu ngoặc kép và nội dung nhiều dòng được hỗ trợ. Xem trước không ghi dữ liệu.</p><button class="secondary-button" id="previewImport">Xem trước</button></div><div class="import-preview"><h3>Kết quả kiểm tra</h3><div id="importSummary" class="empty-box">Chưa có dữ liệu.</div><div id="importPreview"></div><button class="primary-button" id="confirmImport" disabled>Import vào thư viện</button></div></div></dialog>
+
+  <dialog class="sheet wide" id="contextCaptureDialog"><div class="sheet-heading"><div><p class="eyebrow">CONTEXT CAPTURE</p><h2>Chọn từ đáng học từ đoạn văn</h2><p class="muted">AI chỉ đề xuất; không mục nào được tự động thêm.</p></div><button class="icon-button" data-close-dialog aria-label="Đóng chọn từ từ đoạn văn">×</button></div><label>Dán đoạn đọc, transcript hoặc bài viết<textarea id="contextCaptureText" rows="9" placeholder="Dán tối đa một đoạn ngắn có các từ bạn vừa gặp..."></textarea></label><div class="form-actions"><button class="ai-button" id="analyzeContextButton">✨ Phân tích đoạn</button></div><div id="contextCaptureResults" class="context-candidate-list"></div></dialog>
+
+  <dialog class="sheet" id="settingsDialog"><div class="sheet-heading"><div><p class="eyebrow">CÀI ĐẶT & AI</p><h2>Cá nhân hóa Vocab Master</h2></div><button class="icon-button" data-close-dialog aria-label="Đóng cài đặt">×</button></div><form id="settingsForm" class="settings-form">
+  <section><h3>Phiên học</h3><div class="form-grid"><label>Thời lượng<select id="settingMinutes"><option value="5">5 phút</option><option value="10">10 phút</option><option value="15">15 phút</option><option value="20">20 phút</option></select></label><label>Từ mới mỗi ngày<select id="settingNewLimit"><option value="1">1 từ</option><option value="3">3 từ</option><option value="5">5 từ</option><option value="10">10 từ</option><option value="15">15 từ</option></select></label><label>Mục tiêu mặc định<select id="settingLearningGoal"><option value="passive">Vốn từ thụ động</option><option value="active">Vốn từ chủ động</option></select></label><label>Ngày thi (tùy chọn)<input type="date" id="settingExamDate" /></label><label>Nhắc học<input type="time" id="settingReminder" value="20:00" /></label></div><label>Chủ đề bạn quan tâm<input id="settingInterests" placeholder="công nghệ, tài chính, du lịch" /><small class="muted">AI chỉ dùng để cá nhân hóa ngữ cảnh; rule và FSRS vẫn quyết định lịch học.</small></label></section>
+  <section class="audio-settings"><div><h3>Âm thanh & phát âm</h3><p class="muted">Chọn giọng cụ thể thay vì để trình duyệt tự lấy một giọng bất kỳ.</p></div><div class="form-grid"><label>Accent<select id="settingVoice"><option value="en-US">Anh-Mỹ</option><option value="en-GB">Anh-Anh</option></select></label><label>Giọng đọc<select id="settingVoiceURI"><option value="">Đang tải danh sách giọng…</option></select></label><label>Tốc độ mặc định<select id="settingAudioRate"><option value="slow">Chậm · 0.70×</option><option value="medium">Vừa · 0.90×</option><option value="natural">Tự nhiên · 1.00×</option></select></label></div><div class="toggle-list"><label class="toggle-row"><input type="checkbox" id="settingAutoPlayNew" /><span>Tự phát âm khi mở từ mới</span></label><label class="toggle-row"><input type="checkbox" id="settingPlayExample" /><span>Đọc câu ví dụ sau từ</span></label><label class="toggle-row"><input type="checkbox" id="settingShowSlowAudio" /><span>Hiển thị nút Nghe chậm</span></label></div><div class="form-actions"><button type="button" class="secondary-button" id="testVoiceButton">🔊 Nghe thử giọng</button><span id="voiceTestStatus" class="muted" aria-live="polite">Chưa phát thử.</span></div></section>
+  <section class="ai-settings"><h3>Gemini AI</h3><p class="muted">Khóa nhập ở đây chỉ được giữ trong phiên trình duyệt. Khi deploy public, nên đặt khóa trên server bằng biến môi trường.</p><label>Gemini API key<input type="password" id="geminiKey" autocomplete="off" placeholder="AIza..." /></label><label>Model<select id="geminiModel"><option value="gemini-3.6-flash">Gemini 3.6 Flash</option><option value="gemini-3.5-flash">Gemini 3.5 Flash</option><option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite</option></select></label><div class="form-actions"><button type="button" class="secondary-button" id="testAiButton">Kiểm tra kết nối</button><span id="aiTestResult" class="muted"></span></div></section><div class="form-actions"><button class="primary-button" type="submit">Lưu cài đặt</button><button class="secondary-button" type="button" id="exportButton">Xuất dữ liệu JSON</button></div></form></dialog>
+
+  <dialog class="sheet" id="filterDialog"><div class="sheet-heading"><div><p class="eyebrow">BỘ LỌC</p><h2>Thu hẹp thư viện</h2></div><button class="icon-button" data-close-dialog aria-label="Đóng cửa sổ">×</button></div><label>Deck<select id="libraryDeckFilter"></select></label><button class="primary-button" id="applyFilter">Áp dụng</button></dialog>
+  <dialog class="sheet" id="deckDialog"><div class="sheet-heading"><div><p class="eyebrow">CHỌN DECK</p><h2>Bạn muốn học bộ nào?</h2></div><button class="icon-button" data-close-dialog aria-label="Đóng cửa sổ">×</button></div><div id="deckList" class="deck-list"></div></dialog>
+
+  <dialog class="sheet wide" id="wordDetailDialog"><div class="sheet-heading"><div><p class="eyebrow">CHI TIẾT TỪ</p><h2 id="detailWord">—</h2><p class="muted" id="detailMeaning">—</p></div><button class="icon-button" data-close-dialog aria-label="Đóng chi tiết từ">×</button></div><div class="word-detail-grid"><section class="detail-panel"><div id="detailContent"></div><div class="form-actions"><button class="secondary-button" id="detailAudio" aria-label="Nghe từ">🔊 Nghe từ</button><button class="secondary-button" id="detailSlowAudio" aria-label="Nghe từ chậm">🐢 Nghe chậm</button><button class="secondary-button" id="detailExampleAudio" aria-label="Nghe câu ví dụ">▶ Nghe câu</button><button class="secondary-button" id="editCardFromDetail">✏️ Sửa thẻ</button><button class="secondary-button" id="suspendCardFromDetail">⏸ Tạm dừng</button><button class="ai-button" id="generateMnemonic">✨ Tạo mẹo nhớ</button><button class="ai-button" id="generateContextExample">✨ Ví dụ theo sở thích</button><button class="danger-button" id="deleteCardFromDetail" aria-label="Xóa thẻ">🗑️ Xóa thẻ</button></div></section><section class="detail-panel ai-result-panel"><h3>AI hỗ trợ</h3><div id="detailAiResult" class="empty-box">Chọn một tác vụ AI. Kết quả chỉ được lưu khi bạn xác nhận.</div><button class="primary-button" id="saveAiResult" disabled>Lưu vào thẻ</button></section></div></dialog>
+
+  <dialog class="sheet" id="confirmDeleteDialog"><div class="sheet-heading"><div><p class="eyebrow" style="color:#ef4444;">XÁC NHẬN XÓA</p><h2>Xóa thẻ từ vựng</h2><p class="muted">Hành động này sẽ xóa thẻ vĩnh viễn khỏi thư viện.</p></div><button class="icon-button" data-close-dialog aria-label="Đóng cửa sổ">×</button></div><div class="confirm-delete-body"><p style="font-size:15px; color:#334155; margin:16px 0;">Bạn có chắc chắn muốn xóa từ <strong id="deleteCardTarget" style="color:#ef4444; font-weight:800;">—</strong> không?</p></div><div class="form-actions" style="margin-top:24px; justify-content:flex-end; gap:10px;"><button class="secondary-button" data-close-dialog>Hủy bỏ</button><button class="danger-button" id="confirmDeleteButton">Xác nhận xóa</button></div></dialog>
+
+  <section class="study-overlay" id="studyOverlay" role="dialog" aria-modal="true" aria-labelledby="studyLabel" aria-hidden="true" tabindex="-1"><header class="study-header"><button class="icon-button light" id="closeStudy" aria-label="Đóng phiên học">×</button><div class="study-progress"><div><span id="studyLabel">Phiên hôm nay</span><strong id="studyCounter">1 / 12</strong></div><div class="progress-track"><span id="studyProgressBar"></span></div></div><div class="study-audio-tools"><button class="icon-button light" id="studyAudio" aria-label="Nghe từ">🔊</button><button class="icon-button light" id="studySlowAudio" aria-label="Nghe từ chậm">🐢</button></div></header><div class="audio-status" id="audioStatus" aria-live="polite">Sẵn sàng phát âm.</div><main class="study-stage"><p class="study-hint" id="studyHint"></p><div id="exerciseHost"></div></main></section>
+
+  <datalist id="deckOptions"></datalist>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
