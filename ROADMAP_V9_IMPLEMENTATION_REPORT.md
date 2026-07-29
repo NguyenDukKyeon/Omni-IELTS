@@ -20,6 +20,7 @@
 - AI không điều khiển due date, mastery hoặc retention.
 - Manual production tích cực tối đa được ghi Hard và phải có câu chứa target.
 - Progress tách activity khỏi independent review.
+- Pronunciation là coaching-only; microphone fallback không tạo rating FSRS thủ công.
 
 ## Audit cuối đã đóng trong mã
 
@@ -29,8 +30,27 @@
 - Calibration so sánh sai lệch theo đơn vị tỷ lệ với ngưỡng 8 điểm phần trăm.
 - Browser smoke dùng selector thư viện hiện hành và kiểm tra control trước khi bấm.
 - Form thêm từ giữ tham chiếu form ổn định qua `await`, không dùng `event.currentTarget` sau bất đồng bộ.
+- Hardening fixture hoàn thành acquisition trước pronunciation và kiểm tra đúng fallback coaching-only.
 - Toàn bộ script, marker và workflow vá tạm đã được loại khỏi nhánh sản phẩm và `main`.
 
-## Cổng phát hành
+## Kết quả kiểm chứng tự động
 
-Mã cuối đang được xác minh lại bằng GitHub Actions qua unit/integration tests, static cross-check, roadmap audit, production build, server smoke, preview smoke, browser interaction smoke và hardening browser smoke. Production-ready chỉ được công nhận khi toàn bộ chuỗi này xanh trên cùng một head commit.
+Code-bearing commit `4d638488dd3ebca6373219ced1d07d9ebb777ea0` đã đạt toàn bộ GitHub Actions run `30419397509`:
+
+- `npm ci`: đạt.
+- `npm test`: **47/47 test đạt**, 0 fail, 0 skipped.
+- `npm run check`: đạt.
+- `npm run audit:roadmap`: **12/12 contract đạt**.
+- Production build: đạt.
+- Server/AI/PWA/IndexedDB smoke: đạt.
+- AI Studio preview smoke: đạt.
+- Browser interaction smoke: đạt qua pointer click, route, dialog, study, add/search, settings, import và progress.
+- Hardening browser smoke: đạt qua Settings tabs, IndexedDB reload/restore, weak fallback và microphone-denied coaching recovery.
+
+## Phạm vi chưa thể chứng minh bằng CI
+
+- Retention và transfer sau 7–90 ngày cần dữ liệu người học thật.
+- Firefox/Safari và thiết bị di động vật lý vẫn cần manual compatibility pass trước khi phát hành rộng.
+- Multi-tab conflict đã có optimistic-concurrency contract và regression coverage, nhưng vẫn nên được kiểm tra thủ công trên dữ liệu lớn.
+
+Kết luận: các cổng tự động cần cho merge đã đạt. Việc gọi sản phẩm hiệu quả hơn về học tập dài hạn vẫn phụ thuộc vào đo lường sau phát hành, không được suy ra chỉ từ test xanh.
