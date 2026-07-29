@@ -1,9 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { resolve,dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { resolveIeltsEvidence } from '../src/ielts-domain.js';
 import { diffSentence } from '../src/sentence-learning-loop.js';
 import { assistThoughtGroups,smartSelectSentences } from '../src/coaching-engine-v2.js';
 import { validateReadingSemantics,validateParaphraseSemantics,validatePersonalSentenceItem } from '../src/ai-content-factory.js';
+
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 
 test('shadowing and pronunciation coaching never affect FSRS',()=>{
   const decision=resolveIeltsEvidence({activityType:'shadowing',targetCardId:'card',verified:true,independent:true,assisted:false,result:'correct'});
@@ -58,4 +63,14 @@ test('AI content validators reject unsupported evidence and ambiguous answers',(
   const paraphrase=validateParaphraseSemantics({prompt:'Source sentence',context:'Context',kind:'paraphrase',status:'draft',options:[{id:'a',text:'Source sentence',correct:true,rationale:'Too close to the source.'},{id:'b',text:'Other',correct:false,rationale:'A valid detailed rationale.'}],provenance:{status:'draft'}});
   assert.equal(paraphrase.valid,false);
   assert.equal(validatePersonalSentenceItem({text:'Too short',targets:[],explanation:''}).valid,false);
+});
+
+test('personal prepared content runs during idle time and cannot create FSRS evidence by itself',async()=>{
+  const [factory,today]=await Promise.all([readFile(resolve(root,'src/ai-content-factory.js'),'utf8'),readFile(resolve(root,'src/today-planner-v2.js'),'utf8')]);
+  assert.match(factory,/prepareAndRunPersonalContent/);
+  assert.match(factory,/requestIdleCallback/);
+  assert.match(factory,/runPendingAiJobs/);
+  assert.match(today,/lessonId==='personal-next-session'/);
+  assert.match(today,/personal-ai-content-is-validated-but-not-source-verified/);
+  assert.doesNotMatch(today,/personal-ai-content-is-validated-but-not-source-verified[^\n]*affectsSchedule:true/);
 });
