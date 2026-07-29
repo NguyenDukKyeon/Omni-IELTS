@@ -1,0 +1,10 @@
+[
+  {"id":"course-1","startMs":0,"endMs":8200,"text":"Good morning, I am calling to ask about the evening photography course.","status":"verified","weakForms":["I am","to ask","about the"],"ipa":"/ɡʊd ˈmɔːnɪŋ aɪm ˈkɔːlɪŋ tə ɑːsk əˈbaʊt ði ˈiːvnɪŋ fəˈtɒɡrəfi kɔːs/"},
+  {"id":"course-2","startMs":8700,"endMs":17400,"text":"The next course begins on the seventeenth of August and runs for six weeks.","status":"verified","weakForms":["on the","of August","and runs","for six"],"ipa":"/ðə nekst kɔːs bɪˈɡɪnz ɒn ðə ˌsevənˈtiːnθ əv ˈɔːɡəst ən rʌnz fə sɪks wiːks/"},
+  {"id":"course-3","startMs":17900,"endMs":27400,"text":"Classes are held on Tuesdays from six thirty until eight fifteen.","status":"verified","weakForms":["are held","from six"],"ipa":"/ˈklɑːsɪz ə held ɒn ˈtjuːzdeɪz frəm sɪks ˈθɜːti ənˈtɪl eɪt ˌfɪfˈtiːn/"},
+  {"id":"course-4","startMs":27900,"endMs":37600,"text":"The standard fee is two hundred and forty dollars, including equipment hire.","status":"verified","weakForms":["and forty","including"],"ipa":"/ðə ˈstændəd fiː ɪz tuː ˈhʌndrəd ən ˈfɔːti ˈdɒləz ɪnˈkluːdɪŋ ɪˈkwɪpmənt ˈhaɪə/"},
+  {"id":"course-5","startMs":38100,"endMs":47400,"text":"Students who register before Friday receive a ten percent discount.","status":"verified","weakForms":["who register","before Friday","a ten"],"ipa":"/ˈstjuːdənts huː ˈredʒɪstə bɪˈfɔː ˈfraɪdeɪ rɪˈsiːv ə ten pəˈsent ˈdɪskaʊnt/"},
+  {"id":"course-6","startMs":47900,"endMs":57000,"text":"Could you spell your surname so that I can reserve a place?","status":"verified","weakForms":["could you","so that","I can"],"ipa":"/kəd ju spel jɔː ˈsɜːneɪm səʊ ðət aɪ kən rɪˈzɜːv ə pleɪs/"},
+  {"id":"course-7","startMs":57500,"endMs":66600,"text":"It is Nguyen, spelled N G U Y E N.","status":"verified","weakForms":["it is"],"ipa":"/ɪt ɪz ŋwiːˈen speld en dʒiː juː waɪ iː en/"},
+  {"id":"course-8","startMs":67100,"endMs":75800,"text":"Thank you; I will email the registration form and payment instructions this afternoon.","status":"verified","weakForms":["I will","and payment","this afternoon"],"ipa":"/θæŋk juː aɪl ˈiːmeɪl ðə ˌredʒɪˈstreɪʃən fɔːm ən ˈpeɪmənt ɪnˈstrʌkʃənz ðɪs ˌɑːftəˈnuːn/"}
+]
