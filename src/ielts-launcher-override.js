@@ -11,13 +11,18 @@ function openLegacyDialog(tab='overview'){
   requestAnimationFrame(()=>document.querySelector(`#ieltsLabDialog [data-ielts-tab="${tab}"]`)?.click());
 }
 
-function hubLauncherClick(event){
-  event?.preventDefault?.();event?.stopImmediatePropagation?.();
-  const launcher=event?.target?.closest?.('#openIeltsLabButton,#openIeltsLabMobile')||event?.currentTarget||null;
+function openHubFromLauncher(launcher=null){
   const legacy=document.querySelector('#ieltsLabDialog');const legacyWasOpen=Boolean(legacy?.open);if(legacyWasOpen)legacy.close();
   updateLaunchTrace({phase:'hub-captured',capturedAt:Date.now(),launcherId:launcher?.id||'',legacyWasOpen,hubAvailable:Boolean(globalThis.VocabMasterIeltsHub?.open)});
   const opening=globalThis.VocabMasterIeltsHub?.open?.('today');
   void Promise.resolve(opening).then(()=>updateLaunchTrace({phase:'hub-open-complete',completedAt:Date.now(),hubOpen:Boolean(document.querySelector('#v10IeltsHubDialog')?.open),legacyOpen:Boolean(document.querySelector('#ieltsLabDialog')?.open)})).catch(error=>updateLaunchTrace({phase:'hub-open-failed',failedAt:Date.now(),error:error?.message||String(error)}));
+  return opening;
+}
+
+function hubLauncherClick(event){
+  event?.preventDefault?.();event?.stopImmediatePropagation?.();
+  const launcher=event?.target?.closest?.('#openIeltsLabButton,#openIeltsLabMobile')||event?.currentTarget||null;
+  openHubFromLauncher(launcher);
 }
 
 function interceptPrimaryLauncher(event){
@@ -32,6 +37,7 @@ function replaceLauncher(node){
   clone.dataset.v10Launcher='hub';
   clone.onclick=hubLauncherClick;
   clone.addEventListener('click',hubLauncherClick,true);
+  Object.defineProperty(clone,'click',{configurable:true,value:()=>{void openHubFromLauncher(clone);}});
   replacedNodes.add(clone);
 }
 
