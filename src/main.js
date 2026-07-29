@@ -4,7 +4,7 @@ const referrer=globalThis.document?.referrer||'';
 const isEmbedded=(()=>{try{return globalThis.self!==globalThis.top;}catch{return true;}})();
 const isViteDevelopment=Boolean(import.meta.env?.DEV);
 const isLocalDevelopment=isViteDevelopment&&/^(localhost|127(?:\.\d+){3}|0\.0\.0\.0)$/i.test(hostname);
-const isBrowserSmokeSeed=isViteDevelopment&&import.meta.env?.VITE_BROWSER_SMOKE_SEED==='1'&&navigator.webdriver===true;
+const isBrowserSmokeSeed=isViteDevelopment&&import.meta.env?.VITE_BROWSER_SMOKE_SEED==='1';
 const isAiStudioPreview=
   previewQuery==='ai-studio'||
   (/^ais-dev-/i.test(hostname)&&/\.run\.app$/i.test(hostname))||
