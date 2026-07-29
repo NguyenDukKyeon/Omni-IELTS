@@ -1,0 +1,11 @@
+{
+  "targets": [
+    {"sentenceId":"course-1","targets":[{"term":"call to ask about","meaning":"gọi để hỏi về","type":"collocation"}]},
+    {"sentenceId":"course-2","targets":[{"term":"run for six weeks","meaning":"kéo dài sáu tuần","type":"collocation"}]},
+    {"sentenceId":"course-3","targets":[{"term":"be held on Tuesdays","meaning":"được tổ chức vào các ngày thứ Ba","type":"collocation"}]},
+    {"sentenceId":"course-4","targets":[{"term":"standard fee","meaning":"mức học phí tiêu chuẩn","type":"collocation"},{"term":"equipment hire","meaning":"phí thuê thiết bị","type":"collocation"}]},
+    {"sentenceId":"course-5","targets":[{"term":"receive a discount","meaning":"được giảm giá","type":"collocation"}]},
+    {"sentenceId":"course-6","targets":[{"term":"reserve a place","meaning":"giữ một chỗ","type":"collocation"}]},
+    {"sentenceId":"course-8","targets":[{"term":"payment instructions","meaning":"hướng dẫn thanh toán","type":"collocation"}]}
+  ]
+}
