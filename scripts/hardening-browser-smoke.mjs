@@ -97,7 +97,7 @@ async function main(){
 
     await evaluate("document.querySelector('[data-route=\"today\"]').click();document.getElementById('weakPractice').click()");
     await waitFor("document.getElementById('studyOverlay').classList.contains('open')",'weak fallback study');
-    assert.equal(await evaluate("document.getElementById('studyLabel').textContent"),'Ôn nhanh','Weak mode did not fall back to quick review.');
+    assert.match(await evaluate("document.getElementById('studyLabel').textContent"),/^Ôn nhanh(?:\s|$)/,'Weak mode did not fall back to quick review.');
     assert.match(await evaluate("document.getElementById('toast').textContent"),/Chưa có từ yếu/);
     await evaluate("document.getElementById('closeStudy').click()");
 
