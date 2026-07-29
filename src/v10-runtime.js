@@ -7,6 +7,7 @@ import { mountSentenceLearningLoop } from './sentence-learning-loop.js';
 import { mountTranscriptResolverV2 } from './transcript-resolver-v2.js';
 import { mountContentPlatform,refreshContentCatalog,evictContentCache } from './content-platform.js';
 import { mountIeltsHubV2 } from './ielts-hub-v2.js';
+import { mountIeltsLauncherOverride } from './ielts-launcher-override.js';
 import { mountAiContentFactory } from './ai-content-factory.js';
 import { mountCoachingEngineV2 } from './coaching-engine-v2.js';
 import { mountV10Audit,runV10CrossAudit } from './v10-audit.js';
@@ -26,6 +27,7 @@ export async function mountV10Runtime(){
   await guarded('library-v2',()=>mountLibraryV2(),diagnostics);
   await guarded('today-v2',()=>mountTodayPlannerV2(),diagnostics);
   mountIeltsHubV2();diagnostics.push({name:'ielts-hub',status:'ready'});
+  mountIeltsLauncherOverride();diagnostics.push({name:'ielts-launcher-override',status:'ready'});
   mountAiContentFactory();diagnostics.push({name:'ai-factory',status:'ready'});
   await guarded('coaching',()=>mountCoachingEngineV2(),diagnostics);
   mountV10Audit();diagnostics.push({name:'audit',status:'ready'});
