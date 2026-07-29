@@ -1,13 +1,13 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, P0-01 independently accepted
+Last audited: 2026-07-30, P0-02 independently accepted
 
-Audited source commit: 0ec315f7a77e2fac6bad71a548b6ccc71961687b
+Audited source commit: 2025b6320c8d72f116fbc2c0a9dcb4ae884697b6
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
 Active implementation branch: codex/phase-0-release-safety
-Scope of this update: governance/kickoff baseline, P0-00 Acceptance harness và P0-01 Evidence contract. P0-02 bắt đầu; Phase 0 product gate vẫn đỏ.
+Scope of this update: governance/kickoff baseline, P0-00 Acceptance harness, P0-01 Evidence contract và P0-02 Core schedule gateway. P0-03 bắt đầu; Phase 0 product gate vẫn đỏ.
 
 ## 1. Provenance status
 
@@ -75,12 +75,29 @@ Accepted source commit: `0ec315f7a77e2fac6bad71a548b6ccc71961687b`.
 
 P0-01 is an additive contract migration: legacy records without canonical Attempt, complete AssistanceTrace and authority-bound verification receipts are ineligible. Rollback may stop enforcing the new contract but must not delete policy metadata/receipts. Runtime schedule enforcement remains owned by P0-02/P0-03, so the full product gate is intentionally still red.
 
+### P0-02 acceptance evidence
+
+Accepted source commit: `2025b6320c8d72f116fbc2c0a9dcb4ae884697b6`.
+
+| Evidence | Actual result |
+|---|---|
+| Focused gateway/persistence/compatibility tests | PASS 21/21 after final reviewer fixes |
+| `npm test` | PASS 136/136; 0 skipped/todo |
+| `npm run check` | PASS |
+| `npm run audit:roadmap` | PASS 12/12 |
+| `npm run build` | PASS; production bundle built successfully |
+| `npm run test:browser` | PASS with deterministic Chrome discovery and verified cleanup |
+| Persistence boundary | PASS: full evidence envelope is re-evaluated; forged decisions and receipt collisions fail closed; identical receipt is idempotent |
+| Unlock boundary | PASS: only successful qualified evidence marks skill success; qualified `Again` persists as failure and cannot unlock |
+| Legacy outbox compatibility | PASS: terminal legacy review rows are durably quarantined, surfaced and do not block later valid writes |
+| Independent review | ACCEPTED after both P1 findings (outbox head-of-line blocking and missing reconciliation/calibration metadata) were fixed |
+
+P0-02 does not rewrite legacy learning history. New qualified-evidence markers and review metadata are additive; legacy review/outbox rows without canonical evidence stay fail-closed and are preserved in quarantine rather than silently dropped. Rollback may disable the Core gateway code path but must preserve evidence envelopes, reason metadata and quarantine records.
+
 ## 3. Confirmed blockers
 
 | ID | Severity | Blocker | Required owner package |
 |---|---|---|---|
-| B-001 | P0/Critical | Core can write FSRS from caller-supplied affectsSchedule without central evidence decision | P0-01, P0-02 |
-| B-002 | P0/High | Skill unlock can occur after reps > 0, including failed evidence | P0-02 |
 | B-003 | P0/High | IELTS/Error repair can expose correction before an “independent” retry | P0-03 |
 | B-004 | P0/High | V10 Retell does not persist/evaluate learner output; current IELTS Retell browser path fails | P0-03, later P3-04 |
 | B-005 | P0/Critical | Backup omits V10 and some Core durable stores such as drafts/outbox | P0-04 |
@@ -94,7 +111,7 @@ P0-01 is an additive contract migration: legacy records without canonical Attemp
 | B-014 | P5/Critical | Cloud fallback consent/shared-cache policy and local process safety are not production-ready | P5-00–P5-05 |
 | B-015 | P7/High | Metrics/calibration are too weak for safe personalization or FSRS tuning | P7-00–P7-05 |
 
-Resolved at the current audited commit: B-009. Browser discovery, process/port/profile lifecycle and infrastructure-versus-product classification are centralized and independently accepted.
+Resolved at the current audited commit: B-001, B-002 and B-009. Core schedule writes are policy-gated and receipt-bound, skill unlock is based on successful qualified evidence, and the browser harness remains independently accepted.
 
 ## 4. Phase status
 
@@ -129,8 +146,8 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 |---|---|---|---|
 | P0-00 Acceptance harness | P0-00 | Baseline | ACCEPTED @ `33616e5` |
 | P0-01 Evidence contract | P0-01 | P0-00 | ACCEPTED @ `0ec315f` |
-| P0-02 Core evidence gateway | P0-02 | P0-01 | IN_PROGRESS |
-| P0-03 IELTS/V10 containment | P0-03 | P0-01 | PLANNED |
+| P0-02 Core evidence gateway | P0-02 | P0-01 | ACCEPTED @ `2025b63` |
+| P0-03 IELTS/V10 containment | P0-03 | P0-01 | IN_PROGRESS |
 | P0-04 Backup envelope | P0-04 | P0-00 | PLANNED |
 | P0-05 Restore safety | P0-05 | P0-04 | PLANNED |
 | P0-06 Capture containment | P0-06 | P0-00, P0-05 | PLANNED |
@@ -245,8 +262,8 @@ P1-00 remains PHASE_BLOCKED until every checkbox above is checked and P0-08 is i
 
 ## 7. Next package
 
-Current package: P0-02 Core evidence gateway.
+Current package: P0-03 IELTS/V10 evidence containment.
 
 Phase branch: `codex/phase-0-release-safety`.
 
-P0-00 and P0-01 are independently accepted at their exact source commits. P0-02 is active. No Phase 1 work is authorized.
+P0-00 through P0-02 are independently accepted at their exact source commits. P0-03 is active. No Phase 1 work is authorized.

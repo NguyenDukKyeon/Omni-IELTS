@@ -367,3 +367,15 @@ Consequences: legacy or partially traced attempts fail closed. A repeated receip
 Evidence: P0-01 independently accepted source commit `0ec315f7a77e2fac6bad71a548b6ccc71961687b`; focused matrix 38/38 and full unit suite 128/128.
 
 Revisit when: verifier authorities or persisted receipt schemas change; add a new policy version instead of weakening old receipt bindings.
+
+## ADR-029 — Persistence re-evaluates evidence and quarantines terminal legacy writes
+
+Status: CONFIRMED
+
+Decision: every new Core review event persists the complete normalized Attempt, ActivitySpec and verification receipts. The persistence boundary independently re-runs EvidencePolicy and requires an exact EvidenceDecision match before applying the card projection and review event atomically. A duplicate receipt with the same binding is idempotent; a different binding is a terminal collision. Legacy or invalid review outbox rows remain fail-closed and are durably marked `quarantined`, surfaced in persistence status and skipped so they cannot block later valid writes.
+
+Consequences: a caller cannot obtain a schedule write merely by constructing a success-shaped decision object. Legacy rows are not silently deleted or converted into evidence. New events retain the existing reconciliation and calibration fields (`evidenceType` and `predictedRetrievability`) while adding the canonical evidence envelope and qualified-failure marker.
+
+Evidence: P0-02 independently accepted source commit `2025b6320c8d72f116fbc2c0a9dcb4ae884697b6`; final full suite 136/136, focused compatibility matrix 21/21, static/roadmap/build/Core browser gates pass.
+
+Revisit when: a later migration tool can transform quarantined legacy rows using independently verifiable provenance; never infer or fabricate missing evidence.
