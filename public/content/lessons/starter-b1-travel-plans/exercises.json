@@ -1,0 +1,7 @@
+{
+  "lessonId":"starter-b1-travel-plans",
+  "items":[
+    {"id":"travel-q1","type":"evidence-match","prompt":"Why does the speaker suggest taking a coach?","evidenceText":"the train to Bristol has been cancelled","options":[{"id":"a","text":"The train service was cancelled.","correct":true,"rationale":"This is stated directly in the first sentence."},{"id":"b","text":"The coach is always cheaper.","correct":false,"rationale":"No price comparison is given."},{"id":"c","text":"They missed the earlier train.","correct":false,"rationale":"The train was cancelled; they did not say they missed it."}]},
+    {"id":"travel-q2","type":"detail","prompt":"Where must they change?","evidenceText":"change at Reading","options":[{"id":"a","text":"Bristol","correct":false,"rationale":"Bristol is the destination."},{"id":"b","text":"Reading","correct":true,"rationale":"The connection requires a change at Reading."},{"id":"c","text":"Outside the main entrance","correct":false,"rationale":"That is the meeting place, not the interchange."}]}
+  ]
+}
