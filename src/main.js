@@ -128,12 +128,14 @@ try{
     const { mountIeltsBackupBridge } = await import('./ielts-backup-bridge.js');
     const { mountIeltsRuntimeGuard } = await import('./ielts-runtime-guard.js');
     const { mountIeltsChoiceErrorBridge } = await import('./ielts-choice-error-bridge.js');
+    const { mountV10Runtime } = await import('./v10-runtime.js');
     await mountCaptureInbox();
     await mountRoadmapRuntime();
     await mountIeltsLab();
     mountIeltsBackupBridge();
     mountIeltsRuntimeGuard();
     mountIeltsChoiceErrorBridge();
+    await withTimeout(mountV10Runtime(),12_000,'Khởi tạo nền tảng v10');
     await import('./pwa.js');
     await persistence.mountPersistenceUI();
     markBooted();
