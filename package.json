@@ -15,7 +15,10 @@
     "test:browser": "node scripts/browser-smoke-entry.mjs",
     "test:hardening": "node scripts/hardening-browser-smoke.mjs",
     "audit:roadmap": "node scripts/audit-roadmap.mjs",
-    "test:roadmap": "node --test tests/roadmap-v9.test.mjs"
+    "test:roadmap": "node --test tests/roadmap-v9.test.mjs",
+    "test:ielts": "node --test tests/ielts-domain.test.mjs tests/ielts-persistence.test.mjs",
+    "audit:ielts": "node scripts/audit-ielts.mjs",
+    "test:ielts-browser": "node scripts/ielts-browser-smoke.mjs"
   },
   "dependencies": {
     "ts-fsrs": "5.4.1",
