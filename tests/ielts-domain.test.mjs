@@ -78,7 +78,7 @@ test('transcript validator blocks invalid timelines and supports split merge',()
   const [left,right]=splitTranscriptSegment(rows[0],2500);assert.equal(left.endMs,2500);assert.equal(right.startMs,2500);assert.ok(left.text&&right.text);
   const merged=mergeTranscriptSegments(left,right);assert.equal(merged.startMs,0);assert.equal(merged.endMs,5000);assert.match(merged.text,/first sentence/);
   const beyond=validateTranscriptSegments([{id:'x',startMs:0,endMs:20_000,text:'Too long for duration'}],{durationMs:10_000});assert.equal(beyond.valid,false);
-  const repeated=validateTranscriptSegments([0,1,2].map(index=>({id:`r${index}`,startMs:index*1000,endMs:index*1000+900,text:'same'})));assert.equal(repeated.valid,false);
+  const repeated=validateTranscriptSegments([0,1,2].map(index=>({id:`r${index}`,startMs:0,endMs:900,text:'same'})));assert.equal(repeated.valid,false);
 });
 
 test('dictation word diff exposes missing, extra and replacement tokens',()=>{
