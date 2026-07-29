@@ -22,7 +22,10 @@
     "test:ielts-browser": "node scripts/ielts-browser-smoke.mjs",
     "test:v10": "node --test tests/v10-contracts.test.mjs tests/v10-content.test.mjs tests/v10-transcript.test.mjs tests/v10-evidence.test.mjs",
     "audit:v10": "node scripts/audit-v10.mjs",
-    "test:v10-browser": "node scripts/v10-browser-smoke.mjs"
+    "test:v10-browser": "node scripts/v10-browser-smoke.mjs",
+    "test:browser-harness": "node --test tests/browser-harness.test.mjs",
+    "phase0:harness": "node scripts/phase0-gate.mjs --harness",
+    "phase0:gate": "node scripts/phase0-gate.mjs"
   },
   "dependencies": {
     "ts-fsrs": "5.4.1",

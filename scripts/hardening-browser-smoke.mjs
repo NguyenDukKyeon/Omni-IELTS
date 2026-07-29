@@ -1,37 +1,11 @@
 import assert from 'node:assert/strict';
-import { spawn, spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
+import { browserLaunchArguments, runBrowserSuite, waitForHttp, withBrowserHarness } from './browser-harness.mjs';
 
 const PORT=3001;
 const DEBUG_PORT=9334;
 const APP_URL=`http://127.0.0.1:${PORT}/#today`;
 
-function commandPath(command){
-  const result=spawnSync(process.platform==='win32'?'where':'which',[command],{encoding:'utf8'});
-  if(result.status!==0)return null;
-  return String(result.stdout||'').split(/\r?\n/).map(value=>value.trim()).find(Boolean)||null;
-}
-function findBrowser(){
-  if(process.env.CHROME_BIN&&existsSync(process.env.CHROME_BIN))return process.env.CHROME_BIN;
-  for(const command of ['google-chrome-stable','google-chrome','chromium','chromium-browser','msedge']){const value=commandPath(command);if(value)return value;}
-  const candidates=process.platform==='win32'
-    ? [
-        join(process.env.PROGRAMFILES||'','Google','Chrome','Application','chrome.exe'),
-        join(process.env.LOCALAPPDATA||'','Google','Chrome','Application','chrome.exe'),
-        join(process.env.PROGRAMFILES||'','Microsoft','Edge','Application','msedge.exe')
-      ]
-    : ['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'];
-  return candidates.find(path=>path&&existsSync(path))||null;
-}
-async function waitForHttp(url,attempts=80){
-  let last;
-  for(let index=0;index<attempts;index+=1){try{const response=await fetch(url);if(response.ok)return;}catch(error){last=error;}await delay(150);}
-  throw last||new Error(`Timed out waiting for ${url}`);
-}
 async function websocketText(data){if(typeof data==='string')return data;if(data&&typeof data.text==='function')return data.text();if(data instanceof ArrayBuffer)return new TextDecoder().decode(data);if(ArrayBuffer.isView(data))return new TextDecoder().decode(data);return String(data);}
 
 class Cdp{
@@ -51,17 +25,17 @@ class Cdp{
 }
 
 async function main(){
-  const browserPath=findBrowser();
-  if(!browserPath){if(process.env.ALLOW_BROWSER_SMOKE_SKIP==='1'){console.log('Hardening browser smoke skipped: Chrome/Edge not found.');return;}throw new Error('Chrome, Chromium or Edge is required.');}
-  const profile=await mkdtemp(join(tmpdir(),'vocab-hardening-'));
-  let serverOutput='';let browserOutput='';let server;let browser;let cdp;
-  try{
-    server=spawn(process.execPath,['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port',String(PORT),'--strictPort'],{stdio:['ignore','pipe','pipe'],env:{...process.env,NODE_ENV:'development'}});
+  await withBrowserHarness({name:'Hardening browser smoke',profilePrefix:'vocab-hardening-',ports:[PORT,DEBUG_PORT]},async({browser:browserInfo,profileDir,spawnTracked})=>{
+    let serverOutput='';let browserOutput='';let browser;let cdp;
+    const serverRecord=spawnTracked('Hardening Vite server',process.execPath,['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port',String(PORT),'--strictPort'],{stdio:['ignore','pipe','pipe'],env:{...process.env,NODE_ENV:'development'}});
+    const server=serverRecord.child;
+    try{
     server.stdout.on('data',chunk=>serverOutput+=chunk);server.stderr.on('data',chunk=>serverOutput+=chunk);
-    await waitForHttp(`http://127.0.0.1:${PORT}/`);
-    browser=spawn(browserPath,['--headless=new','--disable-gpu','--no-sandbox','--disable-dev-shm-usage','--disable-extensions','--disable-background-networking','--disable-sync','--no-first-run','--no-default-browser-check',`--remote-debugging-port=${DEBUG_PORT}`,`--user-data-dir=${profile}`,APP_URL],{stdio:['ignore','pipe','pipe']});
+    await waitForHttp(`http://127.0.0.1:${PORT}/`,{processRecord:serverRecord,label:'Hardening Vite server'});
+    const browserRecord=spawnTracked('Hardening browser',browserInfo.path,browserLaunchArguments({profileDir,debugPort:DEBUG_PORT,appUrl:APP_URL}),{stdio:['ignore','pipe','pipe']});
+    browser=browserRecord.child;
     browser.stdout.on('data',chunk=>browserOutput+=chunk);browser.stderr.on('data',chunk=>browserOutput+=chunk);
-    await waitForHttp(`http://127.0.0.1:${DEBUG_PORT}/json/version`);
+    await waitForHttp(`http://127.0.0.1:${DEBUG_PORT}/json/version`,{processRecord:browserRecord,label:'Hardening browser CDP'});
     let target;
     for(let index=0;index<100&&!target;index+=1){const targets=await(await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/list`)).json();target=targets.find(item=>item.type==='page'&&String(item.url).startsWith(`http://127.0.0.1:${PORT}`)&&item.title==='Vocab Master');if(!target)await delay(100);}
     assert.ok(target?.webSocketDebuggerUrl,'Vocab Master target not found.');
@@ -125,8 +99,9 @@ async function main(){
 
     assert.deepEqual(runtimeErrors,[],`Runtime errors:\n${runtimeErrors.join('\n')}`);
     console.log('Hardening browser smoke passed: Settings tabs, explicit IndexedDB restore, weak fallback and microphone-denied coaching recovery are operational.');
-  }catch(error){error.message+=`\n\nVite output:\n${serverOutput.slice(-4000)}\n\nBrowser output:\n${browserOutput.slice(-4000)}`;throw error;}
-  finally{cdp?.close();try{browser?.kill('SIGTERM');}catch{}try{server?.kill('SIGTERM');}catch{}await delay(250);try{browser?.kill('SIGKILL');}catch{}try{server?.kill('SIGKILL');}catch{}await rm(profile,{recursive:true,force:true});}
+    }catch(error){error.message+=`\n\nVite output:\n${serverOutput.slice(-4000)}\n\nBrowser output:\n${browserOutput.slice(-4000)}`;throw error;}
+    finally{cdp?.close();}
+  });
 }
 
-await main();
+await runBrowserSuite('Hardening browser smoke',main);
