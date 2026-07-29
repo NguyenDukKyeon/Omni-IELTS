@@ -1,3 +1,5 @@
+import { decideEvidence } from './evidence-policy.js';
+
 export const IELTS_SCHEMA_VERSION=1;
 export const IELTS_SESSION_MINUTES=Object.freeze([10,20,30]);
 export const ERROR_STATUSES=Object.freeze(['open','practicing','monitoring','resolved','ignored']);
@@ -134,37 +136,7 @@ export function mergeErrorRecords(existing,incoming){
 }
 
 export function resolveIeltsEvidence(input={}){
-  const activity=cleanText(input.activityType,80);
-  const result=cleanText(input.result,30);
-  const skill=cleanText(input.skill,30);
-  const verified=input.verified===true;
-  const independent=input.independent===true;
-  const assisted=input.assisted===true;
-  const targetCardId=cleanText(input.targetCardId,180);
-  const errorType=cleanText(input.errorType,80);
-  const base={affectsSchedule:false,rating:null,skill:null,reason:'insufficient-evidence'};
-  if(!verified||!independent||assisted||!targetCardId)return base;
-  if(activity==='shadowing')return{...base,reason:'shadowing-is-imitation'};
-  if(['reading-completion','explanation-view','transcript-edit','lexical-set-view'].includes(activity))return{...base,reason:'activity-does-not-test-retrieval'};
-  if(activity==='dictation'){
-    if(errorType==='transcript-source')return{...base,reason:'source-transcript-error'};
-    if(errorType==='spelling-only')return{...base,reason:'spelling-is-not-listening-retrieval'};
-    if(skill&&skill!=='listening')return{...base,reason:'dictation-skill-mismatch'};
-    return{affectsSchedule:true,rating:result==='correct'?'good':result==='near'?'hard':'again',skill:'listening',reason:'verified-independent-dictation'};
-  }
-  if(activity==='retell'){
-    if(input.preselectedTarget!==true||input.usedTargetCorrectly!==true)return{...base,reason:'retell-target-not-independently-demonstrated'};
-    return{affectsSchedule:true,rating:result==='near'?'hard':'good',skill:'production',reason:'verified-independent-retell-target'};
-  }
-  if(activity==='error-correction'){
-    if(!['recognition','recall','listening','collocation','production'].includes(skill))return{...base,reason:'error-pattern-not-card-skill'};
-    return{affectsSchedule:true,rating:result==='correct'?'good':result==='near'?'hard':'again',skill,reason:'verified-independent-error-correction'};
-  }
-  if(activity==='paraphrase-card-check'){
-    if(!['recognition','recall'].includes(skill))return{...base,reason:'paraphrase-card-skill-mismatch'};
-    return{affectsSchedule:true,rating:result==='correct'?'good':result==='near'?'hard':'again',skill,reason:'verified-targeted-paraphrase-check'};
-  }
-  return base;
+  return decideEvidence({attempt:input.attempt,activity:input.activitySpec,verification:input.verification});
 }
 
 export function sanitizeLexicalSet(input={}){

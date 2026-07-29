@@ -25,14 +25,14 @@ test('resolved repeated errors reopen as monitoring instead of duplicating',()=>
   assert.equal(merged.occurrenceCount,5);
 });
 
-test('IELTS evidence gateway prevents semantic FSRS corruption',()=>{
-  assert.deepEqual(resolveIeltsEvidence({activityType:'shadowing',targetCardId:'c1',verified:true,independent:true,result:'correct'}).affectsSchedule,false);
-  assert.equal(resolveIeltsEvidence({activityType:'dictation',targetCardId:'c1',verified:true,independent:true,result:'wrong',errorType:'spelling-only'}).affectsSchedule,false);
-  assert.equal(resolveIeltsEvidence({activityType:'dictation',targetCardId:'c1',verified:false,independent:true,result:'wrong',errorType:'listening'}).affectsSchedule,false);
-  assert.deepEqual(resolveIeltsEvidence({activityType:'dictation',targetCardId:'c1',verified:true,independent:true,result:'wrong',errorType:'listening'}),{affectsSchedule:true,rating:'again',skill:'listening',reason:'verified-independent-dictation'});
-  assert.equal(resolveIeltsEvidence({activityType:'retell',targetCardId:'c1',verified:true,independent:true,preselectedTarget:false,usedTargetCorrectly:true,result:'correct'}).affectsSchedule,false);
-  assert.deepEqual(resolveIeltsEvidence({activityType:'retell',targetCardId:'c1',verified:true,independent:true,preselectedTarget:true,usedTargetCorrectly:true,result:'correct'}),{affectsSchedule:true,rating:'good',skill:'production',reason:'verified-independent-retell-target'});
-  assert.equal(resolveIeltsEvidence({activityType:'reading-completion',targetCardId:'c1',verified:true,independent:true,result:'correct'}).affectsSchedule,false);
+test('IELTS evidence adapter requires canonical attempt and activity contracts',()=>{
+  assert.equal(resolveIeltsEvidence({activityType:'dictation',targetCardId:'c1',verified:true,independent:true,result:'correct'}).affectsSchedule,false,'legacy caller claims must fail closed');
+  const activitySpec={id:'ielts-dictation-1',type:'dictation',target:{cardId:'c1',skill:'listening',sourceId:'media-1',sourceRevision:'rev-1'}};
+  const attempt={id:'attempt-1',activityId:activitySpec.id,receiptId:'receipt-1',activityType:'dictation',result:'wrong',target:{...activitySpec.target},assistance:{id:'trace-1',schemaVersion:1,collector:'ielts-lab',complete:true},errorType:'listening'};
+  const verification={source:{id:'source-receipt-1',authority:'ielts-source-registry',status:'verified',sourceId:'media-1',sourceRevision:'rev-1'}};
+  const decision=resolveIeltsEvidence({attempt,activitySpec,verification});
+  assert.equal(decision.affectsSchedule,true);assert.equal(decision.rating,'again');assert.equal(decision.successful,false);assert.equal(decision.skill,'listening');
+  assert.equal(resolveIeltsEvidence({attempt:{...attempt,assistance:{...attempt.assistance,transcriptViewed:true}},activitySpec,verification}).affectsSchedule,false);
 });
 
 test('every curated lexical set contains IELTS production metadata',()=>{

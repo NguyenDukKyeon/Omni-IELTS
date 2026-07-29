@@ -37,6 +37,10 @@ test('activity contract distinguishes evidence policy from completion',()=>{
   const shadow=normalizeActivity({type:'shadowing',status:'completed',evidencePolicy:{affectsSchedule:false,reason:'shadowing-is-coaching'}});
   assert.equal(shadow.status,'completed');
   assert.equal(shadow.evidencePolicy.affectsSchedule,false);
+  const unknown=normalizeActivity({type:'future-magic',evidencePolicy:{affectsSchedule:true}});
+  assert.equal(unknown.type,'unknown');
+  assert.equal(unknown.originalType,'future-magic');
+  assert.equal(unknown.evidencePolicy.affectsSchedule,false);
 });
 
 test('sentence progress accepts only state-machine steps',()=>{

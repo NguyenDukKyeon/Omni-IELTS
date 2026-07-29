@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [domain,persistence,ui,runtimeGuard,content,player,api,server,main,sw,css,packageJson]=await Promise.all([
+const [domain,evidencePolicy,persistence,ui,runtimeGuard,content,player,api,server,main,sw,css,packageJson]=await Promise.all([
   readFile(new URL('../src/ielts-domain.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/evidence-policy.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-persistence.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-lab.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-runtime-guard.js',import.meta.url),'utf8'),
@@ -26,10 +27,12 @@ check('Phase 0: all durable stores exist',()=>{
 });
 
 check('Phase 0: one evidence gateway guards FSRS',()=>{
-  assert.ok(domain.includes('resolveIeltsEvidence'),'Evidence gateway missing');
-  assert.ok(domain.includes("activity==='shadowing'")&&domain.includes("reason:'shadowing-is-imitation'"),'Shadowing guard missing');
-  assert.ok(domain.includes("errorType==='spelling-only'")&&domain.includes('spelling-is-not-listening-retrieval'),'Spelling/listening distinction missing');
-  assert.ok(domain.includes('preselectedTarget')&&domain.includes('usedTargetCorrectly'),'Retell target guard missing');
+  assert.ok(domain.includes('resolveIeltsEvidence')&&domain.includes('decideEvidence'),'Evidence gateway missing');
+  assert.ok(evidencePolicy.includes('COACHING_ACTIVITIES')&&evidencePolicy.includes("'shadowing'")&&evidencePolicy.includes('activity-is-coaching-only'),'Shadowing guard missing');
+  assert.ok(evidencePolicy.includes("attempt.errorType==='spelling-only'")&&evidencePolicy.includes('spelling-is-not-listening-retrieval'),'Spelling/listening distinction missing');
+  assert.ok(evidencePolicy.includes('learnerOutput')&&evidencePolicy.includes('targetUsed')&&evidencePolicy.includes('evaluation-is-not-verified'),'Retell target/output/evaluator guard missing');
+  assert.ok(evidencePolicy.includes('missing-receipt-id')&&evidencePolicy.includes('planned-target-mismatch')&&evidencePolicy.includes('assistance-exposed'),'Default-deny binding and assistance guards missing');
+  assert.ok(evidencePolicy.includes('SOURCE_AUTHORITIES')&&evidencePolicy.includes('EVALUATION_AUTHORITIES')&&evidencePolicy.includes('receiptBinding'),'Authoritative receipt binding missing');
   assert.ok(ui.includes('resolveIeltsEvidence')&&ui.includes('commitEvidence'),'UI bypasses evidence gateway');
   assert.ok(runtimeGuard.includes('skillIsPlanned')&&runtimeGuard.includes("supportsSkill(option.value,'listening')")&&runtimeGuard.includes("supportsSkill(input.value,'production')"),'Card learning-goal guard missing');
   assert.ok(main.includes('mountIeltsRuntimeGuard'),'FSRS runtime guard is not mounted');

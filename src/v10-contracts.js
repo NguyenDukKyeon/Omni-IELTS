@@ -1,3 +1,5 @@
+import { normalizeEvidenceRequirement } from './evidence-policy.js';
+
 export const V10_SCHEMA_VERSION=1;
 export const V10_DB_NAME='vocab-master-v10';
 export const V10_DB_VERSION=1;
@@ -80,7 +82,7 @@ export function normalizeCaptureCandidate(input={}){
 }
 
 export function normalizeActivity(input={}){
-  const type=ACTIVITY_TYPES.includes(input.type)?input.type:'card-review';
+  const type=ACTIVITY_TYPES.includes(input.type)?input.type:'unknown';
   return{
     id:clean(input.id,180)||createV10Id('activity'),
     type,
@@ -90,7 +92,8 @@ export function normalizeActivity(input={}){
     estimatedSeconds:Math.max(10,Math.min(900,Number(input.estimatedSeconds||60))),
     priority:Number(input.priority||0),
     dueAt:Number(input.dueAt||0)||null,
-    evidencePolicy:input.evidencePolicy&&typeof input.evidencePolicy==='object'?structuredClone(input.evidencePolicy):{affectsSchedule:false},
+    evidencePolicy:normalizeEvidenceRequirement(type,input.evidencePolicy),
+    originalType:type==='unknown'?clean(input.type,80)||null:null,
     payload:input.payload&&typeof input.payload==='object'?structuredClone(input.payload):{},
     status:['queued','active','completed','skipped','failed'].includes(input.status)?input.status:'queued',
     createdAt:Number(input.createdAt||Date.now()),
