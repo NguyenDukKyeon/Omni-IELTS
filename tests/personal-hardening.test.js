@@ -7,10 +7,10 @@ const source=url=>readFile(new URL(url,import.meta.url),'utf8');
 
 test('metrics normalization is explicit, finite and includes completed reviews',()=>{
   assert.deepEqual(persistenceTesting.normalizeMetrics({dailyDate:'2026-07-28',dailyDone:'4',dailyTarget:'10',studyMinutes:'12',completedReviews:'3'}),{
-    dailyDate:'2026-07-28',dailyDone:4,dailyTarget:10,studyMinutes:12,completedReviews:3
+    dailyDate:'2026-07-28',dailyDone:4,dailyTarget:10,studyMinutes:12,completedReviews:3,activitiesDone:4,independentReviewsDone:3,newSkillsIntroduced:0
   });
   assert.deepEqual(persistenceTesting.normalizeMetrics({dailyDone:-3,dailyTarget:-4,studyMinutes:-8,completedReviews:-1}),{
-    dailyDate:'',dailyDone:0,dailyTarget:0,studyMinutes:0,completedReviews:0
+    dailyDate:'',dailyDone:0,dailyTarget:0,studyMinutes:0,completedReviews:0,activitiesDone:0,independentReviewsDone:0,newSkillsIntroduced:0
   });
 });
 
@@ -23,7 +23,7 @@ test('data trust contracts remove hidden reset, hidden seeding and whole-library
   assert.doesNotMatch(main,/Promise\.race[^\n]*localStorage/);
   assert.match(persistence,/persistReviewResult/);
   assert.match(persistence,/STORE_NAMES\.outbox/);
-  assert.match(persistence,/transaction\.objectStore\(STORE_NAMES\.cards\)\.put/);
+  assert.match(persistence,/(transaction\.objectStore\(STORE_NAMES\.cards\)|cardStore|const store=transaction\.objectStore\(STORE_NAMES\.cards\))[^;]*[;\s\S]{0,500}\.put/);
   assert.match(persistence,/const granted=Boolean\(result\?\.persisted\)/);
   assert.match(persistence,/existingStamp<incomingStamp/);
   assert.doesNotMatch(persistence,/persistReviewResult[\s\S]{0,1800}replaceCards\(/);

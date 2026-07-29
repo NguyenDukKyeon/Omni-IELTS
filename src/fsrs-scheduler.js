@@ -50,7 +50,7 @@ export function skillForExercise(kind, card = null) {
   return normalizeFsrsSkill(EXERCISE_SKILLS[kind], card);
 }
 
-export function requiredSkillsForCard(card = {}) {
+export function plannedSkillsForCard(card = {}) {
   const explicit = Array.isArray(card.targetSkills)
     ? [...new Set(card.targetSkills.filter(skill => FSRS_SKILLS.includes(skill)))]
     : [];
@@ -65,6 +65,36 @@ export function requiredSkillsForCard(card = {}) {
   return active
     ? ['recognition', 'recall', 'listening', 'production']
     : ['recognition', 'recall'];
+}
+
+function unlockedSkillsFromMap(card = {}, map = {}) {
+  const planned = plannedSkillsForCard(card);
+  const reviewed = skill => Number(map[skill]?.reps || 0) > 0;
+  const unlocked = planned.filter(skill => skill === 'recognition' || skill === 'recall');
+  const foundationReady = (!planned.includes('recognition') || reviewed('recognition')) && (!planned.includes('recall') || reviewed('recall'));
+
+  if (planned.includes('collocation') && foundationReady) unlocked.push('collocation');
+  const collocationReady = !planned.includes('collocation') || reviewed('collocation');
+  if (planned.includes('listening') && foundationReady && collocationReady) unlocked.push('listening');
+  const listeningReady = !planned.includes('listening') || reviewed('listening');
+  if (planned.includes('production') && foundationReady && collocationReady && listeningReady) unlocked.push('production');
+  return [...new Set(unlocked)];
+}
+
+export function unlockedSkillsForCard(card = {}) {
+  return unlockedSkillsFromMap(card, existingSkillMap(card));
+}
+
+export function requiredSkillsForCard(card = {}) {
+  return plannedSkillsForCard(card);
+}
+
+export function skillIsPlanned(card, skill) {
+  return plannedSkillsForCard(card).includes(normalizeFsrsSkill(skill, card));
+}
+
+export function skillIsUnlocked(card, skill) {
+  return unlockedSkillsForCard(card).includes(normalizeFsrsSkill(skill, card));
 }
 
 export function skillIsRequired(card, skill) {
@@ -241,11 +271,13 @@ function statusFromSkillMap(card, fsrsBySkill) {
 }
 
 function aggregateSkillMap(card, fsrsBySkill, now, scheduler) {
-  const required = requiredSkillsForCard(card);
-  const entries = required.map(skill => [skill, deserializeValue(fsrsBySkill[skill], now)]);
+  const planned = plannedSkillsForCard(card);
+  const unlocked = unlockedSkillsFromMap(card, fsrsBySkill);
+  const entries = unlocked.map(skill => [skill, deserializeValue(fsrsBySkill[skill], now)]);
   entries.sort((a, b) => a[1].due.getTime() - b[1].due.getTime());
   const [nextSkill, nextCard] = entries[0] || ['recognition', createEmptyCard(new Date(now))];
-  const reviewed = entries.filter(([, value]) => value.reps > 0);
+  const plannedEntries = planned.map(skill => [skill, deserializeValue(fsrsBySkill[skill], now)]);
+  const reviewed = plannedEntries.filter(([, value]) => value.reps > 0);
   const stabilityValues = reviewed.map(([, value]) => value.stability);
   const difficultyValues = reviewed.map(([, value]) => value.difficulty);
   const retrievability = nextCard.reps > 0 && nextCard.state !== State.New
@@ -259,7 +291,7 @@ function aggregateSkillMap(card, fsrsBySkill, now, scheduler) {
     difficulty: difficultyValues.length ? difficultyValues.reduce((sum, value) => sum + value, 0) / difficultyValues.length : 0,
     retrievability,
     status: statusFromSkillMap(card, fsrsBySkill),
-    skillCoverage: required.length ? reviewed.length / required.length : 0
+    skillCoverage: planned.length ? reviewed.length / planned.length : 0
   };
 }
 
@@ -271,6 +303,7 @@ function missingSkillDueAt(card, now) {
 
 export function getSkillDueAt(card, skill, now = Date.now()) {
   const normalizedSkill = normalizeFsrsSkill(skill, card);
+  if (!skillIsUnlocked(card, normalizedSkill)) return Number.POSITIVE_INFINITY;
   const map = existingSkillMap(card, now);
   const value = map[normalizedSkill];
   if (value && Number(value.reps || 0) > 0) return deserializeValue(value, now).due.getTime();
@@ -278,7 +311,7 @@ export function getSkillDueAt(card, skill, now = Date.now()) {
 }
 
 export function getEarliestSkillDue(card, now = Date.now()) {
-  const required = requiredSkillsForCard(card);
+  const required = unlockedSkillsForCard(card);
   if (!required.length) return Number(card?.dueAt || 0);
   return Math.min(...required.map(skill => getSkillDueAt(card, skill, now)));
 }
@@ -288,7 +321,7 @@ export function getDueSkillItems(cards = [], now = Date.now(), config = runtimeC
   const items = [];
   for (const card of cards) {
     if (!card || card.status === 'new' || card.suspendedAt || card.archivedAt) continue;
-    for (const skill of requiredSkillsForCard(card)) {
+    for (const skill of unlockedSkillsForCard(card)) {
       const fsrsCard = deserializeFsrsCard(card, now, skill);
       const reviewed = fsrsCard.reps > 0;
       const dueAt = reviewed ? fsrsCard.due.getTime() : missingSkillDueAt(card, now);

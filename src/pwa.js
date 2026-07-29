@@ -62,10 +62,20 @@ function urlBase64ToUint8Array(base64String){
   const raw=atob(base64);
   return Uint8Array.from([...raw].map(character=>character.charCodeAt(0)));
 }
+function offerServiceWorkerUpdate(registration){
+  if(!registration?.waiting)return;
+  let button=$('#applyPwaUpdate');
+  if(!button){button=document.createElement('button');button.id='applyPwaUpdate';button.className='secondary-button';button.textContent='Cập nhật ứng dụng';$('#pwaStatus')?.after(button);}
+  setStatus('Có phiên bản mới. Cập nhật sau khi kết thúc phiên học để tránh mất trạng thái.','neutral');
+  button.onclick=()=>{if($('#studyOverlay')?.classList.contains('open')){setStatus('Hãy kết thúc phiên học trước khi cập nhật.','error');return;}registration.waiting?.postMessage({type:'SKIP_WAITING'});};
+}
 async function registerServiceWorker(){
   if(IS_DEVELOPMENT)throw new Error('Service Worker được tắt trong chế độ Vite để tránh cache code cũ.');
   if(!('serviceWorker'in navigator))throw new Error('Trình duyệt không hỗ trợ Service Worker.');
   serviceWorkerRegistration=await navigator.serviceWorker.register('/sw.js',{scope:'/'});
+  offerServiceWorkerUpdate(serviceWorkerRegistration);
+  serviceWorkerRegistration.addEventListener('updatefound',()=>{const worker=serviceWorkerRegistration.installing;worker?.addEventListener('statechange',()=>{if(worker.state==='installed'&&navigator.serviceWorker.controller)offerServiceWorkerUpdate(serviceWorkerRegistration);});});
+  navigator.serviceWorker.addEventListener('controllerchange',()=>location.reload(),{once:true});
   await navigator.serviceWorker.ready;
   return serviceWorkerRegistration;
 }

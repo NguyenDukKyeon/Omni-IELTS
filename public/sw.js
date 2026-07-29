@@ -1,4 +1,4 @@
-const CACHE_VERSION='vocab-master-pwa-v4';
+const CACHE_VERSION='vocab-master-pwa-v5';
 const STATIC_CACHE=`${CACHE_VERSION}-static`;
 const RUNTIME_CACHE=`${CACHE_VERSION}-runtime`;
 const PRECACHE=[
@@ -17,7 +17,7 @@ const PRECACHE=[
 ];
 
 self.addEventListener('install',event=>{
-  event.waitUntil(caches.open(STATIC_CACHE).then(cache=>cache.addAll(PRECACHE)).then(()=>self.skipWaiting()));
+  event.waitUntil(caches.open(STATIC_CACHE).then(cache=>cache.addAll(PRECACHE)));
 });
 
 self.addEventListener('activate',event=>{

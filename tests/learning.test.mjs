@@ -68,7 +68,7 @@ test('new-word acquisition is either complete or omitted under a time budget',()
 });
 
 test('pronunciation and test practice never change FSRS',()=>{
-  const cards=seedCards.map(sanitizeCardInput);
+  const cards=seedCards.map(card=>sanitizeCardInput({...card,status:'learning'}));
   const pronunciation=createSessionSteps(cards,'pronunciation',4,{timeBudgetSeconds:600});
   assert.ok(pronunciation.length>0);
   assert.ok(pronunciation.every(step=>step.kind==='pronunciation'&&step.affectsSchedule===false&&step.skill===null));
@@ -106,9 +106,9 @@ test('card identity permits multiple senses but rejects exact semantic duplicate
 
 test('answer checking accepts variants and small spelling slips without converting failure into success',()=>{
   const card=sanitizeCardInput({front:'well-being',back:'sự khỏe mạnh',accepted:['wellbeing']});
-  assert.equal(checkAnswer(card,{answer:'well-being'},'wellbeing').status,'correct');
-  assert.equal(checkAnswer(card,{answer:'well-being'},'well-bein').status,'near');
-  assert.equal(checkAnswer(card,{answer:'well-being'},'unrelated').status,'wrong');
+  assert.equal(checkAnswer(card,{kind:'typing',skill:'recall',answer:'well-being'},'wellbeing').status,'correct');
+  assert.equal(checkAnswer(card,{kind:'typing',skill:'recall',answer:'well-being'},'well-bein').status,'near');
+  assert.equal(checkAnswer(card,{kind:'typing',skill:'recall',answer:'well-being'},'unrelated').status,'wrong');
 });
 
 test('weak ranking, transfer checks and seven-day forecast expose actionable work',()=>{
@@ -118,7 +118,7 @@ test('weak ranking, transfer checks and seven-day forecast expose actionable wor
   assert.ok(weakWordScore(weak,now)>weakWordScore(strong,now));
   assert.deepEqual(getTransferDueCards([weak,strong],now).map(card=>card.id),['weak']);
   const fingerprint=summarizeErrorFingerprint([weak,strong]);
-  assert.equal(fingerprint.top[0].category,'spelling');
+  assert.equal(fingerprint[0].key,'spelling');
   const forecast=forecastWorkload([weak,strong],7,now);
   assert.equal(forecast.length,7);
   assert.ok(forecast.every(day=>day.reviews>=0&&day.estimatedMinutes>=0));

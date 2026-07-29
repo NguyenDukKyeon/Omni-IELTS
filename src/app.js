@@ -21,6 +21,8 @@ import {
   getCardRetrievability,
   getSkillDueAt,
   getDueSkillItems,
+  plannedSkillsForCard,
+  skillIsUnlocked,
   previewFsrsRatings,
   saveFsrsConfig,
   validateFsrsConfig,
@@ -31,6 +33,7 @@ import {
   listReviewEvents,
   persistCard,
   persistCardsBatch,
+  persistImportBatch,
   deleteCard as deletePersistedCard,
   persistFsrsConfig,
   persistMetrics,
@@ -74,7 +77,7 @@ const state={
   cards:(Array.isArray(bootstrap.cards)?bootstrap.cards:[]).map(card=>sanitizeCardInput(card)),
   settings:{...defaultSettings,...(bootstrap.settings||{})},
   fsrsConfig:validateFsrsConfig({...DEFAULT_FSRS_CONFIG,...(bootstrap.fsrsConfig||{})}),
-  metrics:{dailyDate:'',dailyDone:0,dailyTarget:0,studyMinutes:0,completedReviews:0,...(bootstrap.metrics||{})},
+  metrics:{dailyDate:'',dailyDone:0,dailyTarget:0,studyMinutes:0,completedReviews:0,activitiesDone:0,independentReviewsDone:0,newSkillsIntroduced:0,...(bootstrap.metrics||{})},
   route:location.hash.replace('#','')||'today',
   libraryFilter:'all',
   libraryDeck:'all',
@@ -111,7 +114,7 @@ function persistSettingsInBackground(){void persistSettings(state.settings).catc
 function persistMetricsInBackground(){void persistMetrics(state.metrics).catch(error=>console.warn('[persistence] Không thể lưu chỉ số',error));}
 function persistOneCardInBackground(card,reason){void persistCard(card,reason).catch(error=>{console.warn('[persistence] Không thể lưu thẻ',error);showToast(error.outboxQueued?'Thay đổi đang chờ trong outbox và sẽ được thử lại.':'Không thể bảo vệ thay đổi này. Hãy tải backup trước khi tiếp tục.');});}
 function localDayKey(value=Date.now()){const date=new Date(value);return`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;}
-function resetDailyProgressWhenNeeded(){const today=localDayKey();if(state.metrics.dailyDate!==today){state.metrics.dailyDate=today;state.metrics.dailyDone=0;state.metrics.dailyTarget=0;persistMetricsInBackground();}}
+function resetDailyProgressWhenNeeded(){const today=localDayKey();if(state.metrics.dailyDate!==today){state.metrics.dailyDate=today;state.metrics.dailyDone=0;state.metrics.dailyTarget=0;state.metrics.activitiesDone=0;state.metrics.independentReviewsDone=0;state.metrics.newSkillsIntroduced=0;persistMetricsInBackground();}}
 function interestsList(){return String(state.settings.interests||'').split(',').map(value=>value.trim()).filter(Boolean).slice(0,8);}
 function cardRetrievability(card,skill=null,now=Date.now()){return getCardRetrievability(card,now,state.fsrsConfig,skill);}
 function activeCards(){return state.cards.filter(card=>!card.suspendedAt&&!card.archivedAt);}
@@ -157,7 +160,7 @@ function renderToday(){
   const fresh=activeCards().filter(card=>card.status==='new').length;
   const weak=weakCards().length;
   const preview=createSessionSteps(state.cards,'today',40,{newLimit:state.settings.newLimit,minutes:state.settings.minutes,fsrsConfig:state.fsrsConfig});
-  const planned=preview.length;
+  const planned=preview.filter(step=>step.affectsSchedule&&!step.assisted).length;
   if(Number(state.metrics.dailyTarget||0)<=0&&planned>0){state.metrics.dailyTarget=planned;persistMetricsInBackground();}
   const total=Math.max(1,Number(state.metrics.dailyTarget||0)||planned||1);
   const done=Number(state.metrics.dailyDone||0);
@@ -260,18 +263,20 @@ function nextStep(){const{session}=activeContext();if(!session)return;session.in
 function finishStudy(){const session=state.session;if(!session)return;showToast(`Hoàn thành ${session.completed} hoạt động · ${session.correct} lần đạt.`);setTimeout(closeStudy,700);}
 function resolvedSkill(step,card){return step?.skill||(step?.kind==='typing'||step?.kind==='sentence-cloze'?'recall':step?.kind==='dictation'||step?.kind==='listening-choice'?'listening':step?.kind==='cloze'?'collocation':step?.kind==='production'||step?.kind==='output'?'production':card?.type==='collocation'?'collocation':'recognition');}
 function errorCategory(step,rating){if(rating!=='again'&&rating!=='hard')return null;if(step?.kind==='dictation'||step?.kind==='typing')return'spelling';if(step?.kind==='listening-choice')return'listening';if(step?.kind==='cloze')return'collocation';if(step?.kind==='production'||step?.kind==='output'||step?.kind==='transfer')return'production';return'meaning';}
+function evidenceTypeForStep(step={}){if(step.assisted)return'assisted_practice';if(step.transfer)return'transfer_check';if(!step.affectsSchedule)return'optional_practice';if(step.kind==='production'||step.kind==='output')return step.verification==='ai'?'ai_verified_production':'self_assessed_production';return'independent_review';}
 async function scheduleSpecificCard(card,rating,step,session){
   if(!step?.affectsSchedule)return null;
-  const now=Date.now();const skill=resolvedSkill(step,card);const result=applyFsrsRating(card,rating,now,state.fsrsConfig,skill);const counts={again:0,hard:0,good:0,easy:0,...(card.ratingCounts||{})};counts[rating]=Number(counts[rating]||0)+1;result.card.ratingCounts=counts;
+  const now=Date.now();const skill=resolvedSkill(step,card);const predictedRetrievability=cardRetrievability(card,skill,now);const result=applyFsrsRating(card,rating,now,state.fsrsConfig,skill);const counts={again:0,hard:0,good:0,easy:0,...(card.ratingCounts||{})};counts[rating]=Number(counts[rating]||0)+1;result.card.ratingCounts=counts;
   const category=errorCategory(step,rating);if(category){result.card.lastError=category;result.card.errorCounts={...(card.errorCounts||{}),[category]:Number(card.errorCounts?.[category]||0)+1};}result.card.lastSkill=skill;
   const savedCard=replaceCard(result.card);
-  const event={id:createId('review'),cardId:card.id,skill,exerciseType:step.kind,sessionMode:session?.mode,sessionId:session?.id,resultLog:result.log,rating,reviewedAt:now,assisted:Boolean(step.assisted),metadata:{dueReason:step.dueReason||'',transfer:Boolean(step.transfer)}};
-  try{await persistReviewResult({card:savedCard,event,metrics:step.persistMetrics===false?null:state.metrics});}catch(error){console.warn('[persistence] Không thể lưu lượt ôn',error);showToast(error.outboxQueued?'Lượt ôn chưa ghi xong; outbox sẽ thử lại khi mở ứng dụng.':'Không thể bảo vệ lượt ôn này. Hãy tải backup trước khi tiếp tục.');}
+  const evidenceType=evidenceTypeForStep(step);
+  const event={id:createId('review'),cardId:card.id,skill,exerciseType:step.kind,sessionMode:session?.mode,sessionId:session?.id,resultLog:result.log,rating,reviewedAt:now,assisted:Boolean(step.assisted),evidenceType,metadata:{dueReason:step.dueReason||'',transfer:Boolean(step.transfer),evidenceType,predictedRetrievability}};
+  try{await persistReviewResult({card:savedCard,event,metrics:step.persistMetrics===false?null:state.metrics});}catch(error){if(!error.outboxQueued)replaceCard(card);console.warn('[persistence] Không thể lưu lượt ôn',error);showToast(error.outboxQueued?'Lượt ôn chưa ghi xong; outbox sẽ thử lại khi mở ứng dụng.':'Không thể bảo vệ lượt ôn này. Trạng thái thẻ đã được hoàn tác; hãy tải lại nếu tab khác vừa sửa dữ liệu.');}
   return result.interval;
 }
-function scheduleCard(card,rating,affectsSchedule=true){const{step,session}=activeContext();return scheduleSpecificCard(card,rating,{...step,affectsSchedule},session);}
+function scheduleCard(card,rating,affectsSchedule=true,overrides={}){const{step,session}=activeContext();return scheduleSpecificCard(card,rating,{...step,...overrides,affectsSchedule},session);}
 function addRetry(step){const{session}=activeContext();if(!session||session.retryIds.has(step.id)||step.retry)return;session.retryIds.add(step.id);const nextKind=step.kind==='listening-choice'?'dictation':step.kind==='meaning-choice'||step.kind==='sentence-cloze'||step.kind==='flashcard'?'typing':step.kind;session.steps.push({...step,id:`${step.id}-retry`,retry:true,assisted:true,affectsSchedule:false,kind:nextKind,skill:resolvedSkill({...step,kind:nextKind},findCard(step.cardId))});}
-function recordResult(status,{persist=true,reviewCount=null}={}){const{session,step}=activeContext();if(!session)return;session.completed+=1;if(status==='correct')session.correct+=1;state.metrics.dailyDone=Number(state.metrics.dailyDone||0)+1;const completed=reviewCount==null?(step?.affectsSchedule&&!step?.assisted?1:0):Math.max(0,Number(reviewCount||0));state.metrics.completedReviews=Number(state.metrics.completedReviews||0)+completed;if(persist)persistMetricsInBackground();}
+function recordResult(status,{persist=true,reviewCount=null}={}){const{session,step}=activeContext();if(!session)return;session.completed+=1;if(status==='correct')session.correct+=1;state.metrics.activitiesDone=Number(state.metrics.activitiesDone||0)+1;const completed=reviewCount==null?(step?.affectsSchedule&&!step?.assisted?1:0):Math.max(0,Number(reviewCount||0));state.metrics.completedReviews=Number(state.metrics.completedReviews||0)+completed;state.metrics.independentReviewsDone=Number(state.metrics.independentReviewsDone||0)+completed;state.metrics.dailyDone=state.metrics.independentReviewsDone;if(step?.dueReason==='skill-gap'&&completed)state.metrics.newSkillsIntroduced=Number(state.metrics.newSkillsIntroduced||0)+1;if(persist)persistMetricsInBackground();}
 function studySupportMarkup(card){const parts=[];if(card?.mnemonic)parts.push(`<p><strong>✨ Mẹo nhớ:</strong> ${escapeHtml(card.mnemonic)}</p>`);if(card?.example)parts.push(`<p><strong>Ngữ cảnh:</strong> ${escapeHtml(card.example)}${card.translation?`<br><small>${escapeHtml(card.translation)}</small>`:''}</p>`);return parts.length?`<details class="study-support"><summary>Xem gợi ý và mẹo nhớ</summary>${parts.join('')}</details>`:'';}
 function renderStudyStep(){
   stopActiveRecorder();audioManager.stop();const{session,step,card}=activeContext();if(!session||!step||(!card&&step.kind!=='matching'&&step.kind!=='output')){finishStudy();return;}
@@ -313,8 +318,9 @@ async function submitAnswer(answer){
   const commit=async({finalRating,finalStatus,addCorrective=false,acceptedVariant=''})=>{
     if(committed)return;committed=true;$('#continueAnswer').disabled=true;$('#acceptMyAnswer')?.setAttribute('disabled','');
     let current=findCard(card.id)||card;
-    if(acceptedVariant&&!current.accepted.includes(acceptedVariant)){
-      current=replaceCard({...current,accepted:[...current.accepted,acceptedVariant]});
+    const acceptedKind=step.kind||'typing';const acceptedForExercise=Array.isArray(current.acceptedByExercise?.[acceptedKind])?current.acceptedByExercise[acceptedKind]:[];
+    if(acceptedVariant&&!acceptedForExercise.includes(acceptedVariant)){
+      current=replaceCard({...current,acceptedByExercise:{...(current.acceptedByExercise||{}),[acceptedKind]:[...acceptedForExercise,acceptedVariant]}});
       try{await persistCard(current,'accepted-variant-added');}catch(error){committed=false;$('#continueAnswer').disabled=false;$('#acceptMyAnswer')?.removeAttribute('disabled');showToast(`Chưa lưu được biến thể: ${error.message}`);return;}
     }
     recordResult(finalStatus,{persist:!step.affectsSchedule});const interval=await scheduleCard(current,finalRating,step.affectsSchedule);if(addCorrective)addRetry(step);
@@ -325,15 +331,22 @@ async function submitAnswer(answer){
 }
 
 function renderProduction(host,card,step){
-  host.innerHTML=`<article class="exercise-card"><span class="exercise-type">VIẾT CÂU</span><h2>${escapeHtml(step.prompt)}</h2><p class="meaning">${escapeHtml(card.back)}</p><form class="answer-form" id="productionForm"><textarea id="productionInput" rows="4" placeholder="Viết câu của bạn..."></textarea><div class="exercise-actions"><button type="button" class="ai-button" id="evaluateAi">✨ AI góp ý</button><button type="button" class="secondary-button" id="manualGood">Tôi đã dùng đúng</button><button type="button" class="secondary-button" id="manualAgain">Tôi chưa dùng được</button></div></form><div id="answerFeedback" aria-live="polite"></div></article>`;
+  host.innerHTML=`<article class="exercise-card"><span class="exercise-type">VIẾT CÂU</span><h2>${escapeHtml(step.prompt)}</h2><p class="meaning">${escapeHtml(card.back)}</p><form class="answer-form" id="productionForm"><textarea id="productionInput" rows="4" placeholder="Viết câu của bạn..."></textarea><div class="exercise-actions"><button type="button" class="ai-button" id="evaluateAi">✨ AI góp ý</button><button type="button" class="secondary-button" id="manualGood">Tự đánh giá: dùng được</button><button type="button" class="secondary-button" id="manualAgain">Tôi chưa dùng được</button></div></form><div id="answerFeedback" aria-live="polite"></div></article>`;
   let busy=false;let committed=false;
   const controls=()=>[$('#evaluateAi'),$('#manualGood'),$('#manualAgain'),$('#productionInput')].filter(Boolean);
   const setDisabled=value=>controls().forEach(control=>{control.disabled=value;});
   const commitManual=async(rating,status)=>{
     if(busy||committed)return;
+    const sentence=$('#productionInput').value.trim();
+    if(rating!=='again'){
+      if(!sentence){showToast('Hãy viết một câu trước khi tự đánh giá.');return;}
+      const normalized=normalizeText(sentence);const tokens=normalizeText(card.front).split(' ').filter(Boolean);
+      if(!tokens.every(token=>normalized.split(' ').includes(token))){showToast('Câu chưa chứa đủ thành phần của từ/cụm mục tiêu.');return;}
+      rating='hard';status='correct';
+    }
     committed=true;setDisabled(true);
     recordResult(status,{persist:!step.affectsSchedule});
-    await scheduleCard(card,rating,step.affectsSchedule);
+    await scheduleCard(card,rating,step.affectsSchedule,{verification:'self'});
     if(rating==='again')addRetry(step);
     nextStep();
   };
@@ -347,14 +360,14 @@ function renderProduction(host,card,step){
       const correct=Boolean(data.targetUsedCorrectly)&&data.grammarStatus!=='incorrect';
       const rating=correct?(data.grammarStatus==='minor'?'hard':'good'):'again';
       committed=true;recordResult(correct?'correct':'wrong',{persist:!step.affectsSchedule});
-      await scheduleCard(card,rating,step.affectsSchedule);if(!correct)addRetry(step);
+      await scheduleCard(card,rating,step.affectsSchedule,{verification:'ai'});if(!correct)addRetry(step);
       $('#answerFeedback').className='ai-feedback';
       $('#answerFeedback').innerHTML=`<strong>${correct?'✓ Dùng từ phù hợp':'✕ Chưa dùng đúng mục tiêu'}</strong><p>${escapeHtml(data.shortExplanation||'')}</p>${data.correctedSentence?`<p><b>Gợi ý:</b> ${escapeHtml(data.correctedSentence)}</p>`:''}${!correct?studySupportMarkup(card):''}<div class="exercise-actions"><button class="primary-button" id="continueProduction">Tiếp tục</button></div>`;
       $('#continueProduction').addEventListener('click',nextStep);
     }catch(error){showToast(error.message);}
     finally{busy=false;button.textContent='✨ AI góp ý';if(!committed)setDisabled(false);}
   });
-  $('#manualGood').addEventListener('click',()=>void commitManual('good','correct'));
+  $('#manualGood').addEventListener('click',()=>void commitManual('hard','correct'));
   $('#manualAgain').addEventListener('click',()=>void commitManual('again','wrong'));
 }
 function renderTransfer(host,card,step){
@@ -368,7 +381,7 @@ function renderTransfer(host,card,step){
     try{
       const data=await callAi('/api/ai/evaluate',{term:card.front,meaning:card.back,sentence,interests:interestsList()});
       if(activeContext().step?.id!==step.id)return;
-      const passed=Boolean(data.targetUsedCorrectly)&&data.grammarStatus!=='incorrect'&&normalizeText(sentence)!==normalizeText(card.example);
+      const sourceTokens=new Set(normalizeText(card.example).split(' ').filter(token=>token.length>2));const sentenceTokens=new Set(normalizeText(sentence).split(' ').filter(token=>token.length>2));const shared=[...sentenceTokens].filter(token=>sourceTokens.has(token)).length;const novelty=shared/Math.max(1,new Set([...sourceTokens,...sentenceTokens]).size)<0.65;const passed=Boolean(data.targetUsedCorrectly)&&data.grammarStatus!=='incorrect'&&normalizeText(sentence)!==normalizeText(card.example)&&novelty;
       committed=true;
       const updated=replaceCard({...card,transferAttempts:Number(card.transferAttempts||0)+1,transferPassedAt:passed?Date.now():0,transferDueAt:passed?0:Date.now()+7*86400000});
       persistOneCardInBackground(updated,'transfer-check');recordResult(passed?'correct':'wrong');
@@ -416,7 +429,7 @@ function renderPronunciation(host,card){
       const current=findCard(card.id);if(!current)return;
       if(captured.captureMode==='transcript'){
         const actual=normalizeText(captured.transcript);
-        const variants=[card.front,...(card.accepted||[])].map(normalizeText).filter(Boolean);
+        const variants=[card.front,...(card.acceptedBySkill?.listening||[]),...(card.acceptedBySkill?.production||[])].map(normalizeText).filter(Boolean);
         const matched=variants.some(value=>actual===value||` ${actual} `.includes(` ${value} `));
         const updated=replaceCard({...current,pronunciationPractice:{...(current.pronunciationPractice||{}),attempts:Number(current.pronunciationPractice?.attempts||0)+1,lastPracticedAt:Date.now(),lastTranscript:String(captured.transcript||''),lastRecognitionMatched:matched}});
         persistOneCardInBackground(updated,'pronunciation-browser-recognition');finalStatus=matched?'correct':'near';
@@ -473,7 +486,7 @@ function renderOutputPractice(host,step){
       for(const[termIndex,term]of schedulable.entries()){
         const card=findCard(term.id);const assessment=assessments.find(item=>item.id===term.id||normalizeText(item.term)===normalizeText(term.front));
         const rating=['again','hard','good','easy'].includes(assessment?.rating)?assessment.rating:assessment?.targetUsedCorrectly?'good':'again';
-        await scheduleSpecificCard(card,rating,{...step,skill:'production',persistMetrics:termIndex===schedulable.length-1},session);
+        await scheduleSpecificCard(card,rating,{...step,skill:'production',verification:'ai',persistMetrics:termIndex===schedulable.length-1},session);
       }
       $('#answerFeedback').className='ai-feedback';
       $('#answerFeedback').innerHTML=`<strong>${passed}/${step.terms.length} từ được dùng đúng</strong><div class="output-term-assessments">${step.terms.map(term=>{const item=assessments.find(row=>row.id===term.id||normalizeText(row.term)===normalizeText(term.front));return`<p><b>${escapeHtml(term.front)}:</b> ${item?.targetUsedCorrectly?'✓':'✕'} ${escapeHtml(item?.feedback||'')}</p>`;}).join('')}</div><p>${escapeHtml(data.feedback||'')}</p>${data.correctedParagraph?`<p><b>Bản sửa:</b> ${escapeHtml(data.correctedParagraph)}</p>`:''}<div class="exercise-actions"><button class="primary-button" id="continueOutput">Tiếp tục</button></div>`;
@@ -484,17 +497,17 @@ function renderOutputPractice(host,step){
   $('#outputSkip').addEventListener('click',()=>{if(busy||committed)return;committed=true;setDisabled(true);recordResult('skipped');nextStep();});
 }
 async function callAi(path,payload,{timeoutMs=AI_TIMEOUT_MS}={}){const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),timeoutMs);const key=sessionStorage.getItem(SESSION_KEY)||'';const headers={'content-type':'application/json','x-gemini-model':state.settings.model};if(key)headers['x-gemini-key']=key;try{const response=await fetch(path,{method:'POST',headers,body:JSON.stringify(payload),signal:controller.signal});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||`AI lỗi HTTP ${response.status}`);return data;}catch(error){if(error.name==='AbortError')throw new Error(`AI phản hồi quá lâu (${Math.round(timeoutMs/1000)} giây). Nội dung vẫn được giữ để thử lại.`);throw error;}finally{clearTimeout(timer);}}
-async function enrichWithAi(){const term=$('#wordInput').value.trim();const meaning=$('#meaningInput').value.trim();if(!term){showToast('Nhập từ hoặc cụm từ trước.');return;}const button=$('#aiEnrichButton');button.disabled=true;button.textContent='Đang bổ sung…';try{const data=await callAi('/api/ai/enrich',{term,meaning,sourceContext:$('#sourceContextInput')?.value.trim()||'',language:'vi',interests:interestsList()});state.pendingAiDraft={type:data.type,accepted:Array.isArray(data.accepted)?data.accepted:[],model:state.settings.model,generatedAt:Date.now()};if(data.meaning&&!meaning)$('#meaningInput').value=data.meaning;if(data.pronunciation)$('#pronunciationInput').value=data.pronunciation;if(data.example)$('#exampleInput').value=data.example;if(data.translation)$('#translationInput').value=data.translation;if(data.cefr)$('#cefrInput').value=data.cefr;if(data.type&&$('#cardTypeInput'))$('#cardTypeInput').value=data.type;showToast('AI đã điền bản nháp. Hãy kiểm tra trước khi lưu.');}catch(error){showToast(error.message);}finally{button.disabled=false;button.textContent='✨ AI bổ sung';}}
+async function enrichWithAi(){const term=$('#wordInput').value.trim();const meaning=$('#meaningInput').value.trim();if(!term){showToast('Nhập từ hoặc cụm từ trước.');return;}const button=$('#aiEnrichButton');button.disabled=true;button.textContent='Đang bổ sung…';try{const data=await callAi('/api/ai/enrich',{term,meaning,sourceContext:$('#sourceContextInput')?.value.trim()||'',language:'vi',interests:interestsList()});state.pendingAiDraft={type:data.type,accepted:Array.isArray(data.accepted)?data.accepted:[],model:state.settings.model,generatedAt:Date.now(),aiFields:{meaning:{source:'ai',model:state.settings.model,confirmedByUser:true},pronunciation:{source:'ai',model:state.settings.model,confirmedByUser:true},example:{source:'ai',model:state.settings.model,confirmedByUser:true},translation:{source:'ai',model:state.settings.model,confirmedByUser:true},cefr:{source:'ai',model:state.settings.model,confirmedByUser:true}}};if(data.meaning&&!meaning)$('#meaningInput').value=data.meaning;if(data.pronunciation)$('#pronunciationInput').value=data.pronunciation;if(data.example)$('#exampleInput').value=data.example;if(data.translation)$('#translationInput').value=data.translation;if(data.cefr)$('#cefrInput').value=data.cefr;if(data.type&&$('#cardTypeInput'))$('#cardTypeInput').value=data.type;showToast('AI đã điền bản nháp. Hãy kiểm tra trước khi lưu.');}catch(error){showToast(error.message);}finally{button.disabled=false;button.textContent='✨ AI bổ sung';}}
 function previewImport(){
   const result=parseImportText($('#importText').value,$('#importDeck').value.trim()||'Imported');const existing=new Map(state.cards.map(card=>[cardIdentityKey(card),card]));const cards=[];const updates=[];let duplicates=0;const strategy=$('#importConflictStrategy')?.value||'skip';
-  for(const raw of result.cards){const card=sanitizeCardInput({...raw,provenance:{source:'import',importedAt:Date.now()}});const key=cardIdentityKey(card);const current=existing.get(key);if(current){duplicates+=1;if(strategy==='merge'){updates.push(sanitizeCardInput({...current,example:current.example||card.example,translation:current.translation||card.translation,pronunciation:current.pronunciation||card.pronunciation,accepted:[...new Set([...(current.accepted||[]),...(card.accepted||[])])]}));}continue;}existing.set(key,card);cards.push(card);}
+  for(const raw of result.cards){const card=sanitizeCardInput({...raw,provenance:{source:'imported',generatedAt:Date.now(),confirmedByUser:true}});const key=cardIdentityKey(card);const current=existing.get(key);if(current){duplicates+=1;if(strategy==='merge'){updates.push(sanitizeCardInput({...current,example:current.example||card.example,translation:current.translation||card.translation,pronunciation:current.pronunciation||card.pronunciation,accepted:[...new Set([...(current.accepted||[]),...(card.accepted||[])])]}));}continue;}existing.set(key,card);cards.push(card);}
   state.importResult={cards,updates,errors:result.errors,duplicates};$('#importSummary').innerHTML=`<strong>${cards.length} mục mới</strong><br><span>${updates.length} mục sẽ bổ sung dữ liệu · ${duplicates} xung đột · ${result.errors.length} lỗi</span>`;$('#importPreview').innerHTML=`<div class="preview-list">${cards.slice(0,20).map(card=>`<div class="preview-row"><strong>${escapeHtml(card.front)}</strong>${escapeHtml(card.back)} · ${escapeHtml(card.deck)}</div>`).join('')}</div>${result.errors.map(error=>`<p class="preview-error">${escapeHtml(error)}</p>`).join('')}`;$('#confirmImport').disabled=!(cards.length||updates.length);
 }
-async function confirmImport(){if(!state.importResult)return;const{cards,updates}=state.importResult;if(!cards.length&&!updates.length)return;await persistCardsBatch(cards,'import-added');for(const card of updates)await persistCard(card,'import-merged');state.cards=[...cards,...state.cards.map(card=>updates.find(item=>item.id===card.id)||card)];renderAll();showToast(`Đã thêm ${cards.length} và cập nhật ${updates.length} mục.`);closeDialog($('#importDialog'));}
+async function confirmImport(){if(!state.importResult)return;const{cards,updates}=state.importResult;if(!cards.length&&!updates.length)return;const persisted=await persistImportBatch({cards,updates},'import-atomic');const merged=new Map(state.cards.map(card=>[card.id,card]));for(const card of persisted)merged.set(card.id,card);state.cards=[...persisted.filter(card=>cards.some(item=>item.id===card.id)),...[...merged.values()].filter(card=>!cards.some(item=>item.id===card.id))];renderAll();showToast(`Đã thêm ${cards.length} và cập nhật ${updates.length} mục trong một giao dịch.`);closeDialog($('#importDialog'));}
 function renderDeckList(){const list=$('#deckList');list.innerHTML=decks().map(deck=>`<button data-deck="${escapeHtml(deck)}"><span>📚 ${escapeHtml(deck)}</span><span>${state.cards.filter(card=>card.deck===deck).length} mục ›</span></button>`).join('');$$('[data-deck]').forEach(button=>button.addEventListener('click',()=>{closeDialog($('#deckDialog'));startStudy('deck',{deck:button.dataset.deck},'quick');}));}
 function skillName(skill){return({recognition:'Nhận biết',recall:'Tự nhớ',listening:'Nghe',collocation:'Collocation',production:'Sử dụng'})[skill]||skill;}
 function detailViewMarkup(card){
-  const now=Date.now();const required=new Set(requiredSkillsForCard(card));const rows=FSRS_SKILLS.map(skill=>{const value=Math.round(cardRetrievability(card,skill,now)*100);const due=getSkillDueAt(card,skill,now);const schedule=card.fsrsBySkill?.[skill];return`<div class="detail-skill-row"><span>${skillName(skill)}${required.has(skill)?' *':''}</span><progress max="100" value="${Number(schedule?.reps||0)?value:0}"></progress><span>${Number(schedule?.reps||0)?`${value}% · ${new Date(due).toLocaleDateString('vi-VN')}`:required.has(skill)?'Cần học':'Không bắt buộc'}</span></div>`;}).join('');
+  const now=Date.now();const planned=new Set(plannedSkillsForCard(card));const rows=FSRS_SKILLS.map(skill=>{const unlocked=skillIsUnlocked(card,skill);const value=Math.round(cardRetrievability(card,skill,now)*100);const due=getSkillDueAt(card,skill,now);const schedule=card.fsrsBySkill?.[skill];const stateText=!planned.has(skill)?'Không thuộc mục tiêu':!unlocked?'Sẽ mở sau kỹ năng nền':Number(schedule?.reps||0)?`${value}% · ${new Date(due).toLocaleDateString('vi-VN')}`:'Đã mở · cần học';return`<div class="detail-skill-row"><span>${skillName(skill)}${planned.has(skill)?' *':''}</span><progress max="100" value="${Number(schedule?.reps||0)?value:0}"></progress><span>${stateText}</span></div>`;}).join('');
   return`<div class="detail-meta"><span class="deck-pill">${escapeHtml(card.deck)}</span><span class="level-pill">${escapeHtml(card.cefr)}</span><span class="mini-badge">${card.learningGoal==='active'?'Mục tiêu chủ động':'Mục tiêu thụ động'}</span>${card.suspendedAt?'<span class="mini-badge">Đã tạm dừng</span>':''}</div><p class="pronunciation">${escapeHtml(card.pronunciation||'')}</p><div class="detail-example"><p>${escapeHtml(card.example||'Chưa có ví dụ.')}</p><small>${escapeHtml(card.translation||'')}</small></div>${card.sourceContext?`<div class="detail-example"><strong>Ngữ cảnh nguồn</strong><p>${escapeHtml(card.sourceContext)}</p></div>`:''}${card.mnemonic?`<div class="ai-feedback"><strong>✨ Mẹo ghi nhớ</strong><p>${escapeHtml(card.mnemonic)}</p>${card.mnemonicAssociation?`<small>${escapeHtml(card.mnemonicAssociation)}</small>`:''}</div>`:''}<div class="detail-skill-list">${rows}</div>`;
 }
 function openWordDetail(cardId){const card=findCard(cardId);if(!card)return;state.detailAi=null;$('#wordDetailDialog').dataset.cardId=card.id;$('#detailWord').textContent=card.front;$('#detailMeaning').textContent=card.back;$('#detailContent').innerHTML=detailViewMarkup(card);$('#detailAiResult').className='empty-box';$('#detailAiResult').textContent='Chọn một tác vụ AI. Kết quả chỉ được lưu khi bạn xác nhận.';$('#saveAiResult').disabled=true;$('#editCardFromDetail').textContent='✏️ Sửa thẻ';$('#suspendCardFromDetail').textContent=card.suspendedAt?'▶ Tiếp tục học':'⏸ Tạm dừng';openDialog('#wordDetailDialog');}
@@ -528,7 +541,7 @@ globalThis.addEventListener('vocab:notification-setting',event=>{state.settings.
 $('#settingVoice').addEventListener('change',()=>{$('#settingVoiceURI').dataset.userSelected='false';renderVoiceOptions();});$('#settingVoiceURI').addEventListener('change',event=>{event.currentTarget.dataset.userSelected='true';});$('#testVoiceButton').addEventListener('click',async event=>{const voiceURI=$('#settingVoiceURI').value;const language=$('#settingVoice').value;const defaultRate=$('#settingAudioRate').value;$('#voiceTestStatus').textContent='Đang phát thử…';const result=await playText('Clear pronunciation makes vocabulary easier to remember.',{mode:'normal',button:event.currentTarget,label:'Nghe thử giọng',language,voiceURI,defaultRate});$('#voiceTestStatus').textContent=result?.error?'Không thể phát giọng này.':`Đã phát ở tốc độ ${AUDIO_RATES[defaultRate]??AUDIO_RATES.normal}×.`;});
 $('#testAiButton').addEventListener('click',async()=>{const key=$('#geminiKey').value.trim();if(key)sessionStorage.setItem(SESSION_KEY,key);state.settings.model=$('#geminiModel').value;$('#aiTestResult').textContent='Đang kiểm tra…';try{const data=await callAi('/api/ai/test',{ping:'Vocab Master'});$('#aiTestResult').textContent=`Kết nối tốt: ${data.model}`;}catch(error){$('#aiTestResult').textContent=error.message;}});
 $('#exportButton').addEventListener('click',()=>void exportData());$('#aiEnrichButton').addEventListener('click',()=>void enrichWithAi());$('#openContextCapture')?.addEventListener('click',()=>openDialog('#contextCaptureDialog'));$('#analyzeContextButton')?.addEventListener('click',()=>void captureContext());
-$('#addWordForm').addEventListener('submit',async event=>{event.preventDefault();const card=sanitizeCardInput({front:$('#wordInput').value,back:$('#meaningInput').value,example:$('#exampleInput').value,translation:$('#translationInput').value,pronunciation:$('#pronunciationInput').value,sourceContext:$('#sourceContextInput')?.value||'',deck:$('#deckInput').value,cefr:$('#cefrInput').value,type:$('#cardTypeInput')?.value||state.pendingAiDraft?.type||'word',learningGoal:$('#learningGoalInput')?.value||state.settings.learningGoal,accepted:state.pendingAiDraft?.accepted||[],provenance:{source:state.pendingAiDraft?'ai':'manual',model:state.pendingAiDraft?.model||'',generatedAt:state.pendingAiDraft?.generatedAt||0,confirmedByUser:true}});if(!card.front||!card.back){showToast('Từ/cụm và nghĩa là bắt buộc.');return;}if(state.cards.some(item=>cardIdentityKey(item)===cardIdentityKey(card))){showToast('Đã có thẻ cùng từ, nghĩa và loại.');return;}state.cards.unshift(card);await persistCard(card,'card-added');state.pendingAiDraft=null;event.currentTarget.reset();$('#deckInput').value='Cá nhân';if($('#learningGoalInput'))$('#learningGoalInput').value=state.settings.learningGoal;renderAll();showToast('Đã thêm vào thư viện.');});
+$('#addWordForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const card=sanitizeCardInput({front:$('#wordInput').value,back:$('#meaningInput').value,example:$('#exampleInput').value,translation:$('#translationInput').value,pronunciation:$('#pronunciationInput').value,sourceContext:$('#sourceContextInput')?.value||'',deck:$('#deckInput').value,cefr:$('#cefrInput').value,type:$('#cardTypeInput')?.value||state.pendingAiDraft?.type||'word',learningGoal:$('#learningGoalInput')?.value||state.settings.learningGoal,acceptedByExercise:{choice:state.pendingAiDraft?.accepted||[],typing:state.pendingAiDraft?.accepted||[],dictation:state.pendingAiDraft?.accepted||[],'sentence-cloze':state.pendingAiDraft?.accepted||[]},aiFields:state.pendingAiDraft?.aiFields||{},provenance:{source:state.pendingAiDraft?'ai':'manual',model:state.pendingAiDraft?.model||'',generatedAt:state.pendingAiDraft?.generatedAt||0,confirmedByUser:true}});if(!card.front||!card.back){showToast('Từ/cụm và nghĩa là bắt buộc.');return;}if(state.cards.some(item=>cardIdentityKey(item)===cardIdentityKey(card))){showToast('Đã có thẻ cùng từ, nghĩa và loại.');return;}state.cards.unshift(card);await persistCard(card,'card-added');state.pendingAiDraft=null;form.reset();$('#deckInput').value='Cá nhân';if($('#learningGoalInput'))$('#learningGoalInput').value=state.settings.learningGoal;renderAll();globalThis.dispatchEvent(new CustomEvent('vocab:card-added',{detail:{cardId:card.id}}));showToast('Đã thêm vào thư viện.');});
 $('#filterButton').addEventListener('click',()=>openDialog('#filterDialog'));$('#applyFilter').addEventListener('click',()=>{state.libraryDeck=$('#libraryDeckFilter').value;closeDialog($('#filterDialog'));renderLibrary();});$('#librarySearch').addEventListener('input',renderLibrary);$$('[data-filter]').forEach(button=>button.addEventListener('click',()=>{state.libraryFilter=button.dataset.filter;$$('[data-filter]').forEach(item=>item.classList.toggle('active',item===button));renderLibrary();}));
 $('#detailAudio').addEventListener('click',event=>{const card=findCard($('#wordDetailDialog').dataset.cardId);if(card)void speak(card,'normal','front',event.currentTarget);});$('#detailSlowAudio').addEventListener('click',event=>{const card=findCard($('#wordDetailDialog').dataset.cardId);if(card)void speak(card,'slow','front',event.currentTarget);});$('#detailExampleAudio').addEventListener('click',event=>{const card=findCard($('#wordDetailDialog').dataset.cardId);if(card)void speak(card,'example','example',event.currentTarget);});$('#generateMnemonic').addEventListener('click',()=>void generateDetailAi('mnemonic'));$('#generateContextExample').addEventListener('click',()=>void generateDetailAi('context'));$('#saveAiResult').addEventListener('click',()=>void saveDetailAi());$('#editCardFromDetail')?.addEventListener('click',()=>{const card=findCard($('#wordDetailDialog').dataset.cardId);if(card)renderCardEdit(card);});$('#suspendCardFromDetail')?.addEventListener('click',()=>void toggleSuspendCard());
 $('#deleteCardFromDetail').addEventListener('click',()=>promptDeleteCard($('#wordDetailDialog').dataset.cardId));$('#confirmDeleteButton').addEventListener('click',()=>void executeDeleteCard());
@@ -539,5 +552,7 @@ $('#studyOverlay').addEventListener('keydown',event=>{if(event.key!=='Tab')retur
 globalThis.addEventListener('vocab:external-change',event=>{if(state.session){showToast('Tab khác vừa thay đổi dữ liệu. Hãy kết thúc phiên rồi tải lại để tránh ghi đè.');return;}const next=event.detail?.state;if(next?.cards){state.cards=next.cards.map(card=>sanitizeCardInput(card));state.settings={...state.settings,...(next.settings||{})};state.metrics={...state.metrics,...(next.metrics||{})};state.fsrsConfig=validateFsrsConfig(next.fsrsConfig||state.fsrsConfig);saveFsrsConfig(state.fsrsConfig);renderAll();showToast('Dữ liệu đã được cập nhật từ tab khác.');}});
 
 globalThis.addEventListener('vocab:external-change-error',()=>showToast('Không thể đồng bộ thay đổi từ tab khác. Hãy tải lại trang.'));
+globalThis.addEventListener('vocab:write-conflict',event=>{showToast(event.detail?.message||'Dữ liệu đã thay đổi ở tab khác. Ứng dụng sẽ tải lại để tránh ghi đè.');if(state.session)closeStudy();setTimeout(()=>location.reload(),250);});
+globalThis.addEventListener('vocab:metrics-reconciled',event=>{state.metrics={...state.metrics,...(event.detail||{})};renderToday();});
 resetDailyProgressWhenNeeded();renderAll();populateSettings();setRoute(state.route);
-globalThis.VocabMasterApp={startStudy,renderAll,openWordDetail,getState:()=>structuredClone({cards:state.cards,settings:state.settings,fsrsConfig:state.fsrsConfig,metrics:state.metrics}),loadSampleDeck};
+globalThis.VocabMasterApp={startStudy,renderAll,openWordDetail,setRoute,getState:()=>structuredClone({cards:state.cards,settings:state.settings,fsrsConfig:state.fsrsConfig,metrics:state.metrics}),loadSampleDeck};

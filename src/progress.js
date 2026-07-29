@@ -1,4 +1,4 @@
-import { FSRS_SKILLS, getCardRetrievability, requiredSkillsForCard, skillHasReviews } from './fsrs-scheduler.js';
+import { FSRS_SKILLS, getCardRetrievability, plannedSkillsForCard, skillHasReviews } from './fsrs-scheduler.js';
 
 function dayKey(timestamp,timeZone){
   const date=new Date(timestamp);
@@ -10,11 +10,16 @@ function dayKey(timestamp,timeZone){
   return`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 }
 
+function isLearningEvidence(event={}){
+  const type=event.evidenceType||event.metadata?.evidenceType;
+  return type?['independent_review','self_assessed_production','ai_verified_production','transfer_check'].includes(type):!event.assisted;
+}
+
 export function buildActivityMap(events=[],timeZone=undefined){
   const map=new Map();
   for(const event of events){
     const timestamp=Number(event.reviewedAt||event.createdAt||0);
-    if(!timestamp||event.assisted)continue;
+    if(!timestamp||event.assisted||!isLearningEvidence(event))continue;
     const key=dayKey(timestamp,timeZone);
     map.set(key,(map.get(key)||0)+1);
   }
@@ -54,7 +59,7 @@ export function calculateSkillCoverage(cards=[]){
   const bySkill=Object.fromEntries(FSRS_SKILLS.map(skill=>[skill,{required:0,reviewed:0}]));
   for(const card of cards){
     if(card.suspendedAt||card.archivedAt)continue;
-    for(const skill of requiredSkillsForCard(card)){
+    for(const skill of plannedSkillsForCard(card)){
       required+=1;
       bySkill[skill].required+=1;
       if(skillHasReviews(card,skill)){
@@ -75,7 +80,7 @@ export function calculateKnowledgeStrength(cards=[],now=Date.now(),fsrsConfig=un
   const values=[];
   for(const card of cards){
     if(card.suspendedAt||card.archivedAt)continue;
-    for(const skill of requiredSkillsForCard(card)){
+    for(const skill of plannedSkillsForCard(card)){
       if(skillHasReviews(card,skill))values.push(getCardRetrievability(card,now,fsrsConfig,skill));
     }
   }
@@ -90,7 +95,7 @@ export function calculateKnowledgeStrength(cards=[],now=Date.now(),fsrsConfig=un
 
 export function summarizeReviewQuality(events=[]){
   const ratingName=value=>['again','hard','good','easy'].includes(value)?value:({1:'again',2:'hard',3:'good',4:'easy'})[Number(value)]||null;
-  const eligible=events.filter(event=>!event.assisted).map(event=>({...event,rating:ratingName(event.rating??event.fsrsRating)})).filter(event=>event.rating);
+  const eligible=events.filter(event=>!event.assisted&&isLearningEvidence(event)).map(event=>({...event,rating:ratingName(event.rating??event.fsrsRating)})).filter(event=>event.rating);
   const successful=eligible.filter(event=>event.rating!=='again').length;
   const again=eligible.filter(event=>event.rating==='again').length;
   const bySkill=Object.fromEntries(FSRS_SKILLS.map(skill=>{
@@ -103,11 +108,20 @@ export function summarizeReviewQuality(events=[]){
 export function summarizeActivity(events=[],now=Date.now(),timeZone=undefined){
   const activity=buildActivityMap(events,timeZone);
   const cutoff=now-7*86400000;
-  const recent=events.filter(event=>!event.assisted&&Number(event.reviewedAt||event.createdAt||0)>=cutoff);
+  const recent=events.filter(event=>!event.assisted&&isLearningEvidence(event)&&Number(event.reviewedAt||event.createdAt||0)>=cutoff);
   return{
     streak:calculateStreak(activity,now,timeZone),
     activeDaysLast7:new Set(recent.map(event=>dayKey(Number(event.reviewedAt||event.createdAt||0),timeZone))).size,
     reviewsLast7:recent.length,
     heatmap:buildHeatmapDays(events,12,now,timeZone)
   };
+}
+
+export function summarizeCalibration(events=[]){
+  const rows=events.filter(event=>!event.assisted&&Number.isFinite(Number(event.metadata?.predictedRetrievability))&&event.rating);
+  if(!rows.length)return{sampleSize:0,predicted:0,observed:0,gap:0,label:'Chưa đủ dữ liệu'};
+  const predicted=rows.reduce((sum,event)=>sum+Number(event.metadata.predictedRetrievability),0)/rows.length;
+  const observed=rows.filter(event=>String(event.rating)!=='again'&&Number(event.rating)!==1).length/rows.length;
+  const gap=observed-predicted;
+  return{sampleSize:rows.length,predicted:Math.round(predicted*100),observed:Math.round(observed*100),gap:Math.round(gap*100),label:Math.abs(gap)<=0.08?'Khớp tương đối':gap>0?'Mô hình đang thận trọng':'Mô hình đang quá lạc quan hoặc bài kiểm tra khó hơn'};
 }

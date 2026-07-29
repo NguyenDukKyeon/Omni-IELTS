@@ -221,7 +221,8 @@ async function main(){
     await waitFor("document.querySelector('[data-view=\"library\"]')?.classList.contains('active')",'library route');
     await evaluate(`(()=>{const input=document.getElementById('librarySearch');input.value=${JSON.stringify(term)};input.dispatchEvent(new Event('input',{bubbles:true}));})()`);
     await waitFor(`document.getElementById('wordList').textContent.includes(${JSON.stringify(term)})`,'library search result');
-    await evaluate("document.querySelector('#wordList [data-card-id]').click()");
+    await waitFor("document.querySelector('#wordList [data-open-card]')",'library detail control');
+    await evaluate("document.querySelector('#wordList [data-open-card]').click()");
     await waitFor("document.getElementById('wordDetailDialog').open",'word detail dialog');
     await evaluate("document.querySelector('#wordDetailDialog [data-close-dialog]').click()");
     await waitFor("!document.getElementById('wordDetailDialog').open",'word detail close');

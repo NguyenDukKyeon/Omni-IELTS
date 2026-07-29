@@ -52,10 +52,14 @@ test('empty initialized database remains empty and review write is atomic/idempo
   const duplicate=await persistence.persistReviewResult({card:{...card,back:'bền vững'},event,metrics:{dailyDone:1,completedReviews:1}});
   assert.equal(first.inserted,true);
   assert.equal(duplicate.inserted,false);
+  assert.ok(Number(card.storageUpdatedAt)>0);
+  const secondEvent=createReviewEvent({cardId:card.id,skill:'recognition',exerciseType:'meaning-choice',sessionMode:'today',rating:'hard',reviewedAt:3000,resultLog:{id:'log-2',rating:2,review:3000,fsrsVersion:6}});
+  const second=await persistence.persistReviewResult({card,event:secondEvent,metrics:{dailyDone:1,completedReviews:1}});
+  assert.equal(second.inserted,true);
   const backup=await persistence.exportBackupPackage();
   assert.equal(backup.cards.length,1);
-  assert.equal(backup.cards[0].back,'bền vững');
-  assert.equal(backup.reviewEvents.length,1);
+  assert.equal(backup.cards[0].back,'bền');
+  assert.equal(backup.reviewEvents.length,2);
   assert.equal(backup.metrics.completedReviews,1);
   assert.equal((await persistence.getPersistenceStatus()).pendingWrites,0);
 });
@@ -63,13 +67,13 @@ test('empty initialized database remains empty and review write is atomic/idempo
 test('snapshots contain review events and can restore a complete state',async()=>{
   const snapshot=await persistence.createAutomaticSnapshot('integration-test');
   assert.equal(snapshot.cards.length,1);
-  assert.equal(snapshot.reviewEvents.length,1);
+  assert.equal(snapshot.reviewEvents.length,2);
 
   await persistence.persistCard({id:'other',front:'other',back:'khác'},'test-mutation');
   await persistence.restoreSnapshot(snapshot.id);
   const backup=await persistence.exportBackupPackage();
   assert.deepEqual(backup.cards.map(card=>card.id),['atomic-card']);
-  assert.equal(backup.reviewEvents.length,1);
+  assert.equal(backup.reviewEvents.length,2);
 });
 
 test('full restore validates references and manual reset preserves a recovery snapshot',async()=>{

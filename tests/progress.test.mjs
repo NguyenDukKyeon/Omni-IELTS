@@ -72,7 +72,8 @@ test('heatmap and activity summary remain bounded and deterministic',()=>{
   const events=Array.from({length:5},(_,index)=>({reviewedAt:now-index*1000}));
   const heatmap=buildHeatmapDays(events,12,now,'UTC');
   assert.equal(heatmap.length,84);
-  assert.equal(heatmap.at(-1).level,4);
+  assert.equal(heatmap.at(-1).count,5);
+  assert.equal(heatmap.at(-1).level,2);
   assert.ok(heatmap.every(day=>day.level>=0&&day.level<=4));
   const summary=summarizeActivity([{reviewedAt:now},{reviewedAt:now-DAY},{reviewedAt:now-DAY}],now,'UTC');
   assert.equal(summary.reviewsLast7,3);

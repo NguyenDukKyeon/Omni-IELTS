@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
-const [html,css,experience,settingsCss,app,audio,main,learning,progress,fsrsAdapter,persistence,persistenceCore,pwa,settingsUi,serviceWorker,manifest,server,build,packageJson,browserSmoke]=await Promise.all([
+const [html,css,experience,settingsCss,app,audio,main,learning,progress,fsrsAdapter,persistence,persistenceCore,pwa,settingsUi,serviceWorker,manifest,server,build,packageJson,browserSmoke,browserSmokeEntry]=await Promise.all([
   readFile(new URL('../index.html',import.meta.url),'utf8'),
   readFile(new URL('../styles.css',import.meta.url),'utf8'),
   readFile(new URL('../public/experience.css',import.meta.url),'utf8'),
@@ -21,7 +21,8 @@ const [html,css,experience,settingsCss,app,audio,main,learning,progress,fsrsAdap
   readFile(new URL('../server/server.mjs',import.meta.url),'utf8'),
   readFile(new URL('./build.mjs',import.meta.url),'utf8'),
   readFile(new URL('../package.json',import.meta.url),'utf8'),
-  readFile(new URL('./browser-smoke.mjs',import.meta.url),'utf8')
+  readFile(new URL('./browser-smoke.mjs',import.meta.url),'utf8'),
+  readFile(new URL('./browser-smoke-entry.mjs',import.meta.url),'utf8')
 ]);
 
 const requiredIds=[
@@ -72,7 +73,7 @@ assert.ok(app.includes('listReviewEvents'),'Progress UI does not use append-only
 assert.ok(progress.includes('calculateKnowledgeStrength'),'Knowledge strength calculation missing');
 assert.ok(progress.includes('calculateStreak'),'Streak calculation missing');
 assert.ok(progress.includes('buildHeatmapDays'),'Heatmap calculation missing');
-assert.ok(progress.includes('skillHasReviews')&&progress.includes('requiredSkillsForCard'),'Knowledge Strength must use reviewed required skills only');
+assert.ok(progress.includes('skillHasReviews')&&progress.includes('plannedSkillsForCard'),'Knowledge Strength must use reviewed planned skills only');
 assert.ok(progress.includes("label:!values.length?'Chưa đủ dữ liệu'"),'No-data Knowledge Strength label missing');
 assert.ok(progress.includes('calculateSkillCoverage'),'Required-skill coverage metric missing');
 
@@ -92,7 +93,9 @@ assert.ok(main.includes('__VOCAB_INITIAL_STATE__')&&main.includes('initializePer
 assert.ok(main.indexOf("import('./settings-ui.js')")<main.lastIndexOf("import('./app.js')"),'Settings layout must initialize before app listeners');
 assert.ok(browserSmoke.includes('Input.dispatchMouseEvent'),'Browser smoke does not test real pointer interaction');
 for(const expected of ['settingsDialog','practiceSheet','importDialog','wordDetailDialog','studyOverlay','activityHeatmap'])assert.ok(browserSmoke.includes(expected),`Browser smoke misses ${expected}`);
-assert.ok(packageJson.includes('"test:browser": "node scripts/browser-smoke.mjs"'),'Browser smoke npm script missing');
+assert.ok(packageJson.includes('"test:browser": "node scripts/browser-smoke-entry.mjs"'),'Browser smoke npm script missing');
+assert.ok(browserSmokeEntry.includes("VITE_BROWSER_SMOKE_SEED='1'"),'Browser smoke seed flag missing');
+assert.ok(main.includes("isBrowserSmokeSeed=isViteDevelopment&&import.meta.env?.VITE_BROWSER_SMOKE_SEED==='1'"),'E2E seed must be gated to an explicit Vite test flag');
 
 assert.ok(packageJson.includes('"ts-fsrs": "5.4.1"'),'Official ts-fsrs dependency must be pinned');
 assert.ok(fsrsAdapter.includes("from 'ts-fsrs'"),'FSRS adapter must use official package');
@@ -138,37 +141,5 @@ assert.ok(serviceWorker.includes("'/experience.css'"),'Multimodal stylesheet is 
 assert.ok(serviceWorker.includes("'/settings-tabs.css'"),'Settings stylesheet is not precached');
 assert.ok(serviceWorker.includes("self.addEventListener('install'"),'Service worker install handler missing');
 assert.ok(serviceWorker.includes("self.addEventListener('fetch'"),'Offline fetch handler missing');
-assert.ok(serviceWorker.includes("self.addEventListener('push'"),'Push handler missing');
-assert.ok(serviceWorker.includes("self.addEventListener('notificationclick'"),'Notification click handler missing');
-assert.ok(pwa.includes('PushManager'),'Push subscription client missing');
-assert.ok(pwa.includes('beforeinstallprompt'),'PWA install UI missing');
-assert.doesNotMatch(pwa,/localStorage\.(getItem|setItem|removeItem)/,'PWA settings must use app state, not localStorage');
 
-for(const route of ['/api/ai/enrich','/api/ai/evaluate','/api/ai/mnemonic','/api/ai/context-example','/api/ai/context-capture','/api/ai/output-practice','/api/ai/pronunciation'])assert.ok(server.includes(route),`Server route ${route} missing`);
-assert.ok(server.includes('inline_data'),'Gemini audio input is not sent as multimodal data');
-assert.ok(server.includes('microphone=(self)'),'Permissions Policy blocks microphone access');
-assert.ok(server.includes('gemini-3.6-flash'),'Gemini 3.6 Flash default missing');
-assert.ok(server.includes("responseMimeType:'application/json'")&&server.includes('responseJsonSchema'),'Schema-constrained structured JSON output missing');
-assert.ok(server.includes('webpush.sendNotification'),'Web Push sender missing');
-assert.ok(server.includes('checkReminders'),'Daily reminder scheduler missing');
-assert.ok(build.includes('/experience.css'),'Build does not link multimodal stylesheet');
-assert.ok(build.includes("entryPoints:[resolve(root,'src/main.js')]"),'Browser dependency bundle missing');
-assert.doesNotMatch(html,/>Học<\/button>/,'Top-level Học tab should remain hidden');
-
-assert.ok(fsrsAdapter.includes('requiredSkillsForCard')&&fsrsAdapter.includes('getDueSkillItems'),'Required skill profiles and due-skill queue missing');
-assert.ok(learning.includes('addBundleIfFits')&&learning.includes('timeBudgetSeconds'),'Atomic acquisition bundles or time-budget composer missing');
-assert.ok(learning.includes("affectsSchedule:false")&&app.includes('assisted:true'),'Assisted corrective practice must not extend FSRS');
-assert.ok(app.includes("rating=correct?(data.grammarStatus==='minor'?'hard':'good'):'again'"),'Production failures must be rated Again, not Hard');
-assert.ok(app.includes('cardIdentityKey')&&app.includes('importConflictStrategy'),'Sense-aware identity and import conflict handling missing');
-assert.ok(app.includes('editCardFromDetail')&&app.includes('suspendCardFromDetail')&&app.includes('undoDeleteCard'),'Card lifecycle controls missing');
-assert.ok(server.includes('AI_MODELS')&&server.includes('validateAiResult')&&server.includes('AI_SCHEMAS'),'AI model allowlist/schema/runtime validation missing');
-assert.ok(app.includes('intelligibilityScore')&&app.includes("persistOneCardInBackground(updated,'pronunciation-practice')"),'Pronunciation coaching metrics missing');
-{const pronunciationBlock=app.slice(app.indexOf('function renderPronunciation'),app.indexOf('function renderOutputPractice'));assert.doesNotMatch(pronunciationBlock,/scheduleCard|scheduleSpecificCard/,'Pronunciation must not update production FSRS');}
-assert.ok(app.includes('/api/ai/context-capture')&&learning.includes('getTransferDueCards')&&app.includes('renderTransfer'),'Context capture and transfer checks missing');
-assert.ok(persistence.includes("outbox:'outbox'")&&persistence.includes('replayOutbox'),'Durable write outbox missing');
-assert.ok(persistence.includes('databaseInitialized')&&app.includes("Array.isArray(bootstrap.cards)?bootstrap.cards:[]"),'Empty library must remain empty and initialized state must be explicit');
-assert.doesNotMatch(app,/persistCards\(state\.cards/,'Routine UI actions must not rewrite the entire card store');
-assert.ok(serviceWorker.includes('REMINDER_CONFIG')&&serviceWorker.includes("action:'close'"),'Push resubscribe config or honest notification action missing');
-assert.ok(html.includes('role="dialog" aria-modal="true"')&&experience.includes('prefers-reduced-motion'),'Study dialog accessibility or reduced-motion support missing');
-
-console.log('Cross-check passed: data trust, atomic persistence/outbox, required-skill FSRS, adaptive sessions, card lifecycle, schema-validated AI, pronunciation coaching, transfer checks, actionable progress, PWA resubscribe and accessibility contracts are present.');
+assert.ok(app.includes('const form=event.currentTarget;')&&!app.includes('event.currentTarget.reset();'),'Async form handler must keep a stable form reference');

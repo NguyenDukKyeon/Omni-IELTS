@@ -97,8 +97,11 @@ async function main(){
 
     await evaluate("document.querySelector('[data-route=\"today\"]').click();document.getElementById('weakPractice').click()");
     await waitFor("document.getElementById('studyOverlay').classList.contains('open')",'weak fallback study');
-    assert.equal(await evaluate("document.getElementById('studyLabel').textContent"),'Ôn nhanh','Weak mode did not fall back to quick review.');
-    assert.match(await evaluate("document.getElementById('toast').textContent"),/Chưa có từ yếu/);
+    assert.match(await evaluate("document.getElementById('studyLabel').textContent"),/^Ôn nhanh(?:\s|$)/,'Weak mode did not fall back to quick review.');
+    assert.match(await evaluate("document.getElementById('toast').textContent"),/(?:Chưa có từ yếu|đã chuyển sang phiên tổng hợp)/i);
+    await waitFor("document.getElementById('introContinue')",'new-card introduction');
+    await evaluate("document.getElementById('introContinue').click()");
+    await waitFor(`window.VocabMasterApp.getState().cards.some(card=>card.front===${JSON.stringify(term)}&&card.status!=='new')`,'card acquisition state');
     await evaluate("document.getElementById('closeStudy').click()");
 
     await evaluate(`(()=>{
@@ -110,17 +113,18 @@ async function main(){
     await waitFor("document.querySelector('#pronunciationResult .microphone-help')",'microphone denied help');
     const micState=await evaluate(`(()=>({
       studyOpen:document.getElementById('studyOverlay').classList.contains('open'),
-      good:Boolean(document.getElementById('pronunciationManualGood')),
-      hard:Boolean(document.getElementById('pronunciationManualHard')),
+      skip:Boolean(document.getElementById('skipPronunciation')),
+      sample:Boolean(document.getElementById('pronunciationSample')),
       help:document.querySelector('#pronunciationResult .microphone-help')?.textContent||''
     }))()`);
     assert.equal(micState.studyOpen,true,'Microphone denial closed the study session.');
-    assert.equal(micState.good&&micState.hard,true,'Manual pronunciation fallback is missing.');
+    assert.equal(micState.skip&&micState.sample,true,'Coaching-only pronunciation fallback is missing.');
     assert.match(micState.help,/microphone/i);
+    await evaluate("document.getElementById('skipPronunciation').click()");
     await evaluate("document.getElementById('closeStudy').click()");
 
     assert.deepEqual(runtimeErrors,[],`Runtime errors:\n${runtimeErrors.join('\n')}`);
-    console.log('Hardening browser smoke passed: Settings tabs, explicit IndexedDB restore, weak fallback and microphone-denied recovery are operational.');
+    console.log('Hardening browser smoke passed: Settings tabs, explicit IndexedDB restore, weak fallback and microphone-denied coaching recovery are operational.');
   }catch(error){error.message+=`\n\nVite output:\n${serverOutput.slice(-4000)}\n\nBrowser output:\n${browserOutput.slice(-4000)}`;throw error;}
   finally{cdp?.close();try{browser?.kill('SIGTERM');}catch{}try{server?.kill('SIGTERM');}catch{}await delay(250);try{browser?.kill('SIGKILL');}catch{}try{server?.kill('SIGKILL');}catch{}await rm(profile,{recursive:true,force:true});}
 }
