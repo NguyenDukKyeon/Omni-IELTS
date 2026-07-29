@@ -3,7 +3,7 @@ import { listV10Records,putV10Record,getV10Record } from './v10-persistence.js';
 
 const LOCAL_COMPANION_URL='http://127.0.0.1:17321/transcript';
 const SESSION_KEY='vocab-master-gemini-key';
-const SEGMENTER_VERSION='v10-sentence-segmenter-1';
+const SEGMENTER_VERSION='v10-sentence-segmenter-2';
 
 export function parseYouTubeVideoId(input=''){
   try{const url=new URL(String(input).trim());const host=url.hostname.replace(/^www\./,'');if(host==='youtu.be')return url.pathname.split('/').filter(Boolean)[0]||null;if(['youtube.com','m.youtube.com','music.youtube.com','youtube-nocookie.com'].includes(host)){if(url.pathname==='/watch')return url.searchParams.get('v');const match=url.pathname.match(/^\/(?:shorts|embed|live)\/([^/?]+)/);return match?.[1]||null;}}catch{}const value=String(input||'').trim();return /^[A-Za-z0-9_-]{11}$/.test(value)?value:null;
@@ -12,11 +12,29 @@ export function transcriptCacheKey({videoId,language='en',startSeconds=0,endSeco
 
 function finiteNumber(value,fallback=0){const number=Number(value);return Number.isFinite(number)?number:fallback;}
 function segmentTimes(row={}){const startMs=Number.isFinite(Number(row.startMs))?Number(row.startMs):Number.isFinite(Number(row.start))?Number(row.start)*1000:Number.isFinite(Number(row.offset))?Number(row.offset)*1000:0;const endMs=Number.isFinite(Number(row.endMs))?Number(row.endMs):Number.isFinite(Number(row.end))?Number(row.end)*1000:startMs+Math.max(300,finiteNumber(row.duration,0)*1000);return{startMs,endMs};}
+
+export function repairCaptionTimeline(rows=[]){
+  const sorted=(Array.isArray(rows)?rows:[]).map(row=>({...row})).sort((a,b)=>Number(a.startMs||0)-Number(b.startMs||0)||Number(a.endMs||0)-Number(b.endMs||0));
+  const output=[];
+  for(const row of sorted){
+    const current={...row,startMs:Math.max(0,Number(row.startMs||0)),endMs:Math.max(0,Number(row.endMs||0))};
+    const previous=output.at(-1);
+    if(previous&&current.startMs<previous.endMs-500){
+      if(current.startMs>previous.startMs+300)previous.endMs=Math.max(previous.startMs+300,current.startMs);
+      else if(current.endMs>previous.endMs+300)current.startMs=previous.endMs;
+      else continue;
+    }
+    if(current.endMs-current.startMs<300)continue;
+    output.push(current);
+  }
+  return output;
+}
+
 function normalizeSegmentRows(rows=[],sourceId='source'){
   const raw=(Array.isArray(rows)?rows:[]).map((row,index)=>{const times=segmentTimes(row);return{id:String(row.id||`${sourceId}:segment:${index+1}`),...times,text:String(row.text??row.transcript??'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim(),status:row.status||'needs-review',confidence:row.confidence??null,language:row.language||'en'};}).filter(row=>row.text&&row.endMs>row.startMs);
   const deRolled=[];for(const row of raw){const previous=deRolled.at(-1);if(previous){const prev=normalizeKey(previous.text),current=normalizeKey(row.text);if(current===prev)continue;if(current.startsWith(prev)&&row.startMs<=previous.endMs+1500){previous.text=row.text;previous.endMs=Math.max(previous.endMs,row.endMs);continue;}if(prev.startsWith(current)&&row.startMs<=previous.endMs+1500)continue;}deRolled.push({...row});}
   const merged=[];for(const row of deRolled){const previous=merged.at(-1);const duration=row.endMs-row.startMs;if(previous&&previous.text.length<50&&!/[.!?]$/.test(previous.text)&&row.startMs-previous.endMs<900&&previous.text.split(' ').length+row.text.split(' ').length<=24){previous.text=`${previous.text} ${row.text}`.replace(/\s+/g,' ');previous.endMs=Math.max(previous.endMs,row.endMs);continue;}if(duration>30_000){const words=row.text.split(' '),parts=Math.ceil(duration/15_000),per=Math.ceil(words.length/parts);for(let part=0;part<parts;part++){const text=words.slice(part*per,(part+1)*per).join(' ');if(!text)continue;const start=row.startMs+Math.round(duration*part/parts),end=row.startMs+Math.round(duration*(part+1)/parts);merged.push({...row,id:`${row.id}:${part+1}`,startMs:start,endMs:end,text});}}else merged.push({...row});}
-  const validation=validateSentenceSegments(merged);if(!validation.valid)throw new Error(`Transcript normalization lỗi: ${validation.errors.join(' ')}`);return validation.segments;
+  const repaired=repairCaptionTimeline(merged);const validation=validateSentenceSegments(repaired);if(!validation.valid)throw new Error(`Transcript normalization lỗi: ${validation.errors.join(' ')}`);return validation.segments;
 }
 
 async function fetchJson(url,options={},timeoutMs=6500){const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),timeoutMs);try{const response=await fetch(url,{...options,signal:controller.signal});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||`HTTP ${response.status}`);return data;}finally{clearTimeout(timer);}}

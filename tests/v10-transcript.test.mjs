@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { resolve,dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseYouTubeVideoId,transcriptCacheKey } from '../src/transcript-resolver-v2.js';
+import { parseYouTubeVideoId,transcriptCacheKey,repairCaptionTimeline } from '../src/transcript-resolver-v2.js';
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 
- test('YouTube parser supports watch, short and shorts URLs',()=>{
+test('YouTube parser supports watch, short and shorts URLs',()=>{
   const id='dQw4w9WgXcQ';
   assert.equal(parseYouTubeVideoId(`https://www.youtube.com/watch?v=${id}`),id);
   assert.equal(parseYouTubeVideoId(`https://youtu.be/${id}?t=2`),id);
@@ -20,6 +20,19 @@ test('transcript cache key separates language and clip range',()=>{
   assert.equal(transcriptCacheKey(base),transcriptCacheKey({...base}));
   assert.notEqual(transcriptCacheKey(base),transcriptCacheKey({...base,startSeconds:60,endSeconds:120}));
   assert.notEqual(transcriptCacheKey(base),transcriptCacheKey({...base,language:'vi'}));
+});
+
+test('overlapping YouTube auto captions are repaired instead of rejecting the transcript',()=>{
+  const repaired=repairCaptionTimeline([
+    {id:'segment:1',startMs:0,endMs:4200,text:'But now I have got to ask.'},
+    {id:'segment:2',startMs:1800,endMs:6100,text:'What has the BBC ever done for me?'},
+    {id:'segment:3',startMs:4300,endMs:8200,text:'Sure, it is great if you are a fan.'},
+    {id:'segment:4',startMs:6800,endMs:9900,text:'Who cares if they raised money?'}
+  ]);
+  assert.equal(repaired.length,4);
+  for(let index=1;index<repaired.length;index++)assert.ok(repaired[index].startMs>=repaired[index-1].endMs-500);
+  assert.equal(repaired[0].endMs,1800);
+  assert.equal(repaired[1].endMs,4300);
 });
 
 test('server yt-dlp resolver is subtitle-only and never requests audio extraction',async()=>{
@@ -41,6 +54,7 @@ test('client resolver uses cache/provider race before Gemini fallback',async()=>
   assert.match(source,/continueTranscriptProgressively/);
   assert.match(source,/durationSeconds/);
   assert.match(source,/25_000/);
+  assert.match(source,/v10-sentence-segmenter-2/);
 });
 
 test('video learning loop plays timestamped YouTube segments instead of TTS',async()=>{
