@@ -64,6 +64,13 @@ jobs:
           set -o pipefail
           node /tmp/apply-roadmap-v9.mjs 2>&1 | tee /tmp/roadmap-apply.log
 
+      - name: Preserve workflow files for connector-managed update
+        if: steps.state.outputs.needed == 'true' && steps.apply.outcome == 'success'
+        shell: bash
+        run: |
+          git checkout HEAD -- .github/workflows/ci.yml
+          git checkout HEAD -- .github/workflows/implement-roadmap-v9.yml
+
       - name: Record apply failure on branch
         if: steps.state.outputs.needed == 'true' && steps.apply.outcome == 'failure'
         shell: bash
