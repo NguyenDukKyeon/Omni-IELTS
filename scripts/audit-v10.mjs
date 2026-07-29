@@ -39,7 +39,7 @@ check('Transcript is progressive',clientTranscript.includes('firstChunkSeconds=6
 check('Content is not imported into JS bundle',!mainSource.includes('/content/')&&!contentPlatform.includes("import '../public"));
 check('Content catalog has verified starter lessons',lessons.length>=3&&lessons.every(row=>row.verified&&row.qualityStatus==='verified'&&row.license&&row.assets?.transcript));
 check('Service worker caches content on demand',serviceWorker.includes("url.pathname.startsWith('/content/')")&&serviceWorker.includes('contentCacheFirst'));
-check('AI artifacts require validation before publish',aiFactory.includes("job.status!=='ready'||!job.validation?.valid")&&aiFactory.includes("status:'quarantined'"));
+check('AI artifacts require validation before publish',aiFactory.includes("job.status!=='ready'||!job.validation?.valid")&&aiFactory.includes("'quarantined'")&&aiFactory.includes('MAX_RETRIES'));
 check('AI is not required to start sentence loop',!sentenceLoop.includes('/api/ai/')&&!sentenceLoop.includes('/api/ielts/reading-draft'));
 check('Shadowing copy states coaching only',sentenceLoop.includes('SHADOWING · COACHING ONLY')&&sentenceLoop.includes('không tạo FSRS review'));
 check('V10 contracts separate source occurrences',contracts.includes("sourceOccurrences:'sourceOccurrences'")&&contracts.includes('lexicalItemId'));
