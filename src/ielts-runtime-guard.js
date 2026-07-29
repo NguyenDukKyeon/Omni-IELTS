@@ -13,6 +13,16 @@ function announce(message,kind='info'){
   node.className=`ielts-status ${kind}`;node.textContent=message;
 }
 
+function openLabFromLauncher(event){
+  const launcher=event.target.closest?.('#openIeltsLabButton,#openIeltsLabMobile');if(!launcher)return false;
+  event.preventDefault();event.stopImmediatePropagation();
+  const dialog=document.getElementById('ieltsLabDialog');if(!dialog)return true;
+  if(!dialog.open)dialog.showModal();
+  const selected=dialog.querySelector('[data-ielts-tab][aria-selected="true"]');const tab=selected||dialog.querySelector('[data-ielts-tab="overview"]');
+  tab?.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:globalThis}));
+  return true;
+}
+
 function hardenRenderedControls(root=document){
   const dictation=root.querySelector?.('#mediaDictationForm select[name="cardId"]');
   if(dictation){
@@ -67,6 +77,7 @@ export function mountIeltsRuntimeGuard(){
     guardSynchronousForm(form);
   },true);
   document.addEventListener('click',event=>{
+    if(openLabFromLauncher(event))return;
     const button=event.target.closest?.('[data-media-action="speech-retell"]');
     if(!button||!String(button.textContent||'').startsWith('■'))return;
     event.preventDefault();event.stopImmediatePropagation();const stop=button.onclick;button.onclick=null;try{stop?.call(button,event);}catch{}button.textContent='🎤 Nhận giọng nói';
@@ -78,4 +89,4 @@ export function mountIeltsRuntimeGuard(){
   hardenRenderedControls(document);
 }
 
-export const __testing=Object.freeze({supportsSkill,guardSynchronousForm,hardenRenderedControls});
+export const __testing=Object.freeze({supportsSkill,guardSynchronousForm,hardenRenderedControls,openLabFromLauncher});
