@@ -1,0 +1,11 @@
+{
+  "targets": [
+    {"sentenceId":"travel-1","targets":[{"term":"be cancelled","meaning":"bị hủy","type":"collocation"}]},
+    {"sentenceId":"travel-2","targets":[{"term":"instead","meaning":"thay vào đó","type":"word"},{"term":"half past nine","meaning":"chín giờ rưỡi","type":"phrase"}]},
+    {"sentenceId":"travel-3","targets":[{"term":"change at","meaning":"đổi tàu/xe tại","type":"collocation"}]},
+    {"sentenceId":"travel-4","targets":[{"term":"keep your ticket ready","meaning":"để vé sẵn sàng","type":"collocation"}]},
+    {"sentenceId":"travel-5","targets":[{"term":"book a seat","meaning":"đặt chỗ ngồi","type":"collocation"}]},
+    {"sentenceId":"travel-6","targets":[{"term":"booking reference","meaning":"mã đặt chỗ","type":"collocation"}]},
+    {"sentenceId":"travel-7","targets":[{"term":"main entrance","meaning":"lối vào chính","type":"collocation"}]}
+  ]
+}
