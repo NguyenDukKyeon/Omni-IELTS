@@ -1,4 +1,0 @@
-- Wait for full known-duration captions before opening practice when possible.
-- Display a clickable sentence rail beside the video.
-- Preserve Dictation, Noticing, Shadowing, Vocabulary, and Retell behavior.
-- Fall back to available partial captions when full loading fails.
