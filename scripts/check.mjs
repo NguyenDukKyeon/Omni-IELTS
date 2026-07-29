@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
-const [html,css,experience,settingsCss,app,audio,main,learning,progress,fsrsAdapter,persistence,persistenceCore,pwa,settingsUi,serviceWorker,manifest,server,build,packageJson,browserSmoke]=await Promise.all([
+const [html,css,experience,settingsCss,app,audio,main,learning,progress,fsrsAdapter,persistence,persistenceCore,pwa,settingsUi,serviceWorker,manifest,server,build,packageJson,browserSmoke,browserSmokeEntry]=await Promise.all([
   readFile(new URL('../index.html',import.meta.url),'utf8'),
   readFile(new URL('../styles.css',import.meta.url),'utf8'),
   readFile(new URL('../public/experience.css',import.meta.url),'utf8'),
@@ -21,7 +21,8 @@ const [html,css,experience,settingsCss,app,audio,main,learning,progress,fsrsAdap
   readFile(new URL('../server/server.mjs',import.meta.url),'utf8'),
   readFile(new URL('./build.mjs',import.meta.url),'utf8'),
   readFile(new URL('../package.json',import.meta.url),'utf8'),
-  readFile(new URL('./browser-smoke.mjs',import.meta.url),'utf8')
+  readFile(new URL('./browser-smoke.mjs',import.meta.url),'utf8'),
+  readFile(new URL('./browser-smoke-entry.mjs',import.meta.url),'utf8')
 ]);
 
 const requiredIds=[
@@ -92,7 +93,9 @@ assert.ok(main.includes('__VOCAB_INITIAL_STATE__')&&main.includes('initializePer
 assert.ok(main.indexOf("import('./settings-ui.js')")<main.lastIndexOf("import('./app.js')"),'Settings layout must initialize before app listeners');
 assert.ok(browserSmoke.includes('Input.dispatchMouseEvent'),'Browser smoke does not test real pointer interaction');
 for(const expected of ['settingsDialog','practiceSheet','importDialog','wordDetailDialog','studyOverlay','activityHeatmap'])assert.ok(browserSmoke.includes(expected),`Browser smoke misses ${expected}`);
-assert.ok(packageJson.includes('"test:browser": "node scripts/browser-smoke.mjs"'),'Browser smoke npm script missing');
+assert.ok(packageJson.includes('"test:browser": "node scripts/browser-smoke-entry.mjs"'),'Browser smoke npm script missing');
+assert.ok(browserSmokeEntry.includes("VITE_BROWSER_SMOKE_SEED='1'"),'Browser smoke seed flag missing');
+assert.ok(main.includes("import.meta.env?.VITE_BROWSER_SMOKE_SEED==='1'")&&main.includes('navigator.webdriver===true'),'E2E seed must be gated to Vite automation only');
 
 assert.ok(packageJson.includes('"ts-fsrs": "5.4.1"'),'Official ts-fsrs dependency must be pinned');
 assert.ok(fsrsAdapter.includes("from 'ts-fsrs'"),'FSRS adapter must use official package');
