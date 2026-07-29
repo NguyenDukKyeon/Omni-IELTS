@@ -95,7 +95,7 @@ assert.ok(browserSmoke.includes('Input.dispatchMouseEvent'),'Browser smoke does 
 for(const expected of ['settingsDialog','practiceSheet','importDialog','wordDetailDialog','studyOverlay','activityHeatmap'])assert.ok(browserSmoke.includes(expected),`Browser smoke misses ${expected}`);
 assert.ok(packageJson.includes('"test:browser": "node scripts/browser-smoke-entry.mjs"'),'Browser smoke npm script missing');
 assert.ok(browserSmokeEntry.includes("VITE_BROWSER_SMOKE_SEED='1'"),'Browser smoke seed flag missing');
-assert.ok(main.includes("import.meta.env?.VITE_BROWSER_SMOKE_SEED==='1'")&&main.includes('navigator.webdriver===true'),'E2E seed must be gated to Vite automation only');
+assert.ok(main.includes("isBrowserSmokeSeed=isViteDevelopment&&import.meta.env?.VITE_BROWSER_SMOKE_SEED==='1'"),'E2E seed must be gated to an explicit Vite test flag');
 
 assert.ok(packageJson.includes('"ts-fsrs": "5.4.1"'),'Official ts-fsrs dependency must be pinned');
 assert.ok(fsrsAdapter.includes("from 'ts-fsrs'"),'FSRS adapter must use official package');
