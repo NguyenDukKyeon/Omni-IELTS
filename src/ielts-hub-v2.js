@@ -8,6 +8,7 @@ const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<'
 let activeTab='today';
 let videoBusy=false;
 let bypassLegacyLauncher=false;
+const boundLaunchers=new WeakSet();
 
 function dialog(){return document.querySelector('#v10IeltsHubDialog');}
 function panel(){return document.querySelector('#v10IeltsHubPanel');}
@@ -46,5 +47,7 @@ async function handleClick(event){
 function ensureDialog(){if(dialog())return;const node=document.createElement('dialog');node.id='v10IeltsHubDialog';node.className='v10-ielts-dialog';node.innerHTML='<div id="v10IeltsHubPanel"></div>';node.addEventListener('click',event=>void handleClick(event));node.addEventListener('change',event=>{if(event.target.matches('#v10ContentLevel,#v10ContentTopic,#v10ContentSkill'))filterContent();});node.addEventListener('submit',event=>{if(event.target.id==='v10VideoForm'){event.preventDefault();void handleVideoSubmit(event.target);}});document.body.append(node);}
 export async function openIeltsHub(tab='today'){activeTab=tab;ensureDialog();if(!dialog().open)dialog().showModal();await render();}
 
-function interceptLegacyLauncher(){document.addEventListener('click',event=>{if(!event.target.closest('#openIeltsLabButton,#openIeltsLabMobile'))return;if(bypassLegacyLauncher)return;event.preventDefault();event.stopImmediatePropagation();void openIeltsHub('today');},true);}
+function launcherHandler(event){if(bypassLegacyLauncher)return;event.preventDefault();event.stopImmediatePropagation();void openIeltsHub('today');}
+function bindLegacyLaunchers(){for(const launcher of document.querySelectorAll('#openIeltsLabButton,#openIeltsLabMobile')){if(boundLaunchers.has(launcher))continue;boundLaunchers.add(launcher);launcher.addEventListener('click',launcherHandler,true);}}
+function interceptLegacyLauncher(){bindLegacyLaunchers();document.addEventListener('vocab:ielts-launcher-mounted',bindLegacyLaunchers);}
 export function mountIeltsHubV2(){ensureDialog();interceptLegacyLauncher();globalThis.addEventListener('vocab:v10-open-ielts-hub',event=>void openIeltsHub(event.detail?.tab||'today'));globalThis.VocabMasterIeltsHub={open:openIeltsHub,refresh:render,openLegacyTab};}
