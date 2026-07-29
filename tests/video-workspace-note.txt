@@ -1,0 +1,1 @@
+This branch adds full-video transcript loading and a clickable sentence rail.
