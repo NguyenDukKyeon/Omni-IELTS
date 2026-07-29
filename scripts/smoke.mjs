@@ -2,16 +2,31 @@ import { spawn } from 'node:child_process';
 import assert from 'node:assert/strict';
 
 const port=String(5200+Math.floor(Math.random()*500));
+const base=`http://127.0.0.1:${port}`;
 const child=spawn(process.execPath,['server/server.mjs'],{stdio:['ignore','pipe','pipe'],env:{...process.env,PORT:port,PUSH_DATA_DIR:`/tmp/vocab-master-push-${process.pid}-${port}`}});
 let output='';
+let exited=null;
 child.stdout.on('data',chunk=>{output+=chunk;});
 child.stderr.on('data',chunk=>{output+=chunk;});
+child.once('exit',(code,signal)=>{exited={code,signal};});
+
+async function waitForServer(timeoutMs=12_000){
+  const deadline=Date.now()+timeoutMs;
+  let lastError='';
+  while(Date.now()<deadline){
+    if(exited)throw new Error(`Server exited before readiness (code=${exited.code}, signal=${exited.signal}): ${output}`);
+    try{
+      const response=await fetch(`${base}/api/health`,{signal:AbortSignal.timeout(1_000)});
+      if(response.ok)return;
+      lastError=`HTTP ${response.status}`;
+    }catch(error){lastError=error.message;}
+    await new Promise(resolve=>setTimeout(resolve,80));
+  }
+  throw new Error(`Server did not become reachable at ${base}: ${lastError}\n${output}`);
+}
+
 try{
-  await new Promise((resolve,reject)=>{
-    const timeout=setTimeout(()=>reject(new Error(`Server did not start: ${output}`)),12_000);
-    const poll=setInterval(()=>{if(output.includes(`localhost:${port}`)){clearTimeout(timeout);clearInterval(poll);resolve();}},50);
-  });
-  const base=`http://127.0.0.1:${port}`;
+  await waitForServer();
   const post=(path,body)=>fetch(`${base}${path}`,{method:'POST',headers:{'content-type':'application/json',origin:base},body:JSON.stringify(body)});
   const [home,app,css,experience,manifest,serviceWorker,offline,health,publicKey,invalidSubscription,mnemonicNoKey,invalidPronunciation,invalidOutput]=await Promise.all([
     fetch(`${base}/`),
@@ -52,6 +67,6 @@ try{
   assert.match(home.headers.get('permissions-policy')||'',/microphone=\(self\)/);
   console.log(`Multimodal FSRS/PWA/IndexedDB/AI route smoke test passed on port ${port}.`);
 }finally{
-  child.kill('SIGTERM');
+  if(!exited)child.kill('SIGTERM');
   await new Promise(resolve=>setTimeout(resolve,180));
 }
