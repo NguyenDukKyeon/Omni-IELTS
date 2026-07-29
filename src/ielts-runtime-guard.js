@@ -28,17 +28,20 @@ function hardenRenderedControls(root=document){
   if(dictation){
     for(const option of dictation.options){
       if(!option.value)continue;
-      const allowed=supportsSkill(option.value,'listening');option.disabled=!allowed;
-      if(!allowed)option.title='Thẻ này không có Listening trong mục tiêu học.';
+      const allowed=supportsSkill(option.value,'listening');
+      if(option.disabled!==!allowed)option.disabled=!allowed;
+      if(!allowed&&option.title!=='Thẻ này không có Listening trong mục tiêu học.')option.title='Thẻ này không có Listening trong mục tiêu học.';
     }
     if(dictation.value&&!supportsSkill(dictation.value,'listening'))dictation.value='';
   }
   const retell=root.querySelector?.('#mediaRetellForm');
   if(retell)for(const input of retell.querySelectorAll('input[name="target"]')){
-    const allowed=supportsSkill(input.value,'production');input.disabled=!allowed;if(!allowed){input.checked=false;input.closest('label')?.setAttribute('title','Thẻ này chưa có Production trong mục tiêu học.');}
+    const allowed=supportsSkill(input.value,'production');
+    if(input.disabled!==!allowed)input.disabled=!allowed;
+    if(!allowed){input.checked=false;const label=input.closest('label');if(label?.getAttribute('title')!=='Thẻ này chưa có Production trong mục tiêu học.')label?.setAttribute('title','Thẻ này chưa có Production trong mục tiêu học.');}
   }
   const saveShadow=root.querySelector?.('[data-media-action="save-shadow"]');
-  if(saveShadow){const audio=root.querySelector?.('#shadowPlayback');if(!audio?.getAttribute('src'))saveShadow.disabled=true;}
+  if(saveShadow){const audio=root.querySelector?.('#shadowPlayback');if(!audio?.getAttribute('src')&&!saveShadow.disabled)saveShadow.disabled=true;}
 }
 
 function guardSynchronousForm(form){
@@ -83,9 +86,15 @@ export function mountIeltsRuntimeGuard(){
     event.preventDefault();event.stopImmediatePropagation();const stop=button.onclick;button.onclick=null;try{stop?.call(button,event);}catch{}button.textContent='🎤 Nhận giọng nói';
   },true);
   observer=new MutationObserver(records=>{
-    for(const record of records){const target=record.target instanceof Element?record.target:null;hardenRenderedControls(target?.closest?.('#ieltsLabDialog')||document);}
+    for(const record of records){
+      for(const node of record.addedNodes){
+        const element=node instanceof Element?node:null;if(!element)continue;
+        const root=element.closest?.('#ieltsLabDialog')||element.querySelector?.('#ieltsLabDialog')||element;
+        hardenRenderedControls(root);
+      }
+    }
   });
-  observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled','src']});
+  observer.observe(document.documentElement,{childList:true,subtree:true});
   hardenRenderedControls(document);
 }
 
