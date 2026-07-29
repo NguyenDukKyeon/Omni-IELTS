@@ -141,3 +141,5 @@ assert.ok(serviceWorker.includes("'/experience.css'"),'Multimodal stylesheet is 
 assert.ok(serviceWorker.includes("'/settings-tabs.css'"),'Settings stylesheet is not precached');
 assert.ok(serviceWorker.includes("self.addEventListener('install'"),'Service worker install handler missing');
 assert.ok(serviceWorker.includes("self.addEventListener('fetch'"),'Offline fetch handler missing');
+
+assert.ok(app.includes('const form=event.currentTarget;')&&!app.includes('event.currentTarget.reset();'),'Async form handler must keep a stable form reference');
