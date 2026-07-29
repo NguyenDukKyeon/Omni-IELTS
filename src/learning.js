@@ -91,6 +91,9 @@ export function updateCardAfterRating(card, rating, now=Date.now(), skill=null) 
 function cleanText(value) {
   return String(value ?? '').trim().replace(/\s+/g,' ');
 }
+function cleanMultiline(value) {
+  return String(value ?? '').replace(/\r\n?/g,'\n').split('\n').map(line=>line.trim().replace(/[ \t]+/g,' ')).join('\n').replace(/\n{3,}/g,'\n\n').trim();
+}
 
 function normalizeProvenance(input={}) {
   const source = ['manual','imported','ai','sample'].includes(input.source) ? input.source : 'manual';
@@ -119,7 +122,10 @@ export function sanitizeCardInput(input={}) {
   const acceptedBySkill=input.acceptedBySkill&&typeof input.acceptedBySkill==='object'
     ? Object.fromEntries(Object.entries(input.acceptedBySkill).map(([skill,values])=>[skill,[...new Set((Array.isArray(values)?values:[]).map(cleanText).filter(Boolean))]]))
     : {};
-  if(!Object.keys(acceptedBySkill).length&&legacyAccepted.length){acceptedBySkill.recognition=[...legacyAccepted];acceptedBySkill.recall=[...legacyAccepted];acceptedBySkill.listening=[...legacyAccepted];}
+  const acceptedByExercise=input.acceptedByExercise&&typeof input.acceptedByExercise==='object'
+    ? Object.fromEntries(Object.entries(input.acceptedByExercise).map(([kind,values])=>[kind,[...new Set((Array.isArray(values)?values:[]).map(cleanText).filter(Boolean))]]))
+    : {};
+  if(!Object.keys(acceptedByExercise).length&&legacyAccepted.length){for(const kind of ['choice','typing','dictation','sentence-cloze'])acceptedByExercise[kind]=[...legacyAccepted];}
   const provenance=normalizeProvenance(input.provenance || {source: input.aiGenerated ? 'ai' : input.imported ? 'imported' : 'manual'});
 
   return {
@@ -130,16 +136,17 @@ export function sanitizeCardInput(input={}) {
     front,
     back:cleanText(input.back),
     pronunciation:cleanText(input.pronunciation),
-    example:cleanText(input.example),
-    translation:cleanText(input.translation),
+    example:cleanMultiline(input.example),
+    translation:cleanMultiline(input.translation),
     cefr:cleanText(input.cefr)||'—',
     accepted:legacyAccepted,
     acceptedBySkill,
+    acceptedByExercise,
     mnemonic:cleanText(input.mnemonic),
     mnemonicAssociation:cleanText(input.mnemonicAssociation),
     mnemonicImagePrompt:cleanText(input.mnemonicImagePrompt),
     contextTopic:cleanText(input.contextTopic),
-    sourceContext:cleanText(input.sourceContext),
+    sourceContext:cleanMultiline(input.sourceContext),
     usageNote:cleanText(input.usageNote),
     provenance,
     aiFields:input.aiFields&&typeof input.aiFields==='object'?structuredClone(input.aiFields):{},
@@ -153,6 +160,8 @@ export function sanitizeCardInput(input={}) {
     ratingCounts,
     createdAt,
     updatedAt:input.updatedAt??null,
+    storageUpdatedAt:Number(input.storageUpdatedAt||0)||null,
+    storageBaseUpdatedAt:Number(input.storageBaseUpdatedAt||0)||null,
     suspendedAt:Number(input.suspendedAt||0)||null,
     archivedAt:Number(input.archivedAt||0)||null,
     lastRating:input.lastRating??null,
@@ -520,13 +529,14 @@ export function createSessionSteps(cards, mode='today', limit=12, options={}) {
   }else if(mode==='pronunciation'){
     practicePool.forEach(card=>addIfFits(steps,step(card,'pronunciation',pool,{affectsSchedule:false}),budget,used));
   }else if(mode==='listening'){
-    practicePool.forEach((card,index)=>addIfFits(steps,step(card,index%2?'dictation':'listening-choice',pool,{skill:'listening'}),budget,used));
+    practicePool.filter(card=>plannedSkillsForCard(card).includes('listening')&&Number.isFinite(getSkillDueAt(card,'listening',now))).forEach((card,index)=>addIfFits(steps,step(card,index%2?'dictation':'listening-choice',pool,{skill:'listening'}),budget,used));
   }else if(mode==='collocation'){
-    pool.filter(card=>card.type==='collocation').sort((a,b)=>cardPriority(b,now)-cardPriority(a,now)).forEach(card=>addIfFits(steps,step(card,'cloze',pool,{skill:'collocation'}),budget,used));
+    pool.filter(card=>card.type==='collocation'&&plannedSkillsForCard(card).includes('collocation')&&Number.isFinite(getSkillDueAt(card,'collocation',now))).sort((a,b)=>cardPriority(b,now)-cardPriority(a,now)).forEach(card=>addIfFits(steps,step(card,'cloze',pool,{skill:'collocation'}),budget,used));
   }else if(mode==='production'){
-    practicePool.forEach(card=>addIfFits(steps,step(card,'production',pool,{skill:'production'}),budget,used));
+    practicePool.filter(card=>plannedSkillsForCard(card).includes('production')&&Number.isFinite(getSkillDueAt(card,'production',now))).forEach(card=>addIfFits(steps,step(card,'production',pool,{skill:'production'}),budget,used));
   }else if(mode==='output'){
-    addIfFits(steps,buildOutputStep(practicePool,Math.min(5,Math.max(3,options.outputCount||4))),budget,used);
+    const productionPool=practicePool.filter(card=>plannedSkillsForCard(card).includes('production')&&Number.isFinite(getSkillDueAt(card,'production',now)));
+    addIfFits(steps,buildOutputStep(productionPool,Math.min(5,Math.max(3,options.outputCount||4))),budget,used);
   }else if(mode==='weak'||mode==='mistakes'){
     weak.forEach(card=>addIfFits(steps,step(card,preferredWeakExercise(card),pool,{weak:true}),budget,used));
   }else if(mode==='transfer'){
@@ -554,8 +564,9 @@ function levenshtein(a,b){
 export function checkAnswer(card, stepData, answer) {
   const expected=stepData.answer||card.front;
   const scope=stepData.skill||skillForExercise(stepData.kind,card);
-  const scoped=Array.isArray(card.acceptedBySkill?.[scope])?card.acceptedBySkill[scope]:[];
-  const accepted=[expected,...scoped].map(normalizeText).filter(Boolean);
+  const exerciseScoped=Array.isArray(card.acceptedByExercise?.[stepData.kind])?card.acceptedByExercise[stepData.kind]:[];
+  const skillFallback=['typing','dictation','sentence-cloze'].includes(stepData.kind)&&Array.isArray(card.acceptedBySkill?.[scope])?card.acceptedBySkill[scope]:[];
+  const accepted=[expected,...exerciseScoped,...skillFallback].map(normalizeText).filter(Boolean);
   const actual=normalizeText(answer);
   if (!actual) return { status:'empty', correct:false, expected };
   if (accepted.includes(actual)) return { status:'correct', correct:true, expected };

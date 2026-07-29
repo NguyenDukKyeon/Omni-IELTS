@@ -123,5 +123,5 @@ export function summarizeCalibration(events=[]){
   const predicted=rows.reduce((sum,event)=>sum+Number(event.metadata.predictedRetrievability),0)/rows.length;
   const observed=rows.filter(event=>String(event.rating)!=='again'&&Number(event.rating)!==1).length/rows.length;
   const gap=observed-predicted;
-  return{sampleSize:rows.length,predicted:Math.round(predicted*100),observed:Math.round(observed*100),gap:Math.round(gap*100),label:Math.abs(gap)<=8?'Khớp tương đối':gap>0?'Mô hình đang thận trọng':'Bài kiểm tra dễ hơn dự báo'};
+  return{sampleSize:rows.length,predicted:Math.round(predicted*100),observed:Math.round(observed*100),gap:Math.round(gap*100),label:Math.abs(gap)<=8?'Khớp tương đối':gap>0?'Mô hình đang thận trọng':'Mô hình đang quá lạc quan hoặc bài kiểm tra khó hơn'};
 }

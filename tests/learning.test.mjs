@@ -68,7 +68,7 @@ test('new-word acquisition is either complete or omitted under a time budget',()
 });
 
 test('pronunciation and test practice never change FSRS',()=>{
-  const cards=seedCards.map(sanitizeCardInput);
+  const cards=seedCards.map(card=>sanitizeCardInput({...card,status:'learning'}));
   const pronunciation=createSessionSteps(cards,'pronunciation',4,{timeBudgetSeconds:600});
   assert.ok(pronunciation.length>0);
   assert.ok(pronunciation.every(step=>step.kind==='pronunciation'&&step.affectsSchedule===false&&step.skill===null));
@@ -118,7 +118,7 @@ test('weak ranking, transfer checks and seven-day forecast expose actionable wor
   assert.ok(weakWordScore(weak,now)>weakWordScore(strong,now));
   assert.deepEqual(getTransferDueCards([weak,strong],now).map(card=>card.id),['weak']);
   const fingerprint=summarizeErrorFingerprint([weak,strong]);
-  assert.equal(fingerprint.top[0].category,'spelling');
+  assert.equal(fingerprint[0].key,'spelling');
   const forecast=forecastWorkload([weak,strong],7,now);
   assert.equal(forecast.length,7);
   assert.ok(forecast.every(day=>day.reviews>=0&&day.estimatedMinutes>=0));

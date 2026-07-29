@@ -82,7 +82,7 @@ export function unlockedSkillsForCard(card = {}) {
 }
 
 export function requiredSkillsForCard(card = {}) {
-  return unlockedSkillsForCard(card);
+  return plannedSkillsForCard(card);
 }
 
 export function skillIsPlanned(card, skill) {
@@ -305,7 +305,7 @@ export function getSkillDueAt(card, skill, now = Date.now()) {
 }
 
 export function getEarliestSkillDue(card, now = Date.now()) {
-  const required = requiredSkillsForCard(card);
+  const required = unlockedSkillsForCard(card);
   if (!required.length) return Number(card?.dueAt || 0);
   return Math.min(...required.map(skill => getSkillDueAt(card, skill, now)));
 }
@@ -315,7 +315,7 @@ export function getDueSkillItems(cards = [], now = Date.now(), config = runtimeC
   const items = [];
   for (const card of cards) {
     if (!card || card.status === 'new' || card.suspendedAt || card.archivedAt) continue;
-    for (const skill of requiredSkillsForCard(card)) {
+    for (const skill of unlockedSkillsForCard(card)) {
       const fsrsCard = deserializeFsrsCard(card, now, skill);
       const reviewed = fsrsCard.reps > 0;
       const dueAt = reviewed ? fsrsCard.due.getTime() : missingSkillDueAt(card, now);

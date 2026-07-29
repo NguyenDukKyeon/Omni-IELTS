@@ -384,6 +384,7 @@ async function replayOutbox(){
   for(const row of rows){
     try{
       if(row.type==='review')await applyReviewOperation(row);
+      else if(row.type==='import-batch')await applyImportBatchOperation(row);
       else if(row.type==='card-put'){
         const database=await openDatabase();
         const transaction=database.transaction([STORE_NAMES.cards,STORE_NAMES.meta],'readwrite');
@@ -482,6 +483,7 @@ export async function persistCard(card,reason='card-changed'){
     }catch(error){
       error.outboxQueued=Boolean(outbox);
       emitStatus(outbox?'pending':'error',{pendingId:outbox?.id,message:error.message});
+      if(error.code==='STALE_CARD_WRITE')globalThis.dispatchEvent?.(new CustomEvent('vocab:write-conflict',{detail:{code:error.code,message:error.message}}));
       throw error;
     }
   });
@@ -610,6 +612,7 @@ export async function persistReviewResult({card,event,metrics=null,reason='revie
     }catch(error){
       error.outboxQueued=Boolean(outbox);
       emitStatus(outbox?'pending':'error',{pendingId:outbox?.id,message:error.message});
+      if(error.code==='STALE_REVIEW_WRITE')globalThis.dispatchEvent?.(new CustomEvent('vocab:write-conflict',{detail:{code:error.code,message:error.message}}));
       throw error;
     }
   });
@@ -756,16 +759,34 @@ if(typeof window!=='undefined')window.VocabMasterPersistence={
   initializePersistence,getCurrentState,exportBackupPackage,downloadBackupFile,restoreBackupDocument,listReviewEvents,listSnapshots,restoreSnapshot,getPersistenceStatus,persistCard,persistCards,persistCardsBatch,deleteCard,persistSettings,persistFsrsConfig,persistMetrics,persistReviewResult,resetLearningProgressNow
 };
 
+async function applyImportBatchOperation(operation){
+  const database=await openDatabase();
+  const transaction=database.transaction([STORE_NAMES.cards,STORE_NAMES.meta],'readwrite');
+  const store=transaction.objectStore(STORE_NAMES.cards);
+  for(const card of operation.cards){
+    const existing=await requestResult(store.get(card.id));
+    const expected=Number(card.storageBaseUpdatedAt||0);const actual=Number(existing?.storageUpdatedAt||0);
+    if(existing&&expected&&actual!==expected){transaction.abort();const error=new Error('Import dựa trên phiên bản thẻ cũ. Tải lại trước khi merge.');error.code='STALE_IMPORT_WRITE';throw error;}
+    store.put(clone(card));
+  }
+  const revision=await updateRevision(transaction,operation.reason||'import-atomic');await transactionDone(transaction);return revision;
+}
+
 export async function persistImportBatch({cards=[],updates=[]}={},reason='import-atomic'){
-  const values=[...cards,...updates].map(card=>clone(card));
+  const stamp=Date.now();
+  const values=[...cards,...updates].map((card,index)=>({...clone(card),storageBaseUpdatedAt:Number(card?.storageUpdatedAt||0),storageUpdatedAt:stamp+index}));
   return enqueueWrite(async()=>{
     if(indexedDbUnavailable()){const merged=new Map(getCurrentState().cards.map(card=>[card.id,card]));for(const card of values)merged.set(card.id,card);currentState=normalizeState({...getCurrentState(),cards:[...merged.values()]});writeFallbackState({cards:currentState.cards});return clone(values);}
-    const database=await openDatabase();
-    const transaction=database.transaction([STORE_NAMES.cards,STORE_NAMES.meta],'readwrite');
-    const store=transaction.objectStore(STORE_NAMES.cards);for(const card of values)store.put(clone(card));
-    const revision=await updateRevision(transaction,reason);await transactionDone(transaction);
-    const merged=new Map(getCurrentState().cards.map(card=>[card.id,card]));for(const card of values)merged.set(card.id,card);
-    currentState=normalizeState({...getCurrentState(),cards:[...merged.values()],revision});broadcastRevision(revision,reason);scheduleSnapshot(reason);return clone(values);
+    const operation={id:'import:'+stamp,type:'import-batch',cards:values,reason,createdAt:stamp};let outbox=null;
+    try{
+      outbox=await queueOutbox(operation);const revision=await applyImportBatchOperation(operation);await deleteOne(STORE_NAMES.outbox,outbox.id);
+      const merged=new Map(getCurrentState().cards.map(card=>[card.id,card]));for(const card of values)merged.set(card.id,card);
+      currentState=normalizeState({...getCurrentState(),cards:[...merged.values()],revision});broadcastRevision(revision,reason);scheduleSnapshot(reason);emitStatus('saved');return clone(values);
+    }catch(error){
+      if(error.code==='STALE_IMPORT_WRITE'&&outbox)await deleteOne(STORE_NAMES.outbox,outbox.id).catch(()=>{});
+      error.outboxQueued=Boolean(outbox&&error.code!=='STALE_IMPORT_WRITE');emitStatus(error.outboxQueued?'pending':'error',{pendingId:error.outboxQueued?outbox.id:null,message:error.message});
+      if(error.code==='STALE_IMPORT_WRITE')globalThis.dispatchEvent?.(new CustomEvent('vocab:write-conflict',{detail:{code:error.code,message:error.message}}));throw error;
+    }
   });
 }
 

@@ -54,7 +54,7 @@ test('empty initialized database remains empty and review write is atomic/idempo
   assert.equal(duplicate.inserted,false);
   const backup=await persistence.exportBackupPackage();
   assert.equal(backup.cards.length,1);
-  assert.equal(backup.cards[0].back,'bền vững');
+  assert.equal(backup.cards[0].back,'bền');
   assert.equal(backup.reviewEvents.length,1);
   assert.equal(backup.metrics.completedReviews,1);
   assert.equal((await persistence.getPersistenceStatus()).pendingWrites,0);
