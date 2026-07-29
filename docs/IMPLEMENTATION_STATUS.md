@@ -1,13 +1,13 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30 kickoff baseline, trước source change
+Last audited: 2026-07-30, P0-00 independently accepted
 
-Audited source commit: 547e5d665adbf102c15b65ac39def185769e5626
+Audited source commit: 33616e5e03ef3684b0afdbdf6e328ef45bb5cfc4
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
 Active implementation branch: codex/phase-0-release-safety
-Scope of this update: Phase 0 governance reconciliation và kickoff baseline trước source change; source implementation chưa bắt đầu.
+Scope of this update: governance/kickoff baseline và P0-00 Acceptance harness. P0-01 bắt đầu; Phase 0 product gate vẫn đỏ.
 
 ## 1. Provenance status
 
@@ -21,7 +21,7 @@ Scope of this update: Phase 0 governance reconciliation và kickoff baseline tr�
 
 Hard stop: nếu roadmap/dependency thay đổi vật chất, không tiếp tục source cho đến khi ROADMAP, IMPLEMENTATION_PLAN, IMPLEMENTATION_STATUS và DECISIONS được reconcile theo ADR mới.
 
-## 2. Kickoff verification matrix (actual current run)
+## 2. Kickoff baseline verification matrix
 
 | Command | Result | Notes |
 |---|---|---|
@@ -43,6 +43,22 @@ Hard stop: nếu roadmap/dependency thay đổi vật chất, không tiếp tụ
 
 Ports 3000, 3010, 5692 and 4173 were verified empty after the run. V10 browser discovery still fails, and one-off passes do not close earlier flaky evidence; the release baseline is not Phase 0 accepted.
 
+### P0-00 acceptance evidence
+
+Accepted source commit: `33616e5e03ef3684b0afdbdf6e328ef45bb5cfc4`.
+
+| Evidence | Actual result |
+|---|---|
+| `npm run test:browser-harness` | PASS 12/12; deterministic Windows/macOS/Linux discovery, no skip path, isolated profile, bounded EBUSY retry, failure classification and POSIX process-group cleanup checks |
+| `npm run test:ielts-browser` | PASS after every blocked YouTube iframe rerender was deterministically settled; learner Retell attempt and lexical gap were read back from IndexedDB |
+| `npm run check` | PASS after reviewer fixes |
+| `npm run phase0:harness` | Earlier complete run PASS 5/5; repeated run later stopped on a reproducible V10 product race, not an infrastructure/cleanup error |
+| `npm run phase0:gate` | Non-browser unit/static/audit/build/server/preview gates PASS; browser gate correctly stopped on V10 `sentence-learning-loop.js` session lifecycle `TypeError` and reported `PRODUCT_FAILURE` |
+| Cleanup verification | Ports 3000, 3001, 3010, 9333, 9334, 9344 and 9555 empty; all task-owned `vocab-*-smoke-*` temp profiles removed after pass and fail |
+| Independent review | ACCEPTED; no P0/P1 finding after fixes for rerendered iframe race, POSIX descendant cleanup and CDP/transport classification |
+
+P0-00 has no data migration. Rollback is removal of the shared helper, gate scaffold and browser-suite integration. Acceptance here means the harness is trustworthy; it does not turn the known V10 product failure green. That failure remains owned by P0-03 and keeps the Phase 0 hard gate red.
+
 ## 3. Confirmed blockers
 
 | ID | Severity | Blocker | Required owner package |
@@ -55,7 +71,6 @@ Ports 3000, 3010, 5692 and 4173 were verified empty after the run. V10 browser d
 | B-006 | P0/Critical | Cross-DB restore is not crash-atomic; RAM fallback can look successful | P0-05 |
 | B-007 | P0/High | Legacy and V10 Capture/Inbox both mount; async Quick Capture is unsafe | P0-06 |
 | B-008 | P0/High | Multiple Today surfaces; exact plan target can be discarded by launcher | P0-07 |
-| B-009 | P0/High | Browser acceptance is currently inconsistent/flaky across scripts | P0-00 |
 | B-010 | P1/High | Three DBs and several cross-DB writes lack a shared migration/saga/reconciler model | P1-00, P1-03 |
 | B-011 | P2/High | Transcript resolver is range/cache-RAM based, reparses weakly and lacks durable jobs | P2-00–P2-06 |
 | B-012 | P3/Critical | Dictation answer remains in transcript rail DOM/a11y surface | P3-03 |
@@ -63,11 +78,13 @@ Ports 3000, 3010, 5692 and 4173 were verified empty after the run. V10 browser d
 | B-014 | P5/Critical | Cloud fallback consent/shared-cache policy and local process safety are not production-ready | P5-00–P5-05 |
 | B-015 | P7/High | Metrics/calibration are too weak for safe personalization or FSRS tuning | P7-00–P7-05 |
 
+Resolved at the current audited commit: B-009. Browser discovery, process/port/profile lifecycle and infrastructure-versus-product classification are centralized and independently accepted.
+
 ## 4. Phase status
 
 | Phase | Status | Entry gate | Exit state |
 |---|---|---|---|
-| Phase 0 — Containment and Release Safety | IN PLANNING / RED | Baseline audit complete | Not met |
+| Phase 0 — Containment and Release Safety | IMPLEMENTING / RED | Baseline audit complete | Not met |
 | Phase 1 — Core Product Unification | BLOCKED_BY_PHASE_0 | P0-08 ACCEPTED | Not started |
 | Phase 2 — Caption-first Resolver | BLOCKED_BY_PHASE_1 | P1-08 ACCEPTED | Not started |
 | Phase 3 — Full-video Workspace | BLOCKED_BY_PHASE_2 | P2-06 ACCEPTED | Not started |
@@ -94,8 +111,8 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 | Package | Commit unit | Dependency | Status |
 |---|---|---|---|
-| P0-00 Acceptance harness | P0-00 | Baseline | IN_PROGRESS |
-| P0-01 Evidence contract | P0-01 | P0-00 | PLANNED |
+| P0-00 Acceptance harness | P0-00 | Baseline | ACCEPTED @ `33616e5` |
+| P0-01 Evidence contract | P0-01 | P0-00 | IN_PROGRESS |
 | P0-02 Core evidence gateway | P0-02 | P0-01 | PLANNED |
 | P0-03 IELTS/V10 containment | P0-03 | P0-01 | PLANNED |
 | P0-04 Backup envelope | P0-04 | P0-00 | PLANNED |
@@ -202,7 +219,7 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [ ] Durable write failure never silently falls back to RAM success.
 - [ ] Quick Capture survives submit failure/reload and only one Inbox is visible.
 - [ ] Only one Today is visible and every launch preserves exact card/skill/source.
-- [ ] Browser discovery/cleanup is deterministic and critical assertions cannot skip.
+- [x] Browser discovery/cleanup is deterministic and critical assertions cannot skip.
 - [ ] Full phase0:gate passes three consecutive clean runs at one exact commit.
 - [ ] Independent reviewer records P0-08 ACCEPTED.
 
@@ -212,8 +229,8 @@ P1-00 remains PHASE_BLOCKED until every checkbox above is checked and P0-08 is i
 
 ## 7. Next package
 
-Current package: P0-00 Acceptance harness.
+Current package: P0-01 Evidence contract.
 
 Phase branch: `codex/phase-0-release-safety`.
 
-Governance/baseline reconciliation is complete; P0-00 implementation is now active. No Phase 1 work is authorized.
+P0-00 is independently accepted at the exact source commit above. P0-01 is active. No Phase 1 work is authorized.

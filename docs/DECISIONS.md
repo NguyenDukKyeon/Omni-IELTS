@@ -343,3 +343,15 @@ Decision: rollback uses feature flags, compatible readers, catalog pointers and 
 Consequences: temporary unused data/schema may remain; cleanup needs a later independently gated retention package.
 
 Revisit when: a fully exported, verified and user-approved destructive cleanup is separately planned.
+
+## ADR-027 — Browser acceptance separates infrastructure from product behavior
+
+Status: CONFIRMED
+
+Decision: all critical browser suites use one deterministic discovery/lifecycle helper. Browser/CDP/network transport, occupied ports, process-tree leakage and profile cleanup are infrastructure failures. Runtime assertions and durable-state mismatches are product failures. Cleanup failure is appended as infrastructure evidence but never replaces a primary product failure. Missing Chromium is a hard infrastructure failure, never a skipped suite.
+
+Consequences: P0-00 may be accepted when the harness reproducibly exposes a red product defect assigned to a successor package; the full Phase 0 gate remains red until that product defect is fixed. Browser processes use isolated task-owned profiles, and POSIX descendants are owned through isolated process groups.
+
+Evidence: P0-00 independently accepted source commit `33616e5e03ef3684b0afdbdf6e328ef45bb5cfc4`; the V10 sentence-session race remains a product failure owned by P0-03.
+
+Revisit when: the CI browser transport or process ownership model changes; preserve deterministic discovery, bounded cleanup and failure-kind separation.
