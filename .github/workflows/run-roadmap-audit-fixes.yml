@@ -24,7 +24,16 @@ jobs:
           node-version: 22
       - name: Reassemble audited corrections
         shell: bash
-        run: cat .roadmap-audit-fixes/part* | base64 --decode | gzip -dc > /tmp/apply-audit-fixes.mjs
+        run: |
+          cat .roadmap-audit-fixes/part* | base64 --decode | gzip -dc > /tmp/apply-audit-fixes.mjs
+          python - <<'PY'
+          from pathlib import Path
+          path=Path('/tmp/apply-audit-fixes.mjs')
+          source=path.read_text()
+          source=source.replace("return String(value ?? '').trim().replace(/\\\\s+/g, ' ');", "return String(value ?? '').trim().replace(/\\\\s+/g,' ');")
+          path.write_text(source)
+          PY
+          node --check /tmp/apply-audit-fixes.mjs
       - name: Apply audited corrections
         shell: bash
         run: node /tmp/apply-audit-fixes.mjs
