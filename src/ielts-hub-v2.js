@@ -1,4 +1,4 @@
-import { listContentLessons,refreshContentCatalog,downloadContentLesson,openContentLesson,setLessonPinned } from './content-platform.js';
+import { listContentLessons,refreshContentCatalog,downloadContentLesson,openContentLesson } from './content-platform.js';
 import { resolveTranscriptFast,continueTranscriptProgressively,listCachedTranscripts,parseYouTubeVideoId } from './transcript-resolver-v2.js';
 import { buildTodayActivityPlan } from './today-planner-v2.js';
 import { IELTS_STORE_NAMES } from './ielts-domain.js';
@@ -7,12 +7,13 @@ import { listIeltsRecords } from './ielts-persistence.js';
 const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 let activeTab='today';
 let videoBusy=false;
+let bypassLegacyLauncher=false;
 
 function dialog(){return document.querySelector('#v10IeltsHubDialog');}
 function panel(){return document.querySelector('#v10IeltsHubPanel');}
 function toast(message){const node=document.querySelector('#toast');if(!node)return;node.textContent=message;node.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>node.classList.remove('show'),3500);}
 function activityIcon(type){return({ 'card-review':'🧠','new-card':'🌱',dictation:'🎧',shadowing:'🎙️','error-correction':'🛠️',reading:'📖',paraphrase:'🔁',production:'✍️',retell:'🗣️' })[type]||'•';}
-function openLegacyTab(tab){document.querySelector('#openIeltsLabButton,#openIeltsLabMobile')?.click();setTimeout(()=>document.querySelector(`[data-ielts-tab="${tab}"]`)?.click(),60);}
+function openLegacyTab(tab){const launcher=document.querySelector('#openIeltsLabButton,#openIeltsLabMobile');if(!launcher)return;bypassLegacyLauncher=true;try{launcher.click();}finally{bypassLegacyLauncher=false;}setTimeout(()=>document.querySelector(`[data-ielts-tab="${tab}"]`)?.click(),60);}
 
 function shell(content){return`<div class="v10-ielts-shell"><header class="v10-ielts-header"><div><p class="eyebrow">VOCAB MASTER · IELTS LEARNING SYSTEM</p><h2>IELTS</h2><p>Kho từ trung tâm · nội dung theo nhu cầu · học theo câu · lỗi được theo dõi dài hạn</p></div><button class="ielts-icon-button" data-v10-ielts-close aria-label="Đóng IELTS">×</button></header><nav class="v10-ielts-tabs" role="tablist">${[['today','Học hôm nay'],['discover','Khám phá bài học'],['videos','Video của tôi'],['skills','Lỗi & kỹ năng']].map(([id,label])=>`<button role="tab" data-v10-ielts-tab="${id}" aria-selected="${activeTab===id}">${label}</button>`).join('')}</nav><main class="v10-ielts-panel">${content}</main></div>`;}
 
@@ -45,5 +46,5 @@ async function handleClick(event){
 function ensureDialog(){if(dialog())return;const node=document.createElement('dialog');node.id='v10IeltsHubDialog';node.className='v10-ielts-dialog';node.innerHTML='<div id="v10IeltsHubPanel"></div>';node.addEventListener('click',event=>void handleClick(event));node.addEventListener('change',event=>{if(event.target.matches('#v10ContentLevel,#v10ContentTopic,#v10ContentSkill'))filterContent();});node.addEventListener('submit',event=>{if(event.target.id==='v10VideoForm'){event.preventDefault();void handleVideoSubmit(event.target);}});document.body.append(node);}
 export async function openIeltsHub(tab='today'){activeTab=tab;ensureDialog();if(!dialog().open)dialog().showModal();await render();}
 
-function interceptLegacyLauncher(){document.addEventListener('click',event=>{if(!event.target.closest('#openIeltsLabButton,#openIeltsLabMobile'))return;event.preventDefault();event.stopImmediatePropagation();void openIeltsHub('today');},true);}
-export function mountIeltsHubV2(){ensureDialog();interceptLegacyLauncher();globalThis.addEventListener('vocab:v10-open-ielts-hub',event=>void openIeltsHub(event.detail?.tab||'today'));globalThis.VocabMasterIeltsHub={open:openIeltsHub,refresh:render};}
+function interceptLegacyLauncher(){document.addEventListener('click',event=>{if(!event.target.closest('#openIeltsLabButton,#openIeltsLabMobile'))return;if(bypassLegacyLauncher)return;event.preventDefault();event.stopImmediatePropagation();void openIeltsHub('today');},true);}
+export function mountIeltsHubV2(){ensureDialog();interceptLegacyLauncher();globalThis.addEventListener('vocab:v10-open-ielts-hub',event=>void openIeltsHub(event.detail?.tab||'today'));globalThis.VocabMasterIeltsHub={open:openIeltsHub,refresh:render,openLegacyTab};}
