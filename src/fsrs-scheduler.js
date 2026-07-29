@@ -67,18 +67,22 @@ export function plannedSkillsForCard(card = {}) {
     : ['recognition', 'recall'];
 }
 
-export function unlockedSkillsForCard(card = {}) {
+function unlockedSkillsFromMap(card = {}, map = {}) {
   const planned = plannedSkillsForCard(card);
-  const map = existingSkillMap(card);
   const reviewed = skill => Number(map[skill]?.reps || 0) > 0;
   const unlocked = planned.filter(skill => skill === 'recognition' || skill === 'recall');
-  const foundationReady = reviewed('recognition') && reviewed('recall');
+  const foundationReady = (!planned.includes('recognition') || reviewed('recognition')) && (!planned.includes('recall') || reviewed('recall'));
 
-  if (card.type === 'collocation' && planned.includes('collocation') && foundationReady) unlocked.push('collocation');
-  const collocationReady = card.type !== 'collocation' || !planned.includes('collocation') || reviewed('collocation');
+  if (planned.includes('collocation') && foundationReady) unlocked.push('collocation');
+  const collocationReady = !planned.includes('collocation') || reviewed('collocation');
   if (planned.includes('listening') && foundationReady && collocationReady) unlocked.push('listening');
-  if (planned.includes('production') && foundationReady && collocationReady && reviewed('listening')) unlocked.push('production');
+  const listeningReady = !planned.includes('listening') || reviewed('listening');
+  if (planned.includes('production') && foundationReady && collocationReady && listeningReady) unlocked.push('production');
   return [...new Set(unlocked)];
+}
+
+export function unlockedSkillsForCard(card = {}) {
+  return unlockedSkillsFromMap(card, existingSkillMap(card));
 }
 
 export function requiredSkillsForCard(card = {}) {
@@ -267,11 +271,13 @@ function statusFromSkillMap(card, fsrsBySkill) {
 }
 
 function aggregateSkillMap(card, fsrsBySkill, now, scheduler) {
-  const required = requiredSkillsForCard(card);
-  const entries = required.map(skill => [skill, deserializeValue(fsrsBySkill[skill], now)]);
+  const planned = plannedSkillsForCard(card);
+  const unlocked = unlockedSkillsFromMap(card, fsrsBySkill);
+  const entries = unlocked.map(skill => [skill, deserializeValue(fsrsBySkill[skill], now)]);
   entries.sort((a, b) => a[1].due.getTime() - b[1].due.getTime());
   const [nextSkill, nextCard] = entries[0] || ['recognition', createEmptyCard(new Date(now))];
-  const reviewed = entries.filter(([, value]) => value.reps > 0);
+  const plannedEntries = planned.map(skill => [skill, deserializeValue(fsrsBySkill[skill], now)]);
+  const reviewed = plannedEntries.filter(([, value]) => value.reps > 0);
   const stabilityValues = reviewed.map(([, value]) => value.stability);
   const difficultyValues = reviewed.map(([, value]) => value.difficulty);
   const retrievability = nextCard.reps > 0 && nextCard.state !== State.New
@@ -285,7 +291,7 @@ function aggregateSkillMap(card, fsrsBySkill, now, scheduler) {
     difficulty: difficultyValues.length ? difficultyValues.reduce((sum, value) => sum + value, 0) / difficultyValues.length : 0,
     retrievability,
     status: statusFromSkillMap(card, fsrsBySkill),
-    skillCoverage: required.length ? reviewed.length / required.length : 0
+    skillCoverage: planned.length ? reviewed.length / planned.length : 0
   };
 }
 
