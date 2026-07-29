@@ -40,7 +40,7 @@ async function main(){
     const addError=`(()=>{const f=document.getElementById('manualErrorForm');f.querySelector('[name=learnerResponse]').value='economy growth';f.querySelector('[name=expectedResponse]').value='economic growth';f.querySelector('[name=explanation]').value='Use adjective plus noun';f.requestSubmit();})()`;
     await evaluate(addError);await waitFor("document.querySelector('[data-error-id]')",'first error saved');await evaluate(addError);await waitFor("document.querySelector('.ielts-count')?.textContent.includes('2')",'duplicate occurrence merged');
 
-    await evaluate("document.querySelector('[data-ielts-tab=\"paraphrase\"]').click()");await waitFor("document.getElementById('labPracticeForm')",'curated paraphrase practice');await evaluate(`(()=>{const f=document.getElementById('labPracticeForm');const wrong=[...f.querySelectorAll('[name=answer]')].find(input=>{const id=input.value;return !${JSON.stringify(CURATED_WRONG_IDS)}.includes(id)})||f.querySelectorAll('[name=answer]')[1];wrong.checked=true;f.requestSubmit();})()`);
+    await evaluate("document.querySelector('[data-ielts-tab=\"paraphrase\"]').click()");await waitFor("document.getElementById('labPracticeForm')",'curated paraphrase practice');await evaluate(`(()=>{const f=document.getElementById('labPracticeForm');const wrong=[...f.querySelectorAll('[name=answer]')].find(input=>{const id=input.value;return !${JSON.stringify(CURATED_CORRECT_IDS)}.includes(id)})||f.querySelectorAll('[name=answer]')[1];wrong.checked=true;f.requestSubmit();})()`);
     await waitFor("document.getElementById('labFeedback')?.textContent.includes('Chưa đúng')",'paraphrase rationale feedback');
 
     await evaluate("document.querySelector('[data-ielts-tab=\"reading\"]').click()");await waitFor("document.getElementById('readingPracticeForm')",'curated reading practice');await evaluate(`(()=>{const f=document.getElementById('readingPracticeForm');for(const fieldset of f.querySelectorAll('[data-reading-question]')){fieldset.querySelector('input[type=radio]').checked=true;const questionId=fieldset.dataset.readingQuestion;const map={q1:'simply increasing the number of trees does not guarantee equal benefits',q2:'Young trees also require regular watering and maintenance before they provide substantial shade.'};fieldset.querySelector('input[type=text], input:not([type])').value=map[questionId]||'evidence';}f.requestSubmit();})()`);await waitFor("document.getElementById('readingFeedback')?.textContent.includes('Evidence')",'reading evidence feedback');
@@ -59,5 +59,5 @@ async function main(){
   }finally{cdp?.close();browser?.kill('SIGKILL');server.kill('SIGKILL');await Promise.allSettled([new Promise(resolve=>server.once('exit',resolve)),browser?new Promise(resolve=>browser.once('exit',resolve)):Promise.resolve()]);await rm(profileDir,{recursive:true,force:true});if(serverOutput)console.log(serverOutput.trim());if(browserOutput&&process.env.DEBUG_BROWSER_SMOKE==='1')console.log(browserOutput.trim());}
 }
 
-const CURATED_WRONG_IDS=['__never__'];
+const CURATED_CORRECT_IDS=['a'];
 await main();
