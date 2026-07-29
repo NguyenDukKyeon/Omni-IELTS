@@ -4,6 +4,7 @@ import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import webpush from 'web-push';
+import { createIeltsApiHandler } from './ielts-api.mjs';
 
 const port=Number(process.env.PORT||3000);
 const root=resolve(fileURLToPath(new URL('../dist/',import.meta.url)));
@@ -30,7 +31,7 @@ function securityHeaders(contentType='text/plain; charset=utf-8'){
     'x-frame-options':'DENY',
     'cross-origin-opener-policy':'same-origin',
     'permissions-policy':'camera=(), microphone=(self), geolocation=()',
-    'content-security-policy':"default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    'content-security-policy':"default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://i.ytimg.com https://img.youtube.com; media-src 'self' blob:; connect-src 'self'; frame-src https://www.youtube.com https://www.youtube-nocookie.com; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
   };
 }
 function json(res,status,data){res.writeHead(status,{...securityHeaders('application/json; charset=utf-8'),'cache-control':'no-store'});res.end(JSON.stringify(data));}
@@ -57,6 +58,7 @@ function extractJson(text){
 const configuredAiModels=String(process.env.GEMINI_MODELS||'').split(',').map(value=>value.trim()).filter(Boolean);
 const AI_MODELS=new Set(configuredAiModels.length?configuredAiModels:['gemini-3.6-flash','gemini-3.5-flash','gemini-3.5-flash-lite']);
 const DEFAULT_AI_MODEL=AI_MODELS.has(process.env.GEMINI_MODEL)?process.env.GEMINI_MODEL:[...AI_MODELS][0];
+const handleIeltsApi=createIeltsApiHandler({securityHeaders,aiModels:AI_MODELS,defaultAiModel:DEFAULT_AI_MODEL});
 const aiCache=new Map();
 const aiTelemetry={requests:0,cacheHits:0,errors:0,totalLatencyMs:0,byRoute:{}};
 const AI_SCHEMAS={
@@ -210,17 +212,15 @@ async function handlePush(req,res,path){
   }catch(error){return json(res,500,{error:error.message});}
 }
 
-export async function apiHandler(req, res, next) {
-  try {
-    const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
-    if (url.pathname.startsWith('/api/ai/')) return await handleAi(req, res, url.pathname);
-    if (url.pathname.startsWith('/api/push/')) return await handlePush(req, res, url.pathname);
-    if (url.pathname === '/api/health') return json(res, 200, { ok: true, fsrs: 6, pwa: true, push: Boolean(vapidPublicKey), multimodal: true, ai: ['enrich', 'evaluate', 'mnemonic', 'context-example', 'context-capture', 'output-practice', 'pronunciation'], aiTelemetry: {...aiTelemetry, averageLatencyMs: aiTelemetry.requests ? Math.round(aiTelemetry.totalLatencyMs/aiTelemetry.requests) : 0, models:[...AI_MODELS]}  });
-    if (next) return next();
-  } catch (err) {
-    if (next) return next(err);
-    json(res, 500, { error: err.message });
-  }
+export async function apiHandler(req,res,next){
+  try{
+    const url=new URL(req.url||'/',`http://${req.headers.host||'localhost'}`);
+    if(url.pathname.startsWith('/api/ai/'))return await handleAi(req,res,url.pathname);
+    if(url.pathname.startsWith('/api/ielts/'))return await handleIeltsApi(req,res,url.pathname);
+    if(url.pathname.startsWith('/api/push/'))return await handlePush(req,res,url.pathname);
+    if(url.pathname==='/api/health')return json(res,200,{ok:true,fsrs:6,pwa:true,push:Boolean(vapidPublicKey),multimodal:true,ai:['enrich','evaluate','mnemonic','context-example','context-capture','output-practice','pronunciation'],ielts:['transcript','paraphrase-draft','reading-draft','retell'],aiTelemetry:{...aiTelemetry,averageLatencyMs:aiTelemetry.requests?Math.round(aiTelemetry.totalLatencyMs/aiTelemetry.requests):0,models:[...AI_MODELS]}});
+    if(next)return next();
+  }catch(err){if(next)return next(err);json(res,500,{error:err.message});}
 }
 
 await loadPushState();await configureVapid();
@@ -230,8 +230,9 @@ const server=createServer(async(req,res)=>{
   try{
     const url=new URL(req.url||'/',`http://${req.headers.host||'localhost'}`);
     if(url.pathname.startsWith('/api/ai/'))return handleAi(req,res,url.pathname);
+    if(url.pathname.startsWith('/api/ielts/'))return handleIeltsApi(req,res,url.pathname);
     if(url.pathname.startsWith('/api/push/'))return handlePush(req,res,url.pathname);
-    if(url.pathname==='/api/health')return json(res,200,{ok:true,fsrs:6,pwa:true,push:Boolean(vapidPublicKey),multimodal:true,ai:['enrich','evaluate','mnemonic','context-example','context-capture','output-practice','pronunciation'],aiTelemetry:{...aiTelemetry,averageLatencyMs:aiTelemetry.requests?Math.round(aiTelemetry.totalLatencyMs/aiTelemetry.requests):0,models:[...AI_MODELS]}});
+    if(url.pathname==='/api/health')return json(res,200,{ok:true,fsrs:6,pwa:true,push:Boolean(vapidPublicKey),multimodal:true,ai:['enrich','evaluate','mnemonic','context-example','context-capture','output-practice','pronunciation'],ielts:['transcript','paraphrase-draft','reading-draft','retell'],aiTelemetry:{...aiTelemetry,averageLatencyMs:aiTelemetry.requests?Math.round(aiTelemetry.totalLatencyMs/aiTelemetry.requests):0,models:[...AI_MODELS]}});
     const requested=decodeURIComponent(url.pathname);const relative=requested==='/'?'index.html':requested.replace(/^\/+/, '');let file=resolve(root,relative);
     if(!file.startsWith(root))throw new Error('Invalid path');
     try{const info=await stat(file);if(info.isDirectory())file=resolve(file,'index.html');}catch{if(!extname(relative))file=resolve(root,'index.html');}
@@ -240,9 +241,6 @@ const server=createServer(async(req,res)=>{
   }catch{res.writeHead(404,{...securityHeaders(),'cache-control':'no-store'});res.end('Not found');}
 });
 
-const currentFile = fileURLToPath(import.meta.url);
-const entryFile = process.argv[1] ? resolve(process.argv[1]) : '';
-if (currentFile === entryFile) {
-  server.listen(port, '0.0.0.0', () => console.log(`Vocab Master running at http://0.0.0.0:${port}`));
-}
-
+const currentFile=fileURLToPath(import.meta.url);
+const entryFile=process.argv[1]?resolve(process.argv[1]):'';
+if(currentFile===entryFile)server.listen(port,'0.0.0.0',()=>console.log(`Vocab Master running at http://0.0.0.0:${port}`));
