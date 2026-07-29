@@ -99,6 +99,9 @@ async function main(){
     await waitFor("document.getElementById('studyOverlay').classList.contains('open')",'weak fallback study');
     assert.match(await evaluate("document.getElementById('studyLabel').textContent"),/^Ôn nhanh(?:\s|$)/,'Weak mode did not fall back to quick review.');
     assert.match(await evaluate("document.getElementById('toast').textContent"),/(?:Chưa có từ yếu|đã chuyển sang phiên tổng hợp)/i);
+    await waitFor("document.getElementById('introContinue')",'new-card introduction');
+    await evaluate("document.getElementById('introContinue').click()");
+    await waitFor(`window.VocabMasterApp.getState().cards.some(card=>card.front===${JSON.stringify(term)}&&card.status!=='new')`,'card acquisition state');
     await evaluate("document.getElementById('closeStudy').click()");
 
     await evaluate(`(()=>{
