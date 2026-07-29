@@ -10,7 +10,7 @@ permissions:
   issues: write
 jobs:
   apply_review_version_fix:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/agent/roadmap-v9' && !contains(github.event.head_commit.message, '[review-stamp-fixed]')
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'agent/roadmap-v9' && !contains(github.event.pull_request.head.sha, 'review-stamp-fixed')
     runs-on: ubuntu-latest
     permissions:
       contents: write
