@@ -14,6 +14,12 @@ function hubLauncherClick(event){
   void globalThis.VocabMasterIeltsHub?.open?.('today');
 }
 
+function interceptPrimaryLauncher(event){
+  const launcher=event.target.closest?.('#openIeltsLabButton,#openIeltsLabMobile');
+  if(!launcher)return;
+  hubLauncherClick(event);
+}
+
 function replaceLauncher(node){
   if(!node||replacedNodes.has(node))return;
   const clone=node.cloneNode(true);node.replaceWith(clone);
@@ -21,7 +27,9 @@ function replaceLauncher(node){
   replacedNodes.add(clone);
 }
 
-function replaceLaunchers(){replaceLauncher(document.querySelector('#openIeltsLabButton'));replaceLauncher(document.querySelector('#openIeltsLabMobile'));}
+function replaceLaunchers(){
+  for(const node of document.querySelectorAll('#openIeltsLabButton,#openIeltsLabMobile'))replaceLauncher(node);
+}
 
 function interceptHubAdvancedTools(event){
   const direct=event.target.closest('[data-v10-legacy-tab]');const activity=event.target.closest('[data-v10-hub-action]');const tab=direct?.dataset.v10LegacyTab||activity?.dataset.v10HubAction;
@@ -29,8 +37,9 @@ function interceptHubAdvancedTools(event){
 }
 
 export function mountIeltsLauncherOverride(){
+  document.addEventListener('click',interceptPrimaryLauncher,true);
   replaceLaunchers();const hub=document.querySelector('#v10IeltsHubDialog');hub?.addEventListener('click',interceptHubAdvancedTools,true);
   const observer=new MutationObserver(()=>replaceLaunchers());observer.observe(document.body,{childList:true,subtree:true});
   if(globalThis.VocabMasterIeltsHub)globalThis.VocabMasterIeltsHub.openLegacyTab=openLegacyDialog;
-  globalThis.VocabMasterIeltsLauncher={openHub:tab=>globalThis.VocabMasterIeltsHub?.open?.(tab||'today'),openLegacy:openLegacyDialog,refresh:replaceLaunchers,destroy:()=>observer.disconnect()};
+  globalThis.VocabMasterIeltsLauncher={openHub:tab=>globalThis.VocabMasterIeltsHub?.open?.(tab||'today'),openLegacy:openLegacyDialog,refresh:replaceLaunchers,destroy:()=>{observer.disconnect();document.removeEventListener('click',interceptPrimaryLauncher,true);}};
 }
