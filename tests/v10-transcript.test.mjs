@@ -7,7 +7,7 @@ import { parseYouTubeVideoId,transcriptCacheKey } from '../src/transcript-resolv
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 
-test('YouTube parser supports watch, short and shorts URLs',()=>{
+ test('YouTube parser supports watch, short and shorts URLs',()=>{
   const id='dQw4w9WgXcQ';
   assert.equal(parseYouTubeVideoId(`https://www.youtube.com/watch?v=${id}`),id);
   assert.equal(parseYouTubeVideoId(`https://youtu.be/${id}?t=2`),id);
@@ -39,6 +39,8 @@ test('client resolver uses cache/provider race before Gemini fallback',async()=>
   assert.ok(fallback>fast);
   assert.match(source,/firstChunkSeconds=60/);
   assert.match(source,/continueTranscriptProgressively/);
+  assert.match(source,/durationSeconds/);
+  assert.match(source,/25_000/);
 });
 
 test('video learning loop plays timestamped YouTube segments instead of TTS',async()=>{
@@ -50,4 +52,21 @@ test('video learning loop plays timestamped YouTube segments instead of TTS',asy
   assert.match(hub,/createYoutubeSentencePlayer/);
   assert.match(hub,/openVideoLoop\(row\)/);
   assert.doesNotMatch(bridge,/yt-dlp|extract-audio|bestaudio/);
+});
+
+test('full-video workspace waits for caption chunks and exposes a clickable sentence rail',async()=>{
+  const [workspace,runtime,css]=await Promise.all([
+    readFile(resolve(root,'src/video-workspace-v2.js'),'utf8'),
+    readFile(resolve(root,'src/v10-runtime.js'),'utf8'),
+    readFile(resolve(root,'public/video-workspace-v2.css'),'utf8')
+  ]);
+  assert.match(runtime,/mountVideoWorkspaceV2/);
+  assert.match(runtime,/full-video-workspace/);
+  assert.match(workspace,/firstChunkSeconds:180/);
+  assert.match(workspace,/durationSeconds-firstEnd/);
+  assert.match(workspace,/data-video-sentence-index/);
+  assert.match(workspace,/VocabMasterSentenceLoop\.open/);
+  assert.match(workspace,/Đang lấy toàn bộ transcript/);
+  assert.match(css,/grid-template-columns:minmax\(0,1\.7fr\)/);
+  assert.match(css,/\.v10-transcript-row\.active/);
 });
