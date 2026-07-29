@@ -21,6 +21,16 @@
 - Manual production tích cực tối đa được ghi Hard và phải có câu chứa target.
 - Progress tách activity khỏi independent review.
 
-## Cần xác minh trên CI/browser thật
+## Audit cuối đã đóng trong mã
 
-Báo cáo này mô tả thay đổi mã. Production-ready chỉ được công nhận khi toàn bộ release checklist và GitHub Actions đều xanh.
+- Aggregate FSRS chỉ chọn `nextSkill` trong tập kỹ năng đã mở; coverage và mastery vẫn dùng toàn bộ mục tiêu.
+- Review persistence đồng bộ `storageUpdatedAt` trở lại card trong bộ nhớ, hỗ trợ các lượt ôn liên tiếp.
+- Stale review bị loại khỏi outbox thay vì retry vô hạn; trạng thái UI được hoàn tác khi write không được bảo vệ.
+- Calibration so sánh sai lệch theo đơn vị tỷ lệ với ngưỡng 8 điểm phần trăm.
+- Browser smoke dùng selector thư viện hiện hành và kiểm tra control trước khi bấm.
+- Form thêm từ giữ tham chiếu form ổn định qua `await`, không dùng `event.currentTarget` sau bất đồng bộ.
+- Toàn bộ script, marker và workflow vá tạm đã được loại khỏi nhánh sản phẩm và `main`.
+
+## Cổng phát hành
+
+Mã cuối đang được xác minh lại bằng GitHub Actions qua unit/integration tests, static cross-check, roadmap audit, production build, server smoke, preview smoke, browser interaction smoke và hardening browser smoke. Production-ready chỉ được công nhận khi toàn bộ chuỗi này xanh trên cùng một head commit.
