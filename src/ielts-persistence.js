@@ -77,18 +77,10 @@ async function withStore(storeName,mode,callback){
   const transaction=database.transaction(storeName,mode);const store=transaction.objectStore(storeName);const result=await callback(store,null,transaction);await transactionDone(transaction);return result;
 }
 
-async function getAll(storeName){
-  return withStore(storeName,'readonly',async(store,map)=>map?[...map.values()].map(clone):requestResult(store.getAll()));
-}
-async function getOne(storeName,key){
-  return withStore(storeName,'readonly',async(store,map)=>map?clone(map.get(key)):requestResult(store.get(key)));
-}
-async function putOne(storeName,value){
-  return enqueueWrite(()=>withStore(storeName,'readwrite',async(store,map)=>{const copy=clone(value);if(map)map.set(copy.key??copy.id,copy);else store.put(copy);return copy;}));
-}
-async function deleteOne(storeName,key){
-  return enqueueWrite(()=>withStore(storeName,'readwrite',async(store,map)=>{if(map)map.delete(key);else store.delete(key);}));
-}
+async function getAll(storeName){return withStore(storeName,'readonly',async(store,map)=>map?[...map.values()].map(clone):requestResult(store.getAll()));}
+async function getOne(storeName,key){return withStore(storeName,'readonly',async(store,map)=>map?clone(map.get(key)):requestResult(store.get(key)));}
+async function putOne(storeName,value){return enqueueWrite(()=>withStore(storeName,'readwrite',async(store,map)=>{const copy=clone(value);if(map)map.set(copy.key??copy.id,copy);else store.put(copy);return copy;}));}
+async function deleteOne(storeName,key){return enqueueWrite(()=>withStore(storeName,'readwrite',async(store,map)=>{if(map)map.delete(key);else store.delete(key);}));}
 
 function initializeChannel(){
   if(channel||typeof BroadcastChannel==='undefined')return;
@@ -98,7 +90,7 @@ function initializeChannel(){
 function broadcast(reason,stores=[]){const revision=nowRevision();channel?.postMessage({type:'changed',reason,stores,revision});globalThis.dispatchEvent?.(new CustomEvent('vocab:ielts-data-saved',{detail:{reason,stores,revision}}));return revision;}
 
 export async function initializeIeltsPersistence(){
-  initializeChannel();await openIeltsDatabase();const counts={};for(const store of STORE_LIST)counts[store]=(await getAll(store)).length;return{database:IELTS_DB_NAME,version:IELTS_DB_VERSION,counts};
+  initializeChannel();await openIeltsDatabase();const recoveredJobs=await recoverInterruptedTranscriptionJobs();const counts={};for(const store of STORE_LIST)counts[store]=(await getAll(store)).length;return{database:IELTS_DB_NAME,version:IELTS_DB_VERSION,counts,recoveredJobs};
 }
 
 export async function listIeltsRecords(storeName,{limit=0,sortBy='updatedAt',descending=true}={}){
@@ -120,7 +112,7 @@ export async function upsertErrorRecord(input,reason='ielts-error-upserted'){
   const incoming=createErrorRecord(input);emit('saving',{storeName:IELTS_STORE_NAMES.errors});
   const saved=await enqueueWrite(async()=>{
     const database=await openIeltsDatabase();
-    if(!database){const map=memory.get(IELTS_STORE_NAMES.errors);const existing=[...map.values()].find(row=>row.normalizedKey===incoming.normalizedKey);const value=existing?mergeErrorRecords(existing,incoming):incoming;map.delete(existing?.id);map.set(value.id,value);return value;}
+    if(!database){const map=memory.get(IELTS_STORE_NAMES.errors);const existing=[...map.values()].find(row=>row.normalizedKey===incoming.normalizedKey);const value=existing?mergeErrorRecords(existing,incoming):incoming;if(existing)map.delete(existing.id);map.set(value.id,value);return value;}
     const transaction=database.transaction(IELTS_STORE_NAMES.errors,'readwrite');const store=transaction.objectStore(IELTS_STORE_NAMES.errors);const existing=await requestResult(store.index('normalizedKey').get(incoming.normalizedKey));const value=existing?mergeErrorRecords(existing,incoming):incoming;store.put(value);await transactionDone(transaction);return value;
   });
   broadcast(reason,[IELTS_STORE_NAMES.errors]);emit('saved',{storeName:IELTS_STORE_NAMES.errors});return saved;
@@ -149,9 +141,40 @@ export async function findMediaByVideoId(videoId){
   const transaction=database.transaction(IELTS_STORE_NAMES.mediaSources,'readonly');const result=await requestResult(transaction.objectStore(IELTS_STORE_NAMES.mediaSources).index('videoId').get(value));await transactionDone(transaction);return result||null;
 }
 
+function normalizeTranscriptionJob(input={},existing=null){
+  const now=Date.now();return{
+    ...(existing?clone(existing):{}),
+    id:String(existing?.id||input.id||globalThis.crypto?.randomUUID?.()||`transcription-${now}`),
+    mediaSourceId:String(input.mediaSourceId??existing?.mediaSourceId??''),
+    cacheKey:String(input.cacheKey??existing?.cacheKey??''),
+    model:String(input.model??existing?.model??''),
+    language:String(input.language??existing?.language??'en'),
+    status:['queued','processing','needs-review','ready','failed','cancelled'].includes(input.status)?input.status:(existing?.status||'queued'),
+    retryCount:Math.max(0,Number(input.retryCount??existing?.retryCount??0)),
+    error:String(input.error??existing?.error??''),
+    createdAt:Number(existing?.createdAt||input.createdAt||now),
+    updatedAt:now
+  };
+}
+
 export async function saveTranscriptionJob(input){
-  const value={id:String(input.id||globalThis.crypto?.randomUUID?.()||`transcription-${Date.now()}`),mediaSourceId:String(input.mediaSourceId||''),cacheKey:String(input.cacheKey||''),model:String(input.model||''),language:String(input.language||'en'),status:['queued','processing','needs-review','ready','failed','cancelled'].includes(input.status)?input.status:'queued',retryCount:Math.max(0,Number(input.retryCount||0)),error:String(input.error||''),createdAt:Number(input.createdAt||Date.now()),updatedAt:Date.now()};
-  if(!value.mediaSourceId||!value.cacheKey)throw new Error('Transcription job thiếu mediaSourceId hoặc cacheKey.');return saveIeltsRecord(IELTS_STORE_NAMES.transcriptionJobs,value,'ielts-transcription-job');
+  const candidate=normalizeTranscriptionJob(input);if(!candidate.mediaSourceId||!candidate.cacheKey)throw new Error('Transcription job thiếu mediaSourceId hoặc cacheKey.');
+  emit('saving',{storeName:IELTS_STORE_NAMES.transcriptionJobs});
+  const saved=await enqueueWrite(async()=>{
+    const database=await openIeltsDatabase();
+    if(!database){const map=memory.get(IELTS_STORE_NAMES.transcriptionJobs);const existing=[...map.values()].find(row=>row.cacheKey===candidate.cacheKey)||null;const value=normalizeTranscriptionJob(input,existing);if(existing&&existing.id!==value.id)map.delete(existing.id);map.set(value.id,value);return value;}
+    const transaction=database.transaction(IELTS_STORE_NAMES.transcriptionJobs,'readwrite');const store=transaction.objectStore(IELTS_STORE_NAMES.transcriptionJobs);const existing=await requestResult(store.index('cacheKey').get(candidate.cacheKey));const value=normalizeTranscriptionJob(input,existing||null);store.put(value);await transactionDone(transaction);return value;
+  });
+  broadcast('ielts-transcription-job',[IELTS_STORE_NAMES.transcriptionJobs]);emit('saved',{storeName:IELTS_STORE_NAMES.transcriptionJobs});return saved;
+}
+
+export async function recoverInterruptedTranscriptionJobs({now=Date.now()}={}){
+  const recovered=await enqueueWrite(async()=>{
+    const database=await openIeltsDatabase();
+    if(!database){const map=memory.get(IELTS_STORE_NAMES.transcriptionJobs);const changed=[];for(const[rowId,row]of map){if(row.status!=='processing')continue;const value={...row,status:'failed',retryCount:Number(row.retryCount||0)+1,error:'Phiên tạo transcript bị gián đoạn do reload hoặc đóng ứng dụng. Bạn có thể thử lại.',updatedAt:now};map.set(rowId,value);changed.push(value);}return changed;}
+    const transaction=database.transaction(IELTS_STORE_NAMES.transcriptionJobs,'readwrite');const store=transaction.objectStore(IELTS_STORE_NAMES.transcriptionJobs);const processing=await requestResult(store.index('status').getAll('processing'));const changed=processing.map(row=>({...row,status:'failed',retryCount:Number(row.retryCount||0)+1,error:'Phiên tạo transcript bị gián đoạn do reload hoặc đóng ứng dụng. Bạn có thể thử lại.',updatedAt:now}));for(const row of changed)store.put(row);await transactionDone(transaction);return changed;
+  });
+  if(recovered.length)broadcast('ielts-transcription-recovered',[IELTS_STORE_NAMES.transcriptionJobs]);return recovered.length;
 }
 
 export async function replaceTranscriptSegments(mediaSourceId,input,{durationMs=0}={}){
@@ -176,9 +199,7 @@ export async function saveMediaProgress(input){
   if(!value.mediaSourceId)throw new Error('Media progress thiếu mediaSourceId.');return saveIeltsRecord(IELTS_STORE_NAMES.mediaProgress,value,'ielts-media-progress');
 }
 
-export async function getMediaProgress(mediaSourceId){
-  const rows=await getAll(IELTS_STORE_NAMES.mediaProgress);return rows.find(row=>row.mediaSourceId===mediaSourceId)||null;
-}
+export async function getMediaProgress(mediaSourceId){const rows=await getAll(IELTS_STORE_NAMES.mediaProgress);return rows.find(row=>row.mediaSourceId===mediaSourceId)||null;}
 
 export async function buildIeltsBackup(){
   const stores={};for(const store of STORE_LIST)stores[store]=await getAll(store);
@@ -216,4 +237,4 @@ export async function clearIeltsData(){
   await enqueueWrite(async()=>{const database=await openIeltsDatabase();if(!database){for(const map of memory.values())map.clear();return;}const transaction=database.transaction(STORE_LIST,'readwrite');for(const store of STORE_LIST)transaction.objectStore(store).clear();await transactionDone(transaction);});broadcast('ielts-data-cleared',STORE_LIST);
 }
 
-export const __testing=Object.freeze({requestResult,transactionDone,getAll,getOne,putOne,deleteOne,memory});
+export const __testing=Object.freeze({requestResult,transactionDone,getAll,getOne,putOne,deleteOne,memory,normalizeTranscriptionJob});
