@@ -1,3 +1,5 @@
+import { EVIDENCE_POLICY_VERSION,decideEvidence } from './evidence-policy.js';
+
 export const BACKUP_SCHEMA_VERSION = 3;
 export const LEARNING_PROGRESS_RESET_VERSION = 1;
 export const TRACKED_STORAGE_KEYS = Object.freeze({
@@ -98,6 +100,21 @@ export function createReviewEvent({ cardId, skill, exerciseType, sessionMode, re
   return Object.freeze(event);
 }
 
+export function assertEvidenceReviewWrite({card,event}={}){
+  const decision=event?.evidenceDecision;
+  if(!card?.id||!event?.id)throw new TypeError('Evidence review write cần card và event.');
+  if(decision?.eligible!==true||decision?.affectsSchedule!==true)throw Object.assign(new Error('Schedule write bị từ chối: thiếu EvidenceDecision được chấp nhận.'),{code:'EVIDENCE_DECISION_REQUIRED'});
+  if(decision.policyVersion!==EVIDENCE_POLICY_VERSION||!decision.receiptId||!decision.receiptBinding)throw Object.assign(new Error('Schedule write bị từ chối: EvidenceDecision thiếu version/receipt binding.'),{code:'EVIDENCE_DECISION_INVALID'});
+  if(event.id!==`evidence:${decision.receiptId}`||event.receiptId!==decision.receiptId||event.attemptId!==decision.attemptId||event.activityId!==decision.activityId)throw Object.assign(new Error('Schedule write bị từ chối: event không khớp receipt/attempt/activity.'),{code:'EVIDENCE_EVENT_MISMATCH'});
+  if(String(card.id)!==String(decision.target?.cardId)||String(event.cardId)!==String(card.id)||event.skill!==decision.skill||event.rating!==decision.rating)throw Object.assign(new Error('Schedule write bị từ chối: card/skill/rating không khớp EvidenceDecision.'),{code:'EVIDENCE_TARGET_MISMATCH'});
+  if(JSON.stringify(event.target)!==JSON.stringify(decision.target)||event.metadata?.receiptBinding!==decision.receiptBinding||event.metadata?.evidenceReason!==decision.reason||event.qualifiedFailure!==!decision.successful)throw Object.assign(new Error('Schedule write bị từ chối: event metadata không khớp EvidenceDecision.'),{code:'EVIDENCE_EVENT_MISMATCH'});
+  if(event.assisted===true||event.assistanceTrace?.exposed===true)throw Object.assign(new Error('Schedule write bị từ chối: attempt có assistance exposure.'),{code:'EVIDENCE_ASSISTED'});
+  const recomputed=decideEvidence(event.evidence);
+  if(recomputed.eligible!==true||JSON.stringify(recomputed)!==JSON.stringify(decision))throw Object.assign(new Error('Schedule write bị từ chối: EvidenceDecision không tái lập được từ evidence envelope.'),{code:'EVIDENCE_DECISION_UNVERIFIED'});
+  if(JSON.stringify(event.assistanceTrace)!==JSON.stringify(event.evidence?.attempt?.assistance))throw Object.assign(new Error('Schedule write bị từ chối: assistance trace không khớp attempt.'),{code:'EVIDENCE_EVENT_MISMATCH'});
+  return true;
+}
+
 export function dedupeReviewEvents(events = []) {
   const map = new Map();
   for (const event of Array.isArray(events) ? events : []) {
@@ -135,6 +152,7 @@ export function resetLearningProgress(cards = []) {
       fsrsVersion: 6,
       fsrs: null,
       fsrsBySkill: {},
+      qualifiedEvidenceBySkill: {},
       nextSkill: null,
       reviewEventCount: 0,
       lastReviewEventId: null,

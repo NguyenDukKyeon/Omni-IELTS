@@ -50,7 +50,7 @@ test('reveal, hint, transcript, correction and exposed retry are semantic assist
 });
 
 test('qualified wrong evidence persists symmetrically but is not successful',()=>{
-  const decision=decideEvidence(fixture({attempt:{result:'wrong'}}));
+  const decision=decideEvidence(fixture({attempt:{result:'wrong',errorType:'listening'}}));
   assert.equal(decision.eligible,true);assert.equal(decision.rating,'again');assert.equal(decision.successful,false);
 });
 
@@ -59,6 +59,7 @@ test('dictation rejects unverified sources, spelling-only and source errors',()=
   assert.equal(decideEvidence(unverified).reason,EVIDENCE_REASONS.unverifiedSource);
   assert.equal(decideEvidence(fixture({attempt:{errorType:'spelling-only'}})).reason,EVIDENCE_REASONS.spellingOnly);
   assert.equal(decideEvidence(fixture({attempt:{errorType:'transcript-source'}})).reason,EVIDENCE_REASONS.sourceError);
+  assert.equal(decideEvidence(fixture({attempt:{result:'wrong',errorType:null}})).reason,EVIDENCE_REASONS.unclassifiedListeningError);
   assert.equal(decideEvidence(fixture({attempt:{result:'mystery'}})).reason,EVIDENCE_REASONS.invalidResult);
 });
 

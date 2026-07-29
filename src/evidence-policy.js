@@ -23,6 +23,7 @@ export const EVIDENCE_REASONS=Object.freeze({
   targetNotUsed:'target-not-demonstrated',
   sourceError:'source-transcript-error',
   spellingOnly:'spelling-is-not-listening-retrieval',
+  unclassifiedListeningError:'listening-error-is-unclassified',
   invalidResult:'result-is-not-qualified'
 });
 
@@ -183,13 +184,14 @@ export function decideEvidence(input={}){
   if(activity.type==='dictation'){
     if(attempt.errorType==='transcript-source')return deny(EVIDENCE_REASONS.sourceError);
     if(attempt.errorType==='spelling-only')return deny(EVIDENCE_REASONS.spellingOnly);
+    if(rating!=='good'&&!['listening','transcript-source','spelling-only'].includes(attempt.errorType))return deny(EVIDENCE_REASONS.unclassifiedListeningError);
     if(activity.target.skill!=='listening')return deny(EVIDENCE_REASONS.skillMismatch);
   }
   if(['production','retell'].includes(activity.type)){
     if(!attempt.learnerOutput)return deny(EVIDENCE_REASONS.missingLearnerOutput);
     const evaluation=verification.evaluation;
     if(!evaluation.id||!EVALUATION_AUTHORITIES.has(evaluation.authority)||evaluation.status!=='verified'||evaluation.attemptId!==attempt.id||evaluation.activityId!==activity.id||evaluation.cardId!==activity.target.cardId||evaluation.skill!==activity.target.skill||evaluation.outputDigest!==evidenceDigest(attempt.learnerOutput))return deny(EVIDENCE_REASONS.unverifiedEvaluation);
-    if(!evaluation.targetUsed)return deny(EVIDENCE_REASONS.targetNotUsed);
+    if(!evaluation.targetUsed&&rating!=='again')return deny(EVIDENCE_REASONS.targetNotUsed);
   }
   if(activity.type==='error-correction'&&!ALLOWED_SKILLS.has(activity.target.skill))return deny(EVIDENCE_REASONS.skillMismatch);
   const successful=rating!=='again';

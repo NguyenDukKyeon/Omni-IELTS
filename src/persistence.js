@@ -4,6 +4,7 @@ import {
   buildBackupDocument,
   compactSnapshot,
   createReviewEvent,
+  assertEvidenceReviewWrite,
   dedupeReviewEvents,
   resetLearningProgress,
   shouldCreateDailySnapshot,
@@ -351,6 +352,7 @@ async function queueOutbox(operation){
 }
 
 async function applyReviewOperation(operation){
+  assertEvidenceReviewWrite({card:operation?.card,event:operation?.event});
   const database=await openDatabase();
   const stores=[STORE_NAMES.cards,STORE_NAMES.reviewEvents,STORE_NAMES.meta];
   if(operation.metrics)stores.push(STORE_NAMES.settings);
@@ -358,6 +360,7 @@ async function applyReviewOperation(operation){
   const eventsStore=transaction.objectStore(STORE_NAMES.reviewEvents);
   const existing=await requestResult(eventsStore.get(operation.event.id));
   if(existing){
+    if(existing.evidenceDecision?.receiptBinding!==operation.event.evidenceDecision?.receiptBinding){transaction.abort();const error=new Error('Receipt đã được dùng cho một EvidenceDecision khác.');error.code='EVIDENCE_RECEIPT_COLLISION';throw error;}
     const revisionRow=await requestResult(transaction.objectStore(STORE_NAMES.meta).get(REVISION_META_KEY));
     await transactionDone(transaction);
     return{revision:Number(revisionRow?.value||currentState?.revision||0),inserted:false,event:existing};
@@ -380,8 +383,9 @@ async function applyReviewOperation(operation){
 async function replayOutbox(){
   if(indexedDbUnavailable())return{replayed:0,pending:0};
   const rows=(await getAll(STORE_NAMES.outbox)).sort((a,b)=>a.createdAt-b.createdAt);
-  let replayed=0;
+  let replayed=0;let quarantined=0;
   for(const row of rows){
+    if(row.status==='quarantined'){quarantined+=1;continue;}
     try{
       if(row.type==='review')await applyReviewOperation(row);
       else if(row.type==='import-batch')await applyImportBatchOperation(row);
@@ -397,12 +401,19 @@ async function replayOutbox(){
           await updateRevision(transaction,row.reason||'replayed-card');
         }
         await transactionDone(transaction);
-      }
+      }else throw Object.assign(new Error(`Loại outbox không được hỗ trợ: ${row.type||'missing'}`),{code:'OUTBOX_OPERATION_UNKNOWN'});
       await deleteOne(STORE_NAMES.outbox,row.id);
       replayed+=1;
-    }catch(error){console.warn('[persistence] Không thể phát lại outbox',row.id,error);break;}
+    }catch(error){
+      const terminal=String(error?.code||'').startsWith('EVIDENCE_')||['STALE_REVIEW_WRITE','OUTBOX_OPERATION_UNKNOWN'].includes(error?.code);
+      console.warn('[persistence] Không thể phát lại outbox',row.id,error);
+      if(!terminal)break;
+      await putOne(STORE_NAMES.outbox,{...clone(row),status:'quarantined',quarantinedAt:Date.now(),quarantineCode:error.code||'OUTBOX_TERMINAL_FAILURE',quarantineMessage:String(error.message||error),attempts:Number(row.attempts||0)+1});
+      quarantined+=1;
+    }
   }
-  return{replayed,pending:(await getAll(STORE_NAMES.outbox)).length};
+  const remaining=await getAll(STORE_NAMES.outbox);
+  return{replayed,pending:remaining.filter(row=>row.status!=='quarantined').length,quarantined:remaining.filter(row=>row.status==='quarantined').length};
 }
 
 export async function requestPersistentStorage(){
@@ -441,7 +452,7 @@ export async function initializePersistence(){
   const lastSnapshot=await getOne(STORE_NAMES.meta,'lastSnapshotAt');
   if(shouldCreateDailySnapshot(lastSnapshot?.value))await createAutomaticSnapshot('daily-startup');
   void requestPersistentStorage();
-  emitStatus(replay.pending?'pending':'saved',{pending:replay.pending});
+  emitStatus(replay.quarantined?'error':replay.pending?'pending':'saved',{pending:replay.pending,quarantined:replay.quarantined});
   return clone(currentState);
 }
 
@@ -588,11 +599,17 @@ export async function persistMetrics(metrics){
 export async function persistReviewResult({card,event,metrics=null,reason='review-completed'}){
   if(!card?.id)throw new TypeError('persistReviewResult cần một card đã cập nhật.');
   const review=event?.cardId&&event?.id?clone(event):createReviewEvent(event||{});
+  assertEvidenceReviewWrite({card,event:review});
   const createdAt=Date.now();
   const operation={id:`review:${review.id}`,type:'review',card:{...clone(card),storageBaseUpdatedAt:Number(card.storageUpdatedAt||0),storageUpdatedAt:createdAt},event:review,metrics:metrics?normalizeMetrics(metrics):null,reason,createdAt};
   return enqueueWrite(async()=>{
     emitStatus('saving');
     if(indexedDbUnavailable()){
+      const existing=readFallbackReviewEvents().find(item=>item.id===review.id);
+      if(existing){
+        if(existing.evidenceDecision?.receiptBinding!==review.evidenceDecision?.receiptBinding)throw Object.assign(new Error('Receipt đã được dùng cho một EvidenceDecision khác.'),{code:'EVIDENCE_RECEIPT_COLLISION'});
+        return{inserted:false,event:existing,reason:'localStorage-fallback'};
+      }
       const cards=[...getCurrentState().cards.filter(item=>item.id!==card.id),clone(operation.card)];
       card.storageBaseUpdatedAt=operation.card.storageUpdatedAt;card.storageUpdatedAt=operation.card.storageUpdatedAt;
       const events=dedupeReviewEvents([...readFallbackReviewEvents(),review]);
@@ -613,8 +630,8 @@ export async function persistReviewResult({card,event,metrics=null,reason='revie
       if(card&&typeof card==='object'){card.storageBaseUpdatedAt=Number(persistedCard.storageUpdatedAt||0);card.storageUpdatedAt=Number(persistedCard.storageUpdatedAt||0);}
       emitStatus('saved');return result;
     }catch(error){
-      if(error.code==='STALE_REVIEW_WRITE'&&outbox)await deleteOne(STORE_NAMES.outbox,outbox.id).catch(()=>{});
-      error.outboxQueued=Boolean(outbox&&error.code!=='STALE_REVIEW_WRITE');
+      if(['STALE_REVIEW_WRITE','EVIDENCE_RECEIPT_COLLISION'].includes(error.code)&&outbox)await deleteOne(STORE_NAMES.outbox,outbox.id).catch(()=>{});
+      error.outboxQueued=Boolean(outbox&&!['STALE_REVIEW_WRITE','EVIDENCE_RECEIPT_COLLISION'].includes(error.code));
       emitStatus(error.outboxQueued?'pending':'error',{pendingId:error.outboxQueued?outbox.id:null,message:error.message});
       if(error.code==='STALE_REVIEW_WRITE')globalThis.dispatchEvent?.(new CustomEvent('vocab:write-conflict',{detail:{code:error.code,message:error.message}}));
       throw error;
@@ -623,13 +640,8 @@ export async function persistReviewResult({card,event,metrics=null,reason='revie
 }
 
 export async function appendReviewEvent(input){
-  if(indexedDbUnavailable()){
-    const event=input?.cardId&&input?.id?clone(input):createReviewEvent(input||{});writeFallbackState({reviewEvents:dedupeReviewEvents([...readFallbackReviewEvents(),event])});return{inserted:true,event};
-  }
-  const event=input?.cardId&&input?.id?clone(input):createReviewEvent(input||{});
-  const database=await openDatabase();const transaction=database.transaction([STORE_NAMES.reviewEvents,STORE_NAMES.meta],'readwrite');
-  const store=transaction.objectStore(STORE_NAMES.reviewEvents);const existing=await requestResult(store.get(event.id));
-  if(!existing)store.add(event);transaction.objectStore(STORE_NAMES.meta).put({key:'lastReviewAt',value:Number(event.reviewedAt||event.review||Date.now())});const revision=await updateRevision(transaction,'review-event-appended');await transactionDone(transaction);broadcastRevision(revision,'review-event-appended');return{inserted:!existing,event:existing||event};
+  void input;
+  throw Object.assign(new Error('appendReviewEvent bị vô hiệu hóa; mọi schedule write phải đi qua EvidencePolicy gateway.'),{code:'EVIDENCE_GATEWAY_REQUIRED'});
 }
 
 export async function listReviewEvents({cardId=null,limit=0}={}){
@@ -726,7 +738,7 @@ export async function getPersistenceStatus(){
     getAll(STORE_NAMES.cards),getAll(STORE_NAMES.reviewEvents),getAll(STORE_NAMES.snapshots),getOne(STORE_NAMES.meta,'lastSnapshotAt'),getOne(STORE_NAMES.meta,'lastAutomaticFileBackupAt'),getOne(STORE_NAMES.fileHandles,'automaticBackup'),getAll(STORE_NAMES.outbox),globalThis.navigator?.storage?.persisted?.().catch(()=>false)??false,globalThis.navigator?.storage?.estimate?.().catch(()=>({}))??{}
   ]);
   return{
-    available:true,storage:'IndexedDB',cards:cards.length,reviewEvents:events.length,snapshots:snapshots.length,pendingWrites:outbox.length,persistent:Boolean(persisted),usage:Number(estimate?.usage||0),quota:Number(estimate?.quota||0),
+    available:true,storage:'IndexedDB',cards:cards.length,reviewEvents:events.length,snapshots:snapshots.length,pendingWrites:outbox.filter(row=>row.status!=='quarantined').length,quarantinedWrites:outbox.filter(row=>row.status==='quarantined').length,persistent:Boolean(persisted),usage:Number(estimate?.usage||0),quota:Number(estimate?.quota||0),
     lastSnapshotAt:Number(lastSnapshot?.value||0),lastAutomaticFileBackupAt:Number(lastFileBackup?.value||0),automaticFileConfigured:Boolean(handle?.handle),automaticFileName:handle?.handle?.name||null
   };
 }
@@ -742,8 +754,8 @@ export async function mountPersistenceUI(){
     try{
       const[status,snapshots]=await Promise.all([getPersistenceStatus(),listSnapshots()]);
       setStatus(status.available
-        ?`${status.cards} mục · ${status.reviewEvents} lượt ôn · ${status.snapshots} snapshot · ${status.pendingWrites} ghi chờ · ${status.persistent?'bộ nhớ bền vững':'trình duyệt có thể dọn dữ liệu'} · ${formatBytes(status.usage)}/${formatBytes(status.quota)} · snapshot gần nhất: ${formatTimestamp(status.lastSnapshotAt)}${status.automaticFileConfigured?` · auto backup: ${status.automaticFileName}`:''}`
-        :'IndexedDB không khả dụng; app đang dùng localStorage giới hạn.',status.pendingWrites?'error':status.available?'success':'neutral');
+        ?`${status.cards} mục · ${status.reviewEvents} lượt ôn · ${status.snapshots} snapshot · ${status.pendingWrites} ghi chờ · ${status.quarantinedWrites||0} ghi cách ly cần kiểm tra · ${status.persistent?'bộ nhớ bền vững':'trình duyệt có thể dọn dữ liệu'} · ${formatBytes(status.usage)}/${formatBytes(status.quota)} · snapshot gần nhất: ${formatTimestamp(status.lastSnapshotAt)}${status.automaticFileConfigured?` · auto backup: ${status.automaticFileName}`:''}`
+        :'IndexedDB không khả dụng; app đang dùng localStorage giới hạn.',status.pendingWrites||status.quarantinedWrites?'error':status.available?'success':'neutral');
       snapshotHost.innerHTML=snapshots.slice(0,5).map(item=>`<button type="button" class="snapshot-row" data-snapshot-id="${item.id}"><span>${formatTimestamp(item.createdAt)} · ${item.reason}</span><small>${item.cards?.length||0} thẻ · ${item.reviewEvents?.length||0} lượt ôn</small></button>`).join('')||'<p class="muted">Chưa có snapshot.</p>';
       snapshotHost.querySelectorAll('[data-snapshot-id]').forEach(button=>button.addEventListener('click',async()=>{if(!confirm('Khôi phục snapshot này? Một snapshot an toàn mới sẽ được tạo trước.'))return;try{await restoreSnapshot(button.dataset.snapshotId);location.reload();}catch(error){setStatus(error.message,'error');}}));
     }catch(error){setStatus(error.message,'error');}

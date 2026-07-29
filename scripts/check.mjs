@@ -111,13 +111,14 @@ assert.doesNotMatch(pwa,/injectSettings/,'PWA must not inject Settings DOM');
 
 assert.ok(persistence.includes('indexedDB.open(DB_NAME'),'IndexedDB database is not opened');
 assert.ok(persistence.includes("reviewEvents:'reviewEvents'")||persistence.includes("reviewEvents: 'reviewEvents'"),'Append-only review-event store missing');
-assert.ok(persistence.includes('.add(event)')||persistence.includes('.add(operation.event)')||persistence.includes('.add(review)'),'Review events must use add(), not overwrite with put()');
+assert.ok(persistence.includes('.add(event)')||persistence.includes('.add(operation.event)')||persistence.includes('.add(clone(operation.event))')||persistence.includes('.add(review)'),'Review events must use add(), not overwrite with put()');
 assert.ok(persistence.includes('createAutomaticSnapshot'),'Automatic snapshots missing');
 assert.ok(persistence.includes('restoreBackupDocument'),'Validated restore path missing');
 assert.ok(persistence.includes('persistReviewResult'),'Card and review event atomic persistence path missing');
 assert.ok(persistence.includes('writeQueue'),'Serialized write queue missing');
 assert.doesNotMatch(persistence,/Storage\.prototype\.(setItem|removeItem)/,'Storage prototype monkey-patching must be removed');
-assert.ok(app.includes('persistCard')&&app.includes('persistCardsBatch')&&app.includes('persistSettings')&&app.includes('persistMetrics')&&app.includes('persistReviewResult'),'App does not use incremental explicit persistence commands');
+assert.ok(app.includes('persistCard')&&app.includes('persistCardsBatch')&&app.includes('persistSettings')&&app.includes('persistMetrics')&&app.includes('commitCoreEvidence'),'App does not use incremental explicit persistence commands through the evidence gateway');
+assert.doesNotMatch(app,/applyFsrsRating|persistReviewResult/,'Core app bypasses the evidence schedule gateway');
 assert.doesNotMatch(app,/localStorage\.(getItem|setItem|removeItem)/,'App state must not be sourced from localStorage');
 assert.ok(persistenceCore.includes('dedupeReviewEvents'),'Review-event idempotency missing');
 
