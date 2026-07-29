@@ -1,4 +1,4 @@
-const CACHE_VERSION='vocab-master-pwa-v5';
+const CACHE_VERSION='vocab-master-pwa-v6';
 const STATIC_CACHE=`${CACHE_VERSION}-static`;
 const RUNTIME_CACHE=`${CACHE_VERSION}-runtime`;
 const PRECACHE=[
@@ -7,6 +7,7 @@ const PRECACHE=[
   '/styles.css',
   '/experience.css',
   '/settings-tabs.css',
+  '/ielts-lab.css',
   '/assets/app.js',
   '/manifest.webmanifest',
   '/offline.html',
@@ -98,10 +99,12 @@ async function saveReminderConfig(config={}){
   const cache=await caches.open(`${CACHE_VERSION}-config`);
   await cache.put('/__vocab-reminder-config__',new Response(JSON.stringify({reminder:/^([01]\d|2[0-3]):[0-5]\d$/.test(String(config.reminder||''))?config.reminder:'20:00',timeZone:String(config.timeZone||'UTC'),locale:String(config.locale||'vi'),enabled:config.enabled!==false}),{headers:{'content-type':'application/json'}}));
 }
+
 async function readReminderConfig(){
   const response=await caches.match('/__vocab-reminder-config__');
   return response?response.json().catch(()=>({})):{};
 }
+
 self.addEventListener('message',event=>{
   if(event.data?.type==='SKIP_WAITING')self.skipWaiting();
   if(event.data?.type==='REMINDER_CONFIG')event.waitUntil(saveReminderConfig(event.data.config));

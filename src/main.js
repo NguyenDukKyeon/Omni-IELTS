@@ -124,8 +124,16 @@ try{
     if(isBrowserSmokeSeed)await globalThis.VocabMasterApp?.loadSampleDeck?.();
     const { mountCaptureInbox } = await import('./capture-inbox.js');
     const { mountRoadmapRuntime } = await import('./roadmap-runtime.js');
+    const { mountIeltsLab } = await import('./ielts-lab.js');
+    const { mountIeltsBackupBridge } = await import('./ielts-backup-bridge.js');
+    const { mountIeltsRuntimeGuard } = await import('./ielts-runtime-guard.js');
+    const { mountIeltsChoiceErrorBridge } = await import('./ielts-choice-error-bridge.js');
     await mountCaptureInbox();
     await mountRoadmapRuntime();
+    await mountIeltsLab();
+    mountIeltsBackupBridge();
+    mountIeltsRuntimeGuard();
+    mountIeltsChoiceErrorBridge();
     await import('./pwa.js');
     await persistence.mountPersistenceUI();
     markBooted();
