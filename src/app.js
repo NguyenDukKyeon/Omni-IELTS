@@ -271,7 +271,7 @@ async function scheduleSpecificCard(card,rating,step,session){
   const savedCard=replaceCard(result.card);
   const evidenceType=evidenceTypeForStep(step);
   const event={id:createId('review'),cardId:card.id,skill,exerciseType:step.kind,sessionMode:session?.mode,sessionId:session?.id,resultLog:result.log,rating,reviewedAt:now,assisted:Boolean(step.assisted),evidenceType,metadata:{dueReason:step.dueReason||'',transfer:Boolean(step.transfer),evidenceType,predictedRetrievability}};
-  try{await persistReviewResult({card:savedCard,event,metrics:step.persistMetrics===false?null:state.metrics});}catch(error){console.warn('[persistence] Không thể lưu lượt ôn',error);showToast(error.outboxQueued?'Lượt ôn chưa ghi xong; outbox sẽ thử lại khi mở ứng dụng.':'Không thể bảo vệ lượt ôn này. Hãy tải backup trước khi tiếp tục.');}
+  try{await persistReviewResult({card:savedCard,event,metrics:step.persistMetrics===false?null:state.metrics});}catch(error){if(!error.outboxQueued)replaceCard(card);console.warn('[persistence] Không thể lưu lượt ôn',error);showToast(error.outboxQueued?'Lượt ôn chưa ghi xong; outbox sẽ thử lại khi mở ứng dụng.':'Không thể bảo vệ lượt ôn này. Trạng thái thẻ đã được hoàn tác; hãy tải lại nếu tab khác vừa sửa dữ liệu.');}
   return result.interval;
 }
 function scheduleCard(card,rating,affectsSchedule=true,overrides={}){const{step,session}=activeContext();return scheduleSpecificCard(card,rating,{...step,...overrides,affectsSchedule},session);}

@@ -593,7 +593,8 @@ export async function persistReviewResult({card,event,metrics=null,reason='revie
   return enqueueWrite(async()=>{
     emitStatus('saving');
     if(indexedDbUnavailable()){
-      const cards=[...getCurrentState().cards.filter(item=>item.id!==card.id),clone(card)];
+      const cards=[...getCurrentState().cards.filter(item=>item.id!==card.id),clone(operation.card)];
+      card.storageBaseUpdatedAt=operation.card.storageUpdatedAt;card.storageUpdatedAt=operation.card.storageUpdatedAt;
       const events=dedupeReviewEvents([...readFallbackReviewEvents(),review]);
       const next={...getCurrentState(),cards,metrics:operation.metrics||getCurrentState().metrics};
       currentState=normalizeState(next);writeFallbackState({cards,reviewEvents:events,metrics:next.metrics});emitStatus('saved');return{inserted:true,event:review,reason:'localStorage-fallback'};
@@ -608,10 +609,13 @@ export async function persistReviewResult({card,event,metrics=null,reason='revie
         currentState=normalizeState({...getCurrentState(),cards,metrics:operation.metrics||getCurrentState().metrics,revision:result.revision});
         broadcastRevision(result.revision,reason);scheduleSnapshot(reason);
       }else currentState=await readStateFromDatabase();
+      const persistedCard=getCurrentState().cards.find(item=>item.id===card.id)||operation.card;
+      if(card&&typeof card==='object'){card.storageBaseUpdatedAt=Number(persistedCard.storageUpdatedAt||0);card.storageUpdatedAt=Number(persistedCard.storageUpdatedAt||0);}
       emitStatus('saved');return result;
     }catch(error){
-      error.outboxQueued=Boolean(outbox);
-      emitStatus(outbox?'pending':'error',{pendingId:outbox?.id,message:error.message});
+      if(error.code==='STALE_REVIEW_WRITE'&&outbox)await deleteOne(STORE_NAMES.outbox,outbox.id).catch(()=>{});
+      error.outboxQueued=Boolean(outbox&&error.code!=='STALE_REVIEW_WRITE');
+      emitStatus(error.outboxQueued?'pending':'error',{pendingId:error.outboxQueued?outbox.id:null,message:error.message});
       if(error.code==='STALE_REVIEW_WRITE')globalThis.dispatchEvent?.(new CustomEvent('vocab:write-conflict',{detail:{code:error.code,message:error.message}}));
       throw error;
     }
