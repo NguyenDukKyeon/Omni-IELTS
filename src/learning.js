@@ -6,6 +6,7 @@ import {
   getEarliestSkillDue,
   getSkillDueAt,
   requiredSkillsForCard,
+  plannedSkillsForCard,
   skillHasReviews,
   skillForExercise
 } from './fsrs-scheduler.js';
@@ -114,6 +115,11 @@ export function sanitizeCardInput(input={}) {
   const type=['word','collocation'].includes(input.type) ? input.type : (front.includes(' ') ? 'collocation' : 'word');
   const learningGoal=input.learningGoal==='active'?'active':'passive';
   const targetSkills=Array.isArray(input.targetSkills) ? [...new Set(input.targetSkills.map(cleanText).filter(Boolean))] : [];
+  const legacyAccepted=Array.isArray(input.accepted) ? [...new Set(input.accepted.map(cleanText).filter(Boolean))] : [];
+  const acceptedBySkill=input.acceptedBySkill&&typeof input.acceptedBySkill==='object'
+    ? Object.fromEntries(Object.entries(input.acceptedBySkill).map(([skill,values])=>[skill,[...new Set((Array.isArray(values)?values:[]).map(cleanText).filter(Boolean))]]))
+    : {};
+  if(!Object.keys(acceptedBySkill).length&&legacyAccepted.length){acceptedBySkill.recognition=[...legacyAccepted];acceptedBySkill.recall=[...legacyAccepted];acceptedBySkill.listening=[...legacyAccepted];}
   const provenance=normalizeProvenance(input.provenance || {source: input.aiGenerated ? 'ai' : input.imported ? 'imported' : 'manual'});
 
   return {
@@ -127,7 +133,8 @@ export function sanitizeCardInput(input={}) {
     example:cleanText(input.example),
     translation:cleanText(input.translation),
     cefr:cleanText(input.cefr)||'—',
-    accepted:Array.isArray(input.accepted) ? [...new Set(input.accepted.map(cleanText).filter(Boolean))] : [],
+    accepted:legacyAccepted,
+    acceptedBySkill,
     mnemonic:cleanText(input.mnemonic),
     mnemonicAssociation:cleanText(input.mnemonicAssociation),
     mnemonicImagePrompt:cleanText(input.mnemonicImagePrompt),
@@ -284,7 +291,11 @@ function cardPriority(card, now=Date.now()) {
   return (isDue(card,now)?100:0)+overdue*8+memoryRisk+weakWordScore(card,now)*0.45+(card.status==='learning'?22:0);
 }
 
-function choicePool(card, cards, useFront=false) {
+function seededNumber(value='') {
+  let hash=2166136261;for(const char of String(value)){hash^=char.charCodeAt(0);hash=Math.imul(hash,16777619);}return hash>>>0;
+}
+function seededOrder(values,seed=''){return[...values].sort((a,b)=>seededNumber(`${seed}:${a}`)-seededNumber(`${seed}:${b}`));}
+function choicePool(card, cards, useFront=false, seed='') {
   const key=useFront?'front':'back';
   const sameLevel=cards.filter(item=>item.id!==card.id&&item.type===card.type&&item.cefr===card.cefr);
   const candidates=(sameLevel.length>=3?sameLevel:cards.filter(item=>item.id!==card.id&&item.type===card.type))
@@ -295,20 +306,16 @@ function choicePool(card, cards, useFront=false) {
     });
   const distractors=[];const seen=new Set([normalizeText(card[key])]);
   for(const item of candidates){const value=item[key];const normalized=normalizeText(value);if(!normalized||seen.has(normalized))continue;seen.add(normalized);distractors.push(value);if(distractors.length===3)break;}
-  const choices=[card[key],...distractors];
-  return choices.sort((a,b)=>normalizeText(`${card.id}-${a}`).localeCompare(normalizeText(`${card.id}-${b}`)));
+  return seededOrder([card[key],...distractors],`${seed}:${card.id}:${key}`);
 }
 
 const CLOZE_STOP_WORDS = new Set(['a','an','the','to','of','for','in','on','at','with','by','into','from','as']);
 
-function chooseCollocationBlankIndex(words) {
-  let bestIndex=0;let bestScore=-1;
-  words.forEach((word,index)=>{
-    const normalized=normalizeText(word);
-    const score=(CLOZE_STOP_WORDS.has(normalized)?0:100)+normalized.length;
-    if(score>bestScore){bestScore=score;bestIndex=index;}
-  });
-  return bestIndex;
+function chooseCollocationBlankIndex(words,ordinal=0) {
+  const candidates=words.map((word,index)=>({index,normalized:normalizeText(word)})).filter(item=>item.normalized&&!CLOZE_STOP_WORDS.has(item.normalized));
+  const pool=candidates.length?candidates:words.map((word,index)=>({index,normalized:normalizeText(word)}));
+  pool.sort((a,b)=>b.normalized.length-a.normalized.length||a.index-b.index);
+  return pool[Math.abs(Number(ordinal||0))%Math.max(1,pool.length)]?.index||0;
 }
 
 function wordVariants(answer) {
@@ -346,9 +353,9 @@ function maskAnswerInContext(example,answer) {
   return replaced?masked:'';
 }
 
-export function collocationCloze(card) {
+export function collocationCloze(card,ordinal=0) {
   const words=String(card.front||'').trim().split(/\s+/).filter(Boolean);
-  const hiddenIndex=chooseCollocationBlankIndex(words);
+  const hiddenIndex=chooseCollocationBlankIndex(words,ordinal);
   const answer=words[hiddenIndex]||card.front;
   words[hiddenIndex]='_____';
   return { prompt:words.join(' '), answer, context:maskAnswerInContext(card.example,answer) };
@@ -377,12 +384,12 @@ function baseStep(card,kind,extra={}) {
 
 function step(card, kind, cards, extra={}) {
   const base=baseStep(card,kind,extra);
-  if (kind==='choice') return { ...base, prompt:`“${card.back}” nghĩa là từ/cụm nào?`, answer:card.front, choices:choicePool(card,cards,true) };
-  if (kind==='meaning-choice') return { ...base, prompt:`${card.front} có nghĩa là gì?`, answer:card.back, choices:choicePool(card,cards,false) };
+  if (kind==='choice') return { ...base, prompt:`“${card.back}” nghĩa là từ/cụm nào?`, answer:card.front, choices:choicePool(card,cards,true,base.id) };
+  if (kind==='meaning-choice') return { ...base, prompt:`${card.front} có nghĩa là gì?`, answer:card.back, choices:choicePool(card,cards,false,base.id) };
   if (kind==='typing') return { ...base, prompt:`Nhập từ/cụm tiếng Anh có nghĩa: “${card.back}”`, answer:card.front };
-  if (kind==='listening-choice') return { ...base, prompt:'Nghe và chọn nghĩa đúng.', answer:card.back, choices:choicePool(card,cards,false), playAudio:true };
+  if (kind==='listening-choice') return { ...base, prompt:'Nghe và chọn nghĩa đúng.', answer:card.back, choices:choicePool(card,cards,false,base.id), playAudio:true };
   if (kind==='dictation') return { ...base, prompt:'Nghe rồi nhập lại từ hoặc cụm từ.', answer:card.front, playAudio:true };
-  if (kind==='cloze') { const value=collocationCloze(card); return { ...base, prompt:`Hoàn thành collocation: ${value.prompt}`, answer:value.answer, context:value.context, meaning:card.back }; }
+  if (kind==='cloze') { const value=collocationCloze(card,Number(card.reviewEventCount||0)); return { ...base, prompt:`Hoàn thành collocation: ${value.prompt}`, answer:value.answer, context:value.context, meaning:card.back }; }
   if (kind==='sentence-cloze') { const value=sentenceCloze(card); return { ...base, prompt:value.prompt, answer:value.answer, context:card.translation }; }
   if (kind==='production') return { ...base, prompt:`Viết một câu tự nhiên sử dụng “${card.front}”.`, answer:card.front };
   if (kind==='pronunciation') return { ...base, prompt:`Nghe mẫu, đọc to “${card.front}” rồi thử lại sau phản hồi.`, answer:card.front, playAudio:true };
@@ -546,7 +553,9 @@ function levenshtein(a,b){
 
 export function checkAnswer(card, stepData, answer) {
   const expected=stepData.answer||card.front;
-  const accepted=[expected,...(card.accepted||[])].map(normalizeText).filter(Boolean);
+  const scope=stepData.skill||skillForExercise(stepData.kind,card);
+  const scoped=Array.isArray(card.acceptedBySkill?.[scope])?card.acceptedBySkill[scope]:[];
+  const accepted=[expected,...scoped].map(normalizeText).filter(Boolean);
   const actual=normalizeText(answer);
   if (!actual) return { status:'empty', correct:false, expected };
   if (accepted.includes(actual)) return { status:'correct', correct:true, expected };
@@ -612,7 +621,7 @@ export function calculateExamPacing(cards=[],examDate='',now=Date.now()) {
   const target=Date.parse(`${String(examDate||'').trim()}T23:59:59`);
   if(!Number.isFinite(target))return{configured:false,daysRemaining:null,skillGaps:0,dueNow:0,dailyMinimum:0,label:'Chưa đặt ngày mục tiêu'};
   const active=cards.filter(card=>!card.suspendedAt&&!card.archivedAt);
-  const skillGaps=active.reduce((sum,card)=>sum+requiredSkillsForCard(card).filter(skill=>!skillHasReviews(card,skill)).length,0);
+  const skillGaps=active.reduce((sum,card)=>sum+plannedSkillsForCard(card).filter(skill=>!skillHasReviews(card,skill)).length,0);
   const dueNow=getDueSkillItems(active,now).length;
   const daysRemaining=Math.max(0,Math.ceil((target-now)/DAY));
   const dailyMinimum=daysRemaining>0?Math.ceil((skillGaps+dueNow)/daysRemaining):skillGaps+dueNow;

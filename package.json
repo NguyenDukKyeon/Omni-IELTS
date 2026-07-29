@@ -1,6 +1,6 @@
 {
   "name": "vocab-master-personal",
-  "version": "8.0.0",
+  "version": "9.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,7 +13,9 @@
     "test:serve": "node scripts/smoke.mjs",
     "test:preview": "node scripts/preview-smoke.mjs",
     "test:browser": "node scripts/browser-smoke.mjs",
-    "test:hardening": "node scripts/hardening-browser-smoke.mjs"
+    "test:hardening": "node scripts/hardening-browser-smoke.mjs",
+    "audit:roadmap": "node scripts/audit-roadmap.mjs",
+    "test:roadmap": "node --test tests/roadmap-v9.test.mjs"
   },
   "dependencies": {
     "ts-fsrs": "5.4.1",

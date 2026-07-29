@@ -12,7 +12,7 @@ import {
 } from './persistence-core.js';
 
 export const DB_NAME='vocab-master-personal';
-export const DB_VERSION=3;
+export const DB_VERSION=4;
 export const STORE_NAMES=Object.freeze({
   cards:'cards',
   settings:'settings',
@@ -20,7 +20,8 @@ export const STORE_NAMES=Object.freeze({
   snapshots:'snapshots',
   meta:'meta',
   fileHandles:'fileHandles',
-  outbox:'outbox'
+  outbox:'outbox',
+  captureDrafts:'captureDrafts'
 });
 
 const DAILY_DATE_KEY='vocab-master-daily-date';
@@ -65,7 +66,10 @@ function normalizeMetrics(metrics={}){
     dailyDone:Math.max(0,Number(metrics.dailyDone||0)),
     dailyTarget:Math.max(0,Number(metrics.dailyTarget||0)),
     studyMinutes:Math.max(0,Number(metrics.studyMinutes||0)),
-    completedReviews:Math.max(0,Number(metrics.completedReviews||0))
+    completedReviews:Math.max(0,Number(metrics.completedReviews||0)),
+    activitiesDone:Math.max(0,Number(metrics.activitiesDone ?? metrics.dailyDone ?? 0)),
+    independentReviewsDone:Math.max(0,Number(metrics.independentReviewsDone ?? metrics.completedReviews ?? 0)),
+    newSkillsIntroduced:Math.max(0,Number(metrics.newSkillsIntroduced||0))
   };
 }
 
@@ -165,6 +169,11 @@ export function openDatabase(){
       if(!database.objectStoreNames.contains(STORE_NAMES.outbox)){
         const store=database.createObjectStore(STORE_NAMES.outbox,{keyPath:'id'});
         store.createIndex('createdAt','createdAt',{unique:false});
+      }
+      if(!database.objectStoreNames.contains(STORE_NAMES.captureDrafts)){
+        const store=database.createObjectStore(STORE_NAMES.captureDrafts,{keyPath:'id'});
+        store.createIndex('updatedAt','updatedAt',{unique:false});
+        store.createIndex('status','status',{unique:false});
       }
     };
     request.onsuccess=()=>{
@@ -353,7 +362,12 @@ async function applyReviewOperation(operation){
     await transactionDone(transaction);
     return{revision:Number(revisionRow?.value||currentState?.revision||0),inserted:false,event:existing};
   }
-  transaction.objectStore(STORE_NAMES.cards).put(clone(operation.card));
+  const cardStore=transaction.objectStore(STORE_NAMES.cards);
+  const existingCard=await requestResult(cardStore.get(operation.card.id));
+  const expectedStamp=Number(operation.card.storageBaseUpdatedAt||0);
+  const actualStamp=Number(existingCard?.storageUpdatedAt||0);
+  if(existingCard&&expectedStamp&&actualStamp!==expectedStamp){transaction.abort();const error=new Error('Review dựa trên phiên bản thẻ cũ.');error.code='STALE_REVIEW_WRITE';throw error;}
+  cardStore.put(clone(operation.card));
   eventsStore.add(clone(operation.event));
   if(operation.metrics)await putSettingsDocument('metrics',normalizeMetrics(operation.metrics),transaction);
   transaction.objectStore(STORE_NAMES.meta).put({key:'lastReviewAt',value:Number(operation.event.reviewedAt||operation.event.review||Date.now())});
@@ -435,7 +449,12 @@ export function getCurrentState(){return clone(currentState||readFallbackState()
 async function persistCardDirect(card,reason='card-changed'){
   const database=await openDatabase();
   const transaction=database.transaction([STORE_NAMES.cards,STORE_NAMES.meta],'readwrite');
-  transaction.objectStore(STORE_NAMES.cards).put(clone(card));
+  const store=transaction.objectStore(STORE_NAMES.cards);
+  const existing=await requestResult(store.get(card.id));
+  const expected=Number(card.storageBaseUpdatedAt||0);
+  const actual=Number(existing?.storageUpdatedAt||0);
+  if(existing&&expected&&actual!==expected){transaction.abort();const error=new Error('Thẻ đã thay đổi ở tab khác. Tải lại trước khi ghi tiếp.');error.code='STALE_CARD_WRITE';throw error;}
+  store.put(clone(card));
   transaction.objectStore(STORE_NAMES.meta).put({key:'cardsUpdatedAt',value:Date.now()});
   const revision=await updateRevision(transaction,reason);
   await transactionDone(transaction);
@@ -443,7 +462,8 @@ async function persistCardDirect(card,reason='card-changed'){
 }
 
 export async function persistCard(card,reason='card-changed'){
-  const value={...clone(card),storageUpdatedAt:Date.now()};
+  const storageBaseUpdatedAt=Number(card?.storageUpdatedAt||0);
+  const value={...clone(card),storageBaseUpdatedAt,storageUpdatedAt:Date.now()};
   return enqueueWrite(async()=>{
     emitStatus('saving');
     let outbox=null;
@@ -457,6 +477,7 @@ export async function persistCard(card,reason='card-changed'){
         broadcastRevision(revision,reason);scheduleSnapshot(reason);
       }
       if(indexedDbUnavailable())currentState=normalizeState({...getCurrentState(),cards:[...getCurrentState().cards.filter(item=>item.id!==value.id),value]});
+      if(card&&typeof card==='object')card.storageUpdatedAt=value.storageUpdatedAt;
       emitStatus('saved');return clone(value);
     }catch(error){
       error.outboxQueued=Boolean(outbox);
@@ -566,7 +587,7 @@ export async function persistReviewResult({card,event,metrics=null,reason='revie
   if(!card?.id)throw new TypeError('persistReviewResult cần một card đã cập nhật.');
   const review=event?.cardId&&event?.id?clone(event):createReviewEvent(event||{});
   const createdAt=Date.now();
-  const operation={id:`review:${review.id}`,type:'review',card:{...clone(card),storageUpdatedAt:createdAt},event:review,metrics:metrics?normalizeMetrics(metrics):null,reason,createdAt};
+  const operation={id:`review:${review.id}`,type:'review',card:{...clone(card),storageBaseUpdatedAt:Number(card.storageUpdatedAt||0),storageUpdatedAt:createdAt},event:review,metrics:metrics?normalizeMetrics(metrics):null,reason,createdAt};
   return enqueueWrite(async()=>{
     emitStatus('saving');
     if(indexedDbUnavailable()){
@@ -734,3 +755,30 @@ export const __testing=Object.freeze({requestResult,transactionDone,getAll,getOn
 if(typeof window!=='undefined')window.VocabMasterPersistence={
   initializePersistence,getCurrentState,exportBackupPackage,downloadBackupFile,restoreBackupDocument,listReviewEvents,listSnapshots,restoreSnapshot,getPersistenceStatus,persistCard,persistCards,persistCardsBatch,deleteCard,persistSettings,persistFsrsConfig,persistMetrics,persistReviewResult,resetLearningProgressNow
 };
+
+export async function persistImportBatch({cards=[],updates=[]}={},reason='import-atomic'){
+  const values=[...cards,...updates].map(card=>clone(card));
+  return enqueueWrite(async()=>{
+    if(indexedDbUnavailable()){const merged=new Map(getCurrentState().cards.map(card=>[card.id,card]));for(const card of values)merged.set(card.id,card);currentState=normalizeState({...getCurrentState(),cards:[...merged.values()]});writeFallbackState({cards:currentState.cards});return clone(values);}
+    const database=await openDatabase();
+    const transaction=database.transaction([STORE_NAMES.cards,STORE_NAMES.meta],'readwrite');
+    const store=transaction.objectStore(STORE_NAMES.cards);for(const card of values)store.put(clone(card));
+    const revision=await updateRevision(transaction,reason);await transactionDone(transaction);
+    const merged=new Map(getCurrentState().cards.map(card=>[card.id,card]));for(const card of values)merged.set(card.id,card);
+    currentState=normalizeState({...getCurrentState(),cards:[...merged.values()],revision});broadcastRevision(revision,reason);scheduleSnapshot(reason);return clone(values);
+  });
+}
+
+export async function listCaptureDrafts(){
+  if(indexedDbUnavailable())return safeParse(NATIVE_STORAGE?.getItem('vocab-master-capture-drafts'),[]);
+  return(await getAll(STORE_NAMES.captureDrafts)).sort((a,b)=>Number(b.updatedAt||0)-Number(a.updatedAt||0));
+}
+export async function persistCaptureDraft(draft){
+  const value={id:String(draft?.id||('draft-'+Date.now()+'-'+Math.random().toString(36).slice(2,8))),term:String(draft?.term||'').trim(),sourceContext:String(draft?.sourceContext||'').trim(),sourceLabel:String(draft?.sourceLabel||'').trim(),meaning:String(draft?.meaning||'').trim(),status:String(draft?.status||'captured'),createdAt:Number(draft?.createdAt||Date.now()),updatedAt:Date.now()};
+  if(indexedDbUnavailable()){const rows=await listCaptureDrafts();NATIVE_STORAGE?.setItem('vocab-master-capture-drafts',JSON.stringify([value,...rows.filter(row=>row.id!==value.id)]));return value;}
+  await putOne(STORE_NAMES.captureDrafts,value);return value;
+}
+export async function deleteCaptureDraft(id){
+  if(indexedDbUnavailable()){const rows=await listCaptureDrafts();NATIVE_STORAGE?.setItem('vocab-master-capture-drafts',JSON.stringify(rows.filter(row=>row.id!==id)));return true;}
+  await deleteOne(STORE_NAMES.captureDrafts,String(id));return true;
+}

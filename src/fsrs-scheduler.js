@@ -50,7 +50,7 @@ export function skillForExercise(kind, card = null) {
   return normalizeFsrsSkill(EXERCISE_SKILLS[kind], card);
 }
 
-export function requiredSkillsForCard(card = {}) {
+export function plannedSkillsForCard(card = {}) {
   const explicit = Array.isArray(card.targetSkills)
     ? [...new Set(card.targetSkills.filter(skill => FSRS_SKILLS.includes(skill)))]
     : [];
@@ -65,6 +65,32 @@ export function requiredSkillsForCard(card = {}) {
   return active
     ? ['recognition', 'recall', 'listening', 'production']
     : ['recognition', 'recall'];
+}
+
+export function unlockedSkillsForCard(card = {}) {
+  const planned = plannedSkillsForCard(card);
+  const map = existingSkillMap(card);
+  const reviewed = skill => Number(map[skill]?.reps || 0) > 0;
+  const unlocked = planned.filter(skill => skill === 'recognition' || skill === 'recall');
+  const foundationReady = reviewed('recognition') && reviewed('recall');
+
+  if (card.type === 'collocation' && planned.includes('collocation') && foundationReady) unlocked.push('collocation');
+  const collocationReady = card.type !== 'collocation' || !planned.includes('collocation') || reviewed('collocation');
+  if (planned.includes('listening') && foundationReady && collocationReady) unlocked.push('listening');
+  if (planned.includes('production') && foundationReady && collocationReady && reviewed('listening')) unlocked.push('production');
+  return [...new Set(unlocked)];
+}
+
+export function requiredSkillsForCard(card = {}) {
+  return unlockedSkillsForCard(card);
+}
+
+export function skillIsPlanned(card, skill) {
+  return plannedSkillsForCard(card).includes(normalizeFsrsSkill(skill, card));
+}
+
+export function skillIsUnlocked(card, skill) {
+  return unlockedSkillsForCard(card).includes(normalizeFsrsSkill(skill, card));
 }
 
 export function skillIsRequired(card, skill) {
@@ -271,6 +297,7 @@ function missingSkillDueAt(card, now) {
 
 export function getSkillDueAt(card, skill, now = Date.now()) {
   const normalizedSkill = normalizeFsrsSkill(skill, card);
+  if (!skillIsUnlocked(card, normalizedSkill)) return Number.POSITIVE_INFINITY;
   const map = existingSkillMap(card, now);
   const value = map[normalizedSkill];
   if (value && Number(value.reps || 0) > 0) return deserializeValue(value, now).due.getTime();

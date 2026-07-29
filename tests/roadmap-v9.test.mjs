@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { plannedSkillsForCard, requiredSkillsForCard } from '../src/fsrs-scheduler.js';
+import { checkAnswer, sanitizeCardInput } from '../src/learning.js';
+import { summarizeCalibration } from '../src/progress.js';
+
+const reviewed=(reps=1)=>({due:Date.now(),stability:3,difficulty:5,elapsed_days:1,scheduled_days:1,learning_steps:0,reps,lapses:0,state:2,last_review:Date.now()});
+test('active word unlocks skills progressively',()=>{const base=sanitizeCardInput({front:'retain',back:'ghi nhớ',learningGoal:'active',status:'learning'});assert.deepEqual(plannedSkillsForCard(base),['recognition','recall','listening','production']);assert.deepEqual(requiredSkillsForCard(base),['recognition','recall']);const foundation={...base,fsrsBySkill:{recognition:reviewed(),recall:reviewed()}};assert.deepEqual(requiredSkillsForCard(foundation),['recognition','recall','listening']);const heard={...foundation,fsrsBySkill:{...foundation.fsrsBySkill,listening:reviewed()}};assert.deepEqual(requiredSkillsForCard(heard),['recognition','recall','listening','production']);});
+test('collocation production waits for foundation, collocation and listening',()=>{const card=sanitizeCardInput({front:'take into account',back:'cân nhắc',type:'collocation',learningGoal:'active',status:'learning',fsrsBySkill:{recognition:reviewed(),recall:reviewed()}});assert.deepEqual(requiredSkillsForCard(card),['recognition','recall','collocation']);});
+test('accepted answer is scoped to skill',()=>{const card=sanitizeCardInput({front:'bank',back:'bờ sông',acceptedBySkill:{recognition:['river bank'],recall:['bank']}});assert.equal(checkAnswer(card,{kind:'meaning-choice',skill:'recognition',answer:'bờ sông'},'river bank').correct,true);assert.equal(checkAnswer(card,{kind:'typing',skill:'recall',answer:'bank'},'river bank').correct,false);});
+test('calibration reports predicted vs observed recall',()=>{const result=summarizeCalibration([{rating:'good',metadata:{predictedRetrievability:.8}},{rating:'again',metadata:{predictedRetrievability:.6}}]);assert.equal(result.sampleSize,2);assert.equal(result.predicted,70);assert.equal(result.observed,50);});

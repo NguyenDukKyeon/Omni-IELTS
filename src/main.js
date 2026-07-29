@@ -120,6 +120,10 @@ try{
     const persistence=await initializeState();
     await import('./settings-ui.js');
     await import('./app.js');
+    const { mountCaptureInbox } = await import('./capture-inbox.js');
+    const { mountRoadmapRuntime } = await import('./roadmap-runtime.js');
+    await mountCaptureInbox();
+    await mountRoadmapRuntime();
     await import('./pwa.js');
     await persistence.mountPersistenceUI();
     markBooted();
