@@ -1,0 +1,8 @@
+{
+  "lessonId":"starter-b2-course-enquiry",
+  "items":[
+    {"id":"course-q1","type":"detail","prompt":"When does the course begin?","evidenceText":"begins on the seventeenth of August","options":[{"id":"a","text":"17 August","correct":true,"rationale":"The date is stated directly."},{"id":"b","text":"6 August","correct":false,"rationale":"Six refers to the course length in weeks."},{"id":"c","text":"Friday afternoon","correct":false,"rationale":"Friday is the discount deadline, not the start date."}]},
+    {"id":"course-q2","type":"detail","prompt":"What is included in the standard fee?","evidenceText":"including equipment hire","options":[{"id":"a","text":"Transport to the venue","correct":false,"rationale":"Transport is not mentioned."},{"id":"b","text":"Use of equipment","correct":true,"rationale":"Equipment hire is explicitly included."},{"id":"c","text":"A printed photography book","correct":false,"rationale":"No book is mentioned."}]},
+    {"id":"course-q3","type":"paraphrase-match","prompt":"What does register before Friday mean here?","evidenceText":"Students who register before Friday receive a ten percent discount.","options":[{"id":"a","text":"Complete enrolment earlier than Friday to pay less.","correct":true,"rationale":"This preserves the timing and discount relationship."},{"id":"b","text":"Attend a Friday class without paying.","correct":false,"rationale":"The condition concerns registration, not attendance."},{"id":"c","text":"Pay ten percent of the fee on Friday.","correct":false,"rationale":"Ten percent is the discount, not the amount to pay."}]}
+  ]
+}
