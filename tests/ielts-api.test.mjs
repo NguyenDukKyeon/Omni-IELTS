@@ -4,7 +4,7 @@ import { Readable } from 'node:stream';
 import { createIeltsApiHandler } from '../server/ielts-api.mjs';
 
 function request(body,path,{remoteAddress='127.0.0.44'}={}){
-  const req=Readable.from([JSON.stringify(body)]);req.method='POST';req.headers={host:'localhost:3000',origin:'http://localhost:3000','x-gemini-key':'test-key','x-gemini-model':'gemini-test'};req.socket={remoteAddress};
+  const req=Readable.from([Buffer.from(JSON.stringify(body))]);req.method='POST';req.headers={host:'localhost:3000',origin:'http://localhost:3000','x-gemini-key':'test-key','x-gemini-model':'gemini-test'};req.socket={remoteAddress};
   let status=0;let headers={};let text='';
   const res={writeHead(value,nextHeaders){status=value;headers=nextHeaders;},end(value=''){text+=String(value);}};
   return{req,res,path,result:()=>({status,headers,text,json:JSON.parse(text||'{}')})};
