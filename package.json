@@ -21,7 +21,8 @@
     "audit:ielts": "node scripts/audit-ielts.mjs",
     "test:ielts-browser": "node scripts/ielts-browser-smoke.mjs",
     "test:v10": "node --test tests/v10-contracts.test.mjs tests/v10-content.test.mjs tests/v10-transcript.test.mjs tests/v10-evidence.test.mjs",
-    "audit:v10": "node scripts/audit-v10.mjs"
+    "audit:v10": "node scripts/audit-v10.mjs",
+    "test:v10-browser": "node scripts/v10-browser-smoke.mjs"
   },
   "dependencies": {
     "ts-fsrs": "5.4.1",
