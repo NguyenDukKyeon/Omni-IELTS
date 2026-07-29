@@ -19,7 +19,7 @@ const checks=[];
 function check(name,fn){fn();checks.push(name);}
 
 check('Phase 0: all durable stores exist',()=>{
-  for(const name of ['errorRecords','lexicalSets','lexicalRelations','labItems','readingPassages','readingAttempts','mediaSources','transcriptionJobs','transcriptSegments','mediaAttempts','mediaProgress'])assert.ok(domain.includes(`${name}:`),`Missing ${name}`);
+  for(const name of ['errorRecords','lexicalSets','lexicalRelations','labItems','readingPassages','readingAttempts','mediaSources','transcriptionJobs','transcriptSegments','mediaAttempts','mediaProgress'])assert.match(domain,new RegExp(`['\"]${name}['\"]`),`Missing ${name}`);
   assert.ok(persistence.includes('buildIeltsBackup')&&persistence.includes('restoreIeltsBackup')&&persistence.includes('validateIeltsBackup'),'IELTS backup lifecycle missing');
   assert.ok(persistence.includes('BroadcastChannel')&&persistence.includes('writeQueue'),'IELTS concurrency protection missing');
 });
