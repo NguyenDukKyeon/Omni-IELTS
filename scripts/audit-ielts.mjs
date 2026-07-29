@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [domain,persistence,ui,content,player,api,server,main,sw,css,packageJson]=await Promise.all([
+const [domain,persistence,ui,runtimeGuard,content,player,api,server,main,sw,css,packageJson]=await Promise.all([
   readFile(new URL('../src/ielts-domain.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-persistence.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-lab.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/ielts-runtime-guard.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-content.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-media-player.js',import.meta.url),'utf8'),
   readFile(new URL('../server/ielts-api.mjs',import.meta.url),'utf8'),
@@ -30,6 +31,8 @@ check('Phase 0: one evidence gateway guards FSRS',()=>{
   assert.ok(domain.includes("errorType==='spelling-only'")&&domain.includes('spelling-is-not-listening-retrieval'),'Spelling/listening distinction missing');
   assert.ok(domain.includes('preselectedTarget')&&domain.includes('usedTargetCorrectly'),'Retell target guard missing');
   assert.ok(ui.includes('resolveIeltsEvidence')&&ui.includes('commitEvidence'),'UI bypasses evidence gateway');
+  assert.ok(runtimeGuard.includes('skillIsPlanned')&&runtimeGuard.includes("supportsSkill(option.value,'listening')")&&runtimeGuard.includes("supportsSkill(input.value,'production')"),'Card learning-goal guard missing');
+  assert.ok(main.includes('mountIeltsRuntimeGuard'),'FSRS runtime guard is not mounted');
 });
 
 check('Phase 1: Error Notebook stores full evidence and deduplicates',()=>{
