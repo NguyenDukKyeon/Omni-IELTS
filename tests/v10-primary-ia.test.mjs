@@ -18,7 +18,7 @@ test('v10 primary IA promotes IELTS to main navigation and removes the legacy la
   assert.match(ia,/textContent='Thu thập'/);
   assert.match(ia,/textContent='Kho từ'/);
   assert.match(ia,/dataset\.route='ielts'/);
-  assert.match(ia,/data-view=\"ielts\"/);
+  assert.match(ia,/dataset\.view='ielts'/);
   assert.match(ia,/suppressLegacyLaunchers/);
   assert.match(ia,/v10-ielts-route-embedded/);
   assert.match(css,/\.v10-ielts-route-embedded/);
