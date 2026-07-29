@@ -36,7 +36,7 @@ export async function mountV10Runtime(){
   void guarded('content-catalog',()=>refreshContentCatalog(),diagnostics).then(()=>globalThis.VocabMasterIeltsHub?.refresh?.());
   void guarded('storage-persistence',()=>requestV10PersistentStorage(),diagnostics);
   void guarded('content-eviction',()=>evictContentCache(),diagnostics);
-  const ready={version:'10.0.1',persistence,diagnostics,mountedAt:Date.now()};globalThis.__VOCAB_V10_READY__=ready;emitStatus('ready',ready);
+  const ready={version:'10.0.0',persistence,diagnostics,mountedAt:Date.now()};globalThis.__VOCAB_V10_READY__=ready;emitStatus('ready',ready);
   setTimeout(()=>{void runV10CrossAudit().then(report=>{globalThis.__VOCAB_V10_AUDIT__=report;emitStatus(report.valid?'audit-passed':'audit-warning',{report});}).catch(error=>console.warn('[v10 audit]',error));},1200);
   return ready;
 }
