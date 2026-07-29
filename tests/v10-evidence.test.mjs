@@ -70,6 +70,9 @@ test('personal prepared content runs during idle time and cannot create FSRS evi
   assert.match(factory,/prepareAndRunPersonalContent/);
   assert.match(factory,/requestIdleCallback/);
   assert.match(factory,/runPendingAiJobs/);
+  assert.match(factory,/ensurePersonalContentManifest/);
+  assert.match(factory,/private-user-generated/);
+  assert.match(factory,/lessonId:PERSONAL_LESSON_ID/);
   assert.match(today,/lessonId==='personal-next-session'/);
   assert.match(today,/personal-ai-content-is-validated-but-not-source-verified/);
   assert.doesNotMatch(today,/personal-ai-content-is-validated-but-not-source-verified[^\n]*affectsSchedule:true/);
