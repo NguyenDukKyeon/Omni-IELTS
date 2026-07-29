@@ -1,5 +1,5 @@
 import { build } from 'esbuild';
-import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -17,13 +17,21 @@ html=html.replace(
 );
 html=html.replace('<script type="module" src="/src/main.js"></script>','<script type="module" src="./assets/app.js"></script>');
 await writeFile(resolve(dist,'index.html'),html);
-await cp(resolve(root,'styles.css'),resolve(dist,'styles.css'));
+await cp(resolve(root,'styles.css'),resolve(dist,'styles.css'),{force:true});
+await cp(publicDir,dist,{recursive:true,force:true,errorOnExist:false});
 
-for(const entry of await readdir(publicDir,{withFileTypes:true})){
-  await cp(resolve(publicDir,entry.name),resolve(dist,entry.name),{recursive:entry.isDirectory(),force:true});
+for(const required of [
+  'manifest.webmanifest',
+  'sw.js',
+  'v10.css',
+  'content/catalog.json'
+]){
+  const info=await stat(resolve(dist,required));
+  if(!info.isFile())throw new Error(`Build thiếu asset bắt buộc: ${required}`);
 }
 
 await build({
+  absWorkingDir:root,
   entryPoints:[resolve(root,'src/main.js')],
   outfile:resolve(dist,'assets/app.js'),
   bundle:true,
@@ -36,4 +44,4 @@ await build({
   logLevel:'info'
 });
 
-console.log(`Built Vocab Master multimodal FSRS/PWA at ${dist}`);
+console.log(`Built Vocab Master v10 multimodal FSRS/PWA at ${dist}`);

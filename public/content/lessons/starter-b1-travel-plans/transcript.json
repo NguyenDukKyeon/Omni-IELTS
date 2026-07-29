@@ -1,0 +1,9 @@
+[
+  {"id":"travel-1","startMs":0,"endMs":7200,"text":"Hi Maya, I am calling because the train to Bristol has been cancelled.","status":"verified","weakForms":["because the","has been"],"ipa":"/haɪ ˈmaɪə aɪm ˈkɔːlɪŋ bɪˈkɒz ðə treɪn tə ˈbrɪstəl həz bɪn ˈkænsəld/"},
+  {"id":"travel-2","startMs":7600,"endMs":14800,"text":"Could we take the coach that leaves at half past nine instead?","status":"verified","weakForms":["could we","at half past"],"ipa":"/kəd wi teɪk ðə kəʊtʃ ðət liːvz ət hɑːf pɑːst naɪn ɪnˈsted/"},
+  {"id":"travel-3","startMs":15300,"endMs":22400,"text":"That should work, but we will need to change at Reading.","status":"verified","weakForms":["should","will need to"],"ipa":"/ðæt ʃəd wɜːk bət wiːl niːd tə tʃeɪndʒ ət ˈredɪŋ/"},
+  {"id":"travel-4","startMs":23000,"endMs":31600,"text":"The connection is only fifteen minutes, so please keep your ticket ready.","status":"verified","weakForms":["is only","so please"],"ipa":"/ðə kəˈnekʃən ɪz ˈəʊnli ˌfɪfˈtiːn ˈmɪnɪts səʊ pliːz kiːp jɔː ˈtɪkɪt ˈredi/"},
+  {"id":"travel-5","startMs":32100,"endMs":39800,"text":"I have already booked two seats near the front of the coach.","status":"verified","weakForms":["have already","of the"],"ipa":"/aɪv ɔːlˈredi bʊkt tuː siːts nɪə ðə frʌnt əv ðə kəʊtʃ/"},
+  {"id":"travel-6","startMs":40400,"endMs":49200,"text":"Please send me the new booking reference when you receive it.","status":"verified","weakForms":["send me","when you"],"ipa":"/pliːz send mi ðə njuː ˈbʊkɪŋ ˈrefrəns wen jə rɪˈsiːv ɪt/"},
+  {"id":"travel-7","startMs":49800,"endMs":59000,"text":"I will message you immediately, and we can meet outside the main entrance.","status":"verified","weakForms":["will","and we can"],"ipa":"/aɪl ˈmesɪdʒ ju ɪˈmiːdiətli ən wi kən miːt ˌaʊtˈsaɪd ðə meɪn ˈentrəns/"}
+]

@@ -1,6 +1,6 @@
 {
   "name": "vocab-master-personal",
-  "version": "9.0.0",
+  "version": "10.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,6 +8,7 @@
     "build": "node scripts/build.mjs",
     "start": "node server/server.mjs",
     "serve": "node server/server.mjs",
+    "transcript:companion": "node scripts/transcript-companion.mjs",
     "test": "node --test",
     "check": "node scripts/check.mjs",
     "test:serve": "node scripts/smoke.mjs",
@@ -18,7 +19,10 @@
     "test:roadmap": "node --test tests/roadmap-v9.test.mjs",
     "test:ielts": "node --test tests/ielts-domain.test.mjs tests/ielts-persistence.test.mjs",
     "audit:ielts": "node scripts/audit-ielts.mjs",
-    "test:ielts-browser": "node scripts/ielts-browser-smoke.mjs"
+    "test:ielts-browser": "node scripts/ielts-browser-smoke.mjs",
+    "test:v10": "node --test tests/v10-contracts.test.mjs tests/v10-content.test.mjs tests/v10-transcript.test.mjs tests/v10-evidence.test.mjs",
+    "audit:v10": "node scripts/audit-v10.mjs",
+    "test:v10-browser": "node scripts/v10-browser-smoke.mjs"
   },
   "dependencies": {
     "ts-fsrs": "5.4.1",

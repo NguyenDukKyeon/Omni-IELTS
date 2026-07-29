@@ -1,0 +1,12 @@
+{
+  "targets": [
+    {"sentenceId":"trees-1","targets":[{"term":"surrounding countryside","meaning":"vùng nông thôn xung quanh","type":"collocation"}]},
+    {"sentenceId":"trees-2","targets":[{"term":"paved surfaces","meaning":"bề mặt được lát","type":"collocation"},{"term":"absorb heat","meaning":"hấp thụ nhiệt","type":"collocation"}]},
+    {"sentenceId":"trees-3","targets":[{"term":"mitigate the effect","meaning":"giảm nhẹ tác động","type":"collocation"},{"term":"water vapour","meaning":"hơi nước","type":"collocation"}]},
+    {"sentenceId":"trees-4","targets":[{"term":"automatically guarantee","meaning":"tự động đảm bảo","type":"collocation"}]},
+    {"sentenceId":"trees-5","targets":[{"term":"influence the result","meaning":"ảnh hưởng đến kết quả","type":"collocation"}]},
+    {"sentenceId":"trees-6","targets":[{"term":"underground infrastructure","meaning":"cơ sở hạ tầng ngầm","type":"collocation"}]},
+    {"sentenceId":"trees-7","targets":[{"term":"long-term maintenance","meaning":"bảo trì dài hạn","type":"collocation"}]},
+    {"sentenceId":"trees-8","targets":[{"term":"rather than decoration","meaning":"thay vì chỉ là trang trí","type":"phrase"}]}
+  ]
+}
