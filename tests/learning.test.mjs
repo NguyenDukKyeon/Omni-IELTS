@@ -106,9 +106,9 @@ test('card identity permits multiple senses but rejects exact semantic duplicate
 
 test('answer checking accepts variants and small spelling slips without converting failure into success',()=>{
   const card=sanitizeCardInput({front:'well-being',back:'sự khỏe mạnh',accepted:['wellbeing']});
-  assert.equal(checkAnswer(card,{answer:'well-being'},'wellbeing').status,'correct');
-  assert.equal(checkAnswer(card,{answer:'well-being'},'well-bein').status,'near');
-  assert.equal(checkAnswer(card,{answer:'well-being'},'unrelated').status,'wrong');
+  assert.equal(checkAnswer(card,{kind:'typing',skill:'recall',answer:'well-being'},'wellbeing').status,'correct');
+  assert.equal(checkAnswer(card,{kind:'typing',skill:'recall',answer:'well-being'},'well-bein').status,'near');
+  assert.equal(checkAnswer(card,{kind:'typing',skill:'recall',answer:'well-being'},'unrelated').status,'wrong');
 });
 
 test('weak ranking, transfer checks and seven-day forecast expose actionable work',()=>{
