@@ -12,7 +12,7 @@
     "check": "node scripts/check.mjs",
     "test:serve": "node scripts/smoke.mjs",
     "test:preview": "node scripts/preview-smoke.mjs",
-    "test:browser": "node scripts/browser-smoke.mjs",
+    "test:browser": "node scripts/browser-smoke-entry.mjs",
     "test:hardening": "node scripts/hardening-browser-smoke.mjs",
     "audit:roadmap": "node scripts/audit-roadmap.mjs",
     "test:roadmap": "node --test tests/roadmap-v9.test.mjs"
