@@ -1,0 +1,39 @@
+name: Apply Final Audit Reopen v9
+
+on:
+  pull_request:
+    branches: ['main']
+    types: [reopened]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  fix:
+    if: github.event.pull_request.number == 1 && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'agent/roadmap-v9'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/roadmap-v9
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/final-audit-fix.mjs
+      - run: |
+          node --check src/persistence.js
+          node --check src/app.js
+          node --check scripts/browser-smoke.mjs
+          node --check tests/persistence.test.mjs
+          node --check src/progress.js
+          node --check tests/roadmap-v9.test.mjs
+      - name: Commit final fixes and remove temporary files
+        run: |
+          rm -f scripts/final-audit-fix.mjs .final-audit-trigger
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'fix: close final roadmap audit findings [final-audit-fixed]'
+          git push origin HEAD:agent/roadmap-v9
