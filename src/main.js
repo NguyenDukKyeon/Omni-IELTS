@@ -125,9 +125,11 @@ try{
     const { mountCaptureInbox } = await import('./capture-inbox.js');
     const { mountRoadmapRuntime } = await import('./roadmap-runtime.js');
     const { mountIeltsLab } = await import('./ielts-lab.js');
+    const { mountIeltsBackupBridge } = await import('./ielts-backup-bridge.js');
     await mountCaptureInbox();
     await mountRoadmapRuntime();
     await mountIeltsLab();
+    mountIeltsBackupBridge();
     await import('./pwa.js');
     await persistence.mountPersistenceUI();
     markBooted();
