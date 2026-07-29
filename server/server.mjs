@@ -5,6 +5,7 @@ import { extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import webpush from 'web-push';
 import { createIeltsApiHandler } from './ielts-api.mjs';
+import { createTranscriptResolverHandler,getTranscriptResolverHealth } from './transcript-resolver.mjs';
 
 const port=Number(process.env.PORT||3000);
 const root=resolve(fileURLToPath(new URL('../dist/',import.meta.url)));
@@ -31,7 +32,7 @@ function securityHeaders(contentType='text/plain; charset=utf-8'){
     'x-frame-options':'DENY',
     'cross-origin-opener-policy':'same-origin',
     'permissions-policy':'camera=(), microphone=(self), geolocation=()',
-    'content-security-policy':"default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://i.ytimg.com https://img.youtube.com; media-src 'self' blob:; connect-src 'self'; frame-src https://www.youtube.com https://www.youtube-nocookie.com; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    'content-security-policy':"default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://i.ytimg.com https://img.youtube.com; media-src 'self' blob:; connect-src 'self' http://127.0.0.1:17321 http://localhost:17321; frame-src https://www.youtube.com https://www.youtube-nocookie.com; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
   };
 }
 function json(res,status,data){res.writeHead(status,{...securityHeaders('application/json; charset=utf-8'),'cache-control':'no-store'});res.end(JSON.stringify(data));}
@@ -59,6 +60,7 @@ const configuredAiModels=String(process.env.GEMINI_MODELS||'').split(',').map(va
 const AI_MODELS=new Set(configuredAiModels.length?configuredAiModels:['gemini-3.6-flash','gemini-3.5-flash','gemini-3.5-flash-lite']);
 const DEFAULT_AI_MODEL=AI_MODELS.has(process.env.GEMINI_MODEL)?process.env.GEMINI_MODEL:[...AI_MODELS][0];
 const handleIeltsApi=createIeltsApiHandler({securityHeaders,aiModels:AI_MODELS,defaultAiModel:DEFAULT_AI_MODEL});
+const handleTranscriptResolver=createTranscriptResolverHandler({securityHeaders});
 const aiCache=new Map();
 const aiTelemetry={requests:0,cacheHits:0,errors:0,totalLatencyMs:0,byRoute:{}};
 const AI_SCHEMAS={
@@ -212,13 +214,16 @@ async function handlePush(req,res,path){
   }catch(error){return json(res,500,{error:error.message});}
 }
 
+function healthPayload(){return{ok:true,fsrs:6,pwa:true,push:Boolean(vapidPublicKey),multimodal:true,ai:['enrich','evaluate','mnemonic','context-example','context-capture','output-practice','pronunciation'],ielts:['transcript','paraphrase-draft','reading-draft','retell'],transcriptResolver:getTranscriptResolverHealth(),aiTelemetry:{...aiTelemetry,averageLatencyMs:aiTelemetry.requests?Math.round(aiTelemetry.totalLatencyMs/aiTelemetry.requests):0,models:[...AI_MODELS]}};}
+
 export async function apiHandler(req,res,next){
   try{
     const url=new URL(req.url||'/',`http://${req.headers.host||'localhost'}`);
     if(url.pathname.startsWith('/api/ai/'))return await handleAi(req,res,url.pathname);
     if(url.pathname.startsWith('/api/ielts/'))return await handleIeltsApi(req,res,url.pathname);
+    if(url.pathname.startsWith('/api/transcript/'))return await handleTranscriptResolver(req,res,url.pathname,url);
     if(url.pathname.startsWith('/api/push/'))return await handlePush(req,res,url.pathname);
-    if(url.pathname==='/api/health')return json(res,200,{ok:true,fsrs:6,pwa:true,push:Boolean(vapidPublicKey),multimodal:true,ai:['enrich','evaluate','mnemonic','context-example','context-capture','output-practice','pronunciation'],ielts:['transcript','paraphrase-draft','reading-draft','retell'],aiTelemetry:{...aiTelemetry,averageLatencyMs:aiTelemetry.requests?Math.round(aiTelemetry.totalLatencyMs/aiTelemetry.requests):0,models:[...AI_MODELS]}});
+    if(url.pathname==='/api/health')return json(res,200,healthPayload());
     if(next)return next();
   }catch(err){if(next)return next(err);json(res,500,{error:err.message});}
 }
@@ -231,8 +236,9 @@ const server=createServer(async(req,res)=>{
     const url=new URL(req.url||'/',`http://${req.headers.host||'localhost'}`);
     if(url.pathname.startsWith('/api/ai/'))return handleAi(req,res,url.pathname);
     if(url.pathname.startsWith('/api/ielts/'))return handleIeltsApi(req,res,url.pathname);
+    if(url.pathname.startsWith('/api/transcript/'))return handleTranscriptResolver(req,res,url.pathname,url);
     if(url.pathname.startsWith('/api/push/'))return handlePush(req,res,url.pathname);
-    if(url.pathname==='/api/health')return json(res,200,{ok:true,fsrs:6,pwa:true,push:Boolean(vapidPublicKey),multimodal:true,ai:['enrich','evaluate','mnemonic','context-example','context-capture','output-practice','pronunciation'],ielts:['transcript','paraphrase-draft','reading-draft','retell'],aiTelemetry:{...aiTelemetry,averageLatencyMs:aiTelemetry.requests?Math.round(aiTelemetry.totalLatencyMs/aiTelemetry.requests):0,models:[...AI_MODELS]}});
+    if(url.pathname==='/api/health')return json(res,200,healthPayload());
     const requested=decodeURIComponent(url.pathname);const relative=requested==='/'?'index.html':requested.replace(/^\/+/, '');let file=resolve(root,relative);
     if(!file.startsWith(root))throw new Error('Invalid path');
     try{const info=await stat(file);if(info.isDirectory())file=resolve(file,'index.html');}catch{if(!extname(relative))file=resolve(root,'index.html');}
