@@ -1,5 +1,5 @@
 const LEGACY_TABS=new Set(['errors','lexical','paraphrase','reading','media','overview']);
-const replacedIds=new Set();
+const replacedNodes=new WeakSet();
 
 function openLegacyDialog(tab='overview'){
   const legacy=document.querySelector('#ieltsLabDialog');if(!legacy)throw new Error('IELTS advanced tools chưa được mount.');
@@ -8,10 +8,17 @@ function openLegacyDialog(tab='overview'){
   requestAnimationFrame(()=>document.querySelector(`#ieltsLabDialog [data-ielts-tab="${tab}"]`)?.click());
 }
 
-function hubLauncherClick(event){event.preventDefault();event.stopImmediatePropagation();void globalThis.VocabMasterIeltsHub?.open?.('today');}
+function hubLauncherClick(event){
+  event.preventDefault();event.stopImmediatePropagation();
+  const legacy=document.querySelector('#ieltsLabDialog');if(legacy?.open)legacy.close();
+  void globalThis.VocabMasterIeltsHub?.open?.('today');
+}
 
 function replaceLauncher(node){
-  if(!node||replacedIds.has(node.id))return;const clone=node.cloneNode(true);node.replaceWith(clone);clone.addEventListener('click',hubLauncherClick);replacedIds.add(clone.id);
+  if(!node||replacedNodes.has(node))return;
+  const clone=node.cloneNode(true);node.replaceWith(clone);
+  clone.addEventListener('click',hubLauncherClick,true);
+  replacedNodes.add(clone);
 }
 
 function replaceLaunchers(){replaceLauncher(document.querySelector('#openIeltsLabButton'));replaceLauncher(document.querySelector('#openIeltsLabMobile'));}
