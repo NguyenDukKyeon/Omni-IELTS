@@ -126,10 +126,12 @@ try{
     const { mountRoadmapRuntime } = await import('./roadmap-runtime.js');
     const { mountIeltsLab } = await import('./ielts-lab.js');
     const { mountIeltsBackupBridge } = await import('./ielts-backup-bridge.js');
+    const { mountIeltsRuntimeGuard } = await import('./ielts-runtime-guard.js');
     await mountCaptureInbox();
     await mountRoadmapRuntime();
     await mountIeltsLab();
     mountIeltsBackupBridge();
+    mountIeltsRuntimeGuard();
     await import('./pwa.js');
     await persistence.mountPersistenceUI();
     markBooted();
