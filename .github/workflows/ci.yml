@@ -9,6 +9,76 @@ permissions:
   pull-requests: write
   issues: write
 jobs:
+  apply_review_version_fix:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/agent/roadmap-v9' && !contains(github.event.head_commit.message, '[review-stamp-fixed]')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/roadmap-v9
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Synchronize review storage version
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path=Path('src/persistence.js')
+          source=path.read_text()
+          old="""      const cards=[...getCurrentState().cards.filter(item=>item.id!==card.id),clone(card)];
+      const events=dedupeReviewEvents([...readFallbackReviewEvents(),review]);"""
+          new="""      const cards=[...getCurrentState().cards.filter(item=>item.id!==card.id),clone(operation.card)];
+      card.storageBaseUpdatedAt=operation.card.storageUpdatedAt;card.storageUpdatedAt=operation.card.storageUpdatedAt;
+      const events=dedupeReviewEvents([...readFallbackReviewEvents(),review]);"""
+          if old in source: source=source.replace(old,new,1)
+          elif 'card.storageBaseUpdatedAt=operation.card.storageUpdatedAt' not in source: raise SystemExit('fallback review block not found')
+          old="""      }else currentState=await readStateFromDatabase();
+      emitStatus('saved');return result;"""
+          new="""      }else currentState=await readStateFromDatabase();
+      const persistedCard=getCurrentState().cards.find(item=>item.id===card.id)||operation.card;
+      if(card&&typeof card==='object'){card.storageBaseUpdatedAt=Number(persistedCard.storageUpdatedAt||0);card.storageUpdatedAt=Number(persistedCard.storageUpdatedAt||0);}
+      emitStatus('saved');return result;"""
+          if old in source: source=source.replace(old,new,1)
+          elif 'const persistedCard=getCurrentState().cards.find' not in source: raise SystemExit('success review block not found')
+          path.write_text(source)
+
+          test_path=Path('tests/persistence.test.mjs')
+          tests=test_path.read_text()
+          old="""  assert.equal(duplicate.inserted,false);
+  const backup=await persistence.exportBackupPackage();
+  assert.equal(backup.cards.length,1);
+  assert.equal(backup.cards[0].back,'bền');
+  assert.equal(backup.reviewEvents.length,1);"""
+          new="""  assert.equal(duplicate.inserted,false);
+  assert.ok(Number(card.storageUpdatedAt)>0);
+  const secondEvent=createReviewEvent({cardId:card.id,skill:'recognition',exerciseType:'meaning-choice',sessionMode:'today',rating:'hard',reviewedAt:3000,resultLog:{id:'log-2',rating:2,review:3000,fsrsVersion:6}});
+  const second=await persistence.persistReviewResult({card,event:secondEvent,metrics:{dailyDone:1,completedReviews:1}});
+  assert.equal(second.inserted,true);
+  const backup=await persistence.exportBackupPackage();
+  assert.equal(backup.cards.length,1);
+  assert.equal(backup.cards[0].back,'bền');
+  assert.equal(backup.reviewEvents.length,2);"""
+          if old in tests: tests=tests.replace(old,new,1)
+          elif 'const secondEvent=createReviewEvent' not in tests: raise SystemExit('persistence test block not found')
+          tests=tests.replace("assert.equal(snapshot.reviewEvents.length,1);","assert.equal(snapshot.reviewEvents.length,2);",1)
+          tests=tests.replace("assert.equal(backup.reviewEvents.length,1);\n});\n\ntest('full restore", "assert.equal(backup.reviewEvents.length,2);\n});\n\ntest('full restore",1)
+          test_path.write_text(tests)
+          PY
+          node --check src/persistence.js
+          node --check tests/persistence.test.mjs
+      - name: Commit reviewed version fix
+        shell: bash
+        run: |
+          if git diff --quiet -- src/persistence.js tests/persistence.test.mjs; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/persistence.js tests/persistence.test.mjs
+          git commit -m 'fix: synchronize review storage version [review-stamp-fixed]'
+          git push origin HEAD:agent/roadmap-v9
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
