@@ -1,30 +1,33 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30
+Last audited: 2026-07-30 kickoff baseline, trước source change
 
-Audited commit: 54691cfb5314b51762c4959c9d0cee2012fc2b4a
+Audited source commit: 547e5d665adbf102c15b65ac39def185769e5626
 
-Branch: main tracking origin/main
-Scope of this update: planning documents only; no implementation package started.
+Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
+
+Active implementation branch: codex/phase-0-release-safety
+Scope of this update: Phase 0 governance reconciliation và kickoff baseline trước source change; source implementation chưa bắt đầu.
 
 ## 1. Provenance status
 
 | Item | Status | Evidence / action |
 |---|---|---|
 | User-provided AGENTS.md | ACTIVE | Instructions in the current task are applied |
-| Repository AGENTS.md | MISSING | No matching file on main or fetched remote heads |
-| docs/ROADMAP.md | MISSING | No matching file on main or fetched remote heads |
-| Accepted Phase 0–7 roadmap | BASELINE_WITH_PROVENANCE_GAP | Reconstructed from the roadmap accepted by the user in this conversation |
+| Repository AGENTS.md | ACTIVE | Invariant/test/migration/evidence/data/Git rules đã được codify trước source change |
+| docs/ROADMAP.md | CANONICAL | Nguồn chính thức cho Phase 0–7 và dependency |
+| Accepted Phase 0–7 roadmap | RECONCILED | ROADMAP, plan, status và decisions có vai trò không chồng lấn |
 | Current implementation baseline | VERIFIED | Exact commit above, clean before documentation edits |
 
-Hard stop: if a repository docs/ROADMAP.md is later supplied and differs materially, no implementation package may start until IMPLEMENTATION_PLAN.md, IMPLEMENTATION_STATUS.md and DECISIONS.md are reconciled and approved.
+Hard stop: nếu roadmap/dependency thay đổi vật chất, không tiếp tục source cho đến khi ROADMAP, IMPLEMENTATION_PLAN, IMPLEMENTATION_STATUS và DECISIONS được reconcile theo ADR mới.
 
-## 2. Verification matrix at baseline
+## 2. Kickoff verification matrix (actual current run)
 
 | Command | Result | Notes |
 |---|---|---|
+| node --version | PASS | v24.15.0; Windows NT 10.0.26200.0 |
 | npm ci --no-audit --no-fund | PASS | 36 packages installed |
-| npm test | PASS | 106/106 |
+| npm test | PASS | 106/106; 0 skipped/todo |
 | npm run check | PASS | Static checks passed |
 | npm run audit:roadmap | PASS | 12/12 existing gates; not sufficient behavioral acceptance |
 | npm run audit:ielts | PASS | 11/11 existing gates; not sufficient behavioral acceptance |
@@ -34,11 +37,11 @@ Hard stop: if a repository docs/ROADMAP.md is later supplied and differs materia
 | npm run test:serve | PASS | Server smoke |
 | npm run test:preview | PASS | Preview smoke |
 | npm run test:browser | PASS | Passed in this run |
-| npm run test:ielts-browser | FAIL | Retell did not finish in a success state |
+| npm run test:ielts-browser | PASS_ONCE / SUSPECT_FLAKY | Current run passed; earlier audited run failed at Retell, therefore P0-00 must repeat and keep product diagnostics |
 | npm run test:v10-browser | FAIL | Browser discovery omits available Windows Chrome/Edge paths |
-| npm run test:hardening | FAIL_AFTER_ASSERTIONS | Assertions passed, cleanup failed with EBUSY on CrashpadMetrics-active.pma |
+| npm run test:hardening | PASS_ONCE / SUSPECT_FLAKY | Current run passed; earlier audited run hit cleanup EBUSY, therefore bounded retry + cleanup verification remain required |
 
-Ports used by smoke tests were verified empty after the run. The failure list above means the release baseline is not Phase 0 accepted.
+Ports 3000, 3010, 5692 and 4173 were verified empty after the run. V10 browser discovery still fails, and one-off passes do not close earlier flaky evidence; the release baseline is not Phase 0 accepted.
 
 ## 3. Confirmed blockers
 
@@ -87,17 +90,19 @@ Status vocabulary:
 
 ### Phase 0
 
-| Package | Branch | Dependency | Status |
+Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/package nội bộ.
+
+| Package | Commit unit | Dependency | Status |
 |---|---|---|---|
-| P0-00 Acceptance harness | codex/p0-00-acceptance-harness | Baseline | NEXT |
-| P0-01 Evidence contract | codex/p0-01-evidence-contract | P0-00 | PLANNED |
-| P0-02 Core evidence gateway | codex/p0-02-core-evidence-gateway | P0-01 | PLANNED |
-| P0-03 IELTS/V10 containment | codex/p0-03-ielts-v10-containment | P0-01 | PLANNED |
-| P0-04 Backup envelope | codex/p0-04-backup-envelope | P0-00 | PLANNED |
-| P0-05 Restore safety | codex/p0-05-restore-safety | P0-04 | PLANNED |
-| P0-06 Capture containment | codex/p0-06-capture-containment | P0-00, P0-05 | PLANNED |
-| P0-07 Today containment | codex/p0-07-today-containment | P0-00, P0-01 | PLANNED |
-| P0-08 Phase 0 exit gate | codex/p0-08-phase0-exit-gate | P0-02, P0-03, P0-05, P0-06, P0-07 | PLANNED |
+| P0-00 Acceptance harness | P0-00 | Baseline | IN_PROGRESS |
+| P0-01 Evidence contract | P0-01 | P0-00 | PLANNED |
+| P0-02 Core evidence gateway | P0-02 | P0-01 | PLANNED |
+| P0-03 IELTS/V10 containment | P0-03 | P0-01 | PLANNED |
+| P0-04 Backup envelope | P0-04 | P0-00 | PLANNED |
+| P0-05 Restore safety | P0-05 | P0-04 | PLANNED |
+| P0-06 Capture containment | P0-06 | P0-00, P0-05 | PLANNED |
+| P0-07 Today containment | P0-07 | P0-00, P0-01 | PLANNED |
+| P0-08 Phase 0 exit gate | P0-08 | P0-02, P0-03, P0-05, P0-06, P0-07 | PLANNED |
 
 ### Phase 1
 
@@ -207,8 +212,8 @@ P1-00 remains PHASE_BLOCKED until every checkbox above is checked and P0-08 is i
 
 ## 7. Next package
 
-Recommended next package: P0-00 Acceptance harness.
+Current package: P0-00 Acceptance harness.
 
-Proposed branch: codex/p0-00-acceptance-harness.
+Phase branch: `codex/phase-0-release-safety`.
 
-No branch has been created and no implementation has started in this planning task.
+Governance/baseline reconciliation is complete; P0-00 implementation is now active. No Phase 1 work is authorized.

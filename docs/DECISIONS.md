@@ -12,7 +12,7 @@ No decision below authorizes implementation by itself.
 
 ## ADR-001 — Roadmap authority and provenance gap
 
-Status: PROPOSED
+Status: SUPERSEDED by ADR-026
 
 Context: the audited repository has no AGENTS.md and no docs/ROADMAP.md. It contains several older, conflicting phase number systems in reports/audits.
 
@@ -36,7 +36,7 @@ Revisit when: never by informal exception; only by an explicit roadmap decision 
 
 ## ADR-003 — One package equals one branch and one PR
 
-Status: CONFIRMED
+Status: SUPERSEDED by ADR-026
 
 Context: phase-sized PRs cannot be reviewed, migrated or rolled back independently.
 
@@ -46,9 +46,26 @@ Consequences: more PRs and integration points; much smaller blast radius and cle
 
 Revisit when: package boundary proves non-atomic before coding; split it further, never merge a whole phase.
 
+## ADR-026 — Canonical roadmap roles và Phase 0 delivery topology
+
+Status: CONFIRMED
+
+Context: yêu cầu triển khai hiện tại cung cấp authority để tạo repository `AGENTS.md` và canonical `docs/ROADMAP.md`, đồng thời loại bỏ chi phí quản lý thủ công 61 branch/PR. P0-00…P0-08 vẫn cần boundary kiểm chứng/rollback rõ nhưng không cần remote integration point riêng.
+
+Decision:
+
+- `docs/ROADMAP.md` là authority về Phase 0–7 và dependency; IMPLEMENTATION_PLAN giữ package acceptance; IMPLEMENTATION_STATUS giữ evidence/status; DECISIONS giữ rationale; AGENTS giữ invariant thi hành.
+- Work package là đơn vị plan, verification và commit; không mặc định là branch/PR.
+- Toàn Phase 0 chạy tuần tự trên `codex/phase-0-release-safety`, một commit nhỏ cho mỗi P0-00…P0-08 và một PR Phase 0.
+- Independent review vẫn bind vào exact final commit và phải tái chạy hard gate; topology ít PR không làm yếu acceptance.
+
+Consequences: Phase 0 có một review surface end-to-end và commit/package mapping rõ; rollback vẫn có thể theo commit. Các branch name cũ trong planning ledger không còn active cho Phase 0.
+
+Revisit when: package cần release cadence hoặc risk boundary độc lập; thay đổi topology phải được chốt trước khi package bắt đầu, không giữa implementation để né gate.
+
 ## ADR-004 — EvidencePolicy is the sole FSRS write gateway
 
-Status: PROPOSED
+Status: CONFIRMED
 
 Context: Core currently trusts affectsSchedule from activity steps, while IELTS has a separate policy with caller-supplied booleans.
 
@@ -60,7 +77,7 @@ Revisit when: a new activity type cannot be expressed; extend the contract, do n
 
 ## ADR-005 — Failure is persisted, but does not masquerade as success
 
-Status: PROPOSED
+Status: CONFIRMED
 
 Context: Again/failure can currently count as reps and unlock later skills; Skip/complete semantics overlap.
 
@@ -84,7 +101,7 @@ Revisit when: event/repository boundaries are stable and telemetry proves cross-
 
 ## ADR-007 — Durable data, reconstructable cache and ephemeral state are distinct
 
-Status: PROPOSED
+Status: CONFIRMED
 
 Context: current backups omit V10/drafts/outbox, while future media/content caches could make backups huge.
 
@@ -100,7 +117,7 @@ Revisit when: a cache artifact cannot legally/technically be reconstructed.
 
 ## ADR-008 — Restore uses staging, journal and forward-only schema evolution
 
-Status: PROPOSED
+Status: CONFIRMED
 
 Context: IndexedDB version cannot be safely downgraded and multi-DB restore is not one native transaction.
 
@@ -128,7 +145,7 @@ Revisit when: a truly separate product/account boundary appears, not merely a di
 
 ## ADR-010 — Exact activity target is immutable from plan to receipt
 
-Status: PROPOSED
+Status: CONFIRMED
 
 Context: V10 planner stores cardId/skill but launcher starts a generic mode.
 
@@ -284,7 +301,7 @@ Revisit when: outcome cohort meets predeclared sample/quality thresholds.
 
 ## ADR-023 — Acceptance evidence hierarchy
 
-Status: PROPOSED
+Status: CONFIRMED
 
 Decision, strongest to weakest:
 
@@ -319,7 +336,7 @@ Revisit when: production telemetry with privacy safeguards supports revised SLOs
 
 ## ADR-025 — No destructive migration as a feature rollback
 
-Status: PROPOSED
+Status: CONFIRMED
 
 Decision: rollback uses feature flags, compatible readers, catalog pointers and immutable revisions. It must not delete stores, downgrade IndexedDB, overwrite published assets or erase learner data.
 
