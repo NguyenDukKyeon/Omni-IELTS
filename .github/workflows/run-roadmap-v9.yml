@@ -1,28 +1,42 @@
-# Trigger commit after the workflow already exists on main.
 name: Run Roadmap v9 Patch
 
 on:
-  push:
+  pull_request:
     branches: ['main']
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   patch:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'agent/roadmap-v9'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: agent/roadmap-v9
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
+      - name: Detect completed patch
+        id: state
+        shell: bash
+        run: |
+          if [ ! -f .roadmap/gz/part00 ]; then
+            echo 'needed=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'needed=true' >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/setup-node@v4
+        if: steps.state.outputs.needed == 'true'
         with:
           node-version: 22
 
       - name: Reassemble implementation script
+        if: steps.state.outputs.needed == 'true'
         shell: bash
         run: |
           cat .roadmap/gz/part* | base64 --decode | gzip -dc > /tmp/apply-roadmap-v9.mjs
@@ -43,6 +57,7 @@ jobs:
 
       - name: Apply roadmap
         id: apply
+        if: steps.state.outputs.needed == 'true'
         continue-on-error: true
         shell: bash
         run: |
@@ -50,7 +65,7 @@ jobs:
           node /tmp/apply-roadmap-v9.mjs 2>&1 | tee /tmp/roadmap-apply.log
 
       - name: Record apply failure on branch
-        if: steps.apply.outcome == 'failure'
+        if: steps.state.outputs.needed == 'true' && steps.apply.outcome == 'failure'
         shell: bash
         run: |
           git reset --hard HEAD
@@ -65,23 +80,23 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add ROADMAP_WORKFLOW_FAILURE.md
           git commit -m 'Record roadmap apply failure [roadmap-failed]' || true
-          git push origin HEAD:agent/roadmap-v9
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
 
       - name: Stop after apply failure
-        if: steps.apply.outcome == 'failure'
+        if: steps.state.outputs.needed == 'true' && steps.apply.outcome == 'failure'
         run: exit 1
 
       - name: Syntax check
         id: syntax
+        if: steps.state.outputs.needed == 'true' && steps.apply.outcome == 'success'
         continue-on-error: true
-        if: steps.apply.outcome == 'success'
         shell: bash
         run: |
           set -o pipefail
           find src server public scripts tests -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check 2>&1 | tee /tmp/roadmap-syntax.log
 
       - name: Record syntax failure on branch
-        if: steps.apply.outcome == 'success' && steps.syntax.outcome == 'failure'
+        if: steps.state.outputs.needed == 'true' && steps.apply.outcome == 'success' && steps.syntax.outcome == 'failure'
         shell: bash
         run: |
           {
@@ -95,18 +110,18 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           git commit -m 'Implement roadmap with syntax report [roadmap-validation-failed]'
-          git push origin HEAD:agent/roadmap-v9
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
 
       - name: Stop after syntax failure
-        if: steps.apply.outcome == 'success' && steps.syntax.outcome == 'failure'
+        if: steps.state.outputs.needed == 'true' && steps.apply.outcome == 'success' && steps.syntax.outcome == 'failure'
         run: exit 1
 
       - name: Commit patch to implementation branch
-        if: steps.apply.outcome == 'success' && steps.syntax.outcome == 'success'
+        if: steps.state.outputs.needed == 'true' && steps.apply.outcome == 'success' && steps.syntax.outcome == 'success'
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           git commit -m 'Implement roadmap v9 [roadmap-patched]'
-          git push origin HEAD:agent/roadmap-v9
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
