@@ -1,6 +1,7 @@
-const CACHE_VERSION='vocab-master-pwa-v6';
+const CACHE_VERSION='vocab-master-pwa-v10';
 const STATIC_CACHE=`${CACHE_VERSION}-static`;
 const RUNTIME_CACHE=`${CACHE_VERSION}-runtime`;
+const CONTENT_CACHE='vocab-master-content-v1';
 const PRECACHE=[
   '/',
   '/index.html',
@@ -8,6 +9,7 @@ const PRECACHE=[
   '/experience.css',
   '/settings-tabs.css',
   '/ielts-lab.css',
+  '/v10.css',
   '/assets/app.js',
   '/manifest.webmanifest',
   '/offline.html',
@@ -23,7 +25,7 @@ self.addEventListener('install',event=>{
 
 self.addEventListener('activate',event=>{
   event.waitUntil(Promise.all([
-    caches.keys().then(keys=>Promise.all(keys.filter(key=>!key.startsWith(CACHE_VERSION)).map(key=>caches.delete(key)))),
+    caches.keys().then(keys=>Promise.all(keys.filter(key=>!key.startsWith(CACHE_VERSION)&&key!==CONTENT_CACHE).map(key=>caches.delete(key)))),
     self.clients.claim()
   ]));
 });
@@ -52,13 +54,20 @@ async function staleWhileRevalidate(request){
   return cached||await network||new Response('',{status:504,statusText:'Offline'});
 }
 
+async function contentCacheFirst(request){
+  const cache=await caches.open(CONTENT_CACHE);const cached=await cache.match(request);
+  if(cached){void fetch(request).then(response=>{if(response.ok)cache.put(request,response.clone());}).catch(()=>{});return cached;}
+  try{const response=await fetch(request);if(response.ok)await cache.put(request,response.clone());return response;}catch{return new Response(JSON.stringify({error:'Content chưa được tải offline.'}),{status:504,headers:{'content-type':'application/json; charset=utf-8'}});}
+}
+
 self.addEventListener('fetch',event=>{
   const request=event.request;
   if(request.method!=='GET')return;
   const url=new URL(request.url);
   if(url.origin!==self.location.origin)return;
   if(url.pathname.startsWith('/api/'))return;
-  if(request.mode==='navigate')event.respondWith(networkFirst(request));
+  if(url.pathname.startsWith('/content/'))event.respondWith(contentCacheFirst(request));
+  else if(request.mode==='navigate')event.respondWith(networkFirst(request));
   else if(['script','style','worker'].includes(request.destination))event.respondWith(networkFirst(request));
   else event.respondWith(staleWhileRevalidate(request));
 });
@@ -108,6 +117,7 @@ async function readReminderConfig(){
 self.addEventListener('message',event=>{
   if(event.data?.type==='SKIP_WAITING')self.skipWaiting();
   if(event.data?.type==='REMINDER_CONFIG')event.waitUntil(saveReminderConfig(event.data.config));
+  if(event.data?.type==='CONTENT_CACHE_CLEAR')event.waitUntil(caches.delete(CONTENT_CACHE));
   if(event.data?.type==='SHOW_NOTIFICATION'){
     event.waitUntil(self.registration.showNotification(event.data.title||'Vocab Master',{
       body:event.data.body||'Thông báo đang hoạt động.',icon:'/icons/icon-192.svg',badge:'/icons/badge.svg',tag:'vocab-master-local-test',data:{url:'/#today'}
