@@ -17,12 +17,12 @@ function ensureStyles(){
 function renameCoreNavigation(){
   const capture=$('[data-route="capture"] .nav-label');
   const library=$('[data-route="library"] .nav-label');
-  if(capture)capture.textContent='Thu thập';
-  if(library)library.textContent='Kho từ';
+  if(capture&&capture.textContent!=='Thu thập')capture.textContent='Thu thập';
+  if(library&&library.textContent!=='Kho từ')library.textContent='Kho từ';
   const mobileCapture=$('.bottom-nav [data-route="capture"] small');
   const mobileLibrary=$('.bottom-nav [data-route="library"] small');
-  if(mobileCapture)mobileCapture.textContent='Thu thập';
-  if(mobileLibrary)mobileLibrary.textContent='Kho từ';
+  if(mobileCapture&&mobileCapture.textContent!=='Thu thập')mobileCapture.textContent='Thu thập';
+  if(mobileLibrary&&mobileLibrary.textContent!=='Kho từ')mobileLibrary.textContent='Kho từ';
 }
 
 function desktopIeltsButton(){
