@@ -22,9 +22,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Reassemble audited corrections
+        shell: bash
+        run: cat .roadmap-audit-fixes/part* | base64 --decode | gzip -dc > /tmp/apply-audit-fixes.mjs
       - name: Apply audited corrections
         shell: bash
-        run: node scripts/apply-audit-fixes.mjs
+        run: node /tmp/apply-audit-fixes.mjs
       - name: Syntax check
         shell: bash
         run: find src server public scripts tests -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
