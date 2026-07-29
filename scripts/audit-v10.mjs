@@ -12,9 +12,9 @@ const phaseFiles={
   0:['src/v10-contracts.js','src/v10-persistence.js','src/v10-audit.js'],
   1:['src/lexical-core-v2.js'],
   2:['src/unified-capture-v2.js','src/library-v2-runtime.js'],
-  3:['src/today-planner-v2.js','src/ielts-hub-v2.js'],
+  3:['src/today-planner-v2.js','src/ielts-hub-v2.js','src/ielts-launcher-override.js'],
   4:['src/sentence-learning-loop.js'],
-  5:['src/transcript-resolver-v2.js','server/transcript-resolver.mjs','scripts/transcript-companion.mjs'],
+  5:['src/transcript-resolver-v2.js','src/youtube-sentence-player.js','server/transcript-resolver.mjs','scripts/transcript-companion.mjs'],
   6:['src/content-platform.js','public/content/catalog.json'],
   7:['public/content/lessons/starter-b1-travel-plans/transcript.json','public/content/lessons/starter-b2-urban-trees/transcript.json','public/content/lessons/starter-b2-course-enquiry/transcript.json'],
   8:['src/ai-content-factory.js'],
@@ -23,8 +23,8 @@ const phaseFiles={
 };
 for(const[phase,files]of Object.entries(phaseFiles)){for(const file of files)check(`Phase ${phase} file ${file}`,await exists(file));}
 
-const [mainSource,serverSource,clientTranscript,contentPlatform,aiFactory,sentenceLoop,contracts,serviceWorker,packageText,catalogText]=await Promise.all([
-  read('src/main.js'),read('server/server.mjs'),read('src/transcript-resolver-v2.js'),read('src/content-platform.js'),read('src/ai-content-factory.js'),read('src/sentence-learning-loop.js'),read('src/v10-contracts.js'),read('public/sw.js'),read('package.json'),read('public/content/catalog.json')
+const [mainSource,serverSource,clientTranscript,videoPlayer,ieltsHub,launcherOverride,todayPlanner,contentPlatform,aiFactory,sentenceLoop,contracts,serviceWorker,packageText,catalogText]=await Promise.all([
+  read('src/main.js'),read('server/server.mjs'),read('src/transcript-resolver-v2.js'),read('src/youtube-sentence-player.js'),read('src/ielts-hub-v2.js'),read('src/ielts-launcher-override.js'),read('src/today-planner-v2.js'),read('src/content-platform.js'),read('src/ai-content-factory.js'),read('src/sentence-learning-loop.js'),read('src/v10-contracts.js'),read('public/sw.js'),read('package.json'),read('public/content/catalog.json')
 ]);
 const pkg=JSON.parse(packageText),catalog=JSON.parse(catalogText),lessons=(catalog.packs||[]).flatMap(pack=>pack.lessons||[]);
 
@@ -36,10 +36,15 @@ const fastProviderIndex=clientTranscript.indexOf("providers=['indexeddb','shared
 const geminiFallbackIndex=clientTranscript.indexOf('result=await geminiProvider(context)',fastProviderIndex);
 check('Client fast path precedes Gemini fallback',fastProviderIndex>=0&&geminiFallbackIndex>fastProviderIndex);
 check('Transcript is progressive',clientTranscript.includes('firstChunkSeconds=60')&&clientTranscript.includes('continueTranscriptProgressively'));
+check('YouTube sentence loop uses real segment player',videoPlayer.includes("import { YouTubeSegmentPlayer }")&&videoPlayer.includes('player.setSegment')&&ieltsHub.includes('createYoutubeSentencePlayer')&&ieltsHub.includes('openVideoLoop(row)'));
+check('YouTube embed failures are contained',videoPlayer.includes('void ready.catch')&&videoPlayer.includes("host.dataset.status='error'"));
+check('IELTS Hub launcher is deterministic',launcherOverride.includes('cloneNode(true)')&&launcherOverride.includes('openLegacyDialog')&&launcherOverride.includes('stopImmediatePropagation'));
 check('Content is not imported into JS bundle',!mainSource.includes('/content/')&&!contentPlatform.includes("import '../public"));
 check('Content catalog has verified starter lessons',lessons.length>=3&&lessons.every(row=>row.verified&&row.qualityStatus==='verified'&&row.license&&row.assets?.transcript));
 check('Service worker caches content on demand',serviceWorker.includes("url.pathname.startsWith('/content/')")&&serviceWorker.includes('contentCacheFirst'));
 check('AI artifacts require validation before publish',aiFactory.includes("job.status!=='ready'||!job.validation?.valid")&&aiFactory.includes("'quarantined'")&&aiFactory.includes('MAX_RETRIES'));
+check('Personal content is prepared during idle time',aiFactory.includes('requestIdleCallback')&&aiFactory.includes('prepareAndRunPersonalContent')&&aiFactory.includes('runPendingAiJobs'));
+check('Today consumes prepared personal content conservatively',todayPlanner.includes("lessonId==='personal-next-session'")&&todayPlanner.includes('personal-ai-content-is-validated-but-not-source-verified')&&todayPlanner.includes('vocab:v10-personal-content-ready'));
 check('AI is not required to start sentence loop',!sentenceLoop.includes('/api/ai/')&&!sentenceLoop.includes('/api/ielts/reading-draft'));
 check('Shadowing copy states coaching only',sentenceLoop.includes('SHADOWING · COACHING ONLY')&&sentenceLoop.includes('không tạo FSRS review'));
 check('V10 contracts separate source occurrences',contracts.includes("sourceOccurrences:'sourceOccurrences'")&&contracts.includes('lexicalItemId'));
