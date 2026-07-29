@@ -5,6 +5,7 @@ import { mountLibraryV2 } from './library-v2-runtime.js';
 import { mountTodayPlannerV2 } from './today-planner-v2.js';
 import { mountSentenceLearningLoop } from './sentence-learning-loop.js';
 import { mountTranscriptResolverV2 } from './transcript-resolver-v2.js';
+import { mountVideoWorkspaceV2 } from './video-workspace-v2.js';
 import { mountContentPlatform,refreshContentCatalog,evictContentCache } from './content-platform.js';
 import { mountIeltsHubV2 } from './ielts-hub-v2.js';
 import { mountIeltsLauncherOverride } from './ielts-launcher-override.js';
@@ -23,6 +24,7 @@ export async function mountV10Runtime(){
   await guarded('lexical-migration',()=>migrateExistingCardsToOccurrences(),diagnostics);
   mountSentenceLearningLoop();diagnostics.push({name:'sentence-loop',status:'ready'});
   mountTranscriptResolverV2();diagnostics.push({name:'transcript-resolver',status:'ready'});
+  mountVideoWorkspaceV2();diagnostics.push({name:'full-video-workspace',status:'ready'});
   mountContentPlatform();diagnostics.push({name:'content-platform',status:'ready'});
   await guarded('unified-capture',()=>mountUnifiedCaptureV2(),diagnostics);
   await guarded('library-v2',()=>mountLibraryV2(),diagnostics);
