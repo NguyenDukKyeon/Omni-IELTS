@@ -54,7 +54,7 @@ function guardSynchronousForm(form){
   if(form.id==='mediaRetellForm'){
     let removed=0;
     for(const input of form.querySelectorAll('input[name="target"]:checked'))if(!supportsSkill(input.value,'production')){input.checked=false;removed++;}
-    if(removed)announce(`Đã loại ${removed} target không có mục tiêu Production; chúng không được phép tạo FSRS evidence.`,'error');
+    if(removed)announce(`Đã loại ${removed} target không có mục tiêu Production khỏi phản hồi coaching.`,'error');
   }
 }
 
@@ -66,7 +66,7 @@ async function guardErrorCorrection(event,form){
   const linked=Array.isArray(error?.linkedCardIds)?error.linkedCardIds:[];
   const card=linked.length===1?findCard(linked[0]):null;
   if(card&&!skillIsPlanned(card,skill)){
-    announce(`Không thể ghi ${skill} FSRS cho “${card.front}” vì kỹ năng này không thuộc mục tiêu của thẻ. Hãy đổi kỹ năng hoặc mục tiêu thẻ.`,'error');
+    announce(`Không thể gắn coaching ${skill} cho “${card.front}” vì kỹ năng này không thuộc mục tiêu của thẻ. Hãy đổi kỹ năng hoặc mục tiêu thẻ.`,'error');
     return;
   }
   form.dataset.ieltsGuardBypass='true';form.requestSubmit();

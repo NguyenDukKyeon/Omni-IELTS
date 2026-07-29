@@ -1,4 +1,4 @@
-import { normalizeEvidenceRequirement } from './evidence-policy.js';
+import { decideEvidence,evidenceDigest,normalizeAssistanceTrace,normalizeEvidenceRequirement } from './evidence-policy.js';
 
 export const V10_SCHEMA_VERSION=1;
 export const V10_DB_NAME='vocab-master-v10';
@@ -101,6 +101,17 @@ export function normalizeActivity(input={}){
   };
 }
 
+export function buildV10CoachingEnvelope({activityId,receiptId,activityType,sentence={},sourceId,cardId=null,skill,result='correct',learnerOutput='',assistance={}}={}){
+  const id=clean(activityId,180);const receipt=clean(receiptId,180);const source=clean(sourceId,180)||null;
+  const sourceRevision=`v10-sentence-v1:${evidenceDigest(JSON.stringify({id:sentence.id||null,text:String(sentence.text||''),startMs:Number(sentence.startMs||0),endMs:Number(sentence.endMs||0),verified:sentence.verified===true}))}`;
+  const target={cardId:clean(cardId,180)||null,skill:clean(skill,80)||null,sourceId:source,sourceRevision};
+  const attempt={id:`attempt:${receipt}`,activityId:id,receiptId:receipt,activityType:clean(activityType,80),result:clean(result,40),target,learnerOutput:String(learnerOutput||'').trim().slice(0,10_000),assistance:normalizeAssistanceTrace({id:`trace:${receipt}`,schemaVersion:1,collector:'v10-sentence-loop',complete:true,coaching:true,...assistance})};
+  const activitySpec={id,type:attempt.activityType,target};
+  const verification={source:{id:`source:${sourceRevision}`,authority:'v10-source-registry',status:sentence.verified===true?'verified':'unverified',sourceId:source,sourceRevision}};
+  const decision=decideEvidence({attempt,activity:activitySpec,verification});
+  return Object.freeze({attempt,activitySpec,verification,decision});
+}
+
 export function normalizeSentenceProgress(input={}){
   const step=SENTENCE_STEPS.includes(input.step)?input.step:'queued';
   return{
@@ -113,6 +124,10 @@ export function normalizeSentenceProgress(input={}){
     dictationResponse:String(input.dictationResponse||'').slice(0,5000),
     errorClassification:clean(input.errorClassification,80)||null,
     wordDiff:Array.isArray(input.wordDiff)?structuredClone(input.wordDiff).slice(0,500):[],
+    retellResponse:String(input.retellResponse||'').slice(0,5000),
+    retellStatus:['not-started','coaching-completed','skipped','unverified'].includes(input.retellStatus)?input.retellStatus:(input.retellResponse?'unverified':'not-started'),
+    evidenceAttempts:Array.isArray(input.evidenceAttempts)?structuredClone(input.evidenceAttempts).slice(0,20):[],
+    runToken:Number(input.runToken||0)||null,
     linkedCardIds:[...new Set((Array.isArray(input.linkedCardIds)?input.linkedCardIds:[]).map(value=>clean(value,180)).filter(Boolean))],
     savedCandidateIds:[...new Set((Array.isArray(input.savedCandidateIds)?input.savedCandidateIds:[]).map(value=>clean(value,180)).filter(Boolean))],
     weak:input.weak===true,

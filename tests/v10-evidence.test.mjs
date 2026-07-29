@@ -88,3 +88,18 @@ test('personal prepared content runs during idle time and cannot create FSRS evi
   assert.match(today,/personal-ai-content-is-validated-but-not-source-verified/);
   assert.doesNotMatch(today,/personal-ai-content-is-validated-but-not-source-verified[^\n]*affectsSchedule:true/);
 });
+
+test('IELTS and V10 containment surfaces cannot bypass the schedule gateway',async()=>{
+  const [ielts,sentenceLoop]=await Promise.all([readFile(resolve(root,'src/ielts-lab.js'),'utf8'),readFile(resolve(root,'src/sentence-learning-loop.js'),'utf8')]);
+  assert.doesNotMatch(ielts,/applyFsrsRating|persistReviewResult|commitEvidence|validated-provider/);
+  assert.match(ielts,/buildIeltsEvidenceEnvelope/);
+  assert.match(ielts,/selectedTargetIds\.has\(row\.cardId\)/);
+  assert.match(ielts,/correctionExposed:true,answerExposed:true,coaching:true/);
+  assert.match(ielts,/result:'coaching'/);
+  assert.match(sentenceLoop,/progressWriteQueue/);
+  assert.match(sentenceLoop,/runToken/);
+  assert.match(sentenceLoop,/retellStatus='skipped'/);
+  assert.match(sentenceLoop,/retellStatus='coaching-completed'/);
+  assert.match(sentenceLoop,/result:'coaching'/);
+  assert.doesNotMatch(sentenceLoop,/data-v10-complete-sentence/);
+});

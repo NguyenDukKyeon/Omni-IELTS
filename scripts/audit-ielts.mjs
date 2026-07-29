@@ -33,7 +33,9 @@ check('Phase 0: one evidence gateway guards FSRS',()=>{
   assert.ok(evidencePolicy.includes('learnerOutput')&&evidencePolicy.includes('targetUsed')&&evidencePolicy.includes('evaluation-is-not-verified'),'Retell target/output/evaluator guard missing');
   assert.ok(evidencePolicy.includes('missing-receipt-id')&&evidencePolicy.includes('planned-target-mismatch')&&evidencePolicy.includes('assistance-exposed'),'Default-deny binding and assistance guards missing');
   assert.ok(evidencePolicy.includes('SOURCE_AUTHORITIES')&&evidencePolicy.includes('EVALUATION_AUTHORITIES')&&evidencePolicy.includes('receiptBinding'),'Authoritative receipt binding missing');
-  assert.ok(ui.includes('resolveIeltsEvidence')&&ui.includes('commitEvidence'),'UI bypasses evidence gateway');
+  assert.ok(ui.includes('buildIeltsEvidenceEnvelope'),'UI does not emit canonical evidence envelopes');
+  assert.doesNotMatch(ui,/applyFsrsRating|persistReviewResult|commitEvidence/,'IELTS UI contains a direct schedule write path');
+  assert.ok(ui.includes('selectedTargetIds.has(row.cardId)'),'Retell evaluator results are not restricted to preselected targets');
   assert.ok(runtimeGuard.includes('skillIsPlanned')&&runtimeGuard.includes("supportsSkill(option.value,'listening')")&&runtimeGuard.includes("supportsSkill(input.value,'production')"),'Card learning-goal guard missing');
   assert.ok(main.includes('mountIeltsRuntimeGuard'),'FSRS runtime guard is not mounted');
 });

@@ -118,9 +118,10 @@ export async function upsertErrorRecord(input,reason='ielts-error-upserted'){
   broadcast(reason,[IELTS_STORE_NAMES.errors]);emit('saved',{storeName:IELTS_STORE_NAMES.errors});return saved;
 }
 
-export async function setErrorStatus(id,status){
+export async function setErrorStatus(id,status,evidenceAttempt=null){
   const current=await getOne(IELTS_STORE_NAMES.errors,id);if(!current)throw new Error('Không tìm thấy lỗi.');
-  const value=createErrorRecord({...current,status,lastResolvedAt:status==='resolved'?Date.now():current.lastResolvedAt,resolutionAttempts:Number(current.resolutionAttempts||0)+(status==='practicing'?1:0),now:current.firstSeenAt});
+  const evidenceAttempts=evidenceAttempt?[...(current.evidenceAttempts||[]),structuredClone(evidenceAttempt)].slice(-30):(current.evidenceAttempts||[]);
+  const value=createErrorRecord({...current,status,evidenceAttempts,lastResolvedAt:status==='resolved'?Date.now():current.lastResolvedAt,resolutionAttempts:Number(current.resolutionAttempts||0)+(status==='practicing'?1:0),now:current.firstSeenAt});
   await putOne(IELTS_STORE_NAMES.errors,value);broadcast('ielts-error-status',[IELTS_STORE_NAMES.errors]);return value;
 }
 
