@@ -1,0 +1,114 @@
+name: Apply Final Audit Fixes v9
+
+on:
+  pull_request:
+    branches: ['main']
+    types: [synchronize]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  fix:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'agent/roadmap-v9'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply audited persistence and browser fixes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          persistence_path=Path('src/persistence.js')
+          source=persistence_path.read_text()
+          old="""      const cards=[...getCurrentState().cards.filter(item=>item.id!==card.id),clone(card)];
+      const events=dedupeReviewEvents([...readFallbackReviewEvents(),review]);"""
+          new="""      const cards=[...getCurrentState().cards.filter(item=>item.id!==card.id),clone(operation.card)];
+      card.storageBaseUpdatedAt=operation.card.storageUpdatedAt;card.storageUpdatedAt=operation.card.storageUpdatedAt;
+      const events=dedupeReviewEvents([...readFallbackReviewEvents(),review]);"""
+          if old in source: source=source.replace(old,new,1)
+          elif 'card.storageBaseUpdatedAt=operation.card.storageUpdatedAt' not in source: raise SystemExit('fallback review block not found')
+
+          old="""      }else currentState=await readStateFromDatabase();
+      emitStatus('saved');return result;"""
+          new="""      }else currentState=await readStateFromDatabase();
+      const persistedCard=getCurrentState().cards.find(item=>item.id===card.id)||operation.card;
+      if(card&&typeof card==='object'){card.storageBaseUpdatedAt=Number(persistedCard.storageUpdatedAt||0);card.storageUpdatedAt=Number(persistedCard.storageUpdatedAt||0);}
+      emitStatus('saved');return result;"""
+          if old in source: source=source.replace(old,new,1)
+          elif 'const persistedCard=getCurrentState().cards.find' not in source: raise SystemExit('success review block not found')
+
+          old="""    }catch(error){
+      error.outboxQueued=Boolean(outbox);
+      emitStatus(outbox?'pending':'error',{pendingId:outbox?.id,message:error.message});
+      if(error.code==='STALE_REVIEW_WRITE')globalThis.dispatchEvent?.(new CustomEvent('vocab:write-conflict',{detail:{code:error.code,message:error.message}}));
+      throw error;
+    }"""
+          new="""    }catch(error){
+      if(error.code==='STALE_REVIEW_WRITE'&&outbox)await deleteOne(STORE_NAMES.outbox,outbox.id).catch(()=>{});
+      error.outboxQueued=Boolean(outbox&&error.code!=='STALE_REVIEW_WRITE');
+      emitStatus(error.outboxQueued?'pending':'error',{pendingId:error.outboxQueued?outbox.id:null,message:error.message});
+      if(error.code==='STALE_REVIEW_WRITE')globalThis.dispatchEvent?.(new CustomEvent('vocab:write-conflict',{detail:{code:error.code,message:error.message}}));
+      throw error;
+    }"""
+          if old in source: source=source.replace(old,new,1)
+          elif "error.code!=='STALE_REVIEW_WRITE'" not in source: raise SystemExit('stale review catch block not found')
+          persistence_path.write_text(source)
+
+          app_path=Path('src/app.js')
+          app=app_path.read_text()
+          old="""  try{await persistReviewResult({card:savedCard,event,metrics:step.persistMetrics===false?null:state.metrics});}catch(error){console.warn('[persistence] Không thể lưu lượt ôn',error);showToast(error.outboxQueued?'Lượt ôn chưa ghi xong; outbox sẽ thử lại khi mở ứng dụng.':'Không thể bảo vệ lượt ôn này. Hãy tải backup trước khi tiếp tục.');}"""
+          new="""  try{await persistReviewResult({card:savedCard,event,metrics:step.persistMetrics===false?null:state.metrics});}catch(error){if(!error.outboxQueued)replaceCard(card);console.warn('[persistence] Không thể lưu lượt ôn',error);showToast(error.outboxQueued?'Lượt ôn chưa ghi xong; outbox sẽ thử lại khi mở ứng dụng.':'Không thể bảo vệ lượt ôn này. Trạng thái thẻ đã được hoàn tác; hãy tải lại nếu tab khác vừa sửa dữ liệu.');}"""
+          if old in app: app=app.replace(old,new,1)
+          elif 'Trạng thái thẻ đã được hoàn tác' not in app: raise SystemExit('app review rollback block not found')
+          app_path.write_text(app)
+
+          browser_path=Path('scripts/browser-smoke.mjs')
+          browser=browser_path.read_text()
+          browser=browser.replace("await evaluate(\"document.querySelector('#wordList [data-card-id]').click()\");","await waitFor(\"document.querySelector('#wordList [data-open-card]')\",'library detail control');\n    await evaluate(\"document.querySelector('#wordList [data-open-card]').click()\");",1)
+          if "[data-card-id]" in browser: raise SystemExit('obsolete browser card selector remains')
+          browser_path.write_text(browser)
+
+          test_path=Path('tests/persistence.test.mjs')
+          tests=test_path.read_text()
+          old="""  assert.equal(duplicate.inserted,false);
+  const backup=await persistence.exportBackupPackage();
+  assert.equal(backup.cards.length,1);
+  assert.equal(backup.cards[0].back,'bền');
+  assert.equal(backup.reviewEvents.length,1);"""
+          new="""  assert.equal(duplicate.inserted,false);
+  assert.ok(Number(card.storageUpdatedAt)>0);
+  const secondEvent=createReviewEvent({cardId:card.id,skill:'recognition',exerciseType:'meaning-choice',sessionMode:'today',rating:'hard',reviewedAt:3000,resultLog:{id:'log-2',rating:2,review:3000,fsrsVersion:6}});
+  const second=await persistence.persistReviewResult({card,event:secondEvent,metrics:{dailyDone:1,completedReviews:1}});
+  assert.equal(second.inserted,true);
+  const backup=await persistence.exportBackupPackage();
+  assert.equal(backup.cards.length,1);
+  assert.equal(backup.cards[0].back,'bền');
+  assert.equal(backup.reviewEvents.length,2);"""
+          if old in tests: tests=tests.replace(old,new,1)
+          elif 'const secondEvent=createReviewEvent' not in tests: raise SystemExit('persistence regression insertion not found')
+          tests=tests.replace("assert.equal(snapshot.reviewEvents.length,1);","assert.equal(snapshot.reviewEvents.length,2);",1)
+          tests=tests.replace("assert.equal(backup.reviewEvents.length,1);\n});\n\ntest('full restore", "assert.equal(backup.reviewEvents.length,2);\n});\n\ntest('full restore",1)
+          test_path.write_text(tests)
+          PY
+          node --check src/persistence.js
+          node --check src/app.js
+          node --check scripts/browser-smoke.mjs
+          node --check tests/persistence.test.mjs
+      - name: Commit fixes
+        shell: bash
+        run: |
+          if git diff --quiet -- src/persistence.js src/app.js scripts/browser-smoke.mjs tests/persistence.test.mjs; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/persistence.js src/app.js scripts/browser-smoke.mjs tests/persistence.test.mjs
+          git commit -m 'fix: close persistence and browser audit findings [final-audit-fixed]'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
