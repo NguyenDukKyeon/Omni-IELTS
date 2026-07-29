@@ -8,6 +8,7 @@ import { mountTranscriptResolverV2 } from './transcript-resolver-v2.js';
 import { mountContentPlatform,refreshContentCatalog,evictContentCache } from './content-platform.js';
 import { mountIeltsHubV2 } from './ielts-hub-v2.js';
 import { mountIeltsLauncherOverride } from './ielts-launcher-override.js';
+import { mountPrimaryIAV10 } from './primary-ia-v10.js';
 import { mountAiContentFactory } from './ai-content-factory.js';
 import { mountCoachingEngineV2 } from './coaching-engine-v2.js';
 import { mountV10Audit,runV10CrossAudit } from './v10-audit.js';
@@ -28,13 +29,14 @@ export async function mountV10Runtime(){
   await guarded('today-v2',()=>mountTodayPlannerV2(),diagnostics);
   mountIeltsHubV2();diagnostics.push({name:'ielts-hub',status:'ready'});
   mountIeltsLauncherOverride();diagnostics.push({name:'ielts-launcher-override',status:'ready'});
+  mountPrimaryIAV10();diagnostics.push({name:'primary-information-architecture',status:'ready'});
   mountAiContentFactory();diagnostics.push({name:'ai-factory',status:'ready'});
   await guarded('coaching',()=>mountCoachingEngineV2(),diagnostics);
   mountV10Audit();diagnostics.push({name:'audit',status:'ready'});
   void guarded('content-catalog',()=>refreshContentCatalog(),diagnostics).then(()=>globalThis.VocabMasterIeltsHub?.refresh?.());
   void guarded('storage-persistence',()=>requestV10PersistentStorage(),diagnostics);
   void guarded('content-eviction',()=>evictContentCache(),diagnostics);
-  const ready={version:'10.0.0',persistence,diagnostics,mountedAt:Date.now()};globalThis.__VOCAB_V10_READY__=ready;emitStatus('ready',ready);
+  const ready={version:'10.0.1',persistence,diagnostics,mountedAt:Date.now()};globalThis.__VOCAB_V10_READY__=ready;emitStatus('ready',ready);
   setTimeout(()=>{void runV10CrossAudit().then(report=>{globalThis.__VOCAB_V10_AUDIT__=report;emitStatus(report.valid?'audit-passed':'audit-warning',{report});}).catch(error=>console.warn('[v10 audit]',error));},1200);
   return ready;
 }
