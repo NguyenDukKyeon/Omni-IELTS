@@ -40,3 +40,14 @@ test('client resolver uses cache/provider race before Gemini fallback',async()=>
   assert.match(source,/firstChunkSeconds=60/);
   assert.match(source,/continueTranscriptProgressively/);
 });
+
+test('video learning loop plays timestamped YouTube segments instead of TTS',async()=>{
+  const [bridge,hub]=await Promise.all([readFile(resolve(root,'src/youtube-sentence-player.js'),'utf8'),readFile(resolve(root,'src/ielts-hub-v2.js'),'utf8')]);
+  assert.match(bridge,/YouTubeSegmentPlayer/);
+  assert.match(bridge,/player\.setSegment/);
+  assert.match(bridge,/player\.playSegment/);
+  assert.match(bridge,/void ready\.catch/);
+  assert.match(hub,/createYoutubeSentencePlayer/);
+  assert.match(hub,/openVideoLoop\(row\)/);
+  assert.doesNotMatch(bridge,/yt-dlp|extract-audio|bestaudio/);
+});
