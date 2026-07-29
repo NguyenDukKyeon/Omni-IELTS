@@ -1,0 +1,44 @@
+name: One-shot retell regression fix
+on:
+  push:
+    branches: ['agent/ielts-phases-0-5']
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/ielts-phases-0-5
+          fetch-depth: 0
+      - name: Patch retell attempt and regression smoke
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          source = Path('src/ielts-lab.js')
+          text = source.read_text(encoding='utf-8')
+          old = "mode:'retell',learnerResponse,expectedResponse:sourceTranscript"
+          new = "mode:'retell',learnerResponse:learnerTranscript,expectedResponse:sourceTranscript"
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected one retell learnerResponse bug, found {text.count(old)}')
+          source.write_text(text.replace(old, new), encoding='utf-8')
+
+          smoke = Path('scripts/ielts-browser-smoke.mjs')
+          test = smoke.read_text(encoding='utf-8')
+          anchor = "await waitFor(\"document.getElementById('mediaPracticeFeedback')?.textContent.includes('không phải band score')\",'retell feedback without band');"
+          replacement = anchor + "await waitFor(\"document.getElementById('ieltsLabStatus')?.textContent.includes('Đã lưu retell')\",'retell persistence status');"
+          if test.count(anchor) != 1:
+              raise SystemExit(f'Expected one retell smoke anchor, found {test.count(anchor)}')
+          smoke.write_text(test.replace(anchor, replacement), encoding='utf-8')
+
+          Path('.github/workflows/one-shot-fix-retell.yml').unlink()
+          PY
+      - name: Commit focused fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/ielts-lab.js scripts/ielts-browser-smoke.mjs .github/workflows/one-shot-fix-retell.yml
+          git commit -m "fix: persist retell learner transcript"
+          git push origin HEAD:agent/ielts-phases-0-5
