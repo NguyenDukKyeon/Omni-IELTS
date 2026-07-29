@@ -124,8 +124,10 @@ try{
     if(isBrowserSmokeSeed)await globalThis.VocabMasterApp?.loadSampleDeck?.();
     const { mountCaptureInbox } = await import('./capture-inbox.js');
     const { mountRoadmapRuntime } = await import('./roadmap-runtime.js');
+    const { mountIeltsLab } = await import('./ielts-lab.js');
     await mountCaptureInbox();
     await mountRoadmapRuntime();
+    await mountIeltsLab();
     await import('./pwa.js');
     await persistence.mountPersistenceUI();
     markBooted();
