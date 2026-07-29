@@ -355,3 +355,15 @@ Consequences: P0-00 may be accepted when the harness reproducibly exposes a red 
 Evidence: P0-00 independently accepted source commit `33616e5e03ef3684b0afdbdf6e328ef45bb5cfc4`; the V10 sentence-session race remains a product failure owned by P0-03.
 
 Revisit when: the CI browser transport or process ownership model changes; preserve deterministic discovery, bounded cleanup and failure-kind separation.
+
+## ADR-028 — Verification is receipt-bound, not an Attempt self-claim
+
+Status: CONFIRMED
+
+Decision: an Attempt contains learner action, exact target, result and a complete authority-named AssistanceTrace; it cannot declare itself independent or verified. EvidencePolicy separately requires source and, for Production/Retell, evaluation receipts from closed authorities. Receipts bind the exact activity, card, skill, source revision, learner-output digest and target assessment. The decision ID includes a canonical digest of every normalized input that can change the verdict.
+
+Consequences: legacy or partially traced attempts fail closed. A repeated receipt with identical normalized input is deterministic; reusing it with a changed result, error classification, assistance event, source receipt or evaluation receipt produces a different binding that the persistence gateway can reject as a collision. Qualified `Again` remains evidence of failure but never successful evidence.
+
+Evidence: P0-01 independently accepted source commit `0ec315f7a77e2fac6bad71a548b6ccc71961687b`; focused matrix 38/38 and full unit suite 128/128.
+
+Revisit when: verifier authorities or persisted receipt schemas change; add a new policy version instead of weakening old receipt bindings.

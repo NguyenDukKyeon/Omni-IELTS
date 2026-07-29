@@ -1,13 +1,13 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, P0-00 independently accepted
+Last audited: 2026-07-30, P0-01 independently accepted
 
-Audited source commit: 33616e5e03ef3684b0afdbdf6e328ef45bb5cfc4
+Audited source commit: 0ec315f7a77e2fac6bad71a548b6ccc71961687b
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
 Active implementation branch: codex/phase-0-release-safety
-Scope of this update: governance/kickoff baseline và P0-00 Acceptance harness. P0-01 bắt đầu; Phase 0 product gate vẫn đỏ.
+Scope of this update: governance/kickoff baseline, P0-00 Acceptance harness và P0-01 Evidence contract. P0-02 bắt đầu; Phase 0 product gate vẫn đỏ.
 
 ## 1. Provenance status
 
@@ -58,6 +58,22 @@ Accepted source commit: `33616e5e03ef3684b0afdbdf6e328ef45bb5cfc4`.
 | Independent review | ACCEPTED; no P0/P1 finding after fixes for rerendered iframe race, POSIX descendant cleanup and CDP/transport classification |
 
 P0-00 has no data migration. Rollback is removal of the shared helper, gate scaffold and browser-suite integration. Acceptance here means the harness is trustworthy; it does not turn the known V10 product failure green. That failure remains owned by P0-03 and keeps the Phase 0 hard gate red.
+
+### P0-01 acceptance evidence
+
+Accepted source commit: `0ec315f7a77e2fac6bad71a548b6ccc71961687b`.
+
+| Evidence | Actual result |
+|---|---|
+| Focused EvidencePolicy/IELTS/V10 tests | PASS 38/38 |
+| `npm test` | PASS 128/128; 0 skipped/todo |
+| `npm run audit:ielts` | PASS 11/11 |
+| `npm run audit:v10` | PASS 55/55 |
+| `npm run check` | PASS |
+| Adversarial matrix | Default deny for missing legacy provenance, unknown activity/result, wrong target/skill/source/revision, incomplete assistance trace, reveal/hint/transcript/correction/exposed retry, unverified source/evaluator, Retell without output/target use and receipt collisions |
+| Independent review | ACCEPTED; no P0/P1 after receipt binding covered every normalized decision input |
+
+P0-01 is an additive contract migration: legacy records without canonical Attempt, complete AssistanceTrace and authority-bound verification receipts are ineligible. Rollback may stop enforcing the new contract but must not delete policy metadata/receipts. Runtime schedule enforcement remains owned by P0-02/P0-03, so the full product gate is intentionally still red.
 
 ## 3. Confirmed blockers
 
@@ -112,8 +128,8 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 | Package | Commit unit | Dependency | Status |
 |---|---|---|---|
 | P0-00 Acceptance harness | P0-00 | Baseline | ACCEPTED @ `33616e5` |
-| P0-01 Evidence contract | P0-01 | P0-00 | IN_PROGRESS |
-| P0-02 Core evidence gateway | P0-02 | P0-01 | PLANNED |
+| P0-01 Evidence contract | P0-01 | P0-00 | ACCEPTED @ `0ec315f` |
+| P0-02 Core evidence gateway | P0-02 | P0-01 | IN_PROGRESS |
 | P0-03 IELTS/V10 containment | P0-03 | P0-01 | PLANNED |
 | P0-04 Backup envelope | P0-04 | P0-00 | PLANNED |
 | P0-05 Restore safety | P0-05 | P0-04 | PLANNED |
@@ -229,8 +245,8 @@ P1-00 remains PHASE_BLOCKED until every checkbox above is checked and P0-08 is i
 
 ## 7. Next package
 
-Current package: P0-01 Evidence contract.
+Current package: P0-02 Core evidence gateway.
 
 Phase branch: `codex/phase-0-release-safety`.
 
-P0-00 is independently accepted at the exact source commit above. P0-01 is active. No Phase 1 work is authorized.
+P0-00 and P0-01 are independently accepted at their exact source commits. P0-02 is active. No Phase 1 work is authorized.
