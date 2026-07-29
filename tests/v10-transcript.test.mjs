@@ -34,7 +34,7 @@ test('server yt-dlp resolver is subtitle-only and never requests audio extractio
 test('client resolver uses cache/provider race before Gemini fallback',async()=>{
   const source=await readFile(resolve(root,'src/transcript-resolver-v2.js'),'utf8');
   const fast=source.indexOf("providers=['indexeddb','shared-cache','local-companion','backend-provider']");
-  const fallback=source.indexOf('geminiProvider(context)');
+  const fallback=source.indexOf('result=await geminiProvider(context)',fast);
   assert.ok(fast>=0);
   assert.ok(fallback>fast);
   assert.match(source,/firstChunkSeconds=60/);
