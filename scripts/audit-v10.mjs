@@ -32,7 +32,9 @@ check('Main mounts v10 runtime',mainSource.includes("import('./v10-runtime.js')"
 check('V10 runtime is outside AI Studio preview',mainSource.indexOf("import('./v10-runtime.js')")>mainSource.indexOf('}else{'));
 check('Server exposes transcript resolver',serverSource.includes("/api/transcript/")&&serverSource.includes('createTranscriptResolverHandler'));
 check('yt-dlp path is subtitle-only',serverSource.includes('transcriptResolver')&&await read('server/transcript-resolver.mjs').then(text=>text.includes('--skip-download')&&!/--extract-audio|bestaudio|ffmpeg/.test(text)));
-check('Client fast path precedes Gemini fallback',clientTranscript.indexOf("providers=['indexeddb','shared-cache','local-companion','backend-provider']")>=0&&clientTranscript.indexOf('geminiProvider(context)')>clientTranscript.indexOf("providers=['indexeddb','shared-cache','local-companion','backend-provider']"));
+const fastProviderIndex=clientTranscript.indexOf("providers=['indexeddb','shared-cache','local-companion','backend-provider']");
+const geminiFallbackIndex=clientTranscript.indexOf('result=await geminiProvider(context)',fastProviderIndex);
+check('Client fast path precedes Gemini fallback',fastProviderIndex>=0&&geminiFallbackIndex>fastProviderIndex);
 check('Transcript is progressive',clientTranscript.includes('firstChunkSeconds=60')&&clientTranscript.includes('continueTranscriptProgressively'));
 check('Content is not imported into JS bundle',!mainSource.includes('/content/')&&!contentPlatform.includes("import '../public"));
 check('Content catalog has verified starter lessons',lessons.length>=3&&lessons.every(row=>row.verified&&row.qualityStatus==='verified'&&row.license&&row.assets?.transcript));
@@ -41,7 +43,7 @@ check('AI artifacts require validation before publish',aiFactory.includes("job.s
 check('AI is not required to start sentence loop',!sentenceLoop.includes('/api/ai/')&&!sentenceLoop.includes('/api/ielts/reading-draft'));
 check('Shadowing copy states coaching only',sentenceLoop.includes('SHADOWING · COACHING ONLY')&&sentenceLoop.includes('không tạo FSRS review'));
 check('V10 contracts separate source occurrences',contracts.includes("sourceOccurrences:'sourceOccurrences'")&&contracts.includes('lexicalItemId'));
-check('Package has v10 test and audit scripts',Boolean(pkg.scripts?.['test:v10'])&&Boolean(pkg.scripts?.['audit:v10']));
+check('Package has v10 test and audit scripts',Boolean(pkg.scripts?.['test:v10'])&&Boolean(pkg.scripts?.['audit:v10'])&&Boolean(pkg.scripts?.['test:v10-browser']));
 check('App version advanced to v10',pkg.version==='10.0.0');
 
 const forbiddenBundlePatterns=['CURATED_V10_LESSONS','STARTER_TRANSCRIPTS','CONTENT_PACK_PAYLOAD'];for(const pattern of forbiddenBundlePatterns)check(`No bundled content constant ${pattern}`,!mainSource.includes(pattern)&&!contracts.includes(pattern));
