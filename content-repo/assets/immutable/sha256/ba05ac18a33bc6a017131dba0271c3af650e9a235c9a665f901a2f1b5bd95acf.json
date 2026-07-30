@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w1-listening-appointment",
+  "skill": "listening",
+  "transcript": {
+    "segments": [
+      {
+        "id": "segment:foundations-w1-listening-appointment:1",
+        "startMs": 0,
+        "endMs": 5250,
+        "text": "I am calling about your appointment with the nutrition adviser."
+      },
+      {
+        "id": "segment:foundations-w1-listening-appointment:2",
+        "startMs": 5500,
+        "endMs": 10750,
+        "text": "The adviser will be away on Tuesday, so we need to move the appointment to Thursday."
+      },
+      {
+        "id": "segment:foundations-w1-listening-appointment:3",
+        "startMs": 11000,
+        "endMs": 16250,
+        "text": "Your consultation begins at eleven forty, but please arrive at eleven twenty-five."
+      },
+      {
+        "id": "segment:foundations-w1-listening-appointment:4",
+        "startMs": 16500,
+        "endMs": 21750,
+        "text": "Bring the food diary you completed last week."
+      },
+      {
+        "id": "segment:foundations-w1-listening-appointment:5",
+        "startMs": 22000,
+        "endMs": 27250,
+        "text": "If Thursday is inconvenient, call us before four o clock today."
+      }
+    ]
+  },
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w1-listening-appointment:1",
+      "term": "move the appointment",
+      "meaning": "reschedule the meeting",
+      "register": "neutral-academic",
+      "usageNote": "Use “move the appointment” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-listening-appointment:2",
+      "term": "consultation begins",
+      "meaning": "the appointment starts",
+      "register": "neutral-academic",
+      "usageNote": "Use “consultation begins” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-listening-appointment:3",
+      "term": "food diary",
+      "meaning": "a written record of meals",
+      "register": "neutral-academic",
+      "usageNote": "Use “food diary” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-listening-appointment:4",
+      "term": "is inconvenient",
+      "meaning": "does not suit your schedule",
+      "register": "neutral-academic",
+      "usageNote": "Use “is inconvenient” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

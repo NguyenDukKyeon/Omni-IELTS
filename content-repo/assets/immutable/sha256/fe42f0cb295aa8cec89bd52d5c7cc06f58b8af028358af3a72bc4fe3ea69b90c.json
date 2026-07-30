@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w4-lexical-synthesis",
+  "skill": "lexical-paraphrase",
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w4-lexical-synthesis:1",
+      "term": "both accounts emphasise",
+      "meaning": "the two sources give importance to",
+      "register": "neutral-academic",
+      "usageNote": "Use “both accounts emphasise” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-lexical-synthesis:2",
+      "term": "the latter qualifies",
+      "meaning": "the second source limits the earlier claim",
+      "register": "neutral-academic",
+      "usageNote": "Use “the latter qualifies” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-lexical-synthesis:3",
+      "term": "converge on",
+      "meaning": "reach a similar conclusion about",
+      "register": "neutral-academic",
+      "usageNote": "Use “converge on” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-lexical-synthesis:4",
+      "term": "diverge in their explanation",
+      "meaning": "offer different accounts of why",
+      "register": "neutral-academic",
+      "usageNote": "Use “diverge in their explanation” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

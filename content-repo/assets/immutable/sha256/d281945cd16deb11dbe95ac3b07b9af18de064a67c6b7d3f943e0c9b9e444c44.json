@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w1-reading-urban-shade",
+  "skill": "reading",
+  "passage": "City reports often count how many trees have been planted, but that total does not show whether residents receive useful shade. A young tree in an empty traffic island may add to the official figure while doing little for people walking to school or waiting for a bus. Researchers therefore map shade at the times and places where heat exposure is greatest. They also consider canopy width, pavement temperature and whether roots have enough soil to survive. The shift from counting trees to measuring useful shade changes both planning and maintenance priorities.",
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w1-reading-urban-shade:1",
+      "term": "official figure",
+      "meaning": "a number reported by an authority",
+      "register": "neutral-academic",
+      "usageNote": "Use “official figure” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-reading-urban-shade:2",
+      "term": "heat exposure",
+      "meaning": "contact with high temperatures",
+      "register": "neutral-academic",
+      "usageNote": "Use “heat exposure” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-reading-urban-shade:3",
+      "term": "canopy width",
+      "meaning": "the spread of branches and leaves",
+      "register": "neutral-academic",
+      "usageNote": "Use “canopy width” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-reading-urban-shade:4",
+      "term": "maintenance priorities",
+      "meaning": "the most important care tasks",
+      "register": "neutral-academic",
+      "usageNote": "Use “maintenance priorities” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

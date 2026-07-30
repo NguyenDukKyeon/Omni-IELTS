@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w2-lexical-comparison",
+  "skill": "lexical-paraphrase",
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w2-lexical-comparison:1",
+      "term": "compared with",
+      "meaning": "examined in relation to",
+      "register": "neutral-academic",
+      "usageNote": "Use “compared with” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w2-lexical-comparison:2",
+      "term": "whereas",
+      "meaning": "in contrast to the preceding clause",
+      "register": "neutral-academic",
+      "usageNote": "Use “whereas” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w2-lexical-comparison:3",
+      "term": "a similar proportion",
+      "meaning": "roughly the same share",
+      "register": "neutral-academic",
+      "usageNote": "Use “a similar proportion” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w2-lexical-comparison:4",
+      "term": "considerably lower than",
+      "meaning": "substantially below",
+      "register": "neutral-academic",
+      "usageNote": "Use “considerably lower than” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

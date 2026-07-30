@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w4-listening-refill-scheme",
+  "skill": "listening",
+  "transcript": {
+    "segments": [
+      {
+        "id": "segment:foundations-w4-listening-refill-scheme:1",
+        "startMs": 0,
+        "endMs": 5250,
+        "text": "Businesses joining the refill scheme must provide tap water without requiring a purchase."
+      },
+      {
+        "id": "segment:foundations-w4-listening-refill-scheme:2",
+        "startMs": 5500,
+        "endMs": 10750,
+        "text": "Each location will receive a window sticker after a basic hygiene inspection."
+      },
+      {
+        "id": "segment:foundations-w4-listening-refill-scheme:3",
+        "startMs": 11000,
+        "endMs": 16250,
+        "text": "Staff should rinse reusable bottles only when a customer requests it."
+      },
+      {
+        "id": "segment:foundations-w4-listening-refill-scheme:4",
+        "startMs": 16500,
+        "endMs": 21750,
+        "text": "Any interruption to water service must be reported through the council portal."
+      },
+      {
+        "id": "segment:foundations-w4-listening-refill-scheme:5",
+        "startMs": 22000,
+        "endMs": 27250,
+        "text": "The first review will compare participation records after twelve weeks."
+      }
+    ]
+  },
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w4-listening-refill-scheme:1",
+      "term": "without requiring a purchase",
+      "meaning": "without making buying something a condition",
+      "register": "neutral-academic",
+      "usageNote": "Use “without requiring a purchase” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-listening-refill-scheme:2",
+      "term": "hygiene inspection",
+      "meaning": "a check of cleanliness and safety",
+      "register": "neutral-academic",
+      "usageNote": "Use “hygiene inspection” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-listening-refill-scheme:3",
+      "term": "interruption to service",
+      "meaning": "a period when service is unavailable",
+      "register": "neutral-academic",
+      "usageNote": "Use “interruption to service” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-listening-refill-scheme:4",
+      "term": "participation records",
+      "meaning": "data showing involvement in a programme",
+      "register": "neutral-academic",
+      "usageNote": "Use “participation records” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

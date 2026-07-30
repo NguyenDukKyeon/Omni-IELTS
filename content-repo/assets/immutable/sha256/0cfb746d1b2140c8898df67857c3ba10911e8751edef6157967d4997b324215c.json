@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w4-lexical-evaluation",
+  "skill": "lexical-paraphrase",
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w4-lexical-evaluation:1",
+      "term": "offers a plausible benefit",
+      "meaning": "provides a credible possible advantage",
+      "register": "neutral-academic",
+      "usageNote": "Use “offers a plausible benefit” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-lexical-evaluation:2",
+      "term": "evidence remains limited",
+      "meaning": "the available support is still insufficient",
+      "register": "neutral-academic",
+      "usageNote": "Use “evidence remains limited” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-lexical-evaluation:3",
+      "term": "outweigh the drawback",
+      "meaning": "be more important than the disadvantage",
+      "register": "neutral-academic",
+      "usageNote": "Use “outweigh the drawback” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-lexical-evaluation:4",
+      "term": "warrants further investigation",
+      "meaning": "justifies additional research",
+      "register": "neutral-academic",
+      "usageNote": "Use “warrants further investigation” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

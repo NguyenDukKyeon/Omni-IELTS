@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w3-lexical-problem-solution",
+  "skill": "lexical-paraphrase",
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w3-lexical-problem-solution:1",
+      "term": "address the issue",
+      "meaning": "take action on the problem",
+      "register": "neutral-academic",
+      "usageNote": "Use “address the issue” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w3-lexical-problem-solution:2",
+      "term": "a practical constraint",
+      "meaning": "a real limit on implementation",
+      "register": "neutral-academic",
+      "usageNote": "Use “a practical constraint” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w3-lexical-problem-solution:3",
+      "term": "mitigate the impact",
+      "meaning": "reduce the harmful effect",
+      "register": "neutral-academic",
+      "usageNote": "Use “mitigate the impact” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w3-lexical-problem-solution:4",
+      "term": "a partial remedy",
+      "meaning": "a response that solves only part of the problem",
+      "register": "neutral-academic",
+      "usageNote": "Use “a partial remedy” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

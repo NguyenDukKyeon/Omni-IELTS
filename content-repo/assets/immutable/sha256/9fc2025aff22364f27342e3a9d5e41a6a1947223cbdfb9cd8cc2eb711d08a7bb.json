@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w1-reading-study-routines",
+  "skill": "reading",
+  "passage": "A study routine should be easy to begin, but the learning inside it should not always feel effortless. Re-reading familiar notes creates fluency, which learners may mistake for knowledge they can retrieve later. A stronger routine includes short pauses to recall an idea before checking the answer. This small amount of friction makes gaps visible and gives feedback a clear purpose. The aim is not to make study unpleasant; it is to place effort where it improves memory rather than where it merely consumes time.",
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w1-reading-study-routines:1",
+      "term": "feel effortless",
+      "meaning": "seem to require no work",
+      "register": "neutral-academic",
+      "usageNote": "Use “feel effortless” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-reading-study-routines:2",
+      "term": "mistake for",
+      "meaning": "incorrectly interpret as",
+      "register": "neutral-academic",
+      "usageNote": "Use “mistake for” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-reading-study-routines:3",
+      "term": "makes gaps visible",
+      "meaning": "reveals missing knowledge",
+      "register": "neutral-academic",
+      "usageNote": "Use “makes gaps visible” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-reading-study-routines:4",
+      "term": "merely consumes time",
+      "meaning": "uses time without enough benefit",
+      "register": "neutral-academic",
+      "usageNote": "Use “merely consumes time” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

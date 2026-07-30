@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w2-lexical-trends",
+  "skill": "lexical-paraphrase",
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w2-lexical-trends:1",
+      "term": "rose gradually",
+      "meaning": "increased at a slow steady rate",
+      "register": "neutral-academic",
+      "usageNote": "Use “rose gradually” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w2-lexical-trends:2",
+      "term": "declined sharply",
+      "meaning": "fell quickly by a large amount",
+      "register": "neutral-academic",
+      "usageNote": "Use “declined sharply” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w2-lexical-trends:3",
+      "term": "remained stable",
+      "meaning": "showed little meaningful change",
+      "register": "neutral-academic",
+      "usageNote": "Use “remained stable” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w2-lexical-trends:4",
+      "term": "fluctuated throughout",
+      "meaning": "moved up and down across the period",
+      "register": "neutral-academic",
+      "usageNote": "Use “fluctuated throughout” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w4-listening-conference-registration",
+  "skill": "listening",
+  "transcript": {
+    "segments": [
+      {
+        "id": "segment:foundations-w4-listening-conference-registration:1",
+        "startMs": 0,
+        "endMs": 5250,
+        "text": "I am checking a registration under the surname Naylor, spelled N A Y L O R."
+      },
+      {
+        "id": "segment:foundations-w4-listening-conference-registration:2",
+        "startMs": 5500,
+        "endMs": 10750,
+        "text": "The payment has cleared, although the confirmation email still shows pending."
+      },
+      {
+        "id": "segment:foundations-w4-listening-conference-registration:3",
+        "startMs": 11000,
+        "endMs": 16250,
+        "text": "Please replace the afternoon policy panel with the workshop on evidence visualisation."
+      },
+      {
+        "id": "segment:foundations-w4-listening-conference-registration:4",
+        "startMs": 16500,
+        "endMs": 21750,
+        "text": "The workshop is in Cedar Room and begins at one fifteen."
+      },
+      {
+        "id": "segment:foundations-w4-listening-conference-registration:5",
+        "startMs": 22000,
+        "endMs": 27250,
+        "text": "A corrected badge and schedule will be available at the registration desk."
+      }
+    ]
+  },
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w4-listening-conference-registration:1",
+      "term": "payment has cleared",
+      "meaning": "the transaction has completed",
+      "register": "neutral-academic",
+      "usageNote": "Use “payment has cleared” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-listening-conference-registration:2",
+      "term": "still shows pending",
+      "meaning": "continues to display an incomplete status",
+      "register": "neutral-academic",
+      "usageNote": "Use “still shows pending” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-listening-conference-registration:3",
+      "term": "replace the panel with",
+      "meaning": "change one session for another",
+      "register": "neutral-academic",
+      "usageNote": "Use “replace the panel with” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-listening-conference-registration:4",
+      "term": "corrected badge",
+      "meaning": "a name card with fixed information",
+      "register": "neutral-academic",
+      "usageNote": "Use “corrected badge” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}
