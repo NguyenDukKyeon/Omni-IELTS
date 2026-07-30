@@ -4,6 +4,8 @@ import { IDBFactory,IDBDatabase,IDBKeyRange } from 'fake-indexeddb';
 
 globalThis.indexedDB=new IDBFactory();
 globalThis.IDBKeyRange=IDBKeyRange;
+globalThis.dispatchEvent=()=>true;
+globalThis.CustomEvent??=class CustomEvent{constructor(type,{detail}={}){this.type=type;this.detail=detail;}};
 
 const core=await import('../src/persistence.js');
 const coreContracts=await import('../src/persistence-core.js');
@@ -11,6 +13,7 @@ const ielts=await import('../src/ielts-persistence.js');
 const { IELTS_STORE_NAMES }=await import('../src/ielts-domain.js');
 const v10=await import('../src/v10-persistence.js');
 const { V10_STORES }=await import('../src/v10-contracts.js');
+const transcripts=await import('../src/transcript-resolver-v2.js');
 const registry=await import('../src/backup-registry.js');
 const combined=await import('../src/ielts-backup.js');
 
@@ -45,6 +48,8 @@ test('every durable store sentinel reaches canonical vNext payload while caches 
   await v10.putV10Record(V10_STORES.coachingStats,{id:'weak-sound:cache',count:99},'backup-sentinel');
   await v10.putV10Record(V10_STORES.transcriptCache,{id:'provider-transcript',cacheKey:'provider-transcript',provider:'backend-provider',segments:[{id:'raw',text:'RAW_PROVIDER_TEXT_MUST_NOT_LEAK'}]},'backup-sentinel');
   await v10.putV10Record(V10_STORES.transcriptCache,{id:'imported-transcript',cacheKey:'imported-transcript',provider:'imported',segments:[{id:'owned',text:'Learner imported transcript'}]},'backup-sentinel');
+  await transcripts.importTranscript({videoId:'dQw4w9WgXcQ',url:'https://youtu.be/dQw4w9WgXcQ',segments:[{id:'owned-cache',startMs:0,endMs:30_000,text:'Imported transcript after cache read'}]});
+  const cachedImport=await transcripts.resolveTranscriptFast({url:'https://youtu.be/dQw4w9WgXcQ',firstChunkSeconds:30,providers:['indexeddb'],allowGeminiFallback:false});assert.equal(cachedImport.provider,'imported');assert.equal(cachedImport.cacheHitProvider,'indexeddb');
   await v10.putV10Record(V10_STORES.contentAssets,{id:'remote-asset',lessonId:'public-lesson',assetType:'transcript',url:'/content/raw.json',data:'REMOTE_BINARY_BODY_MUST_NOT_LEAK'},'backup-sentinel');
   await v10.putV10Record(V10_STORES.contentAssets,{id:'personal:asset',lessonId:'personal-next-session',assetType:'personal-error',data:{answer:'durable learner data'}},'backup-sentinel');
 
@@ -65,6 +70,7 @@ test('every durable store sentinel reaches canonical vNext payload while caches 
   assert.deepEqual(first.domains.v10.stores.meta.map(row=>row.key),['lexical-migration-v1']);
   const provider=first.domains.v10.stores.transcriptCache.find(row=>row.id==='provider-transcript');assert.equal(provider.backupRepresentation,'reconstructable-cache-stub-v1');assert.equal(provider.segmentCount,1);assert.match(provider.segmentsDigest,/^sha256:/);assert.equal(Object.hasOwn(provider,'segments'),false);
   const imported=first.domains.v10.stores.transcriptCache.find(row=>row.id==='imported-transcript');assert.equal(imported.segments[0].text,'Learner imported transcript');
+  const cachedImported=first.domains.v10.stores.transcriptCache.find(row=>row.cacheKey===cachedImport.cacheKey);assert.equal(cachedImported.provider,'imported');assert.equal(cachedImported.segments[0].text,'Imported transcript after cache read');
   const remote=first.domains.v10.stores.contentAssets.find(row=>row.id==='remote-asset');assert.equal(remote.backupRepresentation,'remote-cache-stub-v1');assert.equal(Object.hasOwn(remote,'data'),false);assert.match(remote.dataDigest,/^sha256:/);
   assert.equal(first.domains.v10.stores.contentAssets.find(row=>row.id==='personal:asset').data.answer,'durable learner data');
   for(const entry of registry.BACKUP_STORE_REGISTRY.filter(row=>row.backupRule!=='exclude'))assert.ok(first.domains[entry.owner].stores[entry.store].length>0,`${entry.owner}.${entry.store}`);
