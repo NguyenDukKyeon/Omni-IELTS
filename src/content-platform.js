@@ -1,5 +1,6 @@
 import { createContentLifecycle } from './content-lifecycle.js';
 import { createPackInstaller } from './pack-installer.js';
+import { createEffectiveRevocationLookup } from './content-revocations.js';
 import {
   createCatalogTrustService,
   loadBundledTrustRoots
@@ -15,9 +16,10 @@ function platformError(code,message,details={}){
 async function createPlatform(){
   const trustRoots=await loadBundledTrustRoots();
   const catalogTrust=createCatalogTrustService({trustRoots});
-  const installer=createPackInstaller({catalogTrust});
-  const lifecycle=createContentLifecycle({catalogTrust,installer});
-  return Object.freeze({catalogTrust,installer,lifecycle,trustRoots});
+  const revocations=createEffectiveRevocationLookup({catalogTrust});
+  const installer=createPackInstaller({catalogTrust,revocations});
+  const lifecycle=createContentLifecycle({catalogTrust,installer,revocations});
+  return Object.freeze({catalogTrust,installer,lifecycle,revocations,trustRoots});
 }
 
 export function getContentPlatform(){

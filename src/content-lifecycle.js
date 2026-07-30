@@ -1,5 +1,10 @@
-import { CONTENT_SCHEMA_VERSION,contentContractError } from './content-contracts-v2.js';
+import {
+  CONTENT_SCHEMA_VERSION,
+  contentContractError,
+  validatePackManifest
+} from './content-contracts-v2.js';
 import { createCacheAssetStore } from './pack-installer.js';
+import { createEffectiveRevocationLookup } from './content-revocations.js';
 import { V10_STORES } from './v10-contracts.js';
 import { getV10Record,listV10Records,putV10Record,transactV10 } from './v10-persistence.js';
 
@@ -180,6 +185,33 @@ export function createV10LifecycleRepository(){
         for(const lesson of manifest.lessons)transactionStores[V10_STORES.contentManifests].put(projectLessonFromSnapshot(lesson,manifest,next,activatedAt));
         return{installed:next,receipt};
       },'phase4-pack-rollback');
+    },
+    async restorePackReady(installed,{verifiedAt}){
+      const stores=[V10_STORES.installedPacks,V10_STORES.contentManifests];
+      return transactV10(stores,async({stores:transactionStores,memory})=>{
+        if(memory)throw contentLifecycleError('PACK_DURABILITY_REQUIRED','Restore reconciliation cannot fall back to memory.');
+        const current=await requestResult(transactionStores[V10_STORES.installedPacks].get(installed.id));
+        if(
+          !current
+          ||current.state!=='reinstall-required'
+          ||current.restoredRequiresAssetVerification!==true
+          ||Number(current.activeRevision)!==Number(installed.activeRevision)
+        )throw contentLifecycleError('PACK_RESTORE_RECONCILIATION_CONFLICT','Restored pack pointer changed before cache verification completed.');
+        const next={
+          ...current,
+          state:'installed',
+          reasonCode:null,
+          restoreState:'verified-cache-reconnected',
+          restoredRequiresAssetVerification:false,
+          restoredVerifiedAt:verifiedAt,
+          updatedAt:Date.parse(verifiedAt)
+        };
+        transactionStores[V10_STORES.installedPacks].put(next);
+        for(const lesson of current.manifestSnapshot.lessons)transactionStores[V10_STORES.contentManifests].put(
+          projectLessonFromSnapshot(lesson,current.manifestSnapshot,next,verifiedAt)
+        );
+        return next;
+      },'phase4-restored-pack-reconciled');
     }
   });
 }
@@ -188,11 +220,38 @@ function revoked(revocations,packId,revision){
   return revocations.some(row=>row.packId===packId&&Number(row.packRevision)===Number(revision));
 }
 
+function hasExactInstalledActivityTarget(activity,lesson){
+  const target=activity?.target;
+  return Boolean(
+    target
+    &&target.packId===lesson.packId
+    &&Number(target.packRevision)===Number(lesson.packRevision)
+    &&target.lessonId===lesson.id
+    &&Number(target.lessonRevision)===Number(lesson.contentRevision)
+    &&target.activityId===activity.id
+    &&target.cardId===activity.id
+    &&target.sourceId===`remote-content:${lesson.id}`
+    &&/^sha256:[a-f0-9]{64}$/.test(String(target.sourceRevision||''))
+    &&['recognition','recall','listening','collocation','production'].includes(target.skill)
+  );
+}
+
+function todayActivityType(activity,lesson){
+  if(['dictation','shadowing'].includes(activity.type))return activity.type;
+  if(activity.type==='retell-coaching')return'retell';
+  if(activity.type.includes('reading'))return'reading';
+  if(['sentence-production','paragraph-production'].includes(activity.type))return'production';
+  if(lesson.skill==='listening')return'dictation';
+  if(lesson.skill==='reading')return'reading';
+  return'paraphrase';
+}
+
 export function createContentLifecycle({
   catalogTrust,
   installer,
   repository=createV10LifecycleRepository(),
   assetStore=createCacheAssetStore(),
+  revocations=createEffectiveRevocationLookup({catalogTrust,repository}),
   appVersion='10.0.0',
   clock=()=>Date.now()
 }={}){
@@ -204,17 +263,22 @@ export function createContentLifecycle({
   }
 
   async function browse(){
-    const [payload,installedRows,durableRevocations]=await Promise.all([
-      catalogPayload(),
+    const [current,installedRows,effective]=await Promise.all([
+      catalogTrust.current(),
       repository.listInstalled(),
-      repository.listRevocations()
+      revocations.snapshot()
     ]);
+    const payload=current?.payload||current?.envelope?.payload||null;
     if(!payload)return{state:'no-valid-catalog',catalog:null,packs:[]};
     const installedByPack=new Map(installedRows.map(row=>[row.packId,row]));
-    const revocations=[...(payload.revocations||[]),...durableRevocations];
-    const packs=payload.entries.map(entry=>{
+    const catalogExpired=current?.expired===true||current?.trustState==='expired-last-known-good';
+    const visibleEntries=catalogExpired
+      ?payload.entries.filter(entry=>installedByPack.has(entry.packId))
+      :payload.entries;
+    const packs=visibleEntries.map(entry=>{
       const installed=installedByPack.get(entry.packId)||null;
-      const isRevoked=revoked(revocations,entry.packId,entry.contentRevision);
+      const isRevoked=effective.indexed.has(`${entry.packId}:${Number(entry.contentRevision)}`)
+        ||Boolean(installed&&effective.indexed.has(`${installed.packId}:${Number(installed.activeRevision)}`));
       const updateAvailable=Boolean(installed?.state==='installed'&&Number(entry.contentRevision)>Number(installed.activeRevision));
       return{
         id:entry.packId,
@@ -227,13 +291,18 @@ export function createContentLifecycle({
         provenance:clone(entry.provenance),
         review:clone(entry.humanReview),
         installedRevision:installed?.activeRevision||null,
-        state:isRevoked?'revoked':updateAvailable?'update-available':installed?.state||'available',
-        updateAvailable,
+        state:isRevoked?'revoked':catalogExpired?(installed?.state==='installed'?'installed':'historical'):updateAvailable?'update-available':installed?.state||'available',
+        updateAvailable:catalogExpired?false:updateAvailable,
         revoked:isRevoked,
-        compatible:compareVersions(appVersion,entry.compatibility?.minimumAppVersion)<0?false:true
+        compatible:compareVersions(appVersion,entry.compatibility?.minimumAppVersion)<0?false:true,
+        catalogInstallable:!catalogExpired&&!isRevoked
       };
     });
-    return{state:'verified',catalog:{catalogId:payload.catalogId,sequence:payload.sequence,revision:payload.catalogRevision,issuedAt:payload.issuedAt,expiresAt:payload.expiresAt},packs};
+    return{
+      state:catalogExpired?'expired-last-known-good':'verified',
+      catalog:{catalogId:payload.catalogId,sequence:payload.sequence,revision:payload.catalogRevision,issuedAt:payload.issuedAt,expiresAt:payload.expiresAt},
+      packs
+    };
   }
 
   async function listLessons({installedOnly=true,skill=null}={}){
@@ -242,9 +311,12 @@ export function createContentLifecycle({
     if(skill)rows=rows.filter(row=>row.skill===skill);
     const installedRows=await repository.listInstalled();
     const installedByPack=new Map(installedRows.map(row=>[row.packId,row]));
+    const effective=await revocations.snapshot();
     return rows.filter(row=>{
       const pack=installedByPack.get(row.packId);
-      return pack?.state==='installed'&&Number(pack.activeRevision)===Number(row.packRevision)&&compareVersions(appVersion,row.compatibility?.minimumAppVersion)<0?false:Boolean(pack?.state==='installed'&&Number(pack.activeRevision)===Number(row.packRevision));
+      const active=Boolean(pack?.state==='installed'&&Number(pack.activeRevision)===Number(row.packRevision));
+      if(!active||compareVersions(appVersion,row.compatibility?.minimumAppVersion)<0)return false;
+      return !effective.indexed.has(`${row.packId}:${Number(row.packRevision)}`);
     });
   }
 
@@ -270,8 +342,12 @@ export function createContentLifecycle({
   }
 
   async function reconcileMissingAssets(){
-    const rows=(await repository.listInstalled()).filter(row=>row.state==='installed');
+    const rows=(await repository.listInstalled()).filter(row=>
+      row.state==='installed'
+      ||(row.state==='reinstall-required'&&row.restoredRequiresAssetVerification===true)
+    );
     const missing=[];
+    const restored=[];
     for(const installed of rows){
       const manifest=installed.manifestSnapshot;
       if(!manifest){
@@ -284,20 +360,44 @@ export function createContentLifecycle({
       if(absent.length){
         await repository.setPackState(installed.packId,'reinstall-required',{reasonCode:'cache-assets-missing',missingAssetAddresses:absent});
         missing.push({packId:installed.packId,addresses:absent});
+      }else if(installed.state==='reinstall-required'&&installed.restoredRequiresAssetVerification===true){
+        const revocation=await revocations.find(installed.packId,installed.activeRevision);
+        if(revocation){
+          await repository.setPackState(installed.packId,'revoked',{reasonCode:revocation.reasonCode||'effective-revocation',effectiveRevocation:clone(revocation)});
+          continue;
+        }
+        const validation=await validatePackManifest(manifest,{publication:true,at:clock()});
+        if(
+          !validation.valid
+          ||Number(manifest.contentRevision)!==Number(installed.activeRevision)
+        ){
+          await repository.setPackState(installed.packId,'error',{
+            reasonCode:'restore-content-contract-invalid',
+            restoreState:'quarantined',
+            restoredRequiresAssetVerification:false,
+            validationErrors:validation.errors
+          });
+          continue;
+        }
+        const ready=await repository.restorePackReady(installed,{verifiedAt:new Date(clock()).toISOString()});
+        restored.push(ready.packId);
       }
     }
-    return{missing};
+    return{missing,restored};
   }
 
   async function applyRevocations(){
-    const payload=await catalogPayload();
-    if(!payload)return{revoked:[]};
-    const revocations=payload.revocations||[];
+    const effective=await revocations.snapshot();
     const changed=[];
     for(const installed of await repository.listInstalled()){
       if(installed.state==='deleted')continue;
-      if(revoked(revocations,installed.packId,installed.activeRevision)){
-        await repository.setPackState(installed.packId,'revoked',{revokedAt:new Date(clock()).toISOString(),reasonCode:'catalog-revocation'});
+      const record=effective.indexed.get(`${installed.packId}:${Number(installed.activeRevision)}`);
+      if(record){
+        await repository.setPackState(installed.packId,'revoked',{
+          revokedAt:record.revokedAt||new Date(clock()).toISOString(),
+          reasonCode:record.reasonCode||'effective-revocation',
+          effectiveRevocation:clone(record)
+        });
         changed.push(installed.packId);
       }
     }
@@ -312,10 +412,10 @@ export function createContentLifecycle({
     if(installed.state==='revoked')throw contentLifecycleError('CONTENT_PACK_REVOKED',`Pack ${installed.packId} is revoked.`,{recoverable:false});
     if(installed.state!=='installed')throw contentLifecycleError('CONTENT_REINSTALL_REQUIRED',`Pack ${installed.packId} must be reinstalled.`,{recovery:'reinstall-pack'});
     if(Number(installed.activeRevision)!==Number(lesson.packRevision))throw contentLifecycleError('CONTENT_STALE_DEEP_LINK','Lesson points to an inactive immutable revision.',{recovery:'browse-installed-pack'});
-    const payload=await catalogPayload();
-    if(revoked(payload?.revocations||[],installed.packId,installed.activeRevision)){
-      await repository.setPackState(installed.packId,'revoked',{reasonCode:'catalog-revocation'});
-      throw contentLifecycleError('CONTENT_PACK_REVOKED',`Pack ${installed.packId} is revoked.`,{recoverable:false});
+    const revocation=await revocations.find(installed.packId,installed.activeRevision);
+    if(revocation){
+      await repository.setPackState(installed.packId,'revoked',{reasonCode:revocation.reasonCode||'effective-revocation',effectiveRevocation:clone(revocation)});
+      throw contentLifecycleError('CONTENT_PACK_REVOKED',`Pack ${installed.packId} is revoked.`,{recoverable:false,revocation});
     }
     if(compareVersions(appVersion,lesson.compatibility?.minimumAppVersion)<0)throw contentLifecycleError('CONTENT_INCOMPATIBLE','This lesson requires a newer app.',{recovery:'update-app'});
     const assets={};
@@ -377,8 +477,8 @@ export function createContentLifecycle({
     if(!installed||installed.state==='deleted')throw contentLifecycleError('PACK_ROLLBACK_UNAVAILABLE','Pack is not installed.');
     const target=(installed.revisionHistory||[]).find(row=>Number(row.revision)===Number(revision));
     if(!target?.manifestSnapshot)throw contentLifecycleError('PACK_ROLLBACK_UNAVAILABLE','Requested revision metadata is unavailable.');
-    const payload=await catalogPayload();
-    if(revoked(payload?.revocations||[],packId,revision))throw contentLifecycleError('CONTENT_PACK_REVOKED','Requested rollback revision is revoked.',{recoverable:false});
+    const revocation=await revocations.find(packId,revision);
+    if(revocation)throw contentLifecycleError('CONTENT_PACK_REVOKED','Requested rollback revision is revoked.',{recoverable:false,revocation});
     const missing=[];
     for(const descriptor of target.manifestSnapshot.assets)if(!await assetStore.readFinal(descriptor))missing.push(descriptor.contentAddress);
     if(missing.length)throw contentLifecycleError('CONTENT_ASSETS_MISSING','Rollback assets are missing.',{missing,recovery:'reinstall-pack'});
@@ -386,19 +486,31 @@ export function createContentLifecycle({
   }
 
   async function todayInventory(){
+    const current=await catalogTrust.current();
+    if(current?.expired===true||current?.trustState==='expired-last-known-good')return[];
     const lessons=await listLessons({installedOnly:true});
-    return lessons.map(lesson=>({
-      id:`content:${lesson.id}:${lesson.contentRevision}`,
-      lessonId:lesson.id,
-      packId:lesson.packId,
-      type:lesson.skill==='listening'?'dictation':lesson.skill==='reading'?'reading':'paraphrase',
-      sourceId:`remote-content:${lesson.id}`,
-      sourceRevision:lesson.contentAddress,
-      target:{cardId:null,senseId:null,skill:lesson.skill,sourceId:`remote-content:${lesson.id}`,sourceRevision:lesson.contentAddress},
-      executor:'content',
-      estimatedSeconds:Number(lesson.estimatedMinutes||5)*60,
-      payload:{contentId:lesson.id,label:lesson.title,packId:lesson.packId}
-    }));
+    return lessons.flatMap(lesson=>(lesson.activities||[])
+      .filter(activity=>hasExactInstalledActivityTarget(activity,lesson))
+      .map(activity=>({
+        id:`content:${lesson.id}:${lesson.contentRevision}:${activity.id}`,
+        lessonId:lesson.id,
+        lessonRevision:Number(lesson.contentRevision),
+        activityId:activity.id,
+        packId:lesson.packId,
+        packRevision:Number(lesson.packRevision),
+        type:todayActivityType(activity,lesson),
+        target:clone(activity.target),
+        executor:'content',
+        estimatedSeconds:Math.max(60,Math.round(Number(lesson.estimatedMinutes||5)*60/Math.max(1,lesson.activities.length))),
+        payload:{
+          contentId:lesson.id,
+          activityId:activity.id,
+          label:lesson.title,
+          packId:lesson.packId,
+          packRevision:Number(lesson.packRevision),
+          lessonRevision:Number(lesson.contentRevision)
+        }
+      })));
   }
 
   return Object.freeze({
@@ -416,4 +528,4 @@ export function createContentLifecycle({
   });
 }
 
-export const __testing=Object.freeze({allAddresses,compareVersions,revoked});
+export const __testing=Object.freeze({allAddresses,compareVersions,hasExactInstalledActivityTarget,revoked,todayActivityType});

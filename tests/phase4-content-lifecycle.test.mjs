@@ -7,12 +7,21 @@ const address=character=>`sha256:${character.repeat(64)}`;
 const clone=value=>value==null?value:structuredClone(value);
 
 function lesson({id='lesson:listening-01',packId='pack:week-1',revision=1,skill='listening',assetAddress=address('a')}={}){
+  const activityId=`activity:${id}:one`;
   return{
     id,packId,packRevision:revision,contentRevision:revision,contentAddress:address(revision===1?'b':'c'),
     title:`Lesson ${id}`,learningObjective:'Practice one exact target.',estimatedMinutes:6,
     skill,installState:'installed',verified:true,qualityStatus:'verified',
     compatibility:{minimumAppVersion:'10.0.0'},
-    activities:[{id:`activity:${id}:one`,type:'dictation',prompt:'Listen.',answer:{text:'answer'}}],
+    activities:[{
+      id:activityId,type:'dictation',prompt:'Listen.',answer:{text:'answer'},
+      target:{
+        contract:'RemoteContentActivityTarget',schemaVersion:2,
+        packId,packRevision:revision,lessonId:id,lessonRevision:revision,activityId,
+        contentRevision:revision,cardId:activityId,senseId:null,skill:'listening',
+        sourceId:`remote-content:${id}`,sourceRevision:address('f')
+      }
+    }],
     assetDescriptors:[{
       id:`asset:${id}`,contentAddress:assetAddress,byteLength:4,
       mediaType:'application/json',retrievalUrl:`https://content.example.test/${assetAddress.slice(7)}.json`
@@ -74,11 +83,12 @@ function memoryAssets(entries=[]){
   };
 }
 
-function setup({packRows,lessonRows,progressRows=[],revocations=[],catalogRevocations=[],assetEntries=[]}={}){
+function setup({packRows,lessonRows,progressRows=[],revocations=[],catalogRevocations=[],assetEntries=[],catalogExpired=false}={}){
   const repository=memoryRepository({installedRows:packRows,lessonRows,progressRows,revocations});
   const assetStore=memoryAssets(assetEntries);
   const catalog={
     schemaVersion:2,catalogId:'catalog:test',sequence:2,catalogRevision:2,
+    issuedAt:'2026-07-30T10:00:00.000Z',expiresAt:'2027-07-30T10:00:00.000Z',
     entries:(packRows||[]).map(pack=>({
       packId:pack.packId,contentRevision:pack.activeRevision,byteLength:1000,lessonCount:pack.lessonIds.length,
       rights:{status:'approved'},provenance:{sourceType:'original-human-authored'},humanReview:{status:'approved'},
@@ -86,7 +96,7 @@ function setup({packRows,lessonRows,progressRows=[],revocations=[],catalogRevoca
     })),
     revocations:catalogRevocations
   };
-  const catalogTrust={current:async()=>({payload:catalog})};
+  const catalogTrust={current:async()=>({payload:catalog,...(catalogExpired?{expired:true,trustState:'expired-last-known-good'}:{})})};
   const installer={install:async packId=>({status:'installed',packId}),cancel:async()=>({cancelled:true})};
   const lifecycle=createContentLifecycle({catalogTrust,installer,repository,assetStore,clock:()=>now});
   return{lifecycle,repository,assetStore,catalog};
@@ -182,5 +192,66 @@ test('stale deep links and unavailable content fail closed; Today uses only exac
   const inventory=await setupValue.lifecycle.todayInventory();
   assert.equal(inventory.length,1);
   assert.equal(inventory[0].lessonId,installedLesson.id);
-  assert.equal(inventory[0].target.sourceRevision,installedLesson.contentAddress);
+  assert.equal(inventory[0].activityId,installedLesson.activities[0].id);
+  assert.equal(inventory[0].target.sourceRevision,installedLesson.activities[0].target.sourceRevision);
+  assert.equal(inventory[0].payload.packRevision,pack.activeRevision);
+});
+
+test('durable revocation survives catalog omission and blocks browse, launch and Today',async()=>{
+  const row=lesson(),pack=installed({lessonRows:[row]});
+  const durableRevocation={
+    id:`revocation:${pack.packId}:1`,
+    packId:pack.packId,
+    packRevision:1,
+    reasonCode:'rights-withdrawn',
+    reason:'Rights withdrawn.',
+    revokedAt:new Date(now).toISOString()
+  };
+  const setupValue=setup({
+    packRows:[pack],
+    lessonRows:[row],
+    revocations:[durableRevocation],
+    catalogRevocations:[],
+    assetEntries:[[address('a'),{bytes:new TextEncoder().encode('{}'),mediaType:'application/json'}]]
+  });
+  const browsed=await setupValue.lifecycle.browse();
+  assert.equal(browsed.packs[0].state,'revoked');
+  assert.equal(browsed.packs[0].catalogInstallable,false);
+  assert.deepEqual((await setupValue.lifecycle.applyRevocations()).revoked,[pack.packId]);
+  await assert.rejects(()=>setupValue.lifecycle.launch(row.id),error=>error.code==='CONTENT_PACK_REVOKED');
+  assert.deepEqual(await setupValue.lifecycle.todayInventory(),[]);
+});
+
+test('durable revocation blocks rollback to the revoked historical revision',async()=>{
+  const oldLesson=lesson({revision:1,assetAddress:address('a')});
+  const newLesson=lesson({revision:2,assetAddress:address('f')});
+  const pack=installed({revision:2,lessonRows:[newLesson],assetAddresses:[address('f')]});
+  pack.revisionHistory=[{
+    revision:1,manifestAddress:address('d'),assetAddresses:[address('a')],lessonIds:[oldLesson.id],
+    manifestSnapshot:{id:pack.packId,contentRevision:1,lessons:[oldLesson],assets:oldLesson.assetDescriptors}
+  }];
+  const setupValue=setup({
+    packRows:[pack],
+    lessonRows:[newLesson],
+    revocations:[{id:'revocation:rollback:1',packId:pack.packId,packRevision:1,reasonCode:'defect',reason:'Defect.',revokedAt:new Date(now).toISOString()}],
+    assetEntries:[[address('a'),{bytes:new TextEncoder().encode('{}'),mediaType:'application/json'}]]
+  });
+  await assert.rejects(()=>setupValue.lifecycle.rollback(pack.packId,1),error=>error.code==='CONTENT_PACK_REVOKED');
+  assert.equal(setupValue.repository.packs.get(pack.packId).activeRevision,2);
+});
+
+test('expired LKG shows installed history without discovery while installed offline launch remains available',async()=>{
+  const row=lesson(),pack=installed({lessonRows:[row]});
+  const setupValue=setup({
+    packRows:[pack],
+    lessonRows:[row],
+    catalogExpired:true,
+    assetEntries:[[address('a'),{bytes:new TextEncoder().encode('{}'),mediaType:'application/json'}]]
+  });
+  const browsed=await setupValue.lifecycle.browse();
+  assert.equal(browsed.state,'expired-last-known-good');
+  assert.equal(browsed.packs.length,1);
+  assert.equal(browsed.packs[0].catalogInstallable,false);
+  assert.equal((await setupValue.lifecycle.launch(row.id)).offline,true);
+  assert.equal((await setupValue.lifecycle.todayInventory()).length,0);
 });
