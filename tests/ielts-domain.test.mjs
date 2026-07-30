@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  createErrorRecord,mergeErrorRecords,resolveIeltsEvidence,validateLexicalSet,validateLabItem,validateReadingPassage,
+  createErrorRecord,mergeErrorRecords,resolveIeltsEvidence,buildIeltsEvidenceEnvelope,ieltsSourceRevision,sanitizeMediaAttempt,validateLexicalSet,validateLabItem,validateReadingPassage,
   parseYouTubeUrl,validateTranscriptSegments,splitTranscriptSegment,mergeTranscriptSegments,diffWords,planMediaSession,validateRetellFeedback
 } from '../src/ielts-domain.js';
 import { CURATED_LEXICAL_SETS,CURATED_PARAPHRASE_ITEMS,CURATED_READING_PASSAGES } from '../src/ielts-content.js';
@@ -25,14 +25,51 @@ test('resolved repeated errors reopen as monitoring instead of duplicating',()=>
   assert.equal(merged.occurrenceCount,5);
 });
 
-test('IELTS evidence gateway prevents semantic FSRS corruption',()=>{
-  assert.deepEqual(resolveIeltsEvidence({activityType:'shadowing',targetCardId:'c1',verified:true,independent:true,result:'correct'}).affectsSchedule,false);
-  assert.equal(resolveIeltsEvidence({activityType:'dictation',targetCardId:'c1',verified:true,independent:true,result:'wrong',errorType:'spelling-only'}).affectsSchedule,false);
-  assert.equal(resolveIeltsEvidence({activityType:'dictation',targetCardId:'c1',verified:false,independent:true,result:'wrong',errorType:'listening'}).affectsSchedule,false);
-  assert.deepEqual(resolveIeltsEvidence({activityType:'dictation',targetCardId:'c1',verified:true,independent:true,result:'wrong',errorType:'listening'}),{affectsSchedule:true,rating:'again',skill:'listening',reason:'verified-independent-dictation'});
-  assert.equal(resolveIeltsEvidence({activityType:'retell',targetCardId:'c1',verified:true,independent:true,preselectedTarget:false,usedTargetCorrectly:true,result:'correct'}).affectsSchedule,false);
-  assert.deepEqual(resolveIeltsEvidence({activityType:'retell',targetCardId:'c1',verified:true,independent:true,preselectedTarget:true,usedTargetCorrectly:true,result:'correct'}),{affectsSchedule:true,rating:'good',skill:'production',reason:'verified-independent-retell-target'});
-  assert.equal(resolveIeltsEvidence({activityType:'reading-completion',targetCardId:'c1',verified:true,independent:true,result:'correct'}).affectsSchedule,false);
+test('IELTS evidence adapter requires canonical attempt and activity contracts',()=>{
+  assert.equal(resolveIeltsEvidence({activityType:'dictation',targetCardId:'c1',verified:true,independent:true,result:'correct'}).affectsSchedule,false,'legacy caller claims must fail closed');
+  const activitySpec={id:'ielts-dictation-1',type:'dictation',target:{cardId:'c1',skill:'listening',sourceId:'media-1',sourceRevision:'rev-1'}};
+  const attempt={id:'attempt-1',activityId:activitySpec.id,receiptId:'receipt-1',activityType:'dictation',result:'wrong',target:{...activitySpec.target},assistance:{id:'trace-1',schemaVersion:1,collector:'ielts-lab',complete:true},errorType:'listening'};
+  const verification={source:{id:'source-receipt-1',authority:'ielts-source-registry',status:'verified',sourceId:'media-1',sourceRevision:'rev-1'}};
+  const decision=resolveIeltsEvidence({attempt,activitySpec,verification});
+  assert.equal(decision.affectsSchedule,true);assert.equal(decision.rating,'again');assert.equal(decision.successful,false);assert.equal(decision.skill,'listening');
+  assert.equal(resolveIeltsEvidence({attempt:{...attempt,assistance:{...attempt.assistance,transcriptViewed:true}},activitySpec,verification}).affectsSchedule,false);
+});
+
+test('IELTS coaching envelopes retain canonical denied evidence without fabricating evaluation',()=>{
+  const sourceRevision=ieltsSourceRevision('segment',{id:'s1',text:'A verified transcript.',updatedAt:10});
+  const envelope=buildIeltsEvidenceEnvelope({
+    activityId:'ielts-dictation:s1',receiptId:'receipt:s1',activityType:'dictation',cardId:'card-1',skill:'listening',
+    sourceId:'segment:s1',sourceRevision,result:'correct',learnerOutput:'A verified transcript.',sourceVerified:true,
+    assistance:{coaching:true,transcriptViewed:true,answerExposed:true}
+  });
+  assert.equal(envelope.decision.affectsSchedule,false);
+  assert.equal(envelope.decision.reason,'assistance-exposed');
+  assert.equal(envelope.verification.evaluation,undefined);
+  const saved=sanitizeMediaAttempt({mediaSourceId:'media-1',segmentId:'s1',mode:'dictation',result:'correct',evidenceAttempts:[envelope],evidenceDecisions:[envelope.decision]});
+  assert.equal(saved.evidenceAttempts[0].attempt.receiptId,'receipt:s1');
+  assert.equal(saved.evidenceDecisions[0].affectsSchedule,false);
+  assert.notEqual(sourceRevision,ieltsSourceRevision('segment',{id:'s1',text:'A changed transcript.',updatedAt:11}));
+  const failedRetell=sanitizeMediaAttempt({mediaSourceId:'media-1',segmentId:'s1',mode:'retell',learnerResponse:'Durable output',result:'coaching',evaluationStatus:'failed',evaluationError:'provider timeout'});
+  assert.equal(failedRetell.learnerResponse,'Durable output');
+  assert.equal(failedRetell.evaluationStatus,'failed');
+  assert.equal(failedRetell.evaluationError,'provider timeout');
+});
+
+test('revealed correction and unverified transcript cannot create independent evidence',()=>{
+  const correction=buildIeltsEvidenceEnvelope({activityId:'repair:1',receiptId:'repair-receipt:1',activityType:'error-correction',cardId:'card-1',skill:'production',sourceId:'error:1',sourceRevision:'error-rev:1',result:'correct',learnerOutput:'corrected answer',sourceVerified:true,assistance:{correctionExposed:true,answerExposed:true,coaching:true}});
+  assert.equal(correction.decision.affectsSchedule,false);
+  assert.equal(correction.decision.reason,'assistance-exposed');
+  const unverified=buildIeltsEvidenceEnvelope({activityId:'dictation:2',receiptId:'dictation-receipt:2',activityType:'dictation',cardId:'card-1',skill:'listening',sourceId:'segment:2',sourceRevision:'segment-rev:2',result:'correct',learnerOutput:'answer',sourceVerified:false});
+  assert.equal(unverified.decision.affectsSchedule,false);
+  assert.equal(unverified.decision.reason,'source-is-not-verified');
+});
+
+test('error record merge keeps bounded coaching evidence audit trail',()=>{
+  const base={category:'meaning',learnerResponse:'wrong',expectedResponse:'right',linkedCardIds:['card-1']};
+  const first=createErrorRecord({...base,evidenceAttempts:[{attempt:{receiptId:'repair-1'},decision:{affectsSchedule:false}}],now:1});
+  const second=createErrorRecord({...base,evidenceAttempts:[{attempt:{receiptId:'repair-2'},decision:{affectsSchedule:false}}],now:2});
+  const merged=mergeErrorRecords(first,second);
+  assert.deepEqual(merged.evidenceAttempts.map(row=>row.attempt.receiptId),['repair-1','repair-2']);
 });
 
 test('every curated lexical set contains IELTS production metadata',()=>{

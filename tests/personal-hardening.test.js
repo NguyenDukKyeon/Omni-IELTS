@@ -30,9 +30,13 @@ test('data trust contracts remove hidden reset, hidden seeding and whole-library
 });
 
 test('app uses incremental persistence and assisted corrective semantics',async()=>{
-  const app=await source('../src/app.js');
-  for(const command of ['persistCard','persistCardsBatch','persistReviewResult'])assert.match(app,new RegExp(command));
+  const[app,gateway]=await Promise.all([source('../src/app.js'),source('../src/schedule-gateway.js')]);
+  for(const command of ['persistCard','persistCardsBatch','commitCoreEvidence'])assert.match(app,new RegExp(command));
+  assert.doesNotMatch(app,/persistReviewResult|applyFsrsRating/);
+  assert.match(gateway,/persistReviewResult/);
+  assert.match(gateway,/decideEvidence/);
   assert.match(app,/assisted:true,affectsSchedule:false/);
+  assert.match(app,/revealed:true,answerExposed:true/);
   assert.match(app,/Đáp án của tôi cũng đúng/);
   assert.match(app,/acceptedVariant:'?[^']*'?/);
   assert.match(app,/rating==='again'\?'wrong':'correct'/);

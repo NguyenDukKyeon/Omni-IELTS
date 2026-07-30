@@ -4,36 +4,47 @@ import { readFile } from 'node:fs/promises';
 import { resolve,dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveIeltsEvidence } from '../src/ielts-domain.js';
+import { evidenceDigest } from '../src/evidence-policy.js';
 import { diffSentence } from '../src/sentence-learning-loop.js';
 import { assistThoughtGroups,smartSelectSentences } from '../src/coaching-engine-v2.js';
 import { validateReadingSemantics,validateParaphraseSemantics,validatePersonalSentenceItem } from '../src/ai-content-factory.js';
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 
+function evidenceFixture(type='dictation',overrides={}){
+  const skill=type==='retell'?'production':type==='shadowing'?'recognition':'listening';
+  const activitySpec={id:`activity-${type}`,type,target:{cardId:'card',skill,sourceId:'source-1',sourceRevision:'revision-1'}};
+  const attempt={id:`attempt-${type}`,activityId:activitySpec.id,receiptId:`receipt-${type}`,activityType:type,result:'correct',target:{...activitySpec.target},assistance:{id:`trace-${type}`,schemaVersion:1,collector:'v10-sentence-loop',complete:true},learnerOutput:type==='retell'?'A real learner retell':'',...overrides};
+  const verification={source:{id:`source-receipt-${type}`,authority:'v10-source-registry',status:'verified',sourceId:'source-1',sourceRevision:'revision-1'},evaluation:{id:`evaluation-receipt-${type}`,authority:'deterministic-rubric',status:'verified',attemptId:attempt.id,activityId:activitySpec.id,cardId:'card',skill,outputDigest:evidenceDigest(attempt.learnerOutput),targetUsed:true}};
+  return{attempt,activitySpec,verification};
+}
+
 test('shadowing and pronunciation coaching never affect FSRS',()=>{
-  const decision=resolveIeltsEvidence({activityType:'shadowing',targetCardId:'card',verified:true,independent:true,assisted:false,result:'correct'});
+  const decision=resolveIeltsEvidence(evidenceFixture('shadowing'));
   assert.equal(decision.affectsSchedule,false);
-  assert.equal(decision.reason,'shadowing-is-imitation');
+  assert.equal(decision.reason,'activity-is-coaching-only');
 });
 
 test('spelling-only and transcript-source errors do not reduce listening FSRS',()=>{
   for(const errorType of ['spelling-only','transcript-source']){
-    const decision=resolveIeltsEvidence({activityType:'dictation',targetCardId:'card',verified:true,independent:true,assisted:false,skill:'listening',result:'wrong',errorType});
+    const decision=resolveIeltsEvidence(evidenceFixture('dictation',{result:'wrong',errorType}));
     assert.equal(decision.affectsSchedule,false,errorType);
   }
 });
 
 test('verified independent dictation can create listening evidence',()=>{
-  const decision=resolveIeltsEvidence({activityType:'dictation',targetCardId:'card',verified:true,independent:true,assisted:false,skill:'listening',result:'near',errorType:'listening'});
+  const decision=resolveIeltsEvidence(evidenceFixture('dictation',{result:'near',errorType:'listening'}));
   assert.equal(decision.affectsSchedule,true);
   assert.equal(decision.skill,'listening');
   assert.equal(decision.rating,'hard');
 });
 
 test('retell requires a preselected target used correctly',()=>{
-  assert.equal(resolveIeltsEvidence({activityType:'retell',targetCardId:'card',verified:true,independent:true,preselectedTarget:false,usedTargetCorrectly:true}).affectsSchedule,false);
-  assert.equal(resolveIeltsEvidence({activityType:'retell',targetCardId:'card',verified:true,independent:true,preselectedTarget:true,usedTargetCorrectly:false}).affectsSchedule,false);
-  assert.equal(resolveIeltsEvidence({activityType:'retell',targetCardId:'card',verified:true,independent:true,preselectedTarget:true,usedTargetCorrectly:true}).affectsSchedule,true);
+  const notUsed=evidenceFixture('retell');notUsed.verification.evaluation={...notUsed.verification.evaluation,targetUsed:false};
+  const unverified=evidenceFixture('retell');unverified.verification.evaluation={...unverified.verification.evaluation,authority:'caller-claimed'};
+  assert.equal(resolveIeltsEvidence(notUsed).affectsSchedule,false);
+  assert.equal(resolveIeltsEvidence(unverified).affectsSchedule,false);
+  assert.equal(resolveIeltsEvidence(evidenceFixture('retell')).affectsSchedule,true);
 });
 
 test('sentence diff separates missing, replaced and inserted tokens',()=>{
@@ -76,4 +87,22 @@ test('personal prepared content runs during idle time and cannot create FSRS evi
   assert.match(today,/lessonId==='personal-next-session'/);
   assert.match(today,/personal-ai-content-is-validated-but-not-source-verified/);
   assert.doesNotMatch(today,/personal-ai-content-is-validated-but-not-source-verified[^\n]*affectsSchedule:true/);
+});
+
+test('IELTS and V10 containment surfaces cannot bypass the schedule gateway',async()=>{
+  const [ielts,sentenceLoop]=await Promise.all([readFile(resolve(root,'src/ielts-lab.js'),'utf8'),readFile(resolve(root,'src/sentence-learning-loop.js'),'utf8')]);
+  assert.doesNotMatch(ielts,/applyFsrsRating|persistReviewResult|commitEvidence|validated-provider/);
+  assert.match(ielts,/buildIeltsEvidenceEnvelope/);
+  assert.match(ielts,/selectedTargetIds\.has\(row\.cardId\)/);
+  assert.match(ielts,/return await submitMediaRetell\(form\)/);
+  assert.match(ielts,/correctionExposed:true,answerExposed:true,coaching:true/);
+  assert.match(ielts,/result:'coaching'/);
+  assert.match(sentenceLoop,/progressWriteQueue/);
+  assert.match(sentenceLoop,/runToken/);
+  assert.match(sentenceLoop,/if\(run\.transitioning\)return/);
+  assert.match(sentenceLoop,/run\.index!==expectedIndex/);
+  assert.match(sentenceLoop,/retellStatus='skipped'/);
+  assert.match(sentenceLoop,/retellStatus='coaching-completed'/);
+  assert.match(sentenceLoop,/result:'coaching'/);
+  assert.doesNotMatch(sentenceLoop,/data-v10-complete-sentence/);
 });

@@ -1,19 +1,20 @@
 # VocabMaster — Implementation Plan Phase 0–7
 
-Trạng thái tài liệu: planning baseline, chưa ủy quyền sửa mã nguồn.
+Trạng thái tài liệu: implementation specification cho roadmap chính thức tại `docs/ROADMAP.md`.
 
-Baseline được kiểm chứng tại commit 54691cfb5314b51762c4959c9d0cee2012fc2b4a trên main, ngày 2026-07-30.
+Historical code baseline được kiểm chứng tại commit 54691cfb5314b51762c4959c9d0cee2012fc2b4a trên main. Exact planning predecessor và kickoff baseline cho Phase 0 là 547e5d665adbf102c15b65ac39def185769e5626, ngày 2026-07-30.
 
 ## 1. Phạm vi, nguồn thẩm quyền và giới hạn
 
-Repository ở baseline không chứa AGENTS.md hoặc docs/ROADMAP.md trên main hay các remote branch đã fetch. Vì vậy:
+Repository hiện có `AGENTS.md` và `docs/ROADMAP.md` được tạo trước source change Phase 0. Vai trò thẩm quyền:
 
-- quy tắc làm việc áp dụng là AGENTS.md người dùng cung cấp trực tiếp trong tác vụ;
-- Phase 0–7 trong tài liệu này là roadmap đã được người dùng chấp thuận trong hội thoại;
-- docs/ielts-phases-0-5-audit.md, docs/RELEASE_CHECKLIST_V9.md và các gate trong src/v10-audit.js chỉ là bằng chứng lịch sử/implementation, không thay thế roadmap mới;
-- trước PR triển khai đầu tiên, nếu xuất hiện docs/ROADMAP.md có nội dung khác, phải dừng, đối chiếu và cập nhật quyết định; không được âm thầm chọn một bản.
+- `docs/ROADMAP.md` giữ roadmap Phase 0–7, package ID và dependency;
+- tài liệu này giữ đặc tả implementation/acceptance chi tiết;
+- `docs/IMPLEMENTATION_STATUS.md` giữ trạng thái và evidence thực tế;
+- `docs/DECISIONS.md` giữ rationale/ADR; `AGENTS.md` giữ quy tắc thi hành;
+- docs/ielts-phases-0-5-audit.md, docs/RELEASE_CHECKLIST_V9.md và các gate trong src/v10-audit.js chỉ là bằng chứng lịch sử/implementation, không thay thế roadmap hiện hành.
 
-Tác vụ này chỉ tạo tài liệu kế hoạch. Không sửa application code, schema, dữ liệu hay cấu hình runtime.
+Phạm vi triển khai đang được ủy quyền chỉ là Phase 0. Phase 1 vẫn bị hard-block cho đến P0-08 `ACCEPTED`.
 
 ## 2. Kết luận kiểm chứng roadmap với implementation
 
@@ -93,11 +94,12 @@ Các ranh giới bắt buộc:
 5. Cache có thể xóa và dựng lại; progress/evidence/user content là durable và phải backup.
 6. AI không trực tiếp publish content, không trực tiếp ghi FSRS và không làm Today chờ.
 
-## 4. Luật package và pull request
+## 4. Luật package, commit và pull request
 
-- Mỗi package dưới đây là đúng một branch và một pull request. Prefix mặc định: codex/.
-- PR phải khai báo predecessor commit, closed file set, migration fixture, rollback path và evidence chạy test.
-- Không gộp toàn bộ phase vào một PR. Không mở Phase 1 trước khi P0-08 ký Phase 0 ACCEPTED.
+- Work package là đơn vị lập kế hoạch, kiểm chứng và commit; không mặc định là một branch hoặc pull request.
+- Phase 0 dùng một branch `codex/phase-0-release-safety`, một commit nhỏ tương ứng mỗi P0-00…P0-08 và một pull request Phase 0.
+- PR Phase 0 phải khai báo commit/package mapping, predecessor, migration/rollback, evidence từng lệnh và blocker/giới hạn.
+- Không mở Phase 1 trước khi P0-08 ký Phase 0 ACCEPTED.
 - Migration phải additive, idempotent và forward-compatible. Rollback là rollback code/feature flag; không hạ IndexedDB version và không xóa dữ liệu mới.
 - Implementer report không phải acceptance evidence. Reviewer phải chạy lại gate liên quan và đối chiếu durable state/runtime behavior.
 - Mỗi package chỉ được ACCEPTED khi mọi acceptance criteria của chính nó đạt; “test cũ xanh” không thay cho test mới.
@@ -140,19 +142,19 @@ Exit gate Phase 0: không có false-positive schedule trong test matrix; backup 
 
 ### P0-00 — Acceptance harness đáng tin
 
-- Branch/PR: codex/p0-00-acceptance-harness.
-- Mục tiêu: chuẩn hóa browser discovery, profile tạm, process/port cleanup, seed/reset fixture và một lệnh phase0:gate để phân biệt lỗi sản phẩm với lỗi harness.
-- Dependency: baseline 54691cf; package đầu tiên.
+- Commit/package: P0-00 trên `codex/phase-0-release-safety`.
+- Mục tiêu: chuẩn hóa browser discovery, profile tạm, process/port cleanup, seed/reset fixture và scaffold lệnh `phase0:gate` để phân biệt lỗi sản phẩm với lỗi harness. P0-08 sở hữu việc hoàn thiện full exit matrix và digest.
+- Dependency: planning predecessor/kickoff baseline 547e5d665adbf102c15b65ac39def185769e5626; package đầu tiên.
 - File/module dự kiến: package.json; scripts/browser-smoke-entry.mjs, scripts/ielts-browser-smoke.mjs, scripts/v10-browser-smoke.mjs, scripts/hardening-browser-smoke.mjs; helper test mới; không sửa feature code.
 - Migration/rollback: không data migration; rollback chỉ bỏ helper/script mới.
 - Test bắt buộc: mọi unit/audit/build hiện có; ba browser smoke trên Windows; chạy lặp ba lần; kiểm port rỗng và temp profile được cleanup cả pass/fail.
-- Acceptance criteria: cùng một browser resolution policy; lỗi Retell vẫn hiện là lỗi sản phẩm có chẩn đoán; không còn EBUSY làm sai verdict; phase0:gate fail-fast và trả exit code đúng.
+- Acceptance criteria: cùng một browser resolution policy; lỗi Retell vẫn hiện là `PRODUCT_FAILURE` có chẩn đoán và giữ Phase 0 product gate đỏ nhưng không làm P0-00 bị đánh giá nhầm là harness failure; không còn EBUSY làm sai verdict; phase0:gate fail-fast và trả exit code đúng.
 - Rủi ro: Medium, vì harness có thể che lỗi nếu retry mù.
 - Điều kiện dừng: dừng nếu phải sửa feature để làm test xanh, bỏ assertion, dùng profile người dùng, hoặc để process/browser sống sau test.
 
 ### P0-01 — Minimal Attempt, AssistanceTrace và EvidencePolicy
 
-- Branch/PR: codex/p0-01-evidence-contract.
+- Commit/package: P0-01 trên `codex/phase-0-release-safety`.
 - Mục tiêu: định nghĩa contract tối thiểu, reason code và pure decision function trước mọi schedule write.
 - Dependency: P0-00 ACCEPTED.
 - File/module dự kiến: src/ielts-domain.js hoặc module evidence-policy mới; src/v10-contracts.js; tests/ielts-domain.test.mjs; tests/v10-evidence.test.mjs.
@@ -164,7 +166,7 @@ Exit gate Phase 0: không có false-positive schedule trong test matrix; backup 
 
 ### P0-02 — Core schedule gateway và unlock correctness
 
-- Branch/PR: codex/p0-02-core-evidence-gateway.
+- Commit/package: P0-02 trên `codex/phase-0-release-safety`.
 - Mục tiêu: mọi Core FSRS write đi qua P0-01; sửa unlock dựa trên qualified evidence thay vì reps > 0.
 - Dependency: P0-01 ACCEPTED.
 - File/module dự kiến: src/app.js, src/learning.js, src/fsrs-scheduler.js, src/persistence-core.js; tests/learning.test.mjs, tests/persistence-core.test.mjs và test scheduler mới.
@@ -176,7 +178,7 @@ Exit gate Phase 0: không có false-positive schedule trong test matrix; backup 
 
 ### P0-03 — IELTS/V10 evidence containment và Retell honesty
 
-- Branch/PR: codex/p0-03-ielts-v10-containment.
+- Commit/package: P0-03 trên `codex/phase-0-release-safety`.
 - Mục tiêu: nối IELTS/V10 vào policy; chặn correction đã lộ đáp án; Retell chưa có output/evaluator phải là coaching-only hoặc ẩn.
 - Dependency: P0-01 ACCEPTED.
 - File/module dự kiến: src/ielts-runtime-guard.js, src/ielts-lab.js, src/ielts-media-player.js, src/sentence-learning-loop.js, src/v10-contracts.js; test domain/evidence/browser.
@@ -188,7 +190,7 @@ Exit gate Phase 0: không có false-positive schedule trong test matrix; backup 
 
 ### P0-04 — Durable store registry và backup envelope vNext
 
-- Branch/PR: codex/p0-04-backup-envelope.
+- Commit/package: P0-04 trên `codex/phase-0-release-safety`.
 - Mục tiêu: phân loại toàn bộ store Core/IELTS/V10 thành durable, reconstructable cache hoặc ephemeral; export mọi durable record gồm drafts/outbox/V10.
 - Dependency: P0-00 ACCEPTED.
 - File/module dự kiến: src/persistence.js, src/persistence-core.js, src/ielts-persistence.js, src/v10-persistence.js, src/ielts-backup.js, src/ielts-backup-bridge.js; backup tests/fixtures.
@@ -200,11 +202,11 @@ Exit gate Phase 0: không có false-positive schedule trong test matrix; backup 
 
 ### P0-05 — Restore journal, rollback và degraded-storage safety
 
-- Branch/PR: codex/p0-05-restore-safety.
+- Commit/package: P0-05 trên `codex/phase-0-release-safety`.
 - Mục tiêu: restore staging/validate/commit có journal và recovery; không chuyển durable writes sang RAM mà vẫn báo thành công.
 - Dependency: P0-04 ACCEPTED.
 - File/module dự kiến: các persistence module, src/ielts-backup.js, startup recovery, settings backup UI; unit/integration/browser fixtures.
-- Migration/rollback: additive restore journal/marker; forward-compatible opener; rollback build bỏ qua marker mới nhưng không hạ DB version; restore legacy bằng adapter.
+- Migration/rollback: additive restore journal/marker; forward-compatible opener; rollback build trong cửa sổ Phase 0 phải mở read-safe hoặc fail incompatible rõ ràng mà không chuyển sang RAM; không hạ DB version; restore legacy bằng adapter.
 - Test bắt buộc: crash sau từng DB/store, quota/block/versionchange, corrupted payload, double restore idempotency, rollback build fixture, reload sau degraded write.
 - Acceptance criteria: failure giữ last-known-good hoặc recovery tiếp tục deterministically; UI phân biệt durable/temporary/failure; canonical compare sau restart đạt 100%.
 - Rủi ro: Critical; bù trừ liên DB không phải transaction thật.
@@ -212,7 +214,7 @@ Exit gate Phase 0: không có false-positive schedule trong test matrix; backup 
 
 ### P0-06 — Quick Capture và single-Inbox containment
 
-- Branch/PR: codex/p0-06-capture-containment.
+- Commit/package: P0-06 trên `codex/phase-0-release-safety`.
 - Mục tiêu: sửa submit async an toàn, đảm bảo draft bền; production chỉ hiển thị một Inbox trong thời gian chờ Phase 1 unification.
 - Dependency: P0-00 và P0-05 ACCEPTED.
 - File/module dự kiến: src/capture-inbox.js, src/unified-capture-v2.js, src/persistence.js, src/v10-persistence.js, src/main.js; capture unit/browser tests.
@@ -224,7 +226,7 @@ Exit gate Phase 0: không có false-positive schedule trong test matrix; backup 
 
 ### P0-07 — Single-Today containment và exact-launch guard
 
-- Branch/PR: codex/p0-07-today-containment.
+- Commit/package: P0-07 trên `codex/phase-0-release-safety`.
 - Mục tiêu: chỉ một Today production entry; chặn launcher bỏ cardId/skill/source đã lập kế hoạch trước khi Phase 1 viết Runner mới.
 - Dependency: P0-01 và P0-00 ACCEPTED.
 - File/module dự kiến: src/app.js, src/today-planner-v2.js, src/ielts-lab.js, src/ielts-hub-v2.js, src/primary-ia-v10.js; Today/evidence/browser tests.
@@ -236,7 +238,7 @@ Exit gate Phase 0: không có false-positive schedule trong test matrix; backup 
 
 ### P0-08 — Phase 0 independent exit audit
 
-- Branch/PR: codex/p0-08-phase0-exit-gate.
+- Commit/package: P0-08 trên `codex/phase-0-release-safety`.
 - Mục tiêu: mã hóa và chạy độc lập toàn bộ exit criteria, tạo release checklist có digest.
 - Dependency: P0-02, P0-03, P0-05, P0-06 và P0-07 ACCEPTED.
 - File/module dự kiến: package.json; scripts/phase0-gate.mjs; tests/phase0-*; docs status/evidence; không thêm feature.
@@ -923,7 +925,7 @@ Không có dependency kỹ thuật buộc Content Platform chờ Workspace UI, h
 
 ## 8. Package đầu tiên được đề xuất
 
-Đề xuất bắt đầu bằng P0-00 trên branch codex/p0-00-acceptance-harness.
+Đề xuất bắt đầu bằng P0-00 trên branch Phase 0 `codex/phase-0-release-safety`.
 
 Lý do:
 

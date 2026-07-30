@@ -77,7 +77,7 @@ function setVisualRoute(route){
   $$('[data-route]').forEach(button=>button.classList.toggle('active',button.dataset.route===route));
 }
 
-async function embedHub(tab='today'){
+async function embedHub(tab='discover'){
   const view=ensureRouteView();
   const host=$('#v10IeltsRouteHost');
   const api=globalThis.VocabMasterIeltsHub;
@@ -105,7 +105,7 @@ function restoreHubDialog(){
   if(host&&!host.children.length)host.innerHTML='<div class="v10-loading">Đang chuẩn bị IELTS…</div>';
 }
 
-async function activateIelts({tab='today'}={}){
+async function activateIelts({tab='discover'}={}){
   routeActive=true;
   document.documentElement.dataset.v10PrimaryRoute='ielts';
   setVisualRoute('ielts');
@@ -141,7 +141,7 @@ function bindLegacyReturn(){
   const legacy=$('#ieltsLabDialog');
   if(!legacy||legacy.dataset.v10ReturnBound==='true')return;
   legacy.dataset.v10ReturnBound='true';
-  legacy.addEventListener('close',()=>{if(routeActive)void embedHub('today').catch(()=>{});});
+  legacy.addEventListener('close',()=>{if(routeActive)void embedHub('discover').catch(()=>{});});
 }
 
 function refreshPrimaryIA(){

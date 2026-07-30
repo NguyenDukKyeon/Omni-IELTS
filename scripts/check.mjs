@@ -24,6 +24,16 @@ const [html,css,experience,settingsCss,app,audio,main,learning,progress,fsrsAdap
   readFile(new URL('./browser-smoke.mjs',import.meta.url),'utf8'),
   readFile(new URL('./browser-smoke-entry.mjs',import.meta.url),'utf8')
 ]);
+const[restoreCoordinator,storageLock,captureInbox,unifiedCapture,todayPlanner,ieltsHub,ieltsLab,primaryIa]=await Promise.all([
+  readFile(new URL('../src/ielts-backup.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/storage-lock.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/capture-inbox.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/unified-capture-v2.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/today-planner-v2.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/ielts-hub-v2.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/ielts-lab.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/primary-ia-v10.js',import.meta.url),'utf8')
+]);
 
 const requiredIds=[
   'startToday','quickReview','weakPractice','practiceSheet','importDialog','settingsDialog','aiEnrichButton','geminiKey','geminiModel','settingInterests','exerciseHost','deckDialog','filterDialog',
@@ -90,6 +100,9 @@ assert.ok(main.includes("if(!isAiStudioPreview)document.getElementById('bootStat
 assert.ok(main.includes('clearDevelopmentPwaState'),'Development PWA cleanup missing');
 assert.ok(main.includes('showNonBlockingBootError'),'Local boot errors must not become a full-screen blocker');
 assert.ok(main.includes('__VOCAB_INITIAL_STATE__')&&main.includes('initializePersistence'),'IndexedDB state must be ready before app import');
+assert.ok(main.indexOf('recoverInterruptedRestore()')<main.indexOf('persistence.initializePersistence()'),'Restore recovery must finish before Core initialization, migration or outbox replay');
+assert.doesNotMatch(main,/withTimeout\(persistence\.initializePersistence/,'Durable initialization must not continue mutating after a non-cancelling boot timeout');
+assert.ok(main.includes("shell.inert=true")&&main.includes("error?.code"),'Storage recovery failure must leave the product shell inert');
 assert.ok(main.indexOf("import('./settings-ui.js')")<main.lastIndexOf("import('./app.js')"),'Settings layout must initialize before app listeners');
 assert.ok(browserSmoke.includes('Input.dispatchMouseEvent'),'Browser smoke does not test real pointer interaction');
 for(const expected of ['settingsDialog','practiceSheet','importDialog','wordDetailDialog','studyOverlay','activityHeatmap'])assert.ok(browserSmoke.includes(expected),`Browser smoke misses ${expected}`);
@@ -111,13 +124,32 @@ assert.doesNotMatch(pwa,/injectSettings/,'PWA must not inject Settings DOM');
 
 assert.ok(persistence.includes('indexedDB.open(DB_NAME'),'IndexedDB database is not opened');
 assert.ok(persistence.includes("reviewEvents:'reviewEvents'")||persistence.includes("reviewEvents: 'reviewEvents'"),'Append-only review-event store missing');
-assert.ok(persistence.includes('.add(event)')||persistence.includes('.add(operation.event)')||persistence.includes('.add(review)'),'Review events must use add(), not overwrite with put()');
+assert.ok(persistence.includes('.add(event)')||persistence.includes('.add(operation.event)')||persistence.includes('.add(clone(operation.event))')||persistence.includes('.add(review)'),'Review events must use add(), not overwrite with put()');
 assert.ok(persistence.includes('createAutomaticSnapshot'),'Automatic snapshots missing');
 assert.ok(persistence.includes('restoreBackupDocument'),'Validated restore path missing');
+assert.ok(persistence.includes("restoreCoreBackupSafely}=await import('./ielts-backup.js')"),'Core restore bypasses the cross-database coordinator');
+assert.ok(restoreCoordinator.includes('withExclusiveStorageLock')&&restoreCoordinator.includes('reopenAndVerify'),'Restore coordinator must hold an exclusive lock through durable read-back');
+assert.ok(storageLock.includes("request(LOCK_NAME,{mode}")&&storageLock.includes("mode:'shared'"),'Durable writes must use the deterministic shared/exclusive storage lock');
+assert.ok(captureInbox.includes("panel.dataset.captureEntry='canonical'")&&captureInbox.includes('data-capture-inbox="canonical"'),'Canonical Capture/Inbox entry point is missing');
+assert.doesNotMatch(unifiedCapture,/v10CapturePanel|insertAdjacentElement\(['"]afterend/,'Legacy V10 must not mount a second Capture Inbox implementation');
+assert.ok(unifiedCapture.includes('configureCaptureInbox')&&unifiedCapture.includes('withExclusiveStorageLock'),'V10 Capture must reuse the canonical Inbox and migrate under the storage lock');
+assert.ok(unifiedCapture.indexOf('await reopenV10Database')<unifiedCapture.indexOf('await deleteCaptureDraft'),'Capture migration must reopen the target before deleting the durable source');
+assert.ok(todayPlanner.includes("today.dataset.todayEntry='canonical'")&&todayPlanner.includes('today.replaceChildren(section)'),'Canonical Today must replace, not CSS-hide, the legacy implementation');
+assert.ok(todayPlanner.includes('activityLaunchBinding')&&todayPlanner.includes('getV10Record(V10_STORES.activities'),'Today launch must re-read and verify the durable plan binding');
+assert.ok(todayPlanner.includes("execution.kind==='core-card'")&&app.includes('startPlannedActivity'),'Core Today launch must use the exact planned executor');
+assert.ok(app.includes('coreSourceRevision(card)!==target.sourceRevision')&&app.includes('TODAY_TARGET_STALE'),'Core Today must fail closed for stale/missing targets');
+assert.doesNotMatch(ieltsHub,/buildTodayActivityPlan|data-v10-hub-activity|Học hôm nay/,'IELTS Hub must not mount a second Today planner');
+assert.doesNotMatch(ieltsLab,/ieltsTodayErrors|data-today-error|renderTodayErrors/,'IELTS Lab must not mount a second Today widget');
+assert.ok(ieltsLab.includes('openErrorTarget')&&ieltsLab.includes('state.selectedErrorId=id'),'Error repair must open the exact planned error ID');
+assert.ok(primaryIa.includes("embedHub(tab='discover')")&&!primaryIa.includes("embedHub(tab='today')"),'IELTS primary route must not default to a second Today surface');
+assert.equal((html.match(/data-today-entry=/g)||[]).length,0,'Canonical Today marker must be owned by the runtime replacement');
+assert.equal((html.match(/data-today-nav="canonical"/g)||[]).length,2,'Desktop/mobile responsive Today controls must share one canonical route marker');
+assert.doesNotMatch(html,/class="brand"[^>]*href="#today"/,'Brand must not be an additional Today launcher');
 assert.ok(persistence.includes('persistReviewResult'),'Card and review event atomic persistence path missing');
 assert.ok(persistence.includes('writeQueue'),'Serialized write queue missing');
 assert.doesNotMatch(persistence,/Storage\.prototype\.(setItem|removeItem)/,'Storage prototype monkey-patching must be removed');
-assert.ok(app.includes('persistCard')&&app.includes('persistCardsBatch')&&app.includes('persistSettings')&&app.includes('persistMetrics')&&app.includes('persistReviewResult'),'App does not use incremental explicit persistence commands');
+assert.ok(app.includes('persistCard')&&app.includes('persistCardsBatch')&&app.includes('persistSettings')&&app.includes('persistMetrics')&&app.includes('commitCoreEvidence'),'App does not use incremental explicit persistence commands through the evidence gateway');
+assert.doesNotMatch(app,/applyFsrsRating|persistReviewResult/,'Core app bypasses the evidence schedule gateway');
 assert.doesNotMatch(app,/localStorage\.(getItem|setItem|removeItem)/,'App state must not be sourced from localStorage');
 assert.ok(persistenceCore.includes('dedupeReviewEvents'),'Review-event idempotency missing');
 

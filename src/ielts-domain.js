@@ -1,3 +1,5 @@
+import { decideEvidence,evidenceDigest,normalizeAssistanceTrace } from './evidence-policy.js';
+
 export const IELTS_SCHEMA_VERSION=1;
 export const IELTS_SESSION_MINUTES=Object.freeze([10,20,30]);
 export const ERROR_STATUSES=Object.freeze(['open','practicing','monitoring','resolved','ignored']);
@@ -105,6 +107,7 @@ export function createErrorRecord(input={}){
     lastSeenAt:Number(input.lastSeenAt||now),
     status:ERROR_STATUSES.includes(input.status)?input.status:'open',
     resolutionAttempts:Math.max(0,Number(input.resolutionAttempts||0)),
+    evidenceAttempts:Array.isArray(input.evidenceAttempts)?structuredClone(input.evidenceAttempts).slice(-30):[],
     lastResolvedAt:Number(input.lastResolvedAt||0)||null,
     severity:['high','medium','low'].includes(input.severity)?input.severity:'medium',
     provenance:normalizeAiArtifact(input.provenance||{status:'verified',generatedAt:now})
@@ -125,6 +128,7 @@ export function mergeErrorRecords(existing,incoming){
     explanation:next.explanation||current.explanation,
     linkedCardIds:[...new Set([...current.linkedCardIds,...next.linkedCardIds])],
     tags:[...new Set([...current.tags,...next.tags])],
+    evidenceAttempts:[...current.evidenceAttempts,...next.evidenceAttempts].slice(-30),
     occurrenceCount:Number(current.occurrenceCount||1)+Number(next.occurrenceCount||1),
     firstSeenAt:Math.min(current.firstSeenAt,next.firstSeenAt),
     lastSeenAt:Math.max(current.lastSeenAt,next.lastSeenAt),
@@ -134,37 +138,22 @@ export function mergeErrorRecords(existing,incoming){
 }
 
 export function resolveIeltsEvidence(input={}){
-  const activity=cleanText(input.activityType,80);
-  const result=cleanText(input.result,30);
-  const skill=cleanText(input.skill,30);
-  const verified=input.verified===true;
-  const independent=input.independent===true;
-  const assisted=input.assisted===true;
-  const targetCardId=cleanText(input.targetCardId,180);
-  const errorType=cleanText(input.errorType,80);
-  const base={affectsSchedule:false,rating:null,skill:null,reason:'insufficient-evidence'};
-  if(!verified||!independent||assisted||!targetCardId)return base;
-  if(activity==='shadowing')return{...base,reason:'shadowing-is-imitation'};
-  if(['reading-completion','explanation-view','transcript-edit','lexical-set-view'].includes(activity))return{...base,reason:'activity-does-not-test-retrieval'};
-  if(activity==='dictation'){
-    if(errorType==='transcript-source')return{...base,reason:'source-transcript-error'};
-    if(errorType==='spelling-only')return{...base,reason:'spelling-is-not-listening-retrieval'};
-    if(skill&&skill!=='listening')return{...base,reason:'dictation-skill-mismatch'};
-    return{affectsSchedule:true,rating:result==='correct'?'good':result==='near'?'hard':'again',skill:'listening',reason:'verified-independent-dictation'};
-  }
-  if(activity==='retell'){
-    if(input.preselectedTarget!==true||input.usedTargetCorrectly!==true)return{...base,reason:'retell-target-not-independently-demonstrated'};
-    return{affectsSchedule:true,rating:result==='near'?'hard':'good',skill:'production',reason:'verified-independent-retell-target'};
-  }
-  if(activity==='error-correction'){
-    if(!['recognition','recall','listening','collocation','production'].includes(skill))return{...base,reason:'error-pattern-not-card-skill'};
-    return{affectsSchedule:true,rating:result==='correct'?'good':result==='near'?'hard':'again',skill,reason:'verified-independent-error-correction'};
-  }
-  if(activity==='paraphrase-card-check'){
-    if(!['recognition','recall'].includes(skill))return{...base,reason:'paraphrase-card-skill-mismatch'};
-    return{affectsSchedule:true,rating:result==='correct'?'good':result==='near'?'hard':'again',skill,reason:'verified-targeted-paraphrase-check'};
-  }
-  return base;
+  return decideEvidence({attempt:input.attempt,activity:input.activitySpec,verification:input.verification});
+}
+
+export function ieltsSourceRevision(prefix,value={}){
+  return `${cleanText(prefix,80)||'ielts-source'}:${evidenceDigest(JSON.stringify(value))}`;
+}
+
+export function buildIeltsEvidenceEnvelope({activityId,receiptId,activityType,cardId,skill,sourceId,sourceRevision,result,learnerOutput='',errorType=null,sourceVerified=false,assistance={},evaluation=null}={}){
+  const id=cleanText(activityId,180);const receipt=cleanText(receiptId,180);const target={cardId:cleanText(cardId,180)||null,skill:cleanText(skill,80)||null,sourceId:cleanText(sourceId,180)||null,sourceRevision:cleanText(sourceRevision,180)||null};
+  const attemptId=`attempt:${receipt}`;
+  const activitySpec={id,type:cleanText(activityType,80),target};
+  const attempt={id:attemptId,activityId:id,receiptId:receipt,activityType:activitySpec.type,result:cleanText(result,40),target,learnerOutput:cleanText(learnerOutput,10_000),errorType:cleanText(errorType,80)||null,assistance:normalizeAssistanceTrace({id:`trace:${receipt}`,schemaVersion:1,collector:'ielts-lab',complete:true,...assistance})};
+  const verification={source:{id:`source:${sourceRevision}`,authority:'ielts-source-registry',status:sourceVerified?'verified':'unverified',sourceId:target.sourceId,sourceRevision:target.sourceRevision}};
+  if(evaluation)verification.evaluation={id:cleanText(evaluation.id,180)||`evaluation:${receipt}`,authority:cleanText(evaluation.authority,80),status:cleanText(evaluation.status,40),attemptId,activityId:id,cardId:target.cardId,skill:target.skill,outputDigest:evidenceDigest(attempt.learnerOutput),targetUsed:evaluation.targetUsed===true};
+  const decision=resolveIeltsEvidence({attempt,activitySpec,verification});
+  return Object.freeze({attempt,activitySpec,verification,decision});
 }
 
 export function sanitizeLexicalSet(input={}){
@@ -452,7 +441,10 @@ export function sanitizeMediaAttempt(input={}){
     wordErrors:Array.isArray(input.wordErrors)?structuredClone(input.wordErrors).slice(0,200):[],
     hintsUsed:Math.max(0,Number(input.hintsUsed||0)),
     linkedCardIds:[...new Set((Array.isArray(input.linkedCardIds)?input.linkedCardIds:[]).map(value=>cleanText(value,180)).filter(Boolean))],
+    evidenceAttempts:Array.isArray(input.evidenceAttempts)?structuredClone(input.evidenceAttempts).slice(0,30):[],
     evidenceDecisions:Array.isArray(input.evidenceDecisions)?structuredClone(input.evidenceDecisions).slice(0,30):[],
+    evaluationStatus:['not-requested','pending','completed','failed'].includes(input.evaluationStatus)?input.evaluationStatus:'not-requested',
+    evaluationError:cleanText(input.evaluationError,1000)||null,
     completedAt:Number(input.completedAt||Date.now()),
     durationMs:Math.max(0,Number(input.durationMs||0))
   };

@@ -1,30 +1,33 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30
+Last audited: 2026-07-30, Phase 0 independently accepted
 
-Audited commit: 54691cfb5314b51762c4959c9d0cee2012fc2b4a
+Audited source commit: b2ed6c09acd97747c46556395e47ab68b9e2021b
 
-Branch: main tracking origin/main
-Scope of this update: planning documents only; no implementation package started.
+Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
+
+Active implementation branch: codex/phase-0-release-safety
+Scope of this update: governance/kickoff baseline và P0-00 đến P0-08 đã independently accepted. Phase 0 exit gate xanh; Phase 1 chưa bắt đầu.
 
 ## 1. Provenance status
 
 | Item | Status | Evidence / action |
 |---|---|---|
 | User-provided AGENTS.md | ACTIVE | Instructions in the current task are applied |
-| Repository AGENTS.md | MISSING | No matching file on main or fetched remote heads |
-| docs/ROADMAP.md | MISSING | No matching file on main or fetched remote heads |
-| Accepted Phase 0–7 roadmap | BASELINE_WITH_PROVENANCE_GAP | Reconstructed from the roadmap accepted by the user in this conversation |
+| Repository AGENTS.md | ACTIVE | Invariant/test/migration/evidence/data/Git rules đã được codify trước source change |
+| docs/ROADMAP.md | CANONICAL | Nguồn chính thức cho Phase 0–7 và dependency |
+| Accepted Phase 0–7 roadmap | RECONCILED | ROADMAP, plan, status và decisions có vai trò không chồng lấn |
 | Current implementation baseline | VERIFIED | Exact commit above, clean before documentation edits |
 
-Hard stop: if a repository docs/ROADMAP.md is later supplied and differs materially, no implementation package may start until IMPLEMENTATION_PLAN.md, IMPLEMENTATION_STATUS.md and DECISIONS.md are reconciled and approved.
+Hard stop: nếu roadmap/dependency thay đổi vật chất, không tiếp tục source cho đến khi ROADMAP, IMPLEMENTATION_PLAN, IMPLEMENTATION_STATUS và DECISIONS được reconcile theo ADR mới.
 
-## 2. Verification matrix at baseline
+## 2. Kickoff baseline verification matrix
 
 | Command | Result | Notes |
 |---|---|---|
+| node --version | PASS | v24.15.0; Windows NT 10.0.26200.0 |
 | npm ci --no-audit --no-fund | PASS | 36 packages installed |
-| npm test | PASS | 106/106 |
+| npm test | PASS | 106/106; 0 skipped/todo |
 | npm run check | PASS | Static checks passed |
 | npm run audit:roadmap | PASS | 12/12 existing gates; not sufficient behavioral acceptance |
 | npm run audit:ielts | PASS | 11/11 existing gates; not sufficient behavioral acceptance |
@@ -34,25 +37,190 @@ Hard stop: if a repository docs/ROADMAP.md is later supplied and differs materia
 | npm run test:serve | PASS | Server smoke |
 | npm run test:preview | PASS | Preview smoke |
 | npm run test:browser | PASS | Passed in this run |
-| npm run test:ielts-browser | FAIL | Retell did not finish in a success state |
+| npm run test:ielts-browser | PASS_ONCE / SUSPECT_FLAKY | Current run passed; earlier audited run failed at Retell, therefore P0-00 must repeat and keep product diagnostics |
 | npm run test:v10-browser | FAIL | Browser discovery omits available Windows Chrome/Edge paths |
-| npm run test:hardening | FAIL_AFTER_ASSERTIONS | Assertions passed, cleanup failed with EBUSY on CrashpadMetrics-active.pma |
+| npm run test:hardening | PASS_ONCE / SUSPECT_FLAKY | Current run passed; earlier audited run hit cleanup EBUSY, therefore bounded retry + cleanup verification remain required |
 
-Ports used by smoke tests were verified empty after the run. The failure list above means the release baseline is not Phase 0 accepted.
+Ports 3000, 3010, 5692 and 4173 were verified empty after the run. V10 browser discovery still fails, and one-off passes do not close earlier flaky evidence; the release baseline is not Phase 0 accepted.
+
+### P0-00 acceptance evidence
+
+Accepted source commit: `33616e5e03ef3684b0afdbdf6e328ef45bb5cfc4`.
+
+| Evidence | Actual result |
+|---|---|
+| `npm run test:browser-harness` | PASS 12/12; deterministic Windows/macOS/Linux discovery, no skip path, isolated profile, bounded EBUSY retry, failure classification and POSIX process-group cleanup checks |
+| `npm run test:ielts-browser` | PASS after every blocked YouTube iframe rerender was deterministically settled; learner Retell attempt and lexical gap were read back from IndexedDB |
+| `npm run check` | PASS after reviewer fixes |
+| `npm run phase0:harness` | Earlier complete run PASS 5/5; repeated run later stopped on a reproducible V10 product race, not an infrastructure/cleanup error |
+| `npm run phase0:gate` | Non-browser unit/static/audit/build/server/preview gates PASS; browser gate correctly stopped on V10 `sentence-learning-loop.js` session lifecycle `TypeError` and reported `PRODUCT_FAILURE` |
+| Cleanup verification | Ports 3000, 3001, 3010, 9333, 9334, 9344 and 9555 empty; all task-owned `vocab-*-smoke-*` temp profiles removed after pass and fail |
+| Independent review | ACCEPTED; no P0/P1 finding after fixes for rerendered iframe race, POSIX descendant cleanup and CDP/transport classification |
+
+P0-00 has no data migration. Rollback is removal of the shared helper, gate scaffold and browser-suite integration. Acceptance here means the harness is trustworthy; it does not turn the known V10 product failure green. That failure remains owned by P0-03 and keeps the Phase 0 hard gate red.
+
+### P0-01 acceptance evidence
+
+Accepted source commit: `0ec315f7a77e2fac6bad71a548b6ccc71961687b`.
+
+| Evidence | Actual result |
+|---|---|
+| Focused EvidencePolicy/IELTS/V10 tests | PASS 38/38 |
+| `npm test` | PASS 128/128; 0 skipped/todo |
+| `npm run audit:ielts` | PASS 11/11 |
+| `npm run audit:v10` | PASS 55/55 |
+| `npm run check` | PASS |
+| Adversarial matrix | Default deny for missing legacy provenance, unknown activity/result, wrong target/skill/source/revision, incomplete assistance trace, reveal/hint/transcript/correction/exposed retry, unverified source/evaluator, Retell without output/target use and receipt collisions |
+| Independent review | ACCEPTED; no P0/P1 after receipt binding covered every normalized decision input |
+
+P0-01 is an additive contract migration: legacy records without canonical Attempt, complete AssistanceTrace and authority-bound verification receipts are ineligible. Rollback may stop enforcing the new contract but must not delete policy metadata/receipts. Runtime schedule enforcement remains owned by P0-02/P0-03, so the full product gate is intentionally still red.
+
+### P0-02 acceptance evidence
+
+Accepted source commit: `2025b6320c8d72f116fbc2c0a9dcb4ae884697b6`.
+
+| Evidence | Actual result |
+|---|---|
+| Focused gateway/persistence/compatibility tests | PASS 21/21 after final reviewer fixes |
+| `npm test` | PASS 136/136; 0 skipped/todo |
+| `npm run check` | PASS |
+| `npm run audit:roadmap` | PASS 12/12 |
+| `npm run build` | PASS; production bundle built successfully |
+| `npm run test:browser` | PASS with deterministic Chrome discovery and verified cleanup |
+| Persistence boundary | PASS: full evidence envelope is re-evaluated; forged decisions and receipt collisions fail closed; identical receipt is idempotent |
+| Unlock boundary | PASS: only successful qualified evidence marks skill success; qualified `Again` persists as failure and cannot unlock |
+| Legacy outbox compatibility | PASS: terminal legacy review rows are durably quarantined, surfaced and do not block later valid writes |
+| Independent review | ACCEPTED after both P1 findings (outbox head-of-line blocking and missing reconciliation/calibration metadata) were fixed |
+
+P0-02 does not rewrite legacy learning history. New qualified-evidence markers and review metadata are additive; legacy review/outbox rows without canonical evidence stay fail-closed and are preserved in quarantine rather than silently dropped. Rollback may disable the Core gateway code path but must preserve evidence envelopes, reason metadata and quarantine records.
+
+### P0-03 acceptance evidence
+
+Accepted source commit: `12b1cf8488fcacf4369a91e8b89a52dc93171f1f`.
+
+| Evidence | Actual result |
+|---|---|
+| Focused IELTS/V10 containment tests | PASS 34/34 |
+| `npm test` | PASS 142/142; 0 skipped/todo |
+| `npm run check` | PASS |
+| `npm run audit:ielts` | PASS 11/11 |
+| `npm run audit:v10` | PASS 55/55 |
+| `npm run build` | PASS; production bundle built successfully |
+| `npm run test:ielts-browser` | PASS: IELTS Dictation/Retell create no Core review event; evaluator 503 keeps a durable failed coaching attempt; successful Retell persists learner output and no fabricated evaluation receipt |
+| `npm run test:v10-browser` | PASS: empty Retell cannot complete; Skip is explicit; coaching output survives reload; stale cross-run save cannot overwrite the active run; double-click advances exactly one sentence |
+| Evidence boundary | PASS: IELTS/V10 coaching envelopes are canonical and default-denied; caller cannot override V10 coaching/collector/completeness; revealed correction and unverified transcript never schedule |
+| Independent review | ACCEPTED after four P1 findings were fixed; reviewer independently reran unit/static/audit/build/browser gates and found no remaining P0/P1 |
+
+P0-03 is an additive compatibility migration. Existing V10 `completed` progress without a durable learner output normalizes to `unverified`; explicit new `skipped` and `coaching-completed` states remain distinct. Existing attempts are not deleted. IELTS Retell now persists a stable coaching attempt as `pending` before evaluator I/O and updates the same ID to `completed` or `failed`. Rollback may hide the contained UI or stop reading new fields, but must retain learner output, evidence envelopes and evaluation status/error records.
+
+### P0-04 acceptance evidence
+
+Accepted source commit: `ffca938b6067e800ae21c5c9231a0b2b811a30de`.
+
+| Evidence | Actual result |
+|---|---|
+| `npm run test:backup` | PASS 5/5: physical registry coverage, every-durable-store sentinel, canonical determinism, SHA-256 payload/store digests, cache/secret/binary exclusion, corrupt/future schema rejection and legacy dual-read |
+| `npm test` | PASS 147/147; 0 skipped/todo |
+| `npm run test:v10` | PASS 31/31 after the imported-transcript provenance fix |
+| `npm run check` | PASS |
+| `npm run audit:roadmap` | PASS 12/12 |
+| `npm run audit:ielts` | PASS 11/11 |
+| `npm run audit:v10` | PASS 55/55 |
+| `npm run build` | PASS; production bundle built successfully |
+| Durable inventory | PASS: registry matches 8 Core, 12 IELTS and 14 V10 object stores; 32 store policies export durable data and two whole-store caches/capabilities are excluded |
+| Mixed-store policy | PASS: imported transcripts and private content remain complete; provider transcript bodies and remote content bodies become reconstruction stubs with SHA-256; migration ledgers remain while known operational/cache metadata is excluded |
+| Independent review | Initial `ce3244a` review rejected one P1 provenance inversion. Fix `ffca938` preserves `provider: imported` across a local cache read; symmetric imported/provider probe passed and reviewer recorded ACCEPTED with zero remaining P0/P1 |
+
+P0-04 changes only the portable export contract. Full backup schema v2 is canonical and fail-closed; Core v3, IELTS v1 and combined v1 readers remain available. vNext restore is deliberately blocked with `VNEXT_STAGED_RESTORE_REQUIRED` until P0-05 supplies stage/journal/rollback/reopen verification. No database version was raised, no store was deleted and rollback code may ignore a v2 file only by reporting the newer schema explicitly; it must never reinterpret it as an empty legacy backup.
+
+### P0-05 acceptance evidence
+
+Accepted source commit: `426feb2c20f36d2eed9a66eca1b1c9fe9e9c4bbf`.
+
+| Evidence | Actual result |
+|---|---|
+| `npm run test:restore` | PASS 27/27; every-durable-store fixture, exact-keyPath rejection before mutation, staged commit, idempotency, rollback per database, crash recovery per owner, excluded-store preservation, quota/block/version failures, legacy adapters, degraded routing and no RAM-only success |
+| `npm run test:backup` | PASS 5/5 |
+| `npm test` | PASS 174/174; 0 skipped/todo |
+| `npm run check` | PASS |
+| `npm run audit:ielts` | PASS 11/11 |
+| `npm run audit:v10` | PASS 55/55 |
+| `npm run build` | PASS; production bundle built successfully |
+| Browser gates | Core, IELTS, V10 and Hardening suites PASS with Chrome `150.0.7871.188`; Hardening includes a real interrupted journal reload/recovery before mount and a production Core-only degraded reload with durable Quick Capture draft read-back |
+| Restore transaction boundary | PASS: global exclusive lock, complete validation and preflight before journal, one transaction per database, durable owner checkpoints, reopen/read-back/canonical digest verification, completed receipt and idempotent startup recovery |
+| Migration/rollback | No IndexedDB version bump or destructive store change. Active journal and completed receipt are additive Core metadata. Legacy Core v3, IELTS v1 and combined v1 preserve domains absent from their schema. Failure injection restores the exact before digest; rolling-back recovery is repeatable |
+| Degraded storage | Verified localStorage Core export is explicitly scoped `core-only`; both production file routers restore it without changing IELTS/V10. When IndexedDB is absent, startup mounts visibly labeled Core-only degraded mode and does not import/mount IELTS/V10 |
+| Independent review | Initial review rejected five P1 restore/locking/validation findings; follow-up found exact-keyPath, degraded file-routing and production degraded-boot gaps. All were fixed. Final exact-commit audit ACCEPTED with stable patch ID `f96a70fd92c0e210ef3526e0bfdc1299a1ea11c9` and no remaining P0/P1 |
+
+P0-05 activates canonical v2 restore only through the safe coordinator. Restore follows stage → validate → journal → commit/reconcile → reopen/read-back/canonical verify, and never clears an included target before complete validation. Cross-database writes and exports share one storage lock. Active restore journals are not portable; completed receipts are durable portable metadata. Rollback keeps database version 4 readable and never deletes the newer metadata or excluded stores.
+
+### P0-06 acceptance evidence
+
+Accepted source commit: `35cdc0b350a77797f6992feed1625067edc5674c`.
+
+| Evidence | Actual result |
+|---|---|
+| `npm run test:capture` | PASS 8/8; copy/reopen/verify/delete ordering, interruption/retry, partial cleanup, target mismatch, collision/divergence, invalid degraded JSON and non-array preservation |
+| `npm run test:restore` | PASS 27/27; Capture locking and restore compatibility remain intact |
+| `npm test` | PASS 182/182; 0 failed, 0 skipped/todo |
+| `npm run check` | PASS; exactly one canonical Inbox marker and no legacy V10 Capture mount |
+| `npm run audit:roadmap` | PASS 12/12 |
+| `npm run audit:ielts` | PASS 11/11 |
+| `npm run audit:v10` | PASS 55/55 |
+| `npm run build` | PASS; production bundle built successfully |
+| `npm run test:v10-browser` | PASS with Chrome `150.0.7871.188`; one Inbox, one double-submit record, reload, offline keyboard flow and mobile viewport; runtime errors 0 |
+| `npm run test:hardening` | PASS with Chrome `150.0.7871.188`; corrupt degraded source remains byte-for-byte unchanged, quota failure retains form, verified retry/double-submit persists once and survives reload |
+| Migration/rollback | PASS: exclusive lock; deterministic target IDs; all targets commit, V10 reopens and read-back verifies before any Core delete; Core reopens and confirms deletion; interruption, collision and changed targets preserve durable source/target and retry is idempotent. No DB version bump or reverse/destructive rollback |
+| Independent review | Two P1 findings (retry overwrite of a changed target and corrupt localStorage overwrite) were fixed. Exact-commit audit ACCEPTED with patch ID `303f61d479ba527d83cb8bbf12cb5e08e7759f6b`; no P0/P1 remained |
+
+P0-06 removes the second production Capture mount rather than hiding it with CSS. One canonical form/Inbox delegates to V10 when durable IndexedDB is available and to verified Core localStorage only in explicitly degraded Core-only mode. Submit resets only after durable commit/read-back, keeps a stable ID across retry and retains edited input on failure. Rollback must preserve both deterministic V10 candidates and any Core sources still awaiting verified cleanup; it must not reverse-migrate or delete either representation automatically.
+
+### P0-07 acceptance evidence
+
+Accepted source commit: `167c3c68abb3ec6627e2bf9d4fc5b762385e2852`.
+
+| Evidence | Actual result |
+|---|---|
+| Focused exact-target matrix | PASS 22/22; planned queue never substitutes card/skill, stale revision and sense mismatch fail closed with zero writes, legacy targetless plan is blocked and reload resumes the identical durable binding |
+| `npm test` | PASS 188/188; 0 failed, 0 skipped/todo |
+| `npm run check` | PASS; canonical Today replaces the legacy DOM, no IELTS second Today mount remains and exact executors are statically guarded |
+| `npm run build` | PASS; production bundle built successfully |
+| `npm run test:browser` | PASS with Chrome `150.0.7871.188`; canonical launcher, practice access and existing Core flows remain operational |
+| `npm run test:ielts-browser` | PASS with Chrome `150.0.7871.188` |
+| `npm run test:v10-browser` | PASS with Chrome `150.0.7871.188`; exactly one canonical Today, one visible responsive Today nav, mobile nav has five items, IELTS Hub has no Today tab, exact error repair overrides preselected DOM state and runtime errors are zero |
+| `npm run test:hardening` | PASS with Chrome `150.0.7871.188`; removing a durable planned card leaves the rendered binding stale, launch returns `TODAY_TARGET_STALE`, opens no generic session and creates zero review events |
+| Migration/rollback | No DB/store version change. New plan fields are additive. Legacy/missing target or executor normalizes to blocked/no-schedule. Rollback may ignore the new fields but must preserve durable activity rows and must not reinterpret them as eligible evidence |
+| Independent review | Initial exact-commit review rejected one P1 because `senseId` was lost before evidence persistence. Fix carries and compares sense through ActivitySpec, Attempt, evaluator receipt, EvidenceDecision and review event. Final exact-commit audit ACCEPTED with cumulative patch ID `c3c3e509fa7ecadfd854d91b17edb2669e99a3f4`; no P0/P1 remained |
+
+P0-07 removes the IELTS Hub Today tab and IELTS Lab Today widget, and replaces the legacy Core Today subtree at runtime rather than hiding it with CSS. Every ready launcher re-reads the durable activity and binding before execution. Core launch preserves exact card/sense/skill/source revision through persisted evidence; error repair opens the bound error ID without consulting selected DOM state. Unsupported media, reading, paraphrase and prepared-error targets remain visibly blocked/coaching-only and cannot schedule. Core-only degraded startup mounts one disabled canonical Today surface instead of claiming a RAM-backed plan.
+
+### P0-08 acceptance evidence
+
+Accepted source commit: `b2ed6c09acd97747c46556395e47ab68b9e2021b`.
+
+| Evidence | Actual result |
+|---|---|
+| `npm run phase0:gate` clean run 1 | PASS 21/21 in 79.3 s |
+| `npm run phase0:gate` clean run 2 | PASS 21/21 in 68.3 s |
+| `npm run phase0:gate` clean run 3 | PASS 21/21 in 60.4 s |
+| Clean install and test matrix per run | `npm ci` installed 36 packages; release evidence 2/2, adversarial EvidencePolicy 33/33, backup sentinel 5/5, restore/rollback 28/28, Capture 8/8, Today 4/4 and full unit suite 191/191 with 0 failed/skipped/todo |
+| Static, audit and production gates | `check`, roadmap 12/12, IELTS 11/11, V10 31/31, V10 audit 55/55, production build, server smoke and preview smoke all PASS |
+| Runtime/browser gates | Browser harness 12/12 plus Core, IELTS, V10 and Hardening browser suites PASS on Chrome `150.0.7871.188`; no suite skipped browser discovery |
+| Environment | Windows `10.0.26200` x64; Node `v24.15.0`; Chrome executable `C:\Program Files\Google\Chrome\Application\chrome.exe` |
+| Canonical artifact | 26 files, 740790 bytes, SHA-256 `1b361e26c9d20feb2bd53d4f9475185a99f0d1c75232c53e09c69aa1131619b6` on every run |
+| Cleanup and hygiene | Worktree remained clean; gate-owned ports and temporary browser profiles were empty after every run; no new skip/todo, weakened assertion, debug artifact or temporary marker |
+| Independent review | ACCEPTED at the exact source commit; reviewer independently reproduced 21/21 in 61.9 s with restore 28/28, full suite 191/191 and the same artifact digest. Cumulative Phase 0 patch ID `9d713cb564266a7e2794a2116f7b5310870c2665`; no P0/P1 remained |
+
+The first P0-08 attempt at `b5f0e4b` correctly failed because the IELTS audit still required the legacy Today widget removed by P0-07. Commit `c5c2820` replaced that obsolete assertion with a stricter audit for the canonical exact-target adapter and absence of a second Today entry point; no runtime or product failure was reclassified or ignored.
+
+The final review at `bea687e` then correctly rejected Phase 0 after independently exposing a timing-dependent restore digest mismatch. A delayed Core snapshot armed before restore could enqueue behind the exclusive lock and mutate the durable snapshot store after rollback verification. Commit `b2ed6c0` invalidates snapshot/file-backup timers at every exclusive restore/recovery boundary and generation-fences stale snapshot callbacks both before enqueue and inside the write queue. The deterministic regression holds restore for 1.7 seconds across the former timer window; focused restore passed 28/28 five consecutive times before the three full gates and independent reproduction.
+
+P0-08 adds no product data migration and changes no database version. It makes the release gate self-auditing: each clean run binds environment, exact commit, test counts, browser gates, repository hygiene and the canonical production artifact digest. The restore race fix only fences scheduled maintenance; it does not delete durable learner data. Product rollback remains the compatible forward-only behavior documented for P0-01 through P0-07; removing the audit tooling would not roll back or delete product data.
 
 ## 3. Confirmed blockers
 
 | ID | Severity | Blocker | Required owner package |
 |---|---|---|---|
-| B-001 | P0/Critical | Core can write FSRS from caller-supplied affectsSchedule without central evidence decision | P0-01, P0-02 |
-| B-002 | P0/High | Skill unlock can occur after reps > 0, including failed evidence | P0-02 |
-| B-003 | P0/High | IELTS/Error repair can expose correction before an “independent” retry | P0-03 |
-| B-004 | P0/High | V10 Retell does not persist/evaluate learner output; current IELTS Retell browser path fails | P0-03, later P3-04 |
-| B-005 | P0/Critical | Backup omits V10 and some Core durable stores such as drafts/outbox | P0-04 |
-| B-006 | P0/Critical | Cross-DB restore is not crash-atomic; RAM fallback can look successful | P0-05 |
-| B-007 | P0/High | Legacy and V10 Capture/Inbox both mount; async Quick Capture is unsafe | P0-06 |
-| B-008 | P0/High | Multiple Today surfaces; exact plan target can be discarded by launcher | P0-07 |
-| B-009 | P0/High | Browser acceptance is currently inconsistent/flaky across scripts | P0-00 |
 | B-010 | P1/High | Three DBs and several cross-DB writes lack a shared migration/saga/reconciler model | P1-00, P1-03 |
 | B-011 | P2/High | Transcript resolver is range/cache-RAM based, reparses weakly and lacks durable jobs | P2-00–P2-06 |
 | B-012 | P3/Critical | Dictation answer remains in transcript rail DOM/a11y surface | P3-03 |
@@ -60,12 +228,14 @@ Ports used by smoke tests were verified empty after the run. The failure list ab
 | B-014 | P5/Critical | Cloud fallback consent/shared-cache policy and local process safety are not production-ready | P5-00–P5-05 |
 | B-015 | P7/High | Metrics/calibration are too weak for safe personalization or FSRS tuning | P7-00–P7-05 |
 
+Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006, B-007, B-008 and B-009. Core schedule writes are policy-gated and receipt-bound; skill unlock is based on successful qualified evidence; IELTS/V10 exposed, unverified and Retell coaching paths cannot schedule; Retell learner output is durable across evaluator failure; the browser harness remains independently accepted; portable export covers every durable Core/IELTS/V10 store policy including drafts and outbox; restore is journaled, crash-recoverable, verified after reopen and explicit about degraded durability; Capture has one durable Inbox with safe retry/migration behavior; and Today has one canonical route whose launchers preserve exact durable targets or fail closed.
+
 ## 4. Phase status
 
 | Phase | Status | Entry gate | Exit state |
 |---|---|---|---|
-| Phase 0 — Containment and Release Safety | IN PLANNING / RED | Baseline audit complete | Not met |
-| Phase 1 — Core Product Unification | BLOCKED_BY_PHASE_0 | P0-08 ACCEPTED | Not started |
+| Phase 0 — Containment and Release Safety | ACCEPTED / GREEN | Baseline audit complete | Met at `b2ed6c0` |
+| Phase 1 — Core Product Unification | NOT_STARTED / ENTRY_GATE_MET | P0-08 ACCEPTED | Not started |
 | Phase 2 — Caption-first Resolver | BLOCKED_BY_PHASE_1 | P1-08 ACCEPTED | Not started |
 | Phase 3 — Full-video Workspace | BLOCKED_BY_PHASE_2 | P2-06 ACCEPTED | Not started |
 | Phase 4 — Remote Content Platform | BLOCKED_BY_PHASE_1 | P1 contracts accepted; production activation also needs platform packages | Not started |
@@ -87,31 +257,33 @@ Status vocabulary:
 
 ### Phase 0
 
-| Package | Branch | Dependency | Status |
+Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/package nội bộ.
+
+| Package | Commit unit | Dependency | Status |
 |---|---|---|---|
-| P0-00 Acceptance harness | codex/p0-00-acceptance-harness | Baseline | NEXT |
-| P0-01 Evidence contract | codex/p0-01-evidence-contract | P0-00 | PLANNED |
-| P0-02 Core evidence gateway | codex/p0-02-core-evidence-gateway | P0-01 | PLANNED |
-| P0-03 IELTS/V10 containment | codex/p0-03-ielts-v10-containment | P0-01 | PLANNED |
-| P0-04 Backup envelope | codex/p0-04-backup-envelope | P0-00 | PLANNED |
-| P0-05 Restore safety | codex/p0-05-restore-safety | P0-04 | PLANNED |
-| P0-06 Capture containment | codex/p0-06-capture-containment | P0-00, P0-05 | PLANNED |
-| P0-07 Today containment | codex/p0-07-today-containment | P0-00, P0-01 | PLANNED |
-| P0-08 Phase 0 exit gate | codex/p0-08-phase0-exit-gate | P0-02, P0-03, P0-05, P0-06, P0-07 | PLANNED |
+| P0-00 Acceptance harness | P0-00 | Baseline | ACCEPTED @ `33616e5` |
+| P0-01 Evidence contract | P0-01 | P0-00 | ACCEPTED @ `0ec315f` |
+| P0-02 Core evidence gateway | P0-02 | P0-01 | ACCEPTED @ `2025b63` |
+| P0-03 IELTS/V10 containment | P0-03 | P0-01 | ACCEPTED @ `12b1cf8` |
+| P0-04 Backup envelope | P0-04 | P0-00 | ACCEPTED @ `ffca938` |
+| P0-05 Restore safety | P0-05 | P0-04 | ACCEPTED @ `426feb2` |
+| P0-06 Capture containment | P0-06 | P0-00, P0-05 | ACCEPTED @ `35cdc0b` |
+| P0-07 Today containment | P0-07 | P0-00, P0-01 | ACCEPTED @ `167c3c6` |
+| P0-08 Phase 0 exit gate | P0-08 | P0-02, P0-03, P0-05, P0-06, P0-07 | ACCEPTED @ `b2ed6c0` |
 
 ### Phase 1
 
 | Package | Branch | Dependency | Status |
 |---|---|---|---|
-| P1-00 Migration ledger | codex/p1-00-migration-ledger | P0-08 | PHASE_BLOCKED |
-| P1-01 Learning contracts | codex/p1-01-learning-contracts | P1-00 | PHASE_BLOCKED |
-| P1-02 Event repositories | codex/p1-02-event-repositories | P1-01 | PHASE_BLOCKED |
-| P1-03 Cross-DB reconciler | codex/p1-03-cross-db-reconciler | P1-02 | PHASE_BLOCKED |
-| P1-04 Unified Capture | codex/p1-04-unified-capture | P1-03 | PHASE_BLOCKED |
-| P1-05 Transcript aggregate | codex/p1-05-transcript-aggregate | P1-02 | PHASE_BLOCKED |
-| P1-06 Error Repository | codex/p1-06-error-repository | P1-02, P1-05 | PHASE_BLOCKED |
-| P1-07 Today Composer | codex/p1-07-today-composer | P1-02, P1-04, P1-06 | PHASE_BLOCKED |
-| P1-08 Today Runner/cutover | codex/p1-08-today-runner-cutover | P1-07 | PHASE_BLOCKED |
+| P1-00 Migration ledger | codex/p1-00-migration-ledger | P0-08 | NEXT |
+| P1-01 Learning contracts | codex/p1-01-learning-contracts | P1-00 | PLANNED |
+| P1-02 Event repositories | codex/p1-02-event-repositories | P1-01 | PLANNED |
+| P1-03 Cross-DB reconciler | codex/p1-03-cross-db-reconciler | P1-02 | PLANNED |
+| P1-04 Unified Capture | codex/p1-04-unified-capture | P1-03 | PLANNED |
+| P1-05 Transcript aggregate | codex/p1-05-transcript-aggregate | P1-02 | PLANNED |
+| P1-06 Error Repository | codex/p1-06-error-repository | P1-02, P1-05 | PLANNED |
+| P1-07 Today Composer | codex/p1-07-today-composer | P1-02, P1-04, P1-06 | PLANNED |
+| P1-08 Today Runner/cutover | codex/p1-08-today-runner-cutover | P1-07 | PLANNED |
 
 ### Phase 2
 
@@ -188,27 +360,27 @@ Status vocabulary:
 
 ## 6. Phase 0 exit checklist
 
-- [ ] One central default-deny EvidencePolicy guards every schedule write.
-- [ ] Again/failure and assisted/unverified attempts cannot unlock or create positive review evidence.
-- [ ] Retell is real and persisted, or clearly coaching-only/disabled.
-- [ ] Backup registry classifies every Core/IELTS/V10 store.
-- [ ] Export→reset→restore→restart sentinel count/digest matches every durable store.
-- [ ] Failure injection cannot leave mixed restore state presented as success.
-- [ ] Durable write failure never silently falls back to RAM success.
-- [ ] Quick Capture survives submit failure/reload and only one Inbox is visible.
-- [ ] Only one Today is visible and every launch preserves exact card/skill/source.
-- [ ] Browser discovery/cleanup is deterministic and critical assertions cannot skip.
-- [ ] Full phase0:gate passes three consecutive clean runs at one exact commit.
-- [ ] Independent reviewer records P0-08 ACCEPTED.
+- [x] One central default-deny EvidencePolicy guards every schedule write.
+- [x] Again/failure and assisted/unverified attempts cannot unlock or create positive review evidence.
+- [x] Retell is real and persisted, or clearly coaching-only/disabled.
+- [x] Backup registry classifies every Core/IELTS/V10 store.
+- [x] Export→reset→restore→restart sentinel count/digest matches every durable store.
+- [x] Failure injection cannot leave mixed restore state presented as success.
+- [x] Durable write failure never silently falls back to RAM success.
+- [x] Quick Capture survives submit failure/reload and only one Inbox is visible.
+- [x] Only one Today is visible and every launch preserves exact card/sense/skill/source revision.
+- [x] Browser discovery/cleanup is deterministic and critical assertions cannot skip.
+- [x] Full phase0:gate passes three consecutive clean runs at one exact commit.
+- [x] Independent reviewer records P0-08 ACCEPTED.
 
 Phase 1 authorization condition:
 
-P1-00 remains PHASE_BLOCKED until every checkbox above is checked and P0-08 is independently ACCEPTED. “Mostly green”, a manual demo, or an implementer report does not satisfy this condition.
+The Phase 1 entry condition is now met. This status change does not start Phase 1; no Phase 1 branch, source change or migration is part of the Phase 0 task or PR.
 
 ## 7. Next package
 
-Recommended next package: P0-00 Acceptance harness.
+Current package: none. Phase 0 is complete and this task stops after its pull request is opened.
 
-Proposed branch: codex/p0-00-acceptance-harness.
+Phase branch: `codex/phase-0-release-safety`.
 
-No branch has been created and no implementation has started in this planning task.
+P0-00 through P0-08 are independently accepted at their exact source commits. P1-00 is the next planned package, but Phase 1 has not started.

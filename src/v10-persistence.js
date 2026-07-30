@@ -1,4 +1,7 @@
 import { V10_DB_NAME,V10_DB_VERSION,V10_STORES } from './v10-contracts.js';
+import { sha256Hex } from './backup-registry.js';
+import { databaseBlocked,durableStorageUnavailable,normalizeDatabaseOpenError } from './storage-safety.js';
+import { assertActiveRestoreToken,withDurableWriteLock } from './storage-lock.js';
 
 const STORE_LIST=Object.freeze(Object.values(V10_STORES));
 let databasePromise=null;
@@ -10,7 +13,7 @@ const clone=value=>value==null?value:structuredClone(value);
 const indexedDbUnavailable=()=>typeof indexedDB==='undefined';
 const requestResult=request=>new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error('IndexedDB request failed'));});
 const transactionDone=transaction=>new Promise((resolve,reject)=>{transaction.oncomplete=()=>resolve();transaction.onabort=()=>reject(transaction.error||new Error('IndexedDB transaction aborted'));transaction.onerror=()=>reject(transaction.error||new Error('IndexedDB transaction failed'));});
-const enqueue=task=>{const run=writeQueue.then(task,task);writeQueue=run.catch(()=>{});return run;};
+const enqueue=(task,{restoreToken=null}={})=>{if(restoreToken)return withDurableWriteLock(task,restoreToken);const locked=()=>withDurableWriteLock(task);const run=writeQueue.then(locked,locked);writeQueue=run.catch(()=>{});return run;};
 const assertStore=name=>{if(!STORE_LIST.includes(name))throw new Error(`V10 store không hợp lệ: ${name}`);return name;};
 
 function createIndexes(name,store){
@@ -32,8 +35,9 @@ function createIndexes(name,store){
 
 export function openV10Database(){
   if(databasePromise)return databasePromise;
-  if(indexedDbUnavailable())return Promise.resolve(null);
+  if(indexedDbUnavailable())return Promise.reject(durableStorageUnavailable(V10_DB_NAME));
   databasePromise=new Promise((resolve,reject)=>{
+    let blocked=false;
     const request=indexedDB.open(V10_DB_NAME,V10_DB_VERSION);
     request.onupgradeneeded=()=>{
       const database=request.result;
@@ -43,9 +47,9 @@ export function openV10Database(){
         createIndexes(name,store);
       }
     };
-    request.onsuccess=()=>{const database=request.result;database.onversionchange=()=>{database.close();databasePromise=null;};resolve(database);};
-    request.onerror=()=>{databasePromise=null;reject(request.error||new Error('Không thể mở Vocab Master v10 database.'));};
-    request.onblocked=()=>{databasePromise=null;reject(new Error('V10 database đang bị tab khác khóa.'));};
+    request.onsuccess=()=>{const database=request.result;if(blocked){database.close();return;}database.onversionchange=()=>{database.close();databasePromise=null;};resolve(database);};
+    request.onerror=()=>{const error=normalizeDatabaseOpenError(request.error,{database:V10_DB_NAME,supportedVersion:V10_DB_VERSION});databasePromise=null;reject(error);};
+    request.onblocked=()=>{blocked=true;databasePromise=null;reject(databaseBlocked(V10_DB_NAME));};
   });
   return databasePromise;
 }
@@ -82,9 +86,9 @@ export async function listV10Records(storeName,{index=null,query=null,sortBy='up
 
 export async function getV10Record(storeName,key){return withStore(assertStore(storeName),'readonly',async(store,map)=>map?clone(map.get(key)):requestResult(store.get(key)));}
 
-export async function putV10Record(storeName,value,reason='v10-record-saved'){
+export async function putV10Record(storeName,value,reason='v10-record-saved',{restoreToken=null}={}){
   const name=assertStore(storeName);const row={...clone(value),updatedAt:Number(value?.updatedAt||Date.now())};const key=name===V10_STORES.meta?row.key:row.id;if(!key)throw new Error(`${name} thiếu khóa.`);
-  return enqueue(async()=>{await withStore(name,'readwrite',async(store,map)=>{if(map)map.set(key,clone(row));else store.put(clone(row));});broadcast(reason,[name]);return clone(row);});
+  return enqueue(async()=>{await withStore(name,'readwrite',async(store,map)=>{if(map)map.set(key,clone(row));else store.put(clone(row));});broadcast(reason,[name]);return clone(row);},{restoreToken});
 }
 
 export async function putV10Records(storeName,values,reason='v10-records-saved'){
@@ -112,4 +116,52 @@ export async function estimateV10Storage(){
 
 export async function requestV10PersistentStorage(){
   if(!globalThis.navigator?.storage?.persist)return{supported:false,persisted:false};const already=await globalThis.navigator.storage.persisted?.().catch(()=>false);const persisted=already||await globalThis.navigator.storage.persist().catch(()=>false);return{supported:true,persisted};
+}
+
+export async function reopenV10Database({restoreToken=null}={}){if(!restoreToken)await writeQueue;else assertActiveRestoreToken(restoreToken);if(databasePromise){const database=await databasePromise.catch(()=>null);database?.close();databasePromise=null;}return openV10Database();}
+
+export async function buildV10BackupStores({restoreToken=null}={}){
+  if(!restoreToken)await writeQueue;else assertActiveRestoreToken(restoreToken);
+  let stores;
+  const database=await openV10Database();
+  const names=STORE_LIST.filter(name=>name!==V10_STORES.coachingStats);
+  if(!database)stores=Object.fromEntries(names.map(name=>[name,[...memory.get(name).values()].map(clone)]));
+  else{
+    const physicalStores=[...database.objectStoreNames];
+    const unknown=physicalStores.filter(name=>!STORE_LIST.includes(name));
+    const missing=STORE_LIST.filter(name=>!physicalStores.includes(name));
+    if(unknown.length||missing.length)throw Object.assign(new Error(`V10 store registry mismatch (missing: ${missing.join(',')||'none'}; unknown: ${unknown.join(',')||'none'}).`),{code:'BACKUP_STORE_REGISTRY_MISMATCH'});
+    const transaction=database.transaction(names,'readonly');
+    stores=Object.fromEntries(await Promise.all(names.map(async name=>[name,await requestResult(transaction.objectStore(name).getAll())])));
+    await transactionDone(transaction);
+  }
+  stores[V10_STORES.meta]=(stores[V10_STORES.meta]||[]).filter(row=>!['schema','content-catalog'].includes(String(row?.key||'')));
+  stores[V10_STORES.transcriptCache]=(stores[V10_STORES.transcriptCache]||[]).map(backupTranscriptRecord);
+  stores[V10_STORES.contentAssets]=(stores[V10_STORES.contentAssets]||[]).map(backupContentAssetRecord);
+  return stores;
+}
+
+const RECONSTRUCTABLE_TRANSCRIPT_PROVIDERS=new Set(['indexeddb','shared-cache','local-companion','backend-provider','gemini-progressive']);
+function canonicalJson(value,seen=new Set(),depth=0){
+  if(depth>100)throw new Error('V10 backup record vuot gioi han do sau JSON-safe.');
+  if(value===null||typeof value==='string'||typeof value==='boolean')return JSON.stringify(value);
+  if(typeof value==='number'){if(!Number.isFinite(value))throw new Error('V10 backup record chua so khong huu han.');return JSON.stringify(value);}
+  if(typeof value!=='object')throw new Error(`V10 backup record chua kieu khong JSON-safe: ${typeof value}.`);
+  if(seen.has(value))throw new Error('V10 backup record chua tham chieu vong.');seen.add(value);
+  if(Array.isArray(value)){const result=`[${value.map(item=>canonicalJson(item,seen,depth+1)).join(',')}]`;seen.delete(value);return result;}
+  const prototype=Object.getPrototypeOf(value);if(prototype!==Object.prototype&&prototype!==null)throw new Error('V10 backup record chua object khong JSON-safe.');
+  const result=`{${Object.keys(value).sort().map(key=>`${JSON.stringify(key)}:${canonicalJson(value[key],seen,depth+1)}`).join(',')}}`;seen.delete(value);return result;
+}
+function backupTranscriptRecord(row={}){
+  if(row.backupRepresentation==='reconstructable-cache-stub-v1'&&!Object.hasOwn(row,'segments'))return clone(row);
+  if(row.provider==='imported'||!RECONSTRUCTABLE_TRANSCRIPT_PROVIDERS.has(row.provider))return clone(row);
+  const segments=Array.isArray(row.segments)?row.segments:[];
+  const {segments:ignored,...stub}=clone(row);
+  return{...stub,backupRepresentation:'reconstructable-cache-stub-v1',segmentCount:segments.length,segmentsDigest:`sha256:${sha256Hex(canonicalJson(segments))}`};
+}
+function backupContentAssetRecord(row={}){
+  const personal=String(row.license||'').startsWith('private')||row.provenance?.scope==='private'||String(row.id||'').startsWith('personal:')||String(row.lessonId||'').startsWith('personal-');
+  if(personal||!row.url)return clone(row);
+  const {data,...stub}=clone(row);
+  return{...stub,backupRepresentation:'remote-cache-stub-v1',...(data===undefined?{}:{dataDigest:`sha256:${sha256Hex(canonicalJson(data))}`})};
 }
