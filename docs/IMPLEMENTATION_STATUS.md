@@ -1,13 +1,13 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, P0-03 independently accepted
+Last audited: 2026-07-30, P0-04 independently accepted
 
-Audited source commit: 12b1cf8488fcacf4369a91e8b89a52dc93171f1f
+Audited source commit: ffca938b6067e800ae21c5c9231a0b2b811a30de
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
 Active implementation branch: codex/phase-0-release-safety
-Scope of this update: governance/kickoff baseline và P0-00 đến P0-03 đã independently accepted. P0-04 bắt đầu; Phase 0 product gate vẫn đỏ.
+Scope of this update: governance/kickoff baseline và P0-00 đến P0-04 đã independently accepted. P0-05 bắt đầu; Phase 0 product gate vẫn đỏ.
 
 ## 1. Provenance status
 
@@ -113,11 +113,30 @@ Accepted source commit: `12b1cf8488fcacf4369a91e8b89a52dc93171f1f`.
 
 P0-03 is an additive compatibility migration. Existing V10 `completed` progress without a durable learner output normalizes to `unverified`; explicit new `skipped` and `coaching-completed` states remain distinct. Existing attempts are not deleted. IELTS Retell now persists a stable coaching attempt as `pending` before evaluator I/O and updates the same ID to `completed` or `failed`. Rollback may hide the contained UI or stop reading new fields, but must retain learner output, evidence envelopes and evaluation status/error records.
 
+### P0-04 acceptance evidence
+
+Accepted source commit: `ffca938b6067e800ae21c5c9231a0b2b811a30de`.
+
+| Evidence | Actual result |
+|---|---|
+| `npm run test:backup` | PASS 5/5: physical registry coverage, every-durable-store sentinel, canonical determinism, SHA-256 payload/store digests, cache/secret/binary exclusion, corrupt/future schema rejection and legacy dual-read |
+| `npm test` | PASS 147/147; 0 skipped/todo |
+| `npm run test:v10` | PASS 31/31 after the imported-transcript provenance fix |
+| `npm run check` | PASS |
+| `npm run audit:roadmap` | PASS 12/12 |
+| `npm run audit:ielts` | PASS 11/11 |
+| `npm run audit:v10` | PASS 55/55 |
+| `npm run build` | PASS; production bundle built successfully |
+| Durable inventory | PASS: registry matches 8 Core, 12 IELTS and 14 V10 object stores; 32 store policies export durable data and two whole-store caches/capabilities are excluded |
+| Mixed-store policy | PASS: imported transcripts and private content remain complete; provider transcript bodies and remote content bodies become reconstruction stubs with SHA-256; migration ledgers remain while known operational/cache metadata is excluded |
+| Independent review | Initial `ce3244a` review rejected one P1 provenance inversion. Fix `ffca938` preserves `provider: imported` across a local cache read; symmetric imported/provider probe passed and reviewer recorded ACCEPTED with zero remaining P0/P1 |
+
+P0-04 changes only the portable export contract. Full backup schema v2 is canonical and fail-closed; Core v3, IELTS v1 and combined v1 readers remain available. vNext restore is deliberately blocked with `VNEXT_STAGED_RESTORE_REQUIRED` until P0-05 supplies stage/journal/rollback/reopen verification. No database version was raised, no store was deleted and rollback code may ignore a v2 file only by reporting the newer schema explicitly; it must never reinterpret it as an empty legacy backup.
+
 ## 3. Confirmed blockers
 
 | ID | Severity | Blocker | Required owner package |
 |---|---|---|---|
-| B-005 | P0/Critical | Backup omits V10 and some Core durable stores such as drafts/outbox | P0-04 |
 | B-006 | P0/Critical | Cross-DB restore is not crash-atomic; RAM fallback can look successful | P0-05 |
 | B-007 | P0/High | Legacy and V10 Capture/Inbox both mount; async Quick Capture is unsafe | P0-06 |
 | B-008 | P0/High | Multiple Today surfaces; exact plan target can be discarded by launcher | P0-07 |
@@ -128,7 +147,7 @@ P0-03 is an additive compatibility migration. Existing V10 `completed` progress 
 | B-014 | P5/Critical | Cloud fallback consent/shared-cache policy and local process safety are not production-ready | P5-00–P5-05 |
 | B-015 | P7/High | Metrics/calibration are too weak for safe personalization or FSRS tuning | P7-00–P7-05 |
 
-Resolved at the current audited commit: B-001, B-002, B-003, B-004 and B-009. Core schedule writes are policy-gated and receipt-bound; skill unlock is based on successful qualified evidence; IELTS/V10 exposed, unverified and Retell coaching paths cannot schedule; Retell learner output is durable across evaluator failure; and the browser harness remains independently accepted.
+Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005 and B-009. Core schedule writes are policy-gated and receipt-bound; skill unlock is based on successful qualified evidence; IELTS/V10 exposed, unverified and Retell coaching paths cannot schedule; Retell learner output is durable across evaluator failure; the browser harness remains independently accepted; and portable export now covers every durable Core/IELTS/V10 store policy including drafts and outbox.
 
 ## 4. Phase status
 
@@ -165,8 +184,8 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 | P0-01 Evidence contract | P0-01 | P0-00 | ACCEPTED @ `0ec315f` |
 | P0-02 Core evidence gateway | P0-02 | P0-01 | ACCEPTED @ `2025b63` |
 | P0-03 IELTS/V10 containment | P0-03 | P0-01 | ACCEPTED @ `12b1cf8` |
-| P0-04 Backup envelope | P0-04 | P0-00 | IN_PROGRESS |
-| P0-05 Restore safety | P0-05 | P0-04 | PLANNED |
+| P0-04 Backup envelope | P0-04 | P0-00 | ACCEPTED @ `ffca938` |
+| P0-05 Restore safety | P0-05 | P0-04 | IN_PROGRESS |
 | P0-06 Capture containment | P0-06 | P0-00, P0-05 | PLANNED |
 | P0-07 Today containment | P0-07 | P0-00, P0-01 | PLANNED |
 | P0-08 Phase 0 exit gate | P0-08 | P0-02, P0-03, P0-05, P0-06, P0-07 | PLANNED |
@@ -263,7 +282,7 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [x] One central default-deny EvidencePolicy guards every schedule write.
 - [x] Again/failure and assisted/unverified attempts cannot unlock or create positive review evidence.
 - [x] Retell is real and persisted, or clearly coaching-only/disabled.
-- [ ] Backup registry classifies every Core/IELTS/V10 store.
+- [x] Backup registry classifies every Core/IELTS/V10 store.
 - [ ] Export→reset→restore→restart sentinel count/digest matches every durable store.
 - [ ] Failure injection cannot leave mixed restore state presented as success.
 - [ ] Durable write failure never silently falls back to RAM success.
@@ -279,8 +298,8 @@ P1-00 remains PHASE_BLOCKED until every checkbox above is checked and P0-08 is i
 
 ## 7. Next package
 
-Current package: P0-04 durable store registry and backup envelope vNext.
+Current package: P0-05 restore journal, rollback and degraded-storage safety.
 
 Phase branch: `codex/phase-0-release-safety`.
 
-P0-00 through P0-03 are independently accepted at their exact source commits. P0-04 is active. No Phase 1 work is authorized.
+P0-00 through P0-04 are independently accepted at their exact source commits. P0-05 is active. No Phase 1 work is authorized.

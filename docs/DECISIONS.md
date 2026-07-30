@@ -391,3 +391,17 @@ Consequences: Phase 0 intentionally records fewer reviews, but removes false ind
 Evidence: P0-03 independently accepted source commit `12b1cf8488fcacf4369a91e8b89a52dc93171f1f`; full suite 142/142, focused containment 34/34, IELTS audit 11/11, V10 audit 55/55, build and both browser suites pass. Browser evidence includes evaluator failure with durable learner output, reload, empty/Skip, cross-run save race and same-run double-click transition.
 
 Revisit when: P3-03/P3-04 provides a genuinely independent Dictation/Retell surface and canonical event repositories; retain all coaching records and legacy-unverified markers during migration/rollback.
+
+## ADR-031 — Portable backup uses a complete registry with record-level mixed-store rules
+
+Status: CONFIRMED
+
+Decision: full backup schema v2 is one canonical envelope over Core, IELTS and V10. The registry names every physical object store and external persistence surface, its owner, primary key, classification, export rule and later restore rule. Included rows are code-unit sorted and recursively canonicalized; every included store and the complete payload carry SHA-256 digests. Missing/unknown stores, newer schema/registry/database versions, duplicate keys, oversized or non-JSON data, manifest mismatch and credential-shaped fields fail the whole export or validation.
+
+Whole-store classification is not allowed to erase mixed durable data. Imported/user transcripts remain complete even after an IndexedDB cache hit, while known provider transcript bodies export as reconstruction stubs/digests. Personal content assets remain complete, remote content bodies remain CacheStorage-only, coaching statistics are reconstructed from IELTS attempts/errors, and unknown metadata defaults durable while only named schema/catalog/operational keys are filtered. Core snapshots, drafts, outbox and migration ledgers are portable; device-bound file handles, PWA caches, session credentials and RAM fallback maps are not.
+
+Consequences: manual and automatic “full backup” now use the same v2 envelope and no longer omit V10, drafts or outbox. Legacy Core v3, IELTS v1 and combined v1 remain readable. P0-04 does not activate sequential v2 restore: validation returns an explicit staged-restore requirement until P0-05 implements journal, failure recovery and reopened canonical verification.
+
+Evidence: P0-04 independently accepted exact source commit `ffca938b6067e800ae21c5c9231a0b2b811a30de`; focused backup gate 5/5, full suite 147/147, V10 focused suite 31/31, static/audits/build pass. The first review found and the final commit closed a P1 case where a local cache read inverted imported-transcript provenance and would have removed learner segments.
+
+Revisit when: a store gains a new mixed record class, credential field or binary representation; update the registry, migration adapters and every-store sentinel together before release.
