@@ -28,6 +28,7 @@
     "test:restore": "node --test tests/restore-safety.test.mjs tests/degraded-backup.test.mjs",
     "test:capture": "node --test tests/capture-containment.test.mjs tests/capture-degraded.test.mjs",
     "test:today": "node --test tests/today-containment.test.mjs",
+    "test:phase0-release": "node --test tests/phase0-release-gate.test.mjs",
     "phase0:harness": "node scripts/phase0-gate.mjs --harness",
     "phase0:gate": "node scripts/phase0-gate.mjs"
   },
