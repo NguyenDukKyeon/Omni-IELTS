@@ -80,6 +80,7 @@ export function createTranscriptAggregate({source={},segments=[],parentRevisionI
     title:clean(source.title,500)||null,
     url:clean(source.url,1200)||null,
     language:clean(source.language,40)||segmentRows[0].language,
+    status:['unverified','verified','edited'].includes(source.status)?source.status:'unverified',
     latestRevisionId:revisionId,
     activeRevisionId:revisionId,
     createdAt:Number(source.createdAt||createdAt),
