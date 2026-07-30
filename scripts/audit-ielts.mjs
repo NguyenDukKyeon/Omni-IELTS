@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [domain,evidencePolicy,persistence,ui,runtimeGuard,content,player,api,server,main,sw,css,packageJson]=await Promise.all([
+const [domain,evidencePolicy,persistence,ui,todayPlanner,ieltsHub,runtimeGuard,content,player,api,server,main,sw,css,packageJson]=await Promise.all([
   readFile(new URL('../src/ielts-domain.js',import.meta.url),'utf8'),
   readFile(new URL('../src/evidence-policy.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-persistence.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-lab.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/today-planner-v2.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/ielts-hub-v2.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-runtime-guard.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-content.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-media-player.js',import.meta.url),'utf8'),
@@ -40,11 +42,14 @@ check('Phase 0: one evidence gateway guards FSRS',()=>{
   assert.ok(main.includes('mountIeltsRuntimeGuard'),'FSRS runtime guard is not mounted');
 });
 
-check('Phase 1: Error Notebook stores full evidence and deduplicates',()=>{
+check('Error Notebook stores full evidence and has one exact Today adapter',()=>{
   for(const field of ['learnerResponse','expectedResponse','correction','sourceRef','linkedCardIds','occurrenceCount','status'])assert.ok(domain.includes(field),`ErrorRecord missing ${field}`);
   assert.ok(persistence.includes("index('normalizedKey').get")&&persistence.includes('mergeErrorRecords'),'Persistent exact dedupe missing');
   assert.ok(ui.includes('installCoreErrorCapture'),'Existing core exercise bridge missing');
-  assert.ok(ui.includes('renderTodayErrors'),'Today integration missing');
+  assert.ok(ui.includes('openErrorTarget')&&ui.includes('state.selectedErrorId=id'),'Exact error target adapter missing');
+  assert.ok(todayPlanner.includes("execution.kind==='ielts-error'")&&todayPlanner.includes('openErrorTarget'),'Canonical Today does not use the exact error adapter');
+  assert.doesNotMatch(ui,/renderTodayErrors|ieltsTodayErrors|data-today-error/,'IELTS Lab still mounts a second Today widget');
+  assert.doesNotMatch(ieltsHub,/buildTodayActivityPlan|data-v10-hub-activity|data-v10-ielts-tab="today"/,'IELTS Hub still mounts a second Today planner');
 });
 
 check('Phase 2: Lexical Sets contain IELTS usage metadata and production',()=>{
