@@ -24,6 +24,7 @@
     "audit:v10": "node scripts/audit-v10.mjs",
     "test:v10-browser": "node scripts/v10-browser-smoke.mjs",
     "test:browser-harness": "node --test tests/browser-harness.test.mjs",
+    "test:backup": "node --test tests/backup-registry.test.mjs",
     "phase0:harness": "node scripts/phase0-gate.mjs --harness",
     "phase0:gate": "node scripts/phase0-gate.mjs"
   },

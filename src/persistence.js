@@ -684,15 +684,49 @@ export async function exportBackupPackage(){
   return buildBackupDocument({...state,reviewEvents,meta:Object.fromEntries(metaRows.map(row=>[row.key,row.value??row]))});
 }
 
+export async function buildCoreBackupStores(){
+  if(indexedDbUnavailable()){
+    const state=readFallbackState();
+    return{
+      [STORE_NAMES.cards]:clone(state.cards),
+      [STORE_NAMES.settings]:[
+        {key:'app',value:clone(state.settings)},
+        {key:'fsrs',value:clone(state.fsrsConfig)},
+        {key:'metrics',value:clone(state.metrics)}
+      ],
+      [STORE_NAMES.reviewEvents]:clone(readFallbackReviewEvents()),
+      [STORE_NAMES.snapshots]:[],
+      [STORE_NAMES.meta]:[],
+      [STORE_NAMES.outbox]:[],
+      [STORE_NAMES.captureDrafts]:clone(await listCaptureDrafts())
+    };
+  }
+  await writeQueue;
+  const database=await openDatabase();
+  const physicalStores=[...database.objectStoreNames];
+  const expectedStores=Object.values(STORE_NAMES);
+  const unknown=physicalStores.filter(name=>!expectedStores.includes(name));
+  const missing=expectedStores.filter(name=>!physicalStores.includes(name));
+  if(unknown.length||missing.length)throw Object.assign(new Error(`Core store registry mismatch (missing: ${missing.join(',')||'none'}; unknown: ${unknown.join(',')||'none'}).`),{code:'BACKUP_STORE_REGISTRY_MISMATCH'});
+  const names=[STORE_NAMES.cards,STORE_NAMES.settings,STORE_NAMES.reviewEvents,STORE_NAMES.snapshots,STORE_NAMES.meta,STORE_NAMES.outbox,STORE_NAMES.captureDrafts];
+  const transaction=database.transaction(names,'readonly');
+  const entries=await Promise.all(names.map(async name=>[name,clone(await requestResult(transaction.objectStore(name).getAll()))]));
+  await transactionDone(transaction);
+  const stores=Object.fromEntries(entries);
+  const operationalMeta=new Set(['revision','lastSnapshotAt','lastAutomaticFileBackupAt','lastManualBackupAt','lastReviewAt','cardsUpdatedAt']);
+  stores[STORE_NAMES.meta]=stores[STORE_NAMES.meta].filter(row=>!operationalMeta.has(String(row?.key||'')));
+  return stores;
+}
+
 export async function downloadBackupFile(){
-  const backup=await exportBackupPackage();const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});const link=document.createElement('a');
-  link.href=URL.createObjectURL(blob);link.download=`vocab-master-backup-${new Date().toISOString().slice(0,10)}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+  const {buildCombinedBackup}=await import('./ielts-backup.js');const backup=await buildCombinedBackup();const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});const link=document.createElement('a');
+  link.href=URL.createObjectURL(blob);link.download=`vocab-master-full-v${backup.schemaVersion}-${new Date().toISOString().slice(0,10)}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);
   if(!indexedDbUnavailable())await putOne(STORE_NAMES.meta,{key:'lastManualBackupAt',value:Date.now()});return backup;
 }
 
 async function writeBackupToHandle(handle){
   if(!handle)return{written:false,reason:'missing-handle'};const permission=await handle.queryPermission?.({mode:'readwrite'});if(permission!=='granted')return{written:false,reason:'permission-required'};
-  const writable=await handle.createWritable();await writable.write(JSON.stringify(await exportBackupPackage(),null,2));await writable.close();await putOne(STORE_NAMES.meta,{key:'lastAutomaticFileBackupAt',value:Date.now()});return{written:true};
+  const {buildCombinedBackup}=await import('./ielts-backup.js');const writable=await handle.createWritable();await writable.write(JSON.stringify(await buildCombinedBackup(),null,2));await writable.close();await putOne(STORE_NAMES.meta,{key:'lastAutomaticFileBackupAt',value:Date.now()});return{written:true};
 }
 
 export async function chooseAutomaticBackupFile(){
@@ -723,8 +757,10 @@ export async function restoreBackupDocument(input){
 }
 
 export async function restoreBackupFile(file){
-  if(!file||Number(file.size||0)>50*1024*1024)throw new Error('File backup vượt quá giới hạn 50 MB.');
-  const text=await file.text();let parsed;try{parsed=JSON.parse(text);}catch{throw new Error('File backup không phải JSON hợp lệ.');}return restoreBackupDocument(parsed);
+  if(!file||Number(file.size||0)>100*1024*1024)throw new Error('File backup vượt quá giới hạn 100 MB.');
+  const text=await file.text();let parsed;try{parsed=JSON.parse(text);}catch{throw new Error('File backup không phải JSON hợp lệ.');}
+  if(['vocab-master-full','combined-core-ielts'].includes(parsed?.kind)){const {restoreCombinedBackup}=await import('./ielts-backup.js');return restoreCombinedBackup(parsed);}
+  return restoreBackupDocument(parsed);
 }
 
 export async function resetLearningProgressNow(){

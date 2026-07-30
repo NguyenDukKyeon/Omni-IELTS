@@ -1,4 +1,5 @@
 import { V10_DB_NAME,V10_DB_VERSION,V10_STORES } from './v10-contracts.js';
+import { sha256Hex } from './backup-registry.js';
 
 const STORE_LIST=Object.freeze(Object.values(V10_STORES));
 let databasePromise=null;
@@ -112,4 +113,49 @@ export async function estimateV10Storage(){
 
 export async function requestV10PersistentStorage(){
   if(!globalThis.navigator?.storage?.persist)return{supported:false,persisted:false};const already=await globalThis.navigator.storage.persisted?.().catch(()=>false);const persisted=already||await globalThis.navigator.storage.persist().catch(()=>false);return{supported:true,persisted};
+}
+
+export async function buildV10BackupStores(){
+  await writeQueue;
+  let stores;
+  const database=await openV10Database();
+  const names=STORE_LIST.filter(name=>name!==V10_STORES.coachingStats);
+  if(!database)stores=Object.fromEntries(names.map(name=>[name,[...memory.get(name).values()].map(clone)]));
+  else{
+    const physicalStores=[...database.objectStoreNames];
+    const unknown=physicalStores.filter(name=>!STORE_LIST.includes(name));
+    const missing=STORE_LIST.filter(name=>!physicalStores.includes(name));
+    if(unknown.length||missing.length)throw Object.assign(new Error(`V10 store registry mismatch (missing: ${missing.join(',')||'none'}; unknown: ${unknown.join(',')||'none'}).`),{code:'BACKUP_STORE_REGISTRY_MISMATCH'});
+    const transaction=database.transaction(names,'readonly');
+    stores=Object.fromEntries(await Promise.all(names.map(async name=>[name,await requestResult(transaction.objectStore(name).getAll())])));
+    await transactionDone(transaction);
+  }
+  stores[V10_STORES.meta]=(stores[V10_STORES.meta]||[]).filter(row=>!['schema','content-catalog'].includes(String(row?.key||'')));
+  stores[V10_STORES.transcriptCache]=(stores[V10_STORES.transcriptCache]||[]).map(backupTranscriptRecord);
+  stores[V10_STORES.contentAssets]=(stores[V10_STORES.contentAssets]||[]).map(backupContentAssetRecord);
+  return stores;
+}
+
+const RECONSTRUCTABLE_TRANSCRIPT_PROVIDERS=new Set(['indexeddb','shared-cache','local-companion','backend-provider','gemini-progressive']);
+function canonicalJson(value,seen=new Set(),depth=0){
+  if(depth>100)throw new Error('V10 backup record vuot gioi han do sau JSON-safe.');
+  if(value===null||typeof value==='string'||typeof value==='boolean')return JSON.stringify(value);
+  if(typeof value==='number'){if(!Number.isFinite(value))throw new Error('V10 backup record chua so khong huu han.');return JSON.stringify(value);}
+  if(typeof value!=='object')throw new Error(`V10 backup record chua kieu khong JSON-safe: ${typeof value}.`);
+  if(seen.has(value))throw new Error('V10 backup record chua tham chieu vong.');seen.add(value);
+  if(Array.isArray(value)){const result=`[${value.map(item=>canonicalJson(item,seen,depth+1)).join(',')}]`;seen.delete(value);return result;}
+  const prototype=Object.getPrototypeOf(value);if(prototype!==Object.prototype&&prototype!==null)throw new Error('V10 backup record chua object khong JSON-safe.');
+  const result=`{${Object.keys(value).sort().map(key=>`${JSON.stringify(key)}:${canonicalJson(value[key],seen,depth+1)}`).join(',')}}`;seen.delete(value);return result;
+}
+function backupTranscriptRecord(row={}){
+  if(row.provider==='imported'||!RECONSTRUCTABLE_TRANSCRIPT_PROVIDERS.has(row.provider))return clone(row);
+  const segments=Array.isArray(row.segments)?row.segments:[];
+  const {segments:ignored,...stub}=clone(row);
+  return{...stub,backupRepresentation:'reconstructable-cache-stub-v1',segmentCount:segments.length,segmentsDigest:`sha256:${sha256Hex(canonicalJson(segments))}`};
+}
+function backupContentAssetRecord(row={}){
+  const personal=String(row.license||'').startsWith('private')||row.provenance?.scope==='private'||String(row.id||'').startsWith('personal:')||String(row.lessonId||'').startsWith('personal-');
+  if(personal||!row.url)return clone(row);
+  const {data,...stub}=clone(row);
+  return{...stub,backupRepresentation:'remote-cache-stub-v1',...(data===undefined?{}:{dataDigest:`sha256:${sha256Hex(canonicalJson(data))}`})};
 }

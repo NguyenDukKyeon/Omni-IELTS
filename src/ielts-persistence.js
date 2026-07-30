@@ -203,15 +203,24 @@ export async function saveMediaProgress(input){
 export async function getMediaProgress(mediaSourceId){const rows=await getAll(IELTS_STORE_NAMES.mediaProgress);return rows.find(row=>row.mediaSourceId===mediaSourceId)||null;}
 
 export async function buildIeltsBackup(){
-  const stores={};for(const store of STORE_LIST)stores[store]=await getAll(store);
+  await writeQueue;
+  let stores={};const database=await openIeltsDatabase();
+  if(!database)for(const store of STORE_LIST)stores[store]=[...memory.get(store).values()].map(clone);
+  else{
+    const physicalStores=[...database.objectStoreNames];const unknown=physicalStores.filter(name=>!STORE_LIST.includes(name));const missing=STORE_LIST.filter(name=>!physicalStores.includes(name));
+    if(unknown.length||missing.length)throw Object.assign(new Error(`IELTS store registry mismatch (missing: ${missing.join(',')||'none'}; unknown: ${unknown.join(',')||'none'}).`),{code:'BACKUP_STORE_REGISTRY_MISMATCH'});
+    const transaction=database.transaction(STORE_LIST,'readonly');stores=Object.fromEntries(await Promise.all(STORE_LIST.map(async store=>[store,await requestResult(transaction.objectStore(store).getAll())])));await transactionDone(transaction);
+  }
   return{app:'Vocab Master IELTS Labs',schemaVersion:IELTS_BACKUP_VERSION,domainSchemaVersion:IELTS_SCHEMA_VERSION,exportedAt:new Date().toISOString(),stores};
 }
 
 export function validateIeltsBackup(input){
   const errors=[];const warnings=[];if(!input||typeof input!=='object'||Array.isArray(input))return{valid:false,errors:['Backup IELTS phải là object.'],warnings,value:null};
-  if(Number(input.schemaVersion||0)>IELTS_BACKUP_VERSION)errors.push('Backup IELTS dùng schema mới hơn ứng dụng.');
+  if(Number(input.schemaVersion||0)!==IELTS_BACKUP_VERSION)errors.push(Number(input.schemaVersion||0)>IELTS_BACKUP_VERSION?'Backup IELTS dùng schema mới hơn ứng dụng.':'Backup IELTS thiếu hoặc sai schema version.');
+  if(Number(input.domainSchemaVersion||0)!==IELTS_SCHEMA_VERSION)errors.push(Number(input.domainSchemaVersion||0)>IELTS_SCHEMA_VERSION?'Backup IELTS dùng domain schema mới hơn ứng dụng.':'Backup IELTS thiếu hoặc sai domain schema version.');
   const stores=input.stores&&typeof input.stores==='object'?input.stores:{};const value={app:'Vocab Master IELTS Labs',schemaVersion:IELTS_BACKUP_VERSION,domainSchemaVersion:IELTS_SCHEMA_VERSION,exportedAt:String(input.exportedAt||new Date().toISOString()),stores:{}};
-  for(const store of STORE_LIST){const rows=Array.isArray(stores[store])?stores[store]:[];if(rows.length>MAX_RECORDS_PER_STORE)errors.push(`${store} vượt giới hạn ${MAX_RECORDS_PER_STORE}.`);value.stores[store]=clone(rows);}
+  for(const store of STORE_LIST){if(!Object.hasOwn(stores,store))errors.push(`Backup IELTS thiếu store ${store}.`);const rows=Array.isArray(stores[store])?stores[store]:[];if(!Array.isArray(stores[store])&&Object.hasOwn(stores,store))errors.push(`${store} phải là array.`);if(rows.length>MAX_RECORDS_PER_STORE)errors.push(`${store} vượt giới hạn ${MAX_RECORDS_PER_STORE}.`);value.stores[store]=clone(rows);}
+  for(const store of Object.keys(stores))if(!STORE_LIST.includes(store))errors.push(`Backup IELTS có store không được hỗ trợ: ${store}.`);
   const ids=new Set();for(const store of STORE_LIST){for(const row of value.stores[store]){const id=String(row?.key??row?.id??'');if(!id){errors.push(`${store} có record thiếu id/key.`);continue;}const composite=`${store}:${id}`;if(ids.has(composite))errors.push(`${store} trùng id ${id}.`);ids.add(composite);}}
   for(const row of value.stores[IELTS_STORE_NAMES.lexicalSets]){const result=validateLexicalSet(row);if(row.status==='active'&&!result.valid)errors.push(...result.errors.map(error=>`lexicalSets/${row.id}: ${error}`));}
   for(const row of value.stores[IELTS_STORE_NAMES.labItems]){const result=validateLabItem(row);if(row.status==='verified'&&!result.valid)errors.push(...result.errors.map(error=>`labItems/${row.id}: ${error}`));}
