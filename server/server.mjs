@@ -6,6 +6,9 @@ import { fileURLToPath } from 'node:url';
 import webpush from 'web-push';
 import { createIeltsApiHandler } from './ielts-api.mjs';
 import { createCaptionResolverV2 } from './caption-resolver-v2.mjs';
+import { createAsrFallbackResolver } from './asr-fallback-resolver.mjs';
+import { createLocalCompanionClient } from './local-asr-provider.mjs';
+import { ResolverJobRepository } from './resolver-job-repository.mjs';
 
 const port=Number(process.env.PORT||3000);
 const root=resolve(fileURLToPath(new URL('../dist/',import.meta.url)));
@@ -60,8 +63,14 @@ const configuredAiModels=String(process.env.GEMINI_MODELS||'').split(',').map(va
 const AI_MODELS=new Set(configuredAiModels.length?configuredAiModels:['gemini-3.6-flash','gemini-3.5-flash','gemini-3.5-flash-lite']);
 const DEFAULT_AI_MODEL=AI_MODELS.has(process.env.GEMINI_MODEL)?process.env.GEMINI_MODEL:[...AI_MODELS][0];
 const handleIeltsApi=createIeltsApiHandler({securityHeaders,aiModels:AI_MODELS,defaultAiModel:DEFAULT_AI_MODEL});
-const transcriptResolver=createCaptionResolverV2({securityHeaders});
-const handleTranscriptResolver=(req,res,path,url)=>transcriptResolver.handle(req,res,path,url);
+const resolverRepository=new ResolverJobRepository();
+const transcriptResolver=createCaptionResolverV2({securityHeaders,repository:resolverRepository});
+const asrFallbackResolver=createAsrFallbackResolver({securityHeaders,repository:resolverRepository,localClient:createLocalCompanionClient()});
+const handleTranscriptResolver=async(req,res,path,url)=>{
+  if(await asrFallbackResolver.handle(req,res,path))return;
+  if(path.endsWith('/cancel')){const jobId=decodeURIComponent(path.split('/').at(-2)||'');if(asrFallbackResolver.isActive(jobId))return json(res,200,{job:await asrFallbackResolver.cancel(jobId)});}
+  return transcriptResolver.handle(req,res,path,url);
+};
 const aiCache=new Map();
 const aiTelemetry={requests:0,cacheHits:0,errors:0,totalLatencyMs:0,byRoute:{}};
 const AI_SCHEMAS={

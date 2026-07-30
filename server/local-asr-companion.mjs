@@ -68,7 +68,7 @@ export class LocalCompanionRuntime{
   async readJournal(taskId){const task=this.tasks.get(taskId);return task?JSON.parse(await readFile(join(task.directory,'journal.json'),'utf8')):null;}
 }
 
-export function createCompanionHttpHandler({runtime=new LocalCompanionRuntime(),token,allowedOrigins=[]}={}){
+export function createCompanionHttpHandler({runtime=new LocalCompanionRuntime(),asrProvider=null,token,allowedOrigins=[]}={}){
   if(!token)throw processError('CONSENT_REQUIRED','Local companion pairing token is required.');
   const origins=new Set(allowedOrigins.map(value=>String(value).trim()).filter(Boolean));if(origins.has('*'))throw processError('INVALID_SOURCE','Wildcard companion origin is not allowed.');
   const headers=origin=>({'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','access-control-allow-origin':origins.has(origin)?origin:'null','access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'authorization,content-type','vary':'Origin'});
@@ -80,6 +80,7 @@ export function createCompanionHttpHandler({runtime=new LocalCompanionRuntime(),
     const url=new URL(req.url||'/','http://127.0.0.1');try{
       if(url.pathname==='/health'&&req.method==='GET')return send(req,res,200,await runtime.health());
       if(url.pathname==='/extract'&&req.method==='POST'){let size=0;const chunks=[];for await(const chunk of req){size+=chunk.length;if(size>20_000)throw processError('MEDIA_LIMIT','Companion request is too large.');chunks.push(chunk);}return send(req,res,200,await runtime.extract(JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}')));}
+      if(url.pathname==='/asr'&&req.method==='POST'){if(!asrProvider)throw processError('MODEL_UNAVAILABLE','Local ASR provider is disabled.');let size=0;const chunks=[];for await(const chunk of req){size+=chunk.length;if(size>30_000)throw processError('MEDIA_LIMIT','Companion request is too large.');chunks.push(chunk);}const body=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');res.writeHead(200,{...headers(origin),'content-type':'application/x-ndjson; charset=utf-8'});const result=await asrProvider.transcribe({...body,onBatch:batch=>res.write(`${JSON.stringify({type:'partial',...batch})}\n`)});res.write(`${JSON.stringify({type:'complete',result})}\n`);return res.end();}
       const match=url.pathname.match(/^\/tasks\/([^/]+)\/cleanup$/);if(match&&req.method==='POST')return send(req,res,200,{cleaned:await runtime.cleanup(decodeURIComponent(match[1]))});
       return send(req,res,404,{error:{code:'NOT_FOUND'}});
     }catch(error){return send(req,res,['INVALID_SOURCE','MEDIA_LIMIT'].includes(error.code)?400:503,{error:{code:error.code||'PROCESS_FAILED',message:redact(error.message)}});}
