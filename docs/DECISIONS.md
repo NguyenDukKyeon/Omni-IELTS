@@ -405,3 +405,19 @@ Consequences: manual and automatic “full backup” now use the same v2 envelop
 Evidence: P0-04 independently accepted exact source commit `ffca938b6067e800ae21c5c9231a0b2b811a30de`; focused backup gate 5/5, full suite 147/147, V10 focused suite 31/31, static/audits/build pass. The first review found and the final commit closed a P1 case where a local cache read inverted imported-transcript provenance and would have removed learner segments.
 
 Revisit when: a store gains a new mixed record class, credential field or binary representation; update the registry, migration adapters and every-store sentinel together before release.
+
+## ADR-032 — Restore is a journaled cross-database operation with explicit degraded scope
+
+Status: CONFIRMED
+
+Decision: canonical v2 restore is available only through one coordinator holding the exclusive durable-storage lock used by Core, IELTS and V10 writers. The coordinator validates the complete payload, exact registry `keyPath` and every known unique index; preflights journal size/quota; records canonical before/target envelopes and owner checkpoints in Core metadata; commits each database in one transaction; reopens all databases; and compares the canonical logical digest before writing a completed receipt and removing the active journal. Startup recovery runs before any migration, outbox replay, snapshot or product mount. Forward recovery that cannot complete durably switches to a repeatable rollback of the last-known-good envelope.
+
+The active journal is operational and cannot be exported or restored. The completed receipt is durable portable metadata. Excluded stores (`fileHandles`, derived coaching cache and CacheStorage) are never cleared. Legacy Core v3, IELTS v1 and combined v1 adapters preserve every current domain their format does not contain. No IndexedDB version is downgraded or raised for this protocol; journal, receipt and legacy card-shape reconciliation are additive at Core database version 4.
+
+When IndexedDB is absent, there cannot be an IndexedDB restore journal. Startup may therefore enter a visibly labeled Core-only degraded mode only after localStorage writes are verified by read-back. IELTS and V10 are not imported or mounted in that mode. A degraded backup is explicitly `core-only`, passes through the same production file routers and coordinator, and preserves current IELTS/V10 when restored on a durable installation. Any unavailable, blocked, quota, version or unverifiable fallback condition remains a typed durable failure and never becomes RAM success.
+
+Consequences: restore success means durable commit plus reopened canonical verification, not merely copied data. Cross-database export cannot race normal writes. Interrupted work either resumes or rolls back from a durable journal, while old readers remain compatible with database version 4 and may ignore additive metadata after recovery. The journal has a bounded size/headroom requirement; an oversized restore fails before mutation.
+
+Evidence: P0-05 independently accepted exact source commit `426feb2c20f36d2eed9a66eca1b1c9fe9e9c4bbf`; restore suite 27/27, full suite 174/174, static checks, IELTS/V10 audits, production build and Core/IELTS/V10/Hardening browser suites pass. Browser evidence includes actual crash-journal reload recovery before mount and Core-only degraded startup/reload with a durable Quick Capture draft. Final reviewer patch ID: `f96a70fd92c0e210ef3526e0bfdc1299a1ea11c9`; no P0/P1 remained.
+
+Revisit when: a fourth database/store owner joins the restore unit, payload size requires chunked staging, or cross-origin/multi-process writers replace the current Web Locks boundary. Preserve full validation before mutation and durable reopened verification.
