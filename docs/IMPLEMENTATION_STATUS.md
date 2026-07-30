@@ -1,17 +1,17 @@
 # VocabMaster — Implementation Status
 
-Last updated: 2026-07-30, Phase 1 delivery handoff opened; CI and independent acceptance pending
+Last updated: 2026-07-30, Phase 1 independently accepted; Phase 2 P2-00 opened
 
 Phase 0 accepted source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
-Phase 1 delivery binding: draft PR #9 from `codex/phase-1-core-unification` into `main`; the final exact SHA is the pushed PR head reported in the PR verification record.
+Phase 1 acceptance binding: merged PR #9 at `main` commit `9da21e1c3cb34b7372f1b33c541d7442dd0390c9`; source head was `ffe5acc812b6ae50d48833506abe15b3048c0b4b`.
 
-Active implementation branch: codex/phase-1-core-unification
-Delivery status: `PUSHED / PR_OPEN / CI_PENDING / INDEPENDENT_REVIEW_REQUIRED`
+Active implementation branch: codex/phase-2-caption-first-resolver
+Delivery status: `PHASE_1_ACCEPTED / PHASE_2_IN_PROGRESS`
 
-Scope of this update: Phase 0 remains accepted at exact source commit `d869eb4` with PR #8 Ubuntu CI run 250 green. P1-00…P1-08 are implemented cumulatively on the user-authorized Phase 1 branch, committed without rewriting `13e32f1` or `6390489`, pushed and opened as draft PR #9. This is implementer evidence only: no P1 package or Phase 1 exit is marked `ACCEPTED` until an independent reviewer reproduces the hard gates on the exact pushed SHA and CI is green.
+Scope of this update: Phase 0 remains accepted at exact source commit `d869eb4` with PR #8 Ubuntu CI run 250 green. PR #9 was merged into `main` at `9da21e1`. GitHub Actions CI run 255 (`30533541002`) completed successfully on that exact merge commit. An independent read-only audit reviewed the cumulative 44-file P1 diff, reproduced `npm ci --no-audit --no-fund`, `npm run phase0:gate` (21/21), and `npm run phase1:verify` (22/22, including 233/233 unit/integration and all production browser suites) on clean `main`; no P0/P1 finding remained. P1-00…P1-08 are therefore accepted at `9da21e1` and unlock P2-00.
 
 ## 1. Provenance status
 
@@ -340,8 +340,8 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 | Phase | Status | Entry gate | Exit state |
 |---|---|---|---|
 | Phase 0 — Containment and Release Safety | ACCEPTED / GREEN | Baseline audit complete | P0-08 accepted at `d869eb4`; PR #8 Ubuntu CI run 250 passed |
-| Phase 1 — Core Product Unification | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED | P0-08 ACCEPTED | P1-00…P1-08 delivered in draft PR #9; independent acceptance and CI pending |
-| Phase 2 — Caption-first Resolver | BLOCKED_BY_PHASE_1 | P1-08 ACCEPTED | Not started |
+| Phase 1 — Core Product Unification | ACCEPTED / GREEN | P0-08 ACCEPTED | PR #9 merged at `9da21e1`; CI run 255 and independent reproduction passed |
+| Phase 2 — Caption-first Resolver | IN_PROGRESS | P1-05, P1-08 ACCEPTED | P2-00 opened on `codex/phase-2-caption-first-resolver` |
 | Phase 3 — Full-video Workspace | BLOCKED_BY_PHASE_2 | P2-06 ACCEPTED | Not started |
 | Phase 4 — Remote Content Platform | BLOCKED_BY_PHASE_1 | P1 contracts accepted; production activation also needs platform packages | Not started |
 | Phase 5 — ASR/Cloud Fallback | BLOCKED_BY_PHASE_2 | P2-06 and policy approval | Not started |
@@ -380,27 +380,27 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 | Package | Branch | Dependency | Status |
 |---|---|---|---|
-| P1-00 Migration ledger | codex/phase-1-core-unification | P0-08 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
-| P1-01 Learning contracts | codex/phase-1-core-unification | P1-00 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
-| P1-02 Event repositories | codex/phase-1-core-unification | P1-01 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
-| P1-03 Cross-DB reconciler | codex/phase-1-core-unification | P1-02 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
-| P1-04 Unified Capture | codex/phase-1-core-unification | P1-03 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
-| P1-05 Transcript aggregate | codex/phase-1-core-unification | P1-02 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
-| P1-06 Error Repository | codex/phase-1-core-unification | P1-02, P1-05 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
-| P1-07 Today Composer | codex/phase-1-core-unification | P1-02, P1-04, P1-06 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
-| P1-08 Today Runner/cutover | codex/phase-1-core-unification | P1-07 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
+| P1-00 Migration ledger | `main` | P0-08 | ACCEPTED @ `9da21e1` |
+| P1-01 Learning contracts | `main` | P1-00 | ACCEPTED @ `9da21e1` |
+| P1-02 Event repositories | `main` | P1-01 | ACCEPTED @ `9da21e1` |
+| P1-03 Cross-DB reconciler | `main` | P1-02 | ACCEPTED @ `9da21e1` |
+| P1-04 Unified Capture | `main` | P1-03 | ACCEPTED @ `9da21e1` |
+| P1-05 Transcript aggregate | `main` | P1-02 | ACCEPTED @ `9da21e1` |
+| P1-06 Error Repository | `main` | P1-02, P1-05 | ACCEPTED @ `9da21e1` |
+| P1-07 Today Composer | `main` | P1-02, P1-04, P1-06 | ACCEPTED @ `9da21e1` |
+| P1-08 Today Runner/cutover | `main` | P1-07 | ACCEPTED @ `9da21e1` |
 
 ### Phase 2
 
 | Package | Branch | Dependency | Status |
 |---|---|---|---|
-| P2-00 Resolver contract | codex/p2-00-resolver-contract | P1-05, P1-08 | PHASE_BLOCKED |
-| P2-01 Resolver jobs/SSE | codex/p2-01-resolver-jobs | P2-00 | PHASE_BLOCKED |
-| P2-02 yt-dlp adapter | codex/p2-02-ytdlp-adapter | P2-01 | PHASE_BLOCKED |
-| P2-03 Whole-track cache | codex/p2-03-whole-track-cache | P2-02 | PHASE_BLOCKED |
-| P2-04 Caption normalizer | codex/p2-04-caption-normalizer | P2-03 | PHASE_BLOCKED |
-| P2-05 Progressive client | codex/p2-05-progressive-client | P2-01, P2-04 | PHASE_BLOCKED |
-| P2-06 Resolver exit gate | codex/p2-06-resolver-exit-gate | P2-05 | PHASE_BLOCKED |
+| P2-00 Resolver contract | codex/phase-2-caption-first-resolver | P1-05, P1-08 | IN_PROGRESS |
+| P2-01 Resolver jobs/SSE | codex/phase-2-caption-first-resolver | P2-00 | PLANNED |
+| P2-02 yt-dlp adapter | codex/phase-2-caption-first-resolver | P2-01 | PLANNED |
+| P2-03 Whole-track cache | codex/phase-2-caption-first-resolver | P2-02 | PLANNED |
+| P2-04 Caption normalizer | codex/phase-2-caption-first-resolver | P2-03 | PLANNED |
+| P2-05 Progressive client | codex/phase-2-caption-first-resolver | P2-01, P2-04 | PLANNED |
+| P2-06 Resolver exit gate | codex/phase-2-caption-first-resolver | P2-05 | PLANNED |
 
 ### Phase 3
 
@@ -481,7 +481,7 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [x] Independent reviewer records P0-08 reacceptance at the cumulative remediated exact source commit.
 - [x] PR #8 GitHub Actions passes on the pushed integration head under Ubuntu.
 
-## 7. Phase 1 implementation verification
+## 7. Phase 1 independent acceptance
 
 - [x] Forward-compatible Core/IELTS/V10 openers retain migration ID/digest ledgers and fail closed on future/unknown schema.
 - [x] Core, IELTS and V10 emit the same versioned ActivitySpec, Run, Attempt and Receipt contract.
@@ -494,16 +494,16 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [x] Today execution uses a registry, durable run resume, multi-tab lease and exact canonical receipts for skip/cancel.
 - [x] Focused P1 suites, full unit/integration tests, static checks, build and all production browser suites pass in the implementation workspace.
 - [x] Clean exact-source `npm run phase1:verify` reproduced on the final committed PR head during delivery handoff; exact SHA and results are recorded in PR #9.
-- [ ] Independent package/phase audit and acceptance.
-- [x] Draft PR #9 is open from the pushed Phase 1 branch into `main`; no merge or deploy was performed.
-- [ ] PR #9 CI on the final pushed source.
+- [x] Independent package/phase audit reviewed the cumulative P1 diff and reproduced the clean hard gates at `9da21e1` with no P0/P1 finding.
+- [x] PR #9 merged into `main` at `9da21e1`.
+- [x] GitHub Actions CI run 255 completed successfully on the merge commit.
 
-The Phase 1 implementation report is `docs/phase1/IMPLEMENTATION_REPORT.md`. Phase 2 remains blocked because implementation evidence is not independent acceptance.
+The Phase 1 implementation report is `docs/phase1/IMPLEMENTATION_REPORT.md` and remains the implementer handoff. This section records the separate acceptance evidence that unlocks Phase 2.
 
 ## 8. Next package
 
-Current package: Phase 1 independent audit/acceptance.
+Current package: P2-00 Resolver contract, provider policy and golden corpus.
 
-Integration branch/PR: `codex/phase-1-core-unification`, draft PR #9.
+Integration branch/PR: `codex/phase-2-caption-first-resolver`.
 
-The cumulative P1 implementation is delivered for review but intentionally not labeled `ACCEPTED`. Do not unlock Phase 2 until the final pushed SHA has green CI, independent audit, verified hard gates and merge into `main`.
+Phase 2 is unlocked by P1-05/P1-08 acceptance at `9da21e1`. P2 packages remain sequential and each still requires its own focused and cumulative evidence.

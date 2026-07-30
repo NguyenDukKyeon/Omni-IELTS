@@ -484,7 +484,7 @@ Revisit when: the build artifact format, required browser matrix or release topo
 
 ## ADR-036 — Phase 1 uses one canonical learning spine with additive durable projections
 
-Status: IMPLEMENTED_PENDING_INDEPENDENT_ACCEPTANCE
+Status: CONFIRMED
 
 Decision: ActivitySpec, Run, Attempt, Receipt and EvidenceDecision are the canonical planning/execution/evidence contracts for Core, IELTS and V10. Core database version 5 stores each canonical envelope as four append-only events plus an idempotent projection and poison-event dead letter. One receipt/event identity can cause at most one Core review mutation. Legacy review/progress readers remain projections; a replay can rebuild canonical projections without inventing evidence.
 
@@ -494,7 +494,7 @@ Transcript edits create child revisions and never mutate historical source text 
 
 Consequences: backup/restore registry coverage grows with every new physical store. Rollback builds may ignore additive stores but must not delete them. Targetless, stale, unknown-version, collision and unsupported-executor data fail closed or quarantine. The implementation may reduce runnable content when no exact target/executor exists; it cannot substitute a generic target.
 
-Evidence: implementer-focused P1 suites and the cumulative 233/233 unit/integration suite pass with zero skip/todo; Core, IELTS, V10 and Hardening production browser suites pass on Chrome `150.0.7871.188`. Implementer clean-source reproduction is bound to the final SHA in draft PR #9; independent review and pushed CI remain pending, so this ADR records an implemented decision rather than Phase 1 acceptance.
+Evidence: implementer-focused P1 suites and the cumulative 233/233 unit/integration suite pass with zero skip/todo; Core, IELTS, V10 and Hardening production browser suites pass on Chrome `150.0.7871.188`. The independent read-only review examined the cumulative P1 diff and reproduced `npm ci --no-audit --no-fund`, `npm run phase0:gate` (21/21) and `npm run phase1:verify` (22/22) on clean merge commit `9da21e1c3cb34b7372f1b33c541d7442dd0390c9`; no P0/P1 finding remained. PR #9 merged at that commit and GitHub Actions CI run 255 (`30533541002`) completed successfully. This confirms the decision and accepts P1-00…P1-08.
 
 Revisit when: a fourth persistence owner joins the learning transaction, transcript identity must span cross-source alignment, or a new Today executor needs a target type not representable by the current exact learning target. Preserve append-only evidence, immutable source revision and default-deny schedule semantics.
 
