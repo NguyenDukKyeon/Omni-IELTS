@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { contentAddressFor,normalizeContentAddress } from '../src/content-contracts-v2.js';
+import {
+  contentActivityTargetFor,
+  contentAddressFor,
+  lessonIdentityFor,
+  normalizeContentAddress
+} from '../src/content-contracts-v2.js';
 import { createPackInstaller } from '../src/pack-installer.js';
 
 const clockValue=Date.parse('2026-07-30T12:00:00.000Z');
@@ -43,21 +48,27 @@ async function makeFixture({revision=1,assetText='verified audio bytes',assetMed
     compatibility:{minimumAppVersion:'10.0.0',supportedActivityTypes:['dictation','shadowing']},
     ...publication(`asset-${packId}-${revision}`,assetAddress)
   };
-  const lessonAddress=semanticAddress(revision%2?'b':'d');
   const lesson={
-    id:`lesson:${packId}:listening`,schemaVersion:2,contentRevision:revision,contentAddress:lessonAddress,
+    id:`lesson:${packId}:listening`,schemaVersion:2,contentRevision:revision,
     title:'Installer listening fixture',learningObjective:'Identify an exact scheduling detail.',
     estimatedMinutes:8,difficulty:'B1',skill:'listening',topic:'Scheduling',
     lexicalTargets:[{id:'lex:bring-forward',term:'bring forward'}],
     assetIds:[asset.id],
     activities:[{
       id:`activity:${packId}:dictation`,type:'dictation',prompt:'Write the sentence.',
-      answer:{text:'The appointment was brought forward.'},assetIds:[asset.id]
+      answer:{text:'The appointment was brought forward.'},assetIds:[asset.id],
+      target:await contentActivityTargetFor({
+        packId,packRevision:revision,lessonId:`lesson:${packId}:listening`,
+        lessonRevision:revision,activityId:`activity:${packId}:dictation`,activityType:'dictation'
+      })
     }],
     accessibility:{label:'Installer listening fixture',language:'en',transcriptAssetId:asset.id},
     compatibility:{minimumAppVersion:'10.0.0',supportedActivityTypes:['dictation']},
-    ...publication(`lesson-${packId}-${revision}`,lessonAddress)
+    ...publication(`lesson-${packId}-${revision}`,semanticAddress(revision%2?'b':'d'))
   };
+  const lessonIdentity=await lessonIdentityFor(lesson);
+  Object.assign(lesson,{contentAddress:lessonIdentity.contentAddress,sha256:lessonIdentity.sha256,byteLength:lessonIdentity.byteLength});
+  lesson.humanReview.scopeDigest=lessonIdentity.contentAddress;
   const packAddress=semanticAddress(revision%2?'c':'e');
   const manifest={
     id:packId,schemaVersion:2,contentRevision:revision,contentAddress:packAddress,
@@ -84,19 +95,36 @@ async function makeFixture({revision=1,assetText='verified audio bytes',assetMed
 
 function makeRepository(){
   const journals=new Map(),installed=new Map(),leases=new Map(),receipts=[];
+  const durableRevocations=[];
   let activateFailure=null;
   return{
-    journals,installed,leases,receipts,
+    journals,installed,leases,receipts,durableRevocations,
     getJournal:async id=>clone(journals.get(id)||null),
     saveJournal:async value=>{journals.set(value.id,clone(value));return clone(value);},
     getInstalled:async packId=>clone(installed.get(packId)||null),
     listInstalled:async()=>[...installed.values()].map(clone),
     listJournals:async()=>[...journals.values()].map(clone),
-    acquireLease:async(packId,ownerId)=>{
-      if(leases.has(packId))return false;
-      leases.set(packId,ownerId);return true;
+    listRevocations:async()=>clone(durableRevocations),
+    acquireLease:async(packId,ownerId,{now,expiresAt,nonce})=>{
+      const previous=leases.get(packId);
+      if(previous&&previous.expiresAt>now)return null;
+      const generation=(previous?.generation||0)+1;
+      const lease={packId,ownerId,generation,fencingToken:`${generation}:${nonce}`,expiresAt};
+      leases.set(packId,lease);return clone(lease);
     },
-    releaseLease:async(packId,ownerId)=>{if(leases.get(packId)===ownerId)leases.delete(packId);},
+    renewLease:async(packId,ownerId,token,{now,expiresAt})=>{
+      const current=leases.get(packId);
+      if(!current||current.ownerId!==ownerId||current.fencingToken!==token||current.expiresAt<=now)return null;
+      const next={...current,expiresAt};leases.set(packId,next);return clone(next);
+    },
+    verifyLease:async(packId,ownerId,token,{now})=>{
+      const current=leases.get(packId);
+      return Boolean(current&&current.ownerId===ownerId&&current.fencingToken===token&&current.expiresAt>now);
+    },
+    releaseLease:async(packId,ownerId,token)=>{
+      const current=leases.get(packId);
+      if(current?.ownerId===ownerId&&current?.fencingToken===token)leases.delete(packId);
+    },
     setActivateFailure(error){activateFailure=error;},
     async activate({entry,manifest,journal,verifiedAssets,activatedAt}){
       if(activateFailure){const error=activateFailure;activateFailure=null;throw error;}
@@ -173,9 +201,25 @@ function makeFetch(fixtures,{assetTransform=null,manifestTransform=null,deferAss
   return fetcher;
 }
 
-function installerFor(fixtures,{repository=makeRepository(),assetStore=makeAssetStore(),fetcher=makeFetch(fixtures),hooks={}}={}){
-  const catalogTrust={current:async()=>({payload:fixtures.catalog})};
-  const installer=createPackInstaller({catalogTrust,repository,assetStore,fetcher,clock,ownerId:'test-installer',lockManager:null,hooks});
+function fakeHeartbeatScheduler(){
+  const callbacks=new Set();
+  return{
+    set(callback){callbacks.add(callback);return callback;},
+    clear(callback){callbacks.delete(callback);},
+    async tick(){
+      for(const callback of [...callbacks])callback();
+      await new Promise(resolve=>setTimeout(resolve,0));
+    }
+  };
+}
+
+function installerFor(fixtures,{repository=makeRepository(),assetStore=makeAssetStore(),fetcher=makeFetch(fixtures),hooks={},catalogRecord={payload:fixtures.catalog},ownerId='test-installer',clockFn=clock,heartbeatScheduler=undefined,leaseNonceFactory=undefined}={}){
+  const catalogTrust={current:async()=>clone(catalogRecord)};
+  const installer=createPackInstaller({
+    catalogTrust,repository,assetStore,fetcher,clock:clockFn,ownerId,lockManager:null,hooks,
+    ...(heartbeatScheduler?{heartbeatScheduler}:{}),
+    ...(leaseNonceFactory?{leaseNonceFactory}:{})
+  });
   return{installer,repository,assetStore,fetcher};
 }
 
@@ -324,4 +368,110 @@ test('orphaned staging cleanup marks abandoned journals recoverable',async()=>{
   assert.deepEqual(result.cleaned,[installId]);
   assert.equal(repository.journals.get(installId).stage,'failed');
   assert.equal(assetStore.stages.has(installId),false);
+});
+
+test('expired last-known-good blocks new install and update before any download',async()=>{
+  const fixtures=await makeFixture();
+  const setup=installerFor(fixtures,{catalogRecord:{payload:fixtures.catalog,expired:true,trustState:'expired-last-known-good'}});
+  await assert.rejects(()=>setup.installer.install(fixtures.manifest.id),error=>error.code==='PACK_CATALOG_EXPIRED');
+  assert.deepEqual(setup.fetcher.calls(),{manifest:0,asset:0});
+});
+
+test('durable revocation blocks fresh install and update even when a newer catalog omits it',async()=>{
+  const first=await makeFixture({revision:1});
+  const repository=makeRepository();
+  repository.durableRevocations.push({
+    id:`revocation:${first.manifest.id}:1`,
+    packId:first.manifest.id,
+    packRevision:1,
+    reasonCode:'rights-withdrawn',
+    reason:'Rights withdrawn.',
+    revokedAt:instant
+  });
+  const fresh=installerFor(first,{repository});
+  await assert.rejects(()=>fresh.installer.install(first.manifest.id),error=>error.code==='PACK_REVOKED');
+  assert.deepEqual(fresh.fetcher.calls(),{manifest:0,asset:0});
+
+  repository.durableRevocations.length=0;
+  await installerFor(first,{repository}).installer.install(first.manifest.id);
+  repository.durableRevocations.push({
+    id:`revocation:${first.manifest.id}:1`,
+    packId:first.manifest.id,
+    packRevision:1,
+    reasonCode:'rights-withdrawn',
+    reason:'Rights withdrawn.',
+    revokedAt:instant
+  });
+  const second=await makeFixture({revision:2,assetText:'revision two'});
+  const update=installerFor(second,{repository});
+  await assert.rejects(()=>update.installer.install(second.manifest.id),error=>error.code==='PACK_REVOKED');
+  assert.equal(repository.installed.get(first.manifest.id).activeRevision,1);
+});
+
+test('renewable fallback lease survives beyond the original TTL and excludes a second owner',async()=>{
+  const fixtures=await makeFixture({packId:'pack:renewed-lease'});
+  const repository=makeRepository(),assetStore=makeAssetStore(),scheduler=fakeHeartbeatScheduler();
+  let time=clockValue,releaseAsset,assetStarted;
+  const started=new Promise(resolve=>{assetStarted=resolve;});
+  const gate=new Promise(resolve=>{releaseAsset=resolve;});
+  const slowFetch=makeFetch(fixtures,{deferAsset:async()=>{assetStarted();await gate;}});
+  const first=installerFor(fixtures,{
+    repository,assetStore,fetcher:slowFetch,ownerId:'owner-a',clockFn:()=>time,
+    heartbeatScheduler:scheduler,leaseNonceFactory:()=> 'nonce-a'
+  });
+  const installing=first.installer.install(fixtures.manifest.id);
+  await started;
+  time+=40_000;await scheduler.tick();
+  time+=40_000;await scheduler.tick();
+  const second=installerFor(fixtures,{repository,assetStore,ownerId:'owner-b',clockFn:()=>time,leaseNonceFactory:()=> 'nonce-b'});
+  await assert.rejects(()=>second.installer.install(fixtures.manifest.id),error=>error.code==='PACK_INSTALL_CONCURRENT');
+  releaseAsset();
+  assert.equal((await installing).status,'installed');
+});
+
+test('lease renewal failure stops the stale owner before promotion or activation',async()=>{
+  const fixtures=await makeFixture({packId:'pack:renewal-failure'});
+  const repository=makeRepository(),scheduler=fakeHeartbeatScheduler();
+  const renew=repository.renewLease;
+  let failRenewal=false;
+  repository.renewLease=async(...args)=>failRenewal?null:renew(...args);
+  let releaseAsset,assetStarted,time=clockValue;
+  const started=new Promise(resolve=>{assetStarted=resolve;});
+  const gate=new Promise(resolve=>{releaseAsset=resolve;});
+  const setup=installerFor(fixtures,{
+    repository,fetcher:makeFetch(fixtures,{deferAsset:async()=>{assetStarted();await gate;}}),
+    ownerId:'owner-a',clockFn:()=>time,heartbeatScheduler:scheduler,leaseNonceFactory:()=> 'nonce-a'
+  });
+  const installing=setup.installer.install(fixtures.manifest.id);
+  await started;
+  failRenewal=true;
+  time+=20_000;
+  await scheduler.tick();
+  releaseAsset();
+  await assert.rejects(()=>installing,error=>error.code==='PACK_LEASE_LOST');
+  assert.equal(repository.installed.size,0);
+});
+
+test('expired owner cannot activate after a second fenced owner acquires',async()=>{
+  const fixtures=await makeFixture({packId:'pack:fenced-takeover'});
+  const repository=makeRepository(),assetStore=makeAssetStore();
+  let time=clockValue,releaseAsset,assetStarted;
+  const started=new Promise(resolve=>{assetStarted=resolve;});
+  const gate=new Promise(resolve=>{releaseAsset=resolve;});
+  const inertScheduler={set:()=>null,clear:()=>{}};
+  const first=installerFor(fixtures,{
+    repository,assetStore,fetcher:makeFetch(fixtures,{deferAsset:async()=>{assetStarted();await gate;}}),
+    ownerId:'owner-a',clockFn:()=>time,heartbeatScheduler:inertScheduler,leaseNonceFactory:()=> 'nonce-a'
+  });
+  const staleInstall=first.installer.install(fixtures.manifest.id);
+  await started;
+  time+=61_000;
+  const second=installerFor(fixtures,{
+    repository,assetStore,ownerId:'owner-b',clockFn:()=>time,
+    heartbeatScheduler:inertScheduler,leaseNonceFactory:()=> 'nonce-b'
+  });
+  assert.equal((await second.installer.install(fixtures.manifest.id)).status,'installed');
+  releaseAsset();
+  await assert.rejects(()=>staleInstall,error=>error.code==='PACK_LEASE_LOST');
+  assert.equal(repository.installed.get(fixtures.manifest.id).activeRevision,1);
 });

@@ -11,6 +11,7 @@ import {
   validatePackInstallJournal,
   validatePackManifest
 } from './content-contracts-v2.js';
+import { createEffectiveRevocationLookup } from './content-revocations.js';
 import { V10_STORES } from './v10-contracts.js';
 import { getV10Record,listV10Records,putV10Record,transactV10 } from './v10-persistence.js';
 
@@ -21,6 +22,7 @@ export const PACK_LEASE_MS=60_000;
 const clone=value=>value==null?value:structuredClone(value);
 const clean=(value,max=1000)=>String(value??'').trim().slice(0,max);
 const nowIso=clock=>new Date(clock()).toISOString();
+const leaseIdFor=packId=>`phase4:pack-lease:${packId}`;
 const requestResult=request=>new Promise((resolve,reject)=>{
   request.onsuccess=()=>resolve(request.result);
   request.onerror=()=>reject(request.error||new Error('IndexedDB request failed'));
@@ -177,28 +179,57 @@ export function createV10PackRepository(){
     },
     listInstalled:()=>listV10Records(V10_STORES.installedPacks,{sortBy:'updatedAt'}),
     listJournals:()=>listV10Records(V10_STORES.packInstallJournals,{sortBy:'updatedAt'}),
-    async acquireLease(packId,ownerId,expiresAt){
-      const leaseId=`phase4:pack-lease:${packId}`;
+    listRevocations:()=>listV10Records(V10_STORES.packRevocations,{sortBy:'revokedAt'}),
+    async acquireLease(packId,ownerId,{now,expiresAt,nonce}){
+      const leaseId=leaseIdFor(packId);
       return transactV10([V10_STORES.packInstallJournals],async({stores,memory})=>{
         if(memory)throw packInstallError('PACK_DURABILITY_REQUIRED','Pack lease cannot fall back to memory.');
         const existing=await requestResult(stores[V10_STORES.packInstallJournals].get(leaseId));
-        if(existing&&Number(existing.expiresAt)>Date.now())return false;
-        stores[V10_STORES.packInstallJournals].put({
+        if(existing&&Number(existing.expiresAt)>Number(now))return null;
+        const generation=Math.max(0,Number(existing?.generation||0))+1;
+        const fencingToken=`${generation}:${clean(nonce,180)}`;
+        const lease={
           id:leaseId,kind:'pack-install-lease',schemaVersion:CONTENT_SCHEMA_VERSION,
-          packId,ownerId,expiresAt,updatedAt:Date.now()
-        });
-        return true;
+          packId,ownerId,generation,fencingToken,expiresAt:Number(expiresAt),updatedAt:Number(now)
+        };
+        stores[V10_STORES.packInstallJournals].put(lease);
+        return clone(lease);
       },'phase4-pack-lease-acquired');
     },
-    async releaseLease(packId,ownerId){
-      const leaseId=`phase4:pack-lease:${packId}`;
+    async renewLease(packId,ownerId,fencingToken,{now,expiresAt}){
+      const leaseId=leaseIdFor(packId);
+      return transactV10([V10_STORES.packInstallJournals],async({stores,memory})=>{
+        if(memory)throw packInstallError('PACK_DURABILITY_REQUIRED','Pack lease cannot fall back to memory.');
+        const existing=await requestResult(stores[V10_STORES.packInstallJournals].get(leaseId));
+        if(
+          !existing
+          ||existing.ownerId!==ownerId
+          ||existing.fencingToken!==fencingToken
+          ||Number(existing.expiresAt)<=Number(now)
+        )return null;
+        const renewed={...existing,expiresAt:Number(expiresAt),updatedAt:Number(now)};
+        stores[V10_STORES.packInstallJournals].put(renewed);
+        return clone(renewed);
+      },'phase4-pack-lease-renewed');
+    },
+    async verifyLease(packId,ownerId,fencingToken,{now}){
+      const existing=await getV10Record(V10_STORES.packInstallJournals,leaseIdFor(packId));
+      return Boolean(
+        existing
+        &&existing.ownerId===ownerId
+        &&existing.fencingToken===fencingToken
+        &&Number(existing.expiresAt)>Number(now)
+      );
+    },
+    async releaseLease(packId,ownerId,fencingToken){
+      const leaseId=leaseIdFor(packId);
       await transactV10([V10_STORES.packInstallJournals],async({stores,memory})=>{
         if(memory)throw packInstallError('PACK_DURABILITY_REQUIRED','Pack lease cannot fall back to memory.');
         const existing=await requestResult(stores[V10_STORES.packInstallJournals].get(leaseId));
-        if(existing?.ownerId===ownerId)stores[V10_STORES.packInstallJournals].delete(leaseId);
+        if(existing?.ownerId===ownerId&&existing?.fencingToken===fencingToken)stores[V10_STORES.packInstallJournals].delete(leaseId);
       },'phase4-pack-lease-released');
     },
-    async activate({entry,manifest,journal,verifiedAssets,activatedAt}){
+    async activate({entry,manifest,journal,verifiedAssets,activatedAt,lease=null,leaseNow=Date.now()}){
       const storeNames=[
         V10_STORES.installedPacks,
         V10_STORES.packActivationReceipts,
@@ -208,6 +239,16 @@ export function createV10PackRepository(){
       ];
       return transactV10(storeNames,async({stores,memory})=>{
         if(memory)throw packInstallError('PACK_DURABILITY_REQUIRED','Pack activation cannot fall back to memory.');
+        if(lease?.kind==='fallback'){
+          const currentLease=await requestResult(stores[V10_STORES.packInstallJournals].get(leaseIdFor(manifest.id)));
+          if(
+            !currentLease
+            ||currentLease.ownerId!==lease.ownerId
+            ||currentLease.fencingToken!==lease.fencingToken
+            ||Number(currentLease.generation)!==Number(lease.generation)
+            ||Number(currentLease.expiresAt)<=Number(leaseNow)
+          )throw packInstallError('PACK_LEASE_LOST','Installer lost its fenced lease before activation.',{packId:manifest.id,recovery:'retry'});
+        }
         const installedStore=stores[V10_STORES.installedPacks];
         const existingRows=await requestResult(installedStore.index('packId').getAll(manifest.id));
         const existing=existingRows[0]||null;
@@ -303,11 +344,17 @@ export function createPackInstaller({
   catalogTrust,
   repository=createV10PackRepository(),
   assetStore=createCacheAssetStore(),
+  revocations=createEffectiveRevocationLookup({catalogTrust,repository}),
   fetcher=fetch,
   appVersion='10.0.0',
   ownerId=globalThis.crypto?.randomUUID?.()||`pack-installer-${Date.now()}`,
   clock=()=>Date.now(),
   lockManager=globalThis.navigator?.locks||null,
+  leaseNonceFactory=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random()}`,
+  heartbeatScheduler={
+    set:(callback,delay)=>globalThis.setInterval(callback,delay),
+    clear:handle=>globalThis.clearInterval(handle)
+  },
   hooks={}
 }={}){
   if(!catalogTrust?.current)throw new TypeError('Pack installer requires a catalog trust service.');
@@ -322,13 +369,58 @@ export function createPackInstaller({
     return next;
   }
 
+  function leaseLost(packId,cause=null){
+    return packInstallError('PACK_LEASE_LOST',`Installer lost the fenced lease for ${packId}.`,{packId,cause,recovery:'retry'});
+  }
+
   async function withLease(packId,operation){
     if(lockManager?.request){
-      return lockManager.request(`vocab-master:pack:${packId}`,{mode:'exclusive'},operation);
+      return lockManager.request(`vocab-master:pack:${packId}`,{mode:'exclusive'},()=>operation(Object.freeze({
+        kind:'web-lock',
+        assertCurrent:async()=>true,
+        record:()=>null
+      })));
     }
-    const acquired=await repository.acquireLease(packId,ownerId,clock()+PACK_LEASE_MS);
-    if(!acquired)throw packInstallError('PACK_INSTALL_CONCURRENT','Another tab is installing this pack.',{packId,recovery:'wait-and-retry'});
-    try{return await operation();}finally{await repository.releaseLease(packId,ownerId);}
+    let current=await repository.acquireLease(packId,ownerId,{
+      now:clock(),
+      expiresAt:clock()+PACK_LEASE_MS,
+      nonce:leaseNonceFactory()
+    });
+    if(!current)throw packInstallError('PACK_INSTALL_CONCURRENT','Another tab is installing this pack.',{packId,recovery:'wait-and-retry'});
+    let lostError=null;
+    let renewal=Promise.resolve();
+    const renew=()=>renewal=renewal.then(async()=>{
+      if(lostError)throw lostError;
+      const next=await repository.renewLease(packId,ownerId,current.fencingToken,{
+        now:clock(),
+        expiresAt:clock()+PACK_LEASE_MS
+      });
+      if(!next){lostError=leaseLost(packId);throw lostError;}
+      current=next;
+      return true;
+    });
+    const heartbeat=heartbeatScheduler.set(()=>{
+      void renew().catch(error=>{lostError=error?.code==='PACK_LEASE_LOST'?error:leaseLost(packId,error);});
+    },Math.max(1,Math.floor(PACK_LEASE_MS/3)));
+    heartbeat?.unref?.();
+    const lease=Object.freeze({
+      kind:'fallback',
+      async assertCurrent({renewNow=false}={}){
+        await renewal.catch(()=>undefined);
+        if(lostError)throw lostError;
+        if(renewNow||Number(current.expiresAt)-Number(clock())<=PACK_LEASE_MS/3)return renew();
+        const valid=await repository.verifyLease(packId,ownerId,current.fencingToken,{now:clock()});
+        if(!valid){lostError=leaseLost(packId);throw lostError;}
+        return true;
+      },
+      record:()=>({...clone(current),kind:'fallback'})
+    });
+    try{return await operation(lease);}
+    finally{
+      heartbeatScheduler.clear(heartbeat);
+      await renewal.catch(()=>undefined);
+      await repository.releaseLease(packId,ownerId,current.fencingToken).catch(()=>undefined);
+    }
   }
 
   async function fetchVerifiedBytes(url,{expectedAddress,expectedLength,expectedMediaType,signal,kind,id}){
@@ -351,16 +443,30 @@ export function createPackInstaller({
   }
 
   async function install(packId,{signal=null}={}){
-    return withLease(packId,async()=>{
+    return withLease(packId,async lease=>{
       const currentCatalog=await catalogTrust.current();
       const payload=currentCatalog?.payload||currentCatalog?.envelope?.payload;
       if(!payload)throw packInstallError('PACK_CATALOG_UNAVAILABLE','No verified catalog is available.',{recovery:'refresh-catalog'});
+      if(currentCatalog?.expired===true||currentCatalog?.trustState==='expired-last-known-good')throw packInstallError(
+        'PACK_CATALOG_EXPIRED',
+        'The last-known-good catalog has expired; installed content remains available but install and update are blocked.',
+        {recovery:'refresh-catalog'}
+      );
       const entry=payload.entries?.find(candidate=>candidate.packId===packId);
       if(!entry)throw packInstallError('PACK_NOT_IN_CATALOG',`Pack ${packId} is absent from the verified catalog.`,{packId,recovery:'refresh-catalog'});
       assertValidContent(validateCatalogEntry(entry,{publication:true,at:clock()}),'PACK_CATALOG_ENTRY_INVALID');
-      if((payload.revocations||[]).some(row=>row.packId===packId&&Number(row.packRevision)===Number(entry.contentRevision)))throw packInstallError('PACK_REVOKED',`Pack ${packId} revision ${entry.contentRevision} is revoked.`,{packId,packRevision:entry.contentRevision});
+      const entryRevocation=await revocations.find(packId,entry.contentRevision);
+      if(entryRevocation)throw packInstallError('PACK_REVOKED',`Pack ${packId} revision ${entry.contentRevision} is revoked.`,{packId,packRevision:entry.contentRevision,revocation:entryRevocation});
       if(compareVersions(appVersion,entry.compatibility.minimumAppVersion)<0)throw packInstallError('PACK_APP_INCOMPATIBLE',`Pack ${packId} requires app ${entry.compatibility.minimumAppVersion}.`,{recovery:'update-app'});
       const existingInstalled=await repository.getInstalled(packId);
+      if(existingInstalled){
+        const activeRevocation=await revocations.find(packId,existingInstalled.activeRevision);
+        if(activeRevocation)throw packInstallError('PACK_REVOKED',`Installed pack ${packId} revision ${existingInstalled.activeRevision} is revoked and cannot update.`,{
+          packId,
+          packRevision:existingInstalled.activeRevision,
+          revocation:activeRevocation
+        });
+      }
       if(existingInstalled?.state==='installed'&&Number(existingInstalled.activeRevision)===Number(entry.contentRevision)&&existingInstalled.manifestAddress===entry.contentAddress)return{status:'already-installed',installed:existingInstalled};
 
       const installId=`install:${packId}:${entry.contentRevision}`;
@@ -389,7 +495,7 @@ export function createPackInstaller({
         let manifest;
         try{manifest=JSON.parse(new TextDecoder().decode(manifestBytes));}
         catch(error){throw packInstallError('PACK_MANIFEST_MALFORMED',`Pack ${packId} manifest is not valid JSON.`,{cause:error});}
-        const manifestResult=validatePackManifest(manifest,{publication:true,at:clock()});
+        const manifestResult=await validatePackManifest(manifest,{publication:true,at:clock()});
         if(!manifestResult.valid)throw packInstallError('PACK_CONTRACT_INVALID',manifestResult.errors.join(' '),{errors:manifestResult.errors});
         manifest=manifestResult.value;
         if(manifest.id!==entry.packId||Number(manifest.contentRevision)!==Number(entry.contentRevision))throw packInstallError('PACK_IDENTITY_MISMATCH','Catalog entry and pack manifest identity do not match.');
@@ -423,14 +529,26 @@ export function createPackInstaller({
           journal=await updateJournal(journal,'assets-staging',{verifiedAssets:clone(verifiedAssets)});
         }
         journal=await updateJournal(journal,'assets-verified',{verifiedAssets:clone(verifiedAssets)});
+        await lease.assertCurrent({renewNow:true});
         for(const descriptor of manifest.assets){
+          await lease.assertCurrent();
           if(await assetStore.readFinal(descriptor))continue;
           try{await assetStore.promote(installId,descriptor);}
           catch(error){throw typedStorageError(error,'asset-promotion');}
         }
+        await lease.assertCurrent({renewNow:true});
         journal=await updateJournal(journal,'activation-pending');
         const activatedAt=nowIso(clock);
-        const result=await repository.activate({entry,manifest,journal,verifiedAssets,activatedAt});
+        await lease.assertCurrent();
+        const result=await repository.activate({
+          entry,
+          manifest,
+          journal,
+          verifiedAssets,
+          activatedAt,
+          lease:lease.record(),
+          leaseNow:clock()
+        });
         await assetStore.deleteStage(installId).catch(()=>false);
         return{status:result.duplicate?'already-installed':'installed',...result,manifest};
       }catch(error){
