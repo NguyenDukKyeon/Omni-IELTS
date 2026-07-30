@@ -1,0 +1,10 @@
+node_modules/
+publication/
+*.key
+*.pem
+*.p8
+*.pkcs8
+private/
+.env
+.env.*
+validation-report.json

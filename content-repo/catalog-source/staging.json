@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "catalogId": "catalog:vocab-master-staging",
+  "sequence": 1,
+  "catalogRevision": 1,
+  "issuedAt": null,
+  "expiresAt": null,
+  "keyId": null,
+  "supportedKeyIds": [],
+  "packManifestPaths": [
+    "packs/sampler/manifest.json",
+    "packs/foundations-week-1/manifest.json",
+    "packs/foundations-week-2/manifest.json",
+    "packs/foundations-week-3/manifest.json",
+    "packs/foundations-week-4/manifest.json"
+  ],
+  "revocations": []
+}
