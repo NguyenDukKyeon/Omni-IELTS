@@ -26,7 +26,7 @@ for(const[phase,files]of Object.entries(phaseFiles)){for(const file of files)che
 const [mainSource,serverSource,clientTranscript,videoPlayer,ieltsHub,launcherOverride,todayPlanner,contentPlatform,aiFactory,sentenceLoop,contracts,serviceWorker,packageText,catalogText]=await Promise.all([
   read('src/main.js'),read('server/server.mjs'),read('src/transcript-resolver-v2.js'),read('src/youtube-sentence-player.js'),read('src/ielts-hub-v2.js'),read('src/ielts-launcher-override.js'),read('src/today-planner-v2.js'),read('src/content-platform.js'),read('src/ai-content-factory.js'),read('src/sentence-learning-loop.js'),read('src/v10-contracts.js'),read('public/sw.js'),read('package.json'),read('public/content/catalog.json')
 ]);
-const pkg=JSON.parse(packageText),catalog=JSON.parse(catalogText),lessons=(catalog.packs||[]).flatMap(pack=>pack.lessons||[]);
+const pkg=JSON.parse(packageText),catalog=JSON.parse(catalogText),catalogEntries=catalog.payload?.entries||[];
 
 check('Main mounts v10 runtime',mainSource.includes("import('./v10-runtime.js')")&&mainSource.includes('mountV10Runtime()'));
 check('V10 runtime is outside AI Studio preview',mainSource.indexOf("import('./v10-runtime.js')")>mainSource.indexOf('}else{'));
@@ -41,7 +41,7 @@ check('YouTube sentence loop uses real segment player',videoPlayer.includes("imp
 check('YouTube embed failures are contained',videoPlayer.includes('void ready.catch')&&videoPlayer.includes("host.dataset.status='error'"));
 check('IELTS Hub launcher is deterministic',launcherOverride.includes('cloneNode(true)')&&launcherOverride.includes('openLegacyDialog')&&launcherOverride.includes('stopImmediatePropagation'));
 check('Content is not imported into JS bundle',!mainSource.includes('/content/')&&!contentPlatform.includes("import '../public"));
-check('Content catalog has verified starter lessons',lessons.length>=3&&lessons.every(row=>row.verified&&row.qualityStatus==='verified'&&row.license&&row.assets?.transcript));
+check('Production content catalog is signed and excludes unreviewed entries',catalog.kind==='vocab-master-signed-catalog'&&catalog.algorithm==='Ed25519'&&Boolean(catalog.signature)&&catalog.payload?.schemaVersion===2&&catalogEntries.every(row=>row.rights?.status==='approved'&&row.humanReview?.status==='approved'&&row.publishedAt));
 check('Service worker caches content on demand',serviceWorker.includes("url.pathname.startsWith('/content/')")&&serviceWorker.includes('contentCacheFirst'));
 check('AI artifacts require validation before publish',aiFactory.includes("job.status!=='ready'||!job.validation?.valid")&&aiFactory.includes("'quarantined'")&&aiFactory.includes('MAX_RETRIES'));
 check('Personal content is prepared during idle time',aiFactory.includes('requestIdleCallback')&&aiFactory.includes('prepareAndRunPersonalContent')&&aiFactory.includes('runPendingAiJobs'));
@@ -53,6 +53,6 @@ check('Package has v10 test and audit scripts',Boolean(pkg.scripts?.['test:v10']
 check('App version advanced to v10',pkg.version==='10.0.0');
 
 const forbiddenBundlePatterns=['CURATED_V10_LESSONS','STARTER_TRANSCRIPTS','CONTENT_PACK_PAYLOAD'];for(const pattern of forbiddenBundlePatterns)check(`No bundled content constant ${pattern}`,!mainSource.includes(pattern)&&!contracts.includes(pattern));
-const allContentPaths=lessons.flatMap(row=>Object.values(row.assets||{}));for(const path of allContentPaths)check(`Catalog asset exists ${path}`,await exists(`public${path}`));
+for(const entry of catalogEntries)check(`Catalog entry has no embedded lesson payload ${entry.id}`,!Object.hasOwn(entry,'lessons')&&!Object.hasOwn(entry,'assets'));
 
 console.log(JSON.stringify({ok:failures.length===0,checks:checks.length,passed:checks.filter(row=>row.ok).length,failures},null,2));if(failures.length){console.error('\nV10 AUDIT FAILED\n- '+failures.join('\n- '));process.exitCode=1;}else console.log('\nV10 AUDIT PASSED');
