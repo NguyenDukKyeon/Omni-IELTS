@@ -80,7 +80,7 @@
   </script>
   <div class="app-shell" id="appShell">
     <aside class="sidebar" aria-label="Điều hướng chính">
-      <a class="brand" href="#today">
+      <div class="brand" aria-label="Vocab Master">
         <span class="brand-mark">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
@@ -89,10 +89,10 @@
           </svg>
         </span>
         <span class="brand-text"><strong>Vocab</strong> Master<span class="brand-badge">AI</span></span>
-      </a>
+      </div>
 
       <nav class="side-nav">
-        <button class="nav-item active" data-route="today">
+        <button class="nav-item active" data-route="today" data-today-nav="canonical">
           <span class="nav-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
           </span>
@@ -758,7 +758,7 @@
       </section>
     </main>
 
-    <nav class="bottom-nav" aria-label="Điều hướng mobile"><button class="active" data-route="today"><span>⌂</span><small>Hôm nay</small></button><button class="add-tab" data-route="capture"><span>＋</span><small>Thêm</small></button><button data-route="library"><span>▤</span><small>Thư viện</small></button><button data-route="progress"><span>◔</span><small>Tiến bộ</small></button></nav>
+    <nav class="bottom-nav" aria-label="Điều hướng mobile"><button class="active" data-route="today" data-today-nav="canonical"><span>⌂</span><small>Hôm nay</small></button><button class="add-tab" data-route="capture"><span>＋</span><small>Thêm</small></button><button data-route="library"><span>▤</span><small>Thư viện</small></button><button data-route="progress"><span>◔</span><small>Tiến bộ</small></button></nav>
   </div>
 
   <dialog class="sheet wide" id="practiceSheet"><div class="sheet-handle"></div><div class="sheet-heading"><div><p class="eyebrow">LUYỆN THÊM</p><h2>Chọn một kỹ năng</h2><p class="muted">Chế độ riêng nằm ở đây để trang Hôm nay luôn gọn.</p></div><button class="icon-button" data-close-dialog aria-label="Đóng cửa sổ">×</button></div><div class="practice-grid expanded"><button data-practice="matching"><span class="practice-icon-3d puzzle">🧩</span><span><strong>Nối cặp</strong><small>Khởi động nhanh</small></span></button><button data-practice="typing"><span class="practice-icon-3d keyboard">⌨️</span><span><strong>Gõ chính tả</strong><small>Nghĩa/nghe → nhập từ</small></span></button><button data-practice="cloze"><span class="practice-icon-3d cloze">📑</span><span><strong>Điền ngữ cảnh</strong><small>Cloze câu và collocation</small></span></button><button data-practice="listening"><span class="practice-icon-3d audio">🎧</span><span><strong>Nghe</strong><small>Nhận diện + dictation</small></span></button><button data-practice="pronunciation"><span class="practice-icon-3d mic">🎙️</span><span><strong>Phát âm</strong><small>Coaching mức dễ hiểu; không đổi lịch FSRS</small></span></button><button data-practice="collocation"><span class="practice-icon-3d chain">🔗</span><span><strong>Collocation</strong><small>Điền đúng cụm từ</small></span></button><button data-practice="production"><span class="practice-icon-3d pencil">✍️</span><span><strong>Viết câu</strong><small>Dùng một từ trong câu</small></span></button><button data-practice="output"><span class="practice-icon-3d sparkles">✨</span><span><strong>Phản xạ AI</strong><small>Dùng 3–5 từ trong đoạn ngắn</small></span></button><button data-practice="weak"><span class="practice-icon-3d target">🩹</span><span><strong>Từ yếu</strong><small>Cramming deck tự động</small></span></button><button data-practice="test"><span class="practice-icon-3d flask">🧪</span><span><strong>Kiểm tra</strong><small>Không đổi lịch ôn</small></span></button><button id="chooseDeckButton"><span class="practice-icon-3d books">📚</span><span><strong>Chọn deck</strong><small>Học theo bộ từ</small></span></button></div></dialog>

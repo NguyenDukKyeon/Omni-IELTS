@@ -69,7 +69,7 @@ export function plannedSkillsForCard(card = {}) {
 
 function unlockedSkillsFromMap(card = {}, map = {}) {
   const planned = plannedSkillsForCard(card);
-  const reviewed = skill => Number(map[skill]?.reps || 0) > 0;
+  const reviewed = skill => Number(card.qualifiedEvidenceBySkill?.[skill]?.successes||0)>0;
   const unlocked = planned.filter(skill => skill === 'recognition' || skill === 'recall');
   const foundationReady = (!planned.includes('recognition') || reviewed('recognition')) && (!planned.includes('recall') || reviewed('recall'));
 
@@ -362,7 +362,8 @@ export function previewFsrsRatings(card, now = Date.now(), config = runtimeConfi
 
 export function applyFsrsRating(card, rating, now = Date.now(), config = runtimeConfig, skill = null) {
   const normalizedSkill = normalizeFsrsSkill(skill, card);
-  const normalizedRating = RATING_MAP[rating] ? rating : 'good';
+  if(!RATING_MAP[rating])throw new TypeError(`FSRS rating không hợp lệ: ${rating}`);
+  const normalizedRating = rating;
   const grade = RATING_MAP[normalizedRating];
   const scheduler = makeScheduler(config);
   const current = deserializeFsrsCard(card, now, normalizedSkill);
@@ -399,8 +400,7 @@ export function applyFsrsRating(card, rating, now = Date.now(), config = runtime
       updatedAt: now,
       correct: Number(card.correct || 0) + (normalizedRating === 'again' ? 0 : 1),
       incorrect: Number(card.incorrect || 0) + (normalizedRating === 'again' ? 1 : 0),
-      transferDueAt: becameMastered && !card.transferPassedAt ? now + 7 * 86_400_000 : (card.transferDueAt ?? null),
-      reviewHistory: undefined
+      transferDueAt: becameMastered && !card.transferPassedAt ? now + 7 * 86_400_000 : (card.transferDueAt ?? null)
     },
     interval,
     log

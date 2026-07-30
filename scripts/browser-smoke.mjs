@@ -1,46 +1,9 @@
 import assert from 'node:assert/strict';
-import { spawn, spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
+import { browserLaunchArguments, runBrowserSuite, waitForHttp, withBrowserHarness } from './browser-harness.mjs';
 
 const APP_URL='http://127.0.0.1:3000/#today';
 const DEBUG_PORT=9333;
-
-function commandPath(command){
-  const result=spawnSync(process.platform==='win32'?'where':'which',[command],{encoding:'utf8'});
-  if(result.status!==0)return null;
-  return String(result.stdout||'').split(/\r?\n/).map(value=>value.trim()).find(Boolean)||null;
-}
-
-function findBrowser(){
-  if(process.env.CHROME_BIN&&existsSync(process.env.CHROME_BIN))return process.env.CHROME_BIN;
-  for(const command of ['google-chrome-stable','google-chrome','chromium','chromium-browser','msedge']){
-    const resolved=commandPath(command);if(resolved)return resolved;
-  }
-  const candidates=process.platform==='win32'
-    ? [
-        join(process.env.PROGRAMFILES||'','Google','Chrome','Application','chrome.exe'),
-        join(process.env['PROGRAMFILES(X86)']||'','Google','Chrome','Application','chrome.exe'),
-        join(process.env.LOCALAPPDATA||'','Google','Chrome','Application','chrome.exe'),
-        join(process.env.PROGRAMFILES||'','Microsoft','Edge','Application','msedge.exe'),
-        join(process.env['PROGRAMFILES(X86)']||'','Microsoft','Edge','Application','msedge.exe')
-      ]
-    : ['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'];
-  return candidates.find(path=>path&&existsSync(path))||null;
-}
-
-async function waitForHttp(url,{attempts=80,interval=250}={}){
-  let lastError;
-  for(let attempt=0;attempt<attempts;attempt+=1){
-    try{const response=await fetch(url);if(response.ok)return response;lastError=new Error(`${url} returned ${response.status}`);}
-    catch(error){lastError=error;}
-    await delay(interval);
-  }
-  throw lastError||new Error(`Timed out waiting for ${url}`);
-}
 
 async function websocketText(data){
   if(typeof data==='string')return data;
@@ -100,30 +63,20 @@ class CdpClient{
 }
 
 async function main(){
-  const browserPath=findBrowser();
-  if(!browserPath){
-    if(process.env.ALLOW_BROWSER_SMOKE_SKIP==='1'){console.log('Browser smoke skipped: Chrome/Edge not found.');return;}
-    throw new Error('Chrome, Chromium or Edge is required for browser smoke tests.');
-  }
-
-  const profileDir=await mkdtemp(join(tmpdir(),'vocab-browser-smoke-'));
-  let serverOutput='';let browserOutput='';
-  const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','3000','--strictPort'],{
-    stdio:['ignore','pipe','pipe'],env:{...process.env,NODE_ENV:'development'}
-  });
-  server.stdout.on('data',chunk=>serverOutput+=chunk);server.stderr.on('data',chunk=>serverOutput+=chunk);
-  let browser;let cdp;let target;let currentHref='unknown';
-  try{
-    await waitForHttp('http://127.0.0.1:3000/');
-    browser=spawn(browserPath,[
-      '--headless=new','--disable-gpu','--no-sandbox','--disable-dev-shm-usage','--disable-extensions',
-      '--disable-background-networking','--disable-sync','--metrics-recording-only',
-      '--no-first-run','--no-default-browser-check',`--remote-debugging-port=${DEBUG_PORT}`,
-      `--user-data-dir=${profileDir}`,APP_URL
-    ],{stdio:['ignore','pipe','pipe']});
+  await withBrowserHarness({name:'Core browser smoke',profilePrefix:'vocab-browser-smoke-',ports:[3000,DEBUG_PORT]},async({browser:browserInfo,profileDir,spawnTracked})=>{
+    let serverOutput='';let browserOutput='';
+    const serverRecord=spawnTracked('Core Vite server',process.execPath,['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','3000','--strictPort'],{
+      stdio:['ignore','pipe','pipe'],env:{...process.env,NODE_ENV:'development'}
+    });
+    const server=serverRecord.child;server.stdout.on('data',chunk=>serverOutput+=chunk);server.stderr.on('data',chunk=>serverOutput+=chunk);
+    let browser;let cdp;let target;let currentHref='unknown';
+    try{
+      await waitForHttp('http://127.0.0.1:3000/',{processRecord:serverRecord,label:'Core Vite server'});
+      const browserRecord=spawnTracked('Core browser',browserInfo.path,browserLaunchArguments({profileDir,debugPort:DEBUG_PORT,appUrl:APP_URL}),{stdio:['ignore','pipe','pipe']});
+    browser=browserRecord.child;
     browser.stdout.on('data',chunk=>browserOutput+=chunk);browser.stderr.on('data',chunk=>browserOutput+=chunk);
 
-    await waitForHttp(`http://127.0.0.1:${DEBUG_PORT}/json/version`);
+    await waitForHttp(`http://127.0.0.1:${DEBUG_PORT}/json/version`,{processRecord:browserRecord,label:'Core browser CDP'});
     for(let attempt=0;attempt<100&&!target;attempt+=1){
       const targets=await (await fetch(`http://127.0.0.1:${DEBUG_PORT}/json/list`)).json();
       const page=targets.find(item=>item.type==='page'&&String(item.url).startsWith('http://127.0.0.1:3000'));
@@ -162,16 +115,17 @@ async function main(){
 
     await waitFor('window.VocabMasterApp','VocabMasterApp');
     await waitFor("document.querySelector('[data-view=\"today\"]')?.classList.contains('active')",'today route');
+    await waitFor("document.getElementById('v10StartPlan')",'canonical Today launcher');
 
     await evaluate(`new Promise(resolve=>{
       document.documentElement.style.scrollBehavior='auto';
-      const start=document.getElementById('startToday');
+      const start=document.getElementById('v10StartPlan');
       start.scrollIntoView({block:'center',behavior:'instant'});
       requestAnimationFrame(()=>requestAnimationFrame(resolve));
     })`);
     const startup=await evaluate(`(()=>{
       const shell=document.getElementById('appShell');
-      const start=document.getElementById('startToday');
+      const start=document.getElementById('v10StartPlan');
       const rect=start.getBoundingClientRect();
       const top=document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2);
       return {
@@ -233,9 +187,10 @@ async function main(){
     await waitFor("!document.getElementById('settingsDialog').open",'settings save and close');
     assert.equal(await evaluate("window.VocabMasterApp.getState().settings.minutes"),15,'Settings were not persisted to app state.');
 
-    await evaluate("document.querySelector('[data-route=\"today\"]').click()");
+    await evaluate(`(async()=>{const hashChanged=location.hash==='#today'?Promise.resolve():new Promise(resolve=>addEventListener('hashchange',resolve,{once:true}));document.querySelector('[data-route="today"]').click();await hashChanged;await window.VocabMasterTodayV2.refresh();})()`);
     await waitFor("document.querySelector('[data-view=\"today\"]')?.classList.contains('active')",'return to today');
-    await evaluate("document.getElementById('openMorePractice').click()");
+    await waitFor("document.getElementById('v10TodayPlan')?.getAttribute('aria-busy')==='false'&&!document.getElementById('v10MorePractice')?.disabled",'settled Today refresh');
+    await evaluate("document.getElementById('v10MorePractice').click()");
     await waitFor("document.getElementById('practiceSheet').open",'practice dialog');
     await evaluate("document.querySelector('#practiceSheet [data-close-dialog]').click()");
     await waitFor("!document.getElementById('practiceSheet').open",'practice dialog close');
@@ -266,18 +221,11 @@ async function main(){
     await delay(500);
     assert.deepEqual(runtimeErrors,[],`Browser runtime errors:\n${runtimeErrors.join('\n')}`);
     console.log('Browser interaction smoke passed: pointer clicks, routes, dialogs, study, add/search, settings, import and progress are operational.');
-  }catch(error){
-    error.message+=`\n\nTarget: ${currentHref} · ${target?.title||'untitled'}\n\nVite output:\n${serverOutput.slice(-5000)}\n\nBrowser output:\n${browserOutput.slice(-5000)}`;
-    throw error;
-  }finally{
-    cdp?.close();
-    try{browser?.kill('SIGTERM');}catch{}
-    try{server.kill('SIGTERM');}catch{}
-    await delay(250);
-    try{browser?.kill('SIGKILL');}catch{}
-    try{server.kill('SIGKILL');}catch{}
-    await rm(profileDir,{recursive:true,force:true});
-  }
+    }catch(error){
+      error.message+=`\n\nTarget: ${currentHref} · ${target?.title||'untitled'}\n\nVite output:\n${serverOutput.slice(-5000)}\n\nBrowser output:\n${browserOutput.slice(-5000)}`;
+      throw error;
+    }finally{cdp?.close();}
+  });
 }
 
-await main();
+await runBrowserSuite('Core browser smoke',main);

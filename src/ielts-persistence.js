@@ -15,6 +15,8 @@ import {
   validateReadingPassage,
   validateTranscriptSegments
 } from './ielts-domain.js';
+import { databaseBlocked,durableStorageUnavailable,normalizeDatabaseOpenError } from './storage-safety.js';
+import { assertActiveRestoreToken,withDurableWriteLock } from './storage-lock.js';
 
 export const IELTS_DB_NAME='vocab-master-ielts';
 export const IELTS_DB_VERSION=1;
@@ -32,7 +34,7 @@ function nowRevision(){return Date.now()*1000+Math.floor(Math.random()*1000);}
 function indexedDbUnavailable(){return typeof indexedDB==='undefined';}
 function requestResult(request){return new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error('IndexedDB request failed'));});}
 function transactionDone(transaction){return new Promise((resolve,reject)=>{transaction.oncomplete=()=>resolve();transaction.onabort=()=>reject(transaction.error||new Error('IndexedDB transaction aborted'));transaction.onerror=()=>reject(transaction.error||new Error('IndexedDB transaction failed'));});}
-function enqueueWrite(task){const run=writeQueue.then(task,task);writeQueue=run.catch(()=>{});return run;}
+function enqueueWrite(task,{restoreToken=null}={}){if(restoreToken)return withDurableWriteLock(task,restoreToken);const locked=()=>withDurableWriteLock(task);const run=writeQueue.then(locked,locked);writeQueue=run.catch(()=>{});return run;}
 function emit(status,detail={}){globalThis.dispatchEvent?.(new CustomEvent('vocab:ielts-persistence',{detail:{status,...detail}}));}
 function assertStore(name){if(!STORE_LIST.includes(name))throw new Error(`IELTS store không hợp lệ: ${name}`);return name;}
 
@@ -52,8 +54,9 @@ function createIndexes(storeName,store){
 
 export function openIeltsDatabase(){
   if(databasePromise)return databasePromise;
-  if(indexedDbUnavailable())return Promise.resolve(null);
+  if(indexedDbUnavailable())return Promise.reject(durableStorageUnavailable(IELTS_DB_NAME));
   databasePromise=new Promise((resolve,reject)=>{
+    let blocked=false;
     const request=indexedDB.open(IELTS_DB_NAME,IELTS_DB_VERSION);
     request.onupgradeneeded=()=>{
       const database=request.result;
@@ -63,9 +66,9 @@ export function openIeltsDatabase(){
         createIndexes(storeName,store);
       }
     };
-    request.onsuccess=()=>{const database=request.result;database.onversionchange=()=>{database.close();databasePromise=null;};resolve(database);};
-    request.onerror=()=>{databasePromise=null;reject(request.error||new Error('Không thể mở IELTS IndexedDB.'));};
-    request.onblocked=()=>{databasePromise=null;reject(new Error('IELTS IndexedDB đang bị tab khác khóa.'));};
+    request.onsuccess=()=>{const database=request.result;if(blocked){database.close();return;}database.onversionchange=()=>{database.close();databasePromise=null;};resolve(database);};
+    request.onerror=()=>{const error=normalizeDatabaseOpenError(request.error,{database:IELTS_DB_NAME,supportedVersion:IELTS_DB_VERSION});databasePromise=null;reject(error);};
+    request.onblocked=()=>{blocked=true;databasePromise=null;reject(databaseBlocked(IELTS_DB_NAME));};
   });
   return databasePromise;
 }
@@ -118,9 +121,10 @@ export async function upsertErrorRecord(input,reason='ielts-error-upserted'){
   broadcast(reason,[IELTS_STORE_NAMES.errors]);emit('saved',{storeName:IELTS_STORE_NAMES.errors});return saved;
 }
 
-export async function setErrorStatus(id,status){
+export async function setErrorStatus(id,status,evidenceAttempt=null){
   const current=await getOne(IELTS_STORE_NAMES.errors,id);if(!current)throw new Error('Không tìm thấy lỗi.');
-  const value=createErrorRecord({...current,status,lastResolvedAt:status==='resolved'?Date.now():current.lastResolvedAt,resolutionAttempts:Number(current.resolutionAttempts||0)+(status==='practicing'?1:0),now:current.firstSeenAt});
+  const evidenceAttempts=evidenceAttempt?[...(current.evidenceAttempts||[]),structuredClone(evidenceAttempt)].slice(-30):(current.evidenceAttempts||[]);
+  const value=createErrorRecord({...current,status,evidenceAttempts,lastResolvedAt:status==='resolved'?Date.now():current.lastResolvedAt,resolutionAttempts:Number(current.resolutionAttempts||0)+(status==='practicing'?1:0),now:current.firstSeenAt});
   await putOne(IELTS_STORE_NAMES.errors,value);broadcast('ielts-error-status',[IELTS_STORE_NAMES.errors]);return value;
 }
 
@@ -201,16 +205,25 @@ export async function saveMediaProgress(input){
 
 export async function getMediaProgress(mediaSourceId){const rows=await getAll(IELTS_STORE_NAMES.mediaProgress);return rows.find(row=>row.mediaSourceId===mediaSourceId)||null;}
 
-export async function buildIeltsBackup(){
-  const stores={};for(const store of STORE_LIST)stores[store]=await getAll(store);
+export async function buildIeltsBackup({restoreToken=null}={}){
+  if(!restoreToken)await writeQueue;else assertActiveRestoreToken(restoreToken);
+  let stores={};const database=await openIeltsDatabase();
+  if(!database)for(const store of STORE_LIST)stores[store]=[...memory.get(store).values()].map(clone);
+  else{
+    const physicalStores=[...database.objectStoreNames];const unknown=physicalStores.filter(name=>!STORE_LIST.includes(name));const missing=STORE_LIST.filter(name=>!physicalStores.includes(name));
+    if(unknown.length||missing.length)throw Object.assign(new Error(`IELTS store registry mismatch (missing: ${missing.join(',')||'none'}; unknown: ${unknown.join(',')||'none'}).`),{code:'BACKUP_STORE_REGISTRY_MISMATCH'});
+    const transaction=database.transaction(STORE_LIST,'readonly');stores=Object.fromEntries(await Promise.all(STORE_LIST.map(async store=>[store,await requestResult(transaction.objectStore(store).getAll())])));await transactionDone(transaction);
+  }
   return{app:'Vocab Master IELTS Labs',schemaVersion:IELTS_BACKUP_VERSION,domainSchemaVersion:IELTS_SCHEMA_VERSION,exportedAt:new Date().toISOString(),stores};
 }
 
 export function validateIeltsBackup(input){
   const errors=[];const warnings=[];if(!input||typeof input!=='object'||Array.isArray(input))return{valid:false,errors:['Backup IELTS phải là object.'],warnings,value:null};
-  if(Number(input.schemaVersion||0)>IELTS_BACKUP_VERSION)errors.push('Backup IELTS dùng schema mới hơn ứng dụng.');
+  if(Number(input.schemaVersion||0)!==IELTS_BACKUP_VERSION)errors.push(Number(input.schemaVersion||0)>IELTS_BACKUP_VERSION?'Backup IELTS dùng schema mới hơn ứng dụng.':'Backup IELTS thiếu hoặc sai schema version.');
+  if(Number(input.domainSchemaVersion||0)!==IELTS_SCHEMA_VERSION)errors.push(Number(input.domainSchemaVersion||0)>IELTS_SCHEMA_VERSION?'Backup IELTS dùng domain schema mới hơn ứng dụng.':'Backup IELTS thiếu hoặc sai domain schema version.');
   const stores=input.stores&&typeof input.stores==='object'?input.stores:{};const value={app:'Vocab Master IELTS Labs',schemaVersion:IELTS_BACKUP_VERSION,domainSchemaVersion:IELTS_SCHEMA_VERSION,exportedAt:String(input.exportedAt||new Date().toISOString()),stores:{}};
-  for(const store of STORE_LIST){const rows=Array.isArray(stores[store])?stores[store]:[];if(rows.length>MAX_RECORDS_PER_STORE)errors.push(`${store} vượt giới hạn ${MAX_RECORDS_PER_STORE}.`);value.stores[store]=clone(rows);}
+  for(const store of STORE_LIST){if(!Object.hasOwn(stores,store))errors.push(`Backup IELTS thiếu store ${store}.`);const rows=Array.isArray(stores[store])?stores[store]:[];if(!Array.isArray(stores[store])&&Object.hasOwn(stores,store))errors.push(`${store} phải là array.`);if(rows.length>MAX_RECORDS_PER_STORE)errors.push(`${store} vượt giới hạn ${MAX_RECORDS_PER_STORE}.`);value.stores[store]=clone(rows);}
+  for(const store of Object.keys(stores))if(!STORE_LIST.includes(store))errors.push(`Backup IELTS có store không được hỗ trợ: ${store}.`);
   const ids=new Set();for(const store of STORE_LIST){for(const row of value.stores[store]){const id=String(row?.key??row?.id??'');if(!id){errors.push(`${store} có record thiếu id/key.`);continue;}const composite=`${store}:${id}`;if(ids.has(composite))errors.push(`${store} trùng id ${id}.`);ids.add(composite);}}
   for(const row of value.stores[IELTS_STORE_NAMES.lexicalSets]){const result=validateLexicalSet(row);if(row.status==='active'&&!result.valid)errors.push(...result.errors.map(error=>`lexicalSets/${row.id}: ${error}`));}
   for(const row of value.stores[IELTS_STORE_NAMES.labItems]){const result=validateLabItem(row);if(row.status==='verified'&&!result.valid)errors.push(...result.errors.map(error=>`labItems/${row.id}: ${error}`));}
@@ -220,14 +233,11 @@ export function validateIeltsBackup(input){
 }
 
 export async function restoreIeltsBackup(input){
-  const result=validateIeltsBackup(input);if(!result.valid)throw new Error(result.errors.join('\n'));
-  emit('saving',{reason:'restore'});await enqueueWrite(async()=>{
-    const database=await openIeltsDatabase();
-    if(!database){for(const store of STORE_LIST){const map=memory.get(store);map.clear();for(const row of result.value.stores[store])map.set(row.key??row.id,clone(row));}return;}
-    const transaction=database.transaction(STORE_LIST,'readwrite');for(const storeName of STORE_LIST){const store=transaction.objectStore(storeName);store.clear();for(const row of result.value.stores[storeName])store.put(clone(row));}await transactionDone(transaction);
-  });
-  broadcast('ielts-backup-restored',STORE_LIST);emit('saved',{reason:'restore'});return result;
+  const {restoreIeltsBackupSafely}=await import('./ielts-backup.js');
+  return restoreIeltsBackupSafely(input);
 }
+
+export async function reopenIeltsDatabase({restoreToken=null}={}){if(!restoreToken)await writeQueue;else assertActiveRestoreToken(restoreToken);if(databasePromise){const database=await databasePromise.catch(()=>null);database?.close();databasePromise=null;}return openIeltsDatabase();}
 
 export async function downloadIeltsBackup(){
   const backup=await buildIeltsBackup();const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const anchor=document.createElement('a');anchor.href=url;anchor.download=`vocab-master-ielts-${new Date().toISOString().slice(0,10)}.json`;document.body.append(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);return backup;

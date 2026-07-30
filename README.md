@@ -216,7 +216,7 @@ npm run test:hardening
 - `npm run build`: bundle production vào `dist/`.
 - Các smoke test yêu cầu dependency đã được cài và browser runtime phù hợp.
 
-Báo cáo triển khai và phạm vi kiểm chứng nằm trong `IMPLEMENTATION_REPORT.md`.
+Roadmap hiện hành nằm trong `docs/ROADMAP.md`; acceptance chi tiết và evidence thực tế nằm trong `docs/IMPLEMENTATION_PLAN.md` và `docs/IMPLEMENTATION_STATUS.md`. `IMPLEMENTATION_REPORT.md` chỉ là báo cáo lịch sử của baseline cũ.
 
 ## 12. Giới hạn có chủ ý
 

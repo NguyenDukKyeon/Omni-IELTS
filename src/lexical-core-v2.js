@@ -15,12 +15,12 @@ export function matchLexicalCards({term='',meaning='',type='',partOfSpeech=''}={
     .map(row=>({...row.card,matchKind:row.sense===sense?'same-sense':'same-lemma'}));
 }
 
-export async function captureLexicalCandidate(input={}){
+export async function captureLexicalCandidate(input={},options={}){
   const matches=matchLexicalCards({term:input.term,meaning:input.proposedMeaning??input.meaning,type:input.proposedType??input.type,partOfSpeech:input.partOfSpeech});
   const exact=matches.find(card=>card.matchKind==='same-sense')||null;
   const candidate=normalizeCaptureCandidate({...input,matchedCardIds:matches.map(card=>card.id),duplicateOfCardId:exact?.id||null,status:exact?'needs-review':input.status});
   candidate.sourceOccurrence={...candidate.sourceOccurrence,candidateId:candidate.id};
-  await putV10Record(V10_STORES.captureCandidates,candidate,'capture-candidate-added');
+  await putV10Record(V10_STORES.captureCandidates,candidate,'capture-candidate-added',options);
   return candidate;
 }
 

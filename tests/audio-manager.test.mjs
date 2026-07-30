@@ -60,3 +60,20 @@ test('voiceschanged refreshes the available voice list',()=>{
   callback();
   assert.equal(manager.getVoices('en').length,3);
 });
+
+test('an empty voice list is stable and cannot recursively refresh through listeners',()=>{
+  let reads=0;
+  let events=0;
+  const synthesis={getVoices(){reads+=1;return[];},addEventListener(){},cancel(){},speak(){}};
+  const manager=createAudioManager({synthesis,Utterance:class{},delay:0});
+  manager.subscribe(event=>{
+    if(event.type!=='voices')return;
+    events+=1;
+    assert.deepEqual(manager.getVoices(),[]);
+    assert.equal(manager.chooseVoice({language:'en-US'}),null);
+  });
+  assert.deepEqual(manager.refreshVoices(),[]);
+  assert.deepEqual(manager.getVoices(),[]);
+  assert.equal(events,1);
+  assert.equal(reads,1);
+});

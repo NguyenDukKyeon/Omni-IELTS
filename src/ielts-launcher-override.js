@@ -14,7 +14,7 @@ function openLegacyDialog(tab='overview'){
 function openHubFromLauncher(launcher=null){
   const legacy=document.querySelector('#ieltsLabDialog');const legacyWasOpen=Boolean(legacy?.open);if(legacyWasOpen)legacy.close();
   updateLaunchTrace({phase:'hub-captured',capturedAt:Date.now(),launcherId:launcher?.id||'',legacyWasOpen,hubAvailable:Boolean(globalThis.VocabMasterIeltsHub?.open)});
-  const opening=globalThis.VocabMasterIeltsHub?.open?.('today');
+  const opening=globalThis.VocabMasterIeltsHub?.open?.('discover');
   void Promise.resolve(opening).then(()=>updateLaunchTrace({phase:'hub-open-complete',completedAt:Date.now(),hubOpen:Boolean(document.querySelector('#v10IeltsHubDialog')?.open),legacyOpen:Boolean(document.querySelector('#ieltsLabDialog')?.open)})).catch(error=>updateLaunchTrace({phase:'hub-open-failed',failedAt:Date.now(),error:error?.message||String(error)}));
   return opening;
 }
@@ -56,5 +56,5 @@ export function mountIeltsLauncherOverride(){
   const observer=new MutationObserver(()=>replaceLaunchers());observer.observe(document.body,{childList:true,subtree:true});
   if(globalThis.VocabMasterIeltsHub)globalThis.VocabMasterIeltsHub.openLegacyTab=openLegacyDialog;
   updateLaunchTrace({phase:'mounted',mountedAt:Date.now(),launcherCount:document.querySelectorAll('#openIeltsLabButton,#openIeltsLabMobile').length});
-  globalThis.VocabMasterIeltsLauncher={openHub:tab=>globalThis.VocabMasterIeltsHub?.open?.(tab||'today'),openLegacy:openLegacyDialog,refresh:replaceLaunchers,destroy:()=>{observer.disconnect();document.removeEventListener('click',interceptPrimaryLauncher,true);}};
+  globalThis.VocabMasterIeltsLauncher={openHub:tab=>globalThis.VocabMasterIeltsHub?.open?.(tab||'discover'),openLegacy:openLegacyDialog,refresh:replaceLaunchers,destroy:()=>{observer.disconnect();document.removeEventListener('click',interceptPrimaryLauncher,true);}};
 }

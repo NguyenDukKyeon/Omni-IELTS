@@ -125,6 +125,12 @@ export function sanitizeCardInput(input={}) {
   const acceptedByExercise=input.acceptedByExercise&&typeof input.acceptedByExercise==='object'
     ? Object.fromEntries(Object.entries(input.acceptedByExercise).map(([kind,values])=>[kind,[...new Set((Array.isArray(values)?values:[]).map(cleanText).filter(Boolean))]]))
     : {};
+  const qualifiedEvidenceBySkill=input.qualifiedEvidenceBySkill&&typeof input.qualifiedEvidenceBySkill==='object'
+    ? Object.fromEntries(Object.entries(input.qualifiedEvidenceBySkill).filter(([skill,value])=>['recognition','recall','listening','collocation','production'].includes(skill)&&value&&typeof value==='object').map(([skill,value])=>[skill,{
+      attempts:Math.max(0,Number(value.attempts||0)),successes:Math.max(0,Number(value.successes||0)),failures:Math.max(0,Number(value.failures||0)),
+      lastDecisionId:cleanText(value.lastDecisionId)||null,lastReceiptId:cleanText(value.lastReceiptId)||null,lastAttemptAt:Number(value.lastAttemptAt||0)||null,lastSuccessfulAt:Number(value.lastSuccessfulAt||0)||null,policyVersion:cleanText(value.policyVersion)||null
+    }]))
+    : {};
   if(!Object.keys(acceptedByExercise).length&&legacyAccepted.length){for(const kind of ['choice','typing','dictation','sentence-cloze'])acceptedByExercise[kind]=[...legacyAccepted];}
   const provenance=normalizeProvenance(input.provenance || {source: input.aiGenerated ? 'ai' : input.imported ? 'imported' : 'manual'});
 
@@ -175,6 +181,7 @@ export function sanitizeCardInput(input={}) {
     fsrsVersion:Number(input.fsrsVersion||0),
     fsrs:input.fsrs&&typeof input.fsrs==='object' ? {...input.fsrs} : (input.status==='new'&&!input.correct&&!input.incorrect ? createFsrsCard(createdAt) : null),
     fsrsBySkill,
+    qualifiedEvidenceBySkill,
     nextSkill:input.nextSkill??null,
     reviewEventCount:Number(input.reviewEventCount||0),
     lastReviewEventId:input.lastReviewEventId??null,
@@ -491,7 +498,28 @@ export function createSessionSteps(cards, mode='today', limit=12, options={}) {
   const practicePool=active;
   const budget=budgetFor(limit,options);const used={value:0};const steps=[];
 
-  if(mode==='today'||mode==='deck'){
+  if(mode==='planned-exact'){
+    const targetCardId=String(options.targetCardId||'');
+    const targetSkill=String(options.targetSkill||'');
+    const card=pool.find(item=>item.id===targetCardId);
+    if(card&&options.activityType==='new-card'&&card.status==='new'){
+      addIfFits(steps,step(card,'intro',pool,{
+        id:String(options.activityId||`${card.id}-intro`),
+        skill:null,affectsSchedule:false,
+        plannedActivityType:'new-card',
+        plannedTarget:options.plannedTarget&&typeof options.plannedTarget==='object'?structuredClone(options.plannedTarget):null
+      }),budget,used);
+    }else if(card&&requiredSkillsForCard(card).includes(targetSkill)){
+      const kind=exerciseForSkill(card,targetSkill,0);
+      addIfFits(steps,step(card,kind,pool,{
+        id:String(options.activityId||`${card.id}-${kind}`),
+        skill:targetSkill,
+        affectsSchedule:options.affectsSchedule===true,
+        plannedActivityType:String(options.activityType||'card-review'),
+        plannedTarget:options.plannedTarget&&typeof options.plannedTarget==='object'?structuredClone(options.plannedTarget):null
+      }),budget,used);
+    }
+  }else if(mode==='today'||mode==='deck'){
     const warmupCandidates=[...new Map([...dueItems.map(item=>pool.find(card=>card.id===item.cardId)),...fresh].filter(Boolean).map(card=>[card.id,card])).values()];
     if(budget.seconds>=360){const warmup=buildMatchingStep(warmupCandidates,Math.min(6,warmupCandidates.length));if(warmup)addIfFits(steps,warmup,budget,used);}
     dueItems.forEach((item,index)=>{

@@ -4,19 +4,27 @@ import { lexicalIntegrityAudit } from './lexical-core-v2.js';
 import { contentIntegrityAudit } from './content-platform.js';
 import { aiFactoryAudit } from './ai-content-factory.js';
 import { resolveIeltsEvidence } from './ielts-domain.js';
+import { evidenceDigest } from './evidence-policy.js';
 
 function gate(id,label,valid,detail={}){return{id,label,valid:Boolean(valid),detail};}
+function evidenceFixture(type,overrides={}){
+  const skill=type==='retell'?'production':type==='shadowing'?'recognition':'listening';
+  const activitySpec={id:`audit-${type}`,type,target:{cardId:'card',skill,sourceId:'source',sourceRevision:'revision'}};
+  const attempt={id:`attempt-${type}`,activityId:activitySpec.id,receiptId:`receipt-${type}`,activityType:type,result:'correct',target:{...activitySpec.target},assistance:{id:`trace-${type}`,schemaVersion:1,collector:'v10-sentence-loop',complete:true},learnerOutput:type==='retell'?'Learner output':'',...overrides};
+  const verification={source:{id:`source-receipt-${type}`,authority:'v10-source-registry',status:'verified',sourceId:'source',sourceRevision:'revision'},evaluation:{id:`evaluation-receipt-${type}`,authority:'deterministic-rubric',status:'verified',attemptId:attempt.id,activityId:activitySpec.id,cardId:'card',skill,outputDigest:evidenceDigest(attempt.learnerOutput),targetUsed:type!=='retell'}};
+  return{attempt,activitySpec,verification};
+}
 export async function runV10CrossAudit(){
   const [lexical,content,ai,transcripts,progress,activities,storage]=await Promise.all([lexicalIntegrityAudit(),contentIntegrityAudit(),aiFactoryAudit(),listV10Records(V10_STORES.transcriptCache),listV10Records(V10_STORES.sentenceProgress),listV10Records(V10_STORES.activities),estimateV10Storage()]);
   const transcriptFailures=transcripts.map(row=>({id:row.id,result:validateSentenceSegments(row.segments)})).filter(row=>!row.result.valid);
   const invalidProgress=progress.filter(row=>!SENTENCE_STEPS.includes(row.step)||!row.sentenceId);
   const invalidActivities=activities.filter(row=>!row.type||!row.evidencePolicy);
   const evidenceChecks={
-    shadowing:resolveIeltsEvidence({activityType:'shadowing',targetCardId:'card',verified:true,independent:true,result:'correct'}),
-    spelling:resolveIeltsEvidence({activityType:'dictation',targetCardId:'card',verified:true,independent:true,skill:'listening',result:'wrong',errorType:'spelling-only'}),
-    transcript:resolveIeltsEvidence({activityType:'dictation',targetCardId:'card',verified:true,independent:true,skill:'listening',result:'wrong',errorType:'transcript-source'}),
-    dictation:resolveIeltsEvidence({activityType:'dictation',targetCardId:'card',verified:true,independent:true,skill:'listening',result:'correct',errorType:'listening'}),
-    retellBlocked:resolveIeltsEvidence({activityType:'retell',targetCardId:'card',verified:true,independent:true,result:'correct',preselectedTarget:false,usedTargetCorrectly:true})
+    shadowing:resolveIeltsEvidence(evidenceFixture('shadowing')),
+    spelling:resolveIeltsEvidence(evidenceFixture('dictation',{result:'wrong',errorType:'spelling-only'})),
+    transcript:resolveIeltsEvidence(evidenceFixture('dictation',{result:'wrong',errorType:'transcript-source'})),
+    dictation:resolveIeltsEvidence(evidenceFixture('dictation',{result:'correct',errorType:'listening'})),
+    retellBlocked:resolveIeltsEvidence(evidenceFixture('retell'))
   };
   const evidenceValid=!evidenceChecks.shadowing.affectsSchedule&&!evidenceChecks.spelling.affectsSchedule&&!evidenceChecks.transcript.affectsSchedule&&evidenceChecks.dictation.affectsSchedule&&!evidenceChecks.retellBlocked.affectsSchedule;
   const phases=[

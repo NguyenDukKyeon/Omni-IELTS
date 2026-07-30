@@ -1,23 +1,167 @@
 import { getDueSkillItems,requiredSkillsForCard,skillHasReviews,getCardRetrievability } from './fsrs-scheduler.js';
-import { IELTS_STORE_NAMES } from './ielts-domain.js';
-import { listIeltsRecords } from './ielts-persistence.js';
+import { IELTS_STORE_NAMES,ieltsSourceRevision } from './ielts-domain.js';
+import { getIeltsRecord,listIeltsRecords } from './ielts-persistence.js';
+import { evidenceDigest } from './evidence-policy.js';
+import { coreSourceRevision } from './schedule-gateway.js';
 import { V10_STORES,normalizeActivity } from './v10-contracts.js';
-import { listV10Records,putV10Records } from './v10-persistence.js';
+import { getV10Record,listV10Records,putV10Records } from './v10-persistence.js';
 
-const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[char]));
-function core(){return globalThis.VocabMasterApp?.getState?.()||{cards:[],settings:{minutes:10,newLimit:5},fsrsConfig:{}};}
-function activeCards(){return(core().cards||[]).filter(card=>!card.suspendedAt&&!card.archivedAt);}
-function localDateKey(now=Date.now()){const date=new Date(now);return`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;}
+const PLAN_VERSION='phase0-today-v1';
+const READY_EXECUTORS=new Set(['core-card','core-intro','ielts-error','content','sentences']);
+const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const core=()=>globalThis.VocabMasterApp?.getState?.()||{cards:[],settings:{minutes:10,newLimit:5},fsrsConfig:{}};
+const activeCards=()=>core().cards.filter(card=>!card.suspendedAt&&!card.archivedAt);
+let todayActionTail=Promise.resolve();
+let pendingTodayRenders=0;
+let todayStatus={message:'',kind:'neutral'};
 
-function cardPriority(card,skill,now,config){const reviewed=skillHasReviews(card,skill);const retrievability=reviewed?getCardRetrievability(card,now,config,skill):0;const due=Number(card.fsrsBySkill?.[skill]?.due||card.dueAt||0);const overdue=due&&due<now?Math.min(40,(now-due)/86_400_000*5):0;return 100+overdue+(1-retrievability)*30;}
-function activityId(date,type,sourceId='',cardIds=[]){return`today:${date}:${type}:${sourceId||cardIds.join(',')||'general'}`;}
+export function localDateKey(now=Date.now()){
+  const date=new Date(now);
+  return`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
 
-export async function buildTodayActivityPlan({minutes=null,maxActivities=18}={}){
-  const state=core();const now=Date.now(),date=localDateKey(now);const budgetSeconds=Math.max(180,Number(minutes??state.settings?.minutes??10)*60);const cards=activeCards();const activities=[];
+function stableRevision(prefix,value){
+  return`${prefix}:${evidenceDigest(JSON.stringify(value))}`;
+}
+
+function errorRevision(error={}){
+  return ieltsSourceRevision('ielts-error-v1',{
+    id:error.id,correction:error.correction||error.expectedResponse||'',linkedCardIds:error.linkedCardIds||[],lastSeenAt:error.lastSeenAt
+  });
+}
+
+function contentRevision(row={}){
+  return stableRevision('v10-content-v1',{
+    id:row.id,contentVersion:row.contentVersion,qualityStatus:row.qualityStatus,updatedAt:row.updatedAt,
+    assets:row.assets||{},provenance:row.provenance||{}
+  });
+}
+
+function assetRevision(row={}){
+  return stableRevision('v10-content-asset-v1',{
+    id:row.id,lessonId:row.lessonId,assetType:row.assetType,status:row.status,updatedAt:row.updatedAt,data:row.data
+  });
+}
+
+function cardTarget(card,skill=null){
+  return{
+    cardId:card.id,
+    senseId:card.senseId||null,
+    skill,
+    sourceId:`core-card:${card.id}`,
+    sourceRevision:coreSourceRevision(card)
+  };
+}
+
+function sourceTarget({sourceId,sourceRevision,cardId=null,senseId=null,skill=null}){
+  return{cardId,senseId,skill,sourceId,sourceRevision};
+}
+
+function exactActivity(input,kind){
+  return normalizeActivity({...input,execution:{kind,status:'ready',reason:null}});
+}
+
+function blockedActivity(input,reason='missing-exact-executor'){
+  return normalizeActivity({
+    ...input,
+    evidencePolicy:{affectsSchedule:false,reason},
+    execution:{kind:'blocked',status:'blocked',reason}
+  });
+}
+
+function cardPriority(card,skill,now,config){
+  const reviewed=skillHasReviews(card,skill);
+  const retrievability=reviewed?getCardRetrievability(card,now,config,skill):0;
+  const due=Number(card.fsrsBySkill?.[skill]?.due||card.dueAt||0);
+  const overdue=due&&due<now?Math.min(40,(now-due)/86_400_000*5):0;
+  return 100+overdue+(1-retrievability)*30;
+}
+
+function activityId(date,type,sourceId='',cardIds=[]){
+  return`today:${date}:${type}:${sourceId||cardIds.join(',')||'general'}`;
+}
+
+function launchProjection(activity={}){
+  return{
+    id:activity.id,type:activity.type,sourceType:activity.sourceType,sourceId:activity.sourceId,
+    cardIds:activity.cardIds||[],target:activity.target||null,execution:activity.execution||null,
+    payload:activity.payload||{},evidencePolicy:activity.evidencePolicy||{},planId:activity.planId||null,
+    planDate:activity.planDate||null,plannedAt:Number(activity.plannedAt||0)
+  };
+}
+
+export function activityLaunchBinding(activity={}){
+  return evidenceDigest(JSON.stringify(launchProjection(activity)));
+}
+
+function planResult(activities,budgetSeconds){
+  const estimatedSeconds=activities.reduce((sum,row)=>sum+Number(row.estimatedSeconds||0),0);
+  return{
+    activities,estimatedSeconds,budgetSeconds,
+    coverage:{
+      cards:activities.filter(row=>row.cardIds.length).length,
+      errors:activities.filter(row=>row.type==='error-correction').length,
+      listening:activities.filter(row=>row.type==='dictation').length,
+      coaching:activities.filter(row=>!row.evidencePolicy?.affectsSchedule).length,
+      content:activities.filter(row=>['reading','paraphrase'].includes(row.type)||row.sourceType==='personal-content').length
+    }
+  };
+}
+
+async function resumeTodayPlan(date,budgetSeconds){
+  const rows=(await listV10Records(V10_STORES.activities,{sortBy:null}).catch(()=>[]))
+    .filter(row=>row.planDate===date&&row.planId&&row.payload?.planVersion===PLAN_VERSION&&row.launchBinding);
+  const groups=new Map();
+  for(const row of rows){
+    const normalized=normalizeActivity(row);
+    if(activityLaunchBinding(normalized)!==normalized.launchBinding)continue;
+    const group=groups.get(normalized.planId)||[];
+    group.push(normalized);groups.set(normalized.planId,group);
+  }
+  const complete=[...groups.values()].filter(group=>{
+    const expected=Number(group[0]?.payload?.planCount||0);
+    return expected>0&&group.length===expected&&group.every(row=>Number(row.payload?.planCount||0)===expected);
+  }).sort((left,right)=>Number(right[0]?.plannedAt||0)-Number(left[0]?.plannedAt||0));
+  const activities=complete[0]?.sort((a,b)=>Number(a.payload?.planOrder||0)-Number(b.payload?.planOrder||0))||[];
+  return activities.length?planResult(activities,budgetSeconds):null;
+}
+
+export async function buildTodayActivityPlan({minutes=null,maxActivities=18,force=false,now=Date.now()}={}){
+  const state=core();
+  const date=localDateKey(now);
+  const budgetSeconds=Math.max(180,Number(minutes??state.settings?.minutes??10)*60);
+  if(!force){
+    const resumed=await resumeTodayPlan(date,budgetSeconds);
+    if(resumed)return resumed;
+  }
+
+  const cards=activeCards();
+  const activities=[];
   const due=getDueSkillItems(cards,now,state.fsrsConfig)||[];
-  for(const row of due){const card=cards.find(item=>item.id===(row.cardId||row.card?.id))||row.card;if(!card)continue;const skill=row.skill||card.nextSkill||requiredSkillsForCard(card)[0]||'recognition';activities.push(normalizeActivity({id:activityId(date,'card-review',`${card.id}:${skill}`,[card.id]),type:'card-review',cardIds:[card.id],estimatedSeconds:skill==='production'?75:skill==='listening'?48:40,priority:cardPriority(card,skill,now,state.fsrsConfig),dueAt:row.dueAt||card.dueAt,payload:{skill,mode:skill==='recognition'?'matching':skill==='recall'?'typing':skill==='listening'?'listening':skill==='collocation'?'collocation':'production',label:`${card.front} · ${skill}`},evidencePolicy:{affectsSchedule:true,skill,requiresIndependentRetrieval:true}}));}
-  const newLimit=Math.max(0,Number(state.settings?.newLimit||0));for(const card of cards.filter(item=>item.status==='new').slice(0,newLimit)){activities.push(normalizeActivity({id:activityId(date,'new-card',card.id,[card.id]),type:'new-card',cardIds:[card.id],estimatedSeconds:55,priority:55,payload:{mode:'today',label:`Làm quen ${card.front}`},evidencePolicy:{affectsSchedule:false,reason:'new-card-introduction'}}));}
-  const [errors,mediaProgress,readings,labs,sentenceProgress,content,personalAssets]=await Promise.all([
+  for(const row of due){
+    const card=cards.find(item=>item.id===(row.cardId||row.card?.id))||row.card;
+    if(!card)continue;
+    const skill=row.skill||card.nextSkill||requiredSkillsForCard(card)[0]||'recognition';
+    activities.push(exactActivity({
+      id:activityId(date,'card-review',`${card.id}:${skill}`,[card.id]),
+      type:'card-review',cardIds:[card.id],target:cardTarget(card,skill),
+      estimatedSeconds:skill==='production'?75:skill==='listening'?48:40,
+      priority:cardPriority(card,skill,now,state.fsrsConfig),dueAt:row.dueAt||card.dueAt,
+      payload:{label:`${card.front} · ${skill}`},
+      evidencePolicy:{affectsSchedule:true,skill,requiresIndependentRetrieval:true}
+    },'core-card'));
+  }
+
+  const newLimit=Math.max(0,Number(state.settings?.newLimit||0));
+  for(const card of cards.filter(item=>item.status==='new').slice(0,newLimit)){
+    activities.push(exactActivity({
+      id:activityId(date,'new-card',card.id,[card.id]),type:'new-card',cardIds:[card.id],
+      target:cardTarget(card,null),estimatedSeconds:55,priority:55,payload:{label:`Làm quen ${card.front}`},
+      evidencePolicy:{affectsSchedule:false,reason:'new-card-introduction-is-coaching'}
+    },'core-intro'));
+  }
+
+  const[errors,mediaProgress,readings,labs,sentenceProgress,content,personalAssets]=await Promise.all([
     listIeltsRecords(IELTS_STORE_NAMES.errors,{sortBy:'lastSeenAt'}).catch(()=>[]),
     listIeltsRecords(IELTS_STORE_NAMES.mediaProgress,{sortBy:'updatedAt'}).catch(()=>[]),
     listIeltsRecords(IELTS_STORE_NAMES.readingPassages,{sortBy:'updatedAt'}).catch(()=>[]),
@@ -26,32 +170,266 @@ export async function buildTodayActivityPlan({minutes=null,maxActivities=18}={})
     listV10Records(V10_STORES.contentManifests,{sortBy:'updatedAt'}).catch(()=>[]),
     listV10Records(V10_STORES.contentAssets,{sortBy:'updatedAt'}).then(rows=>rows.filter(row=>row.lessonId==='personal-next-session')).catch(()=>[])
   ]);
-  for(const error of errors.filter(row=>!['resolved','ignored'].includes(row.status)).slice(0,3)){activities.push(normalizeActivity({id:activityId(date,'error-correction',error.id,error.linkedCardIds),type:'error-correction',sourceType:'error',sourceId:error.id,cardIds:error.linkedCardIds||[],estimatedSeconds:55,priority:90+Math.min(20,Number(error.occurrenceCount||1)*3)+(error.severity==='high'?15:0),payload:{tab:'errors',label:`Sửa lỗi: ${error.correction||error.expectedResponse||error.category}`},evidencePolicy:{affectsSchedule:Boolean(error.linkedCardIds?.length),requiresIndependentRetrieval:true}}));}
-  const weakSentenceIds=new Set(sentenceProgress.filter(row=>row.weak).map(row=>row.sentenceId));for(const progress of mediaProgress.filter(row=>(row.weakSegmentIds||[]).length).slice(0,2)){const count=(progress.weakSegmentIds||[]).filter(id=>!weakSentenceIds.size||weakSentenceIds.has(id)).length||progress.weakSegmentIds.length;activities.push(normalizeActivity({id:activityId(date,'dictation',progress.mediaSourceId),type:'dictation',sourceType:'media',sourceId:progress.mediaSourceId,estimatedSeconds:Math.min(240,Math.max(60,count*48)),priority:88,payload:{tab:'media',label:`Ôn ${count} câu nghe yếu`,weakSegmentIds:progress.weakSegmentIds},evidencePolicy:{affectsSchedule:true,skill:'listening',requiresVerifiedTranscript:true,requiresIndependentRetrieval:true}}));activities.push(normalizeActivity({id:activityId(date,'shadowing',progress.mediaSourceId),type:'shadowing',sourceType:'media',sourceId:progress.mediaSourceId,estimatedSeconds:Math.min(180,Math.max(45,count*35)),priority:48,payload:{tab:'media',label:`Shadowing ${Math.min(3,count)} câu yếu`},evidencePolicy:{affectsSchedule:false,reason:'shadowing-is-coaching'}}));}
-  const verifiedReading=readings.find(row=>row.status==='verified');if(verifiedReading)activities.push(normalizeActivity({id:activityId(date,'reading',verifiedReading.id),type:'reading',sourceType:'reading',sourceId:verifiedReading.id,estimatedSeconds:180,priority:45,payload:{tab:'reading',label:`Reading: ${verifiedReading.title}`},evidencePolicy:{affectsSchedule:false,reason:'reading-completion-is-not-card-retrieval'}}));
-  const verifiedLab=labs.find(row=>row.status==='verified');if(verifiedLab)activities.push(normalizeActivity({id:activityId(date,'paraphrase',verifiedLab.id,verifiedLab.sourceCardIds),type:'paraphrase',sourceType:'lab',sourceId:verifiedLab.id,cardIds:verifiedLab.sourceCardIds||[],estimatedSeconds:75,priority:52,payload:{tab:'paraphrase',label:'Paraphrase & distractor'},evidencePolicy:{affectsSchedule:Boolean(verifiedLab.sourceCardIds?.length),requiresTargetedCardCheck:true}}));
-  const verifiedContent=content.find(row=>row.qualityStatus==='verified');if(verifiedContent)activities.push(normalizeActivity({id:activityId(date,'reading',verifiedContent.id),type:'reading',sourceType:'content',sourceId:verifiedContent.id,estimatedSeconds:150,priority:42,payload:{label:`Bài đã tải: ${verifiedContent.title}`,contentId:verifiedContent.id},evidencePolicy:{affectsSchedule:false}}));
-  for(const asset of personalAssets.slice(0,4)){
-    if(asset.assetType==='personal-error'&&asset.data){const item=asset.data;activities.push(normalizeActivity({id:activityId(date,'error-correction',asset.id,item.linkedCardIds),type:'error-correction',sourceType:'personal-content',sourceId:asset.id,cardIds:item.linkedCardIds||[],estimatedSeconds:55,priority:84,payload:{tab:'errors',label:`Bài sửa lỗi đã chuẩn bị: ${item.answer||item.prompt}`},evidencePolicy:{affectsSchedule:false,reason:'prepared-item-must-be-verified-in-error-notebook'}}));}
-    if(asset.assetType==='personal-sentences'&&Array.isArray(asset.data)&&asset.data.length){const targetIds=[...new Set(asset.data.flatMap(row=>(row.targets||[]).map(target=>target.cardId)).filter(Boolean))];activities.push(normalizeActivity({id:activityId(date,'dictation',asset.id,targetIds),type:'dictation',sourceType:'personal-content',sourceId:asset.id,cardIds:targetIds,estimatedSeconds:Math.min(180,asset.data.length*55),priority:58,payload:{label:'Câu transfer đã chuẩn bị cho hôm nay',sentences:asset.data.map(row=>({id:row.id,text:row.text,status:'needs-review',verified:false,lexicalTargets:(row.targets||[]).map(target=>({term:target.term,meaning:target.meaning,type:String(target.term||'').includes(' ')?'collocation':'word'})),linkedCardIds:(row.targets||[]).map(target=>target.cardId).filter(Boolean)}))},evidencePolicy:{affectsSchedule:false,reason:'personal-ai-content-is-validated-but-not-source-verified'}}));}
+
+  for(const error of errors.filter(row=>!['resolved','ignored'].includes(row.status)).slice(0,3)){
+    const cardId=error.linkedCardIds?.length===1?error.linkedCardIds[0]:null;
+    const card=cards.find(row=>row.id===cardId);
+    activities.push(exactActivity({
+      id:activityId(date,'error-correction',error.id,error.linkedCardIds),type:'error-correction',
+      sourceType:'error',sourceId:error.id,cardIds:error.linkedCardIds||[],
+      target:sourceTarget({cardId,senseId:card?.senseId||null,skill:cardId?'production':null,sourceId:`ielts-error:${error.id}`,sourceRevision:errorRevision(error)}),
+      estimatedSeconds:55,priority:90+Math.min(20,Number(error.occurrenceCount||1)*3)+(error.severity==='high'?15:0),
+      payload:{errorId:error.id,label:`Sửa lỗi: ${error.correction||error.expectedResponse||error.category}`},
+      evidencePolicy:{affectsSchedule:false,reason:'error-repair-is-coaching-after-correction-exposure'}
+    },'ielts-error'));
   }
-  const productionCards=cards.filter(card=>card.learningGoal==='active'&&requiredSkillsForCard(card).includes('production')).sort((a,b)=>Number(a.fsrsBySkill?.production?.due||0)-Number(b.fsrsBySkill?.production?.due||0)).slice(0,3);if(productionCards.length)activities.push(normalizeActivity({id:activityId(date,'production','active-cards',productionCards.map(card=>card.id)),type:'production',cardIds:productionCards.map(card=>card.id),estimatedSeconds:150,priority:50,payload:{mode:'output',label:`Production với ${productionCards.map(card=>card.front).join(', ')}`},evidencePolicy:{affectsSchedule:true,skill:'production',requiresIndependentRetrieval:true}}));
-  activities.sort((a,b)=>b.priority-a.priority||Number(a.dueAt||Infinity)-Number(b.dueAt||Infinity));const selected=[];let used=0;for(const activity of activities){if(selected.length>=maxActivities)break;if(used+activity.estimatedSeconds>budgetSeconds&&selected.length>=3)continue;selected.push(activity);used+=activity.estimatedSeconds;if(used>=budgetSeconds)break;}
-  await putV10Records(V10_STORES.activities,selected.map(row=>({...row,planDate:date})),'today-plan-built');
-  return{activities:selected,estimatedSeconds:used,budgetSeconds,coverage:{cards:selected.filter(row=>row.cardIds.length).length,errors:selected.filter(row=>row.type==='error-correction').length,listening:selected.filter(row=>row.type==='dictation').length,coaching:selected.filter(row=>row.type==='shadowing').length,content:selected.filter(row=>['reading','paraphrase'].includes(row.type)||row.sourceType==='personal-content').length}};
+
+  const weakSentenceIds=new Set(sentenceProgress.filter(row=>row.weak).map(row=>row.sentenceId));
+  for(const progress of mediaProgress.filter(row=>(row.weakSegmentIds||[]).length).slice(0,2)){
+    const count=(progress.weakSegmentIds||[]).filter(id=>!weakSentenceIds.size||weakSentenceIds.has(id)).length||progress.weakSegmentIds.length;
+    const target=sourceTarget({
+      sourceId:`ielts-media:${progress.mediaSourceId}`,
+      sourceRevision:stableRevision('ielts-media-progress-v1',{mediaSourceId:progress.mediaSourceId,weakSegmentIds:progress.weakSegmentIds||[],updatedAt:progress.updatedAt})
+    });
+    activities.push(blockedActivity({
+      id:activityId(date,'dictation',progress.mediaSourceId),type:'dictation',sourceType:'media',sourceId:progress.mediaSourceId,
+      target,estimatedSeconds:Math.min(240,Math.max(60,count*48)),priority:88,payload:{label:`Ôn ${count} câu nghe yếu`}
+    },'media-segment-exact-executor-not-supported'));
+    activities.push(blockedActivity({
+      id:activityId(date,'shadowing',progress.mediaSourceId),type:'shadowing',sourceType:'media',sourceId:progress.mediaSourceId,
+      target,estimatedSeconds:Math.min(180,Math.max(45,count*35)),priority:48,payload:{label:`Shadowing ${Math.min(3,count)} câu yếu`}
+    },'media-segment-exact-executor-not-supported'));
+  }
+
+  const verifiedReading=readings.find(row=>row.status==='verified');
+  if(verifiedReading)activities.push(blockedActivity({
+    id:activityId(date,'reading',verifiedReading.id),type:'reading',sourceType:'reading',sourceId:verifiedReading.id,
+    target:sourceTarget({sourceId:`ielts-reading:${verifiedReading.id}`,sourceRevision:stableRevision('ielts-reading-v1',{id:verifiedReading.id,status:verifiedReading.status,updatedAt:verifiedReading.updatedAt})}),
+    estimatedSeconds:180,priority:45,payload:{label:`Reading: ${verifiedReading.title}`}
+  },'reading-exact-executor-not-supported'));
+
+  const verifiedLab=labs.find(row=>row.status==='verified');
+  if(verifiedLab)activities.push(blockedActivity({
+    id:activityId(date,'paraphrase',verifiedLab.id,verifiedLab.sourceCardIds),type:'paraphrase',sourceType:'lab',sourceId:verifiedLab.id,
+    cardIds:verifiedLab.sourceCardIds||[],
+    target:sourceTarget({sourceId:`ielts-lab:${verifiedLab.id}`,sourceRevision:stableRevision('ielts-lab-v1',{id:verifiedLab.id,status:verifiedLab.status,updatedAt:verifiedLab.updatedAt})}),
+    estimatedSeconds:75,priority:52,payload:{label:'Paraphrase & distractor'}
+  },'paraphrase-exact-executor-not-supported'));
+
+  const verifiedContent=content.find(row=>row.qualityStatus==='verified');
+  if(verifiedContent)activities.push(exactActivity({
+    id:activityId(date,'reading',verifiedContent.id),type:'reading',sourceType:'content',sourceId:verifiedContent.id,
+    target:sourceTarget({sourceId:`v10-content:${verifiedContent.id}`,sourceRevision:contentRevision(verifiedContent)}),
+    estimatedSeconds:150,priority:42,payload:{label:`Bài đã tải: ${verifiedContent.title}`,contentId:verifiedContent.id},
+    evidencePolicy:{affectsSchedule:false,reason:'content-open-is-coaching'}
+  },'content'));
+
+  for(const asset of personalAssets.slice(0,4)){
+    if(asset.assetType==='personal-error'&&asset.data){
+      activities.push(blockedActivity({
+        id:activityId(date,'error-correction',asset.id,asset.data.linkedCardIds),type:'error-correction',
+        sourceType:'personal-content',sourceId:asset.id,cardIds:asset.data.linkedCardIds||[],
+        target:sourceTarget({sourceId:`v10-content-asset:${asset.id}`,sourceRevision:assetRevision(asset)}),
+        estimatedSeconds:55,priority:84,payload:{label:`Bài sửa lỗi đã chuẩn bị: ${asset.data.answer||asset.data.prompt}`}
+      },'prepared-error-exact-executor-not-supported'));
+    }
+    if(asset.assetType==='personal-sentences'&&Array.isArray(asset.data)&&asset.data.length){
+      const targetIds=[...new Set(asset.data.flatMap(row=>(row.targets||[]).map(target=>target.cardId)).filter(Boolean))];
+      activities.push(exactActivity({
+        id:activityId(date,'dictation',asset.id,targetIds),type:'dictation',sourceType:'personal-content',sourceId:asset.id,
+        cardIds:targetIds,target:sourceTarget({sourceId:`v10-content-asset:${asset.id}`,sourceRevision:assetRevision(asset)}),
+        estimatedSeconds:Math.min(180,asset.data.length*55),priority:58,
+        payload:{
+          label:'Câu transfer đã chuẩn bị cho hôm nay',
+          sentences:asset.data.map(row=>({
+            id:row.id,text:row.text,status:'needs-review',verified:false,
+            lexicalTargets:(row.targets||[]).map(target=>({term:target.term,meaning:target.meaning,type:String(target.term||'').includes(' ')?'collocation':'word'})),
+            linkedCardIds:(row.targets||[]).map(target=>target.cardId).filter(Boolean)
+          }))
+        },
+      evidencePolicy:{affectsSchedule:false,reason:'personal-ai-content-is-validated-but-not-source-verified'}
+      },'sentences'));
+    }
+  }
+
+  const productionCards=cards
+    .filter(card=>card.status!=='new'&&card.learningGoal==='active'&&requiredSkillsForCard(card).includes('production'))
+    .sort((a,b)=>Number(a.fsrsBySkill?.production?.due||0)-Number(b.fsrsBySkill?.production?.due||0))
+    .slice(0,3);
+  for(const card of productionCards){
+    if(activities.some(row=>row.type==='card-review'&&row.target?.cardId===card.id&&row.target?.skill==='production'))continue;
+    activities.push(exactActivity({
+      id:activityId(date,'production',`${card.id}:production`,[card.id]),type:'production',cardIds:[card.id],
+      target:cardTarget(card,'production'),estimatedSeconds:75,priority:50,payload:{label:`Production với ${card.front}`},
+      evidencePolicy:{affectsSchedule:true,skill:'production',requiresIndependentRetrieval:true}
+    },'core-card'));
+  }
+
+  activities.sort((a,b)=>b.priority-a.priority||Number(a.dueAt||Infinity)-Number(b.dueAt||Infinity));
+  const selected=[];let used=0;
+  for(const activity of activities){
+    if(selected.length>=maxActivities)break;
+    if(used+activity.estimatedSeconds>budgetSeconds&&selected.length>=3)continue;
+    selected.push(activity);used+=activity.estimatedSeconds;
+    if(used>=budgetSeconds)break;
+  }
+
+  const plannedAt=Number(now);
+  const planId=`today-plan:${date}:${plannedAt}`;
+  const finalized=selected.map((row,index)=>{
+    const planned=normalizeActivity({
+      ...row,planId,planDate:date,plannedAt,
+      payload:{...row.payload,planVersion:PLAN_VERSION,planOrder:index,planCount:selected.length}
+    });
+    return normalizeActivity({...planned,launchBinding:activityLaunchBinding(planned)});
+  });
+  if(finalized.length)await putV10Records(V10_STORES.activities,finalized,'today-plan-built');
+  return planResult(finalized,budgetSeconds);
 }
 
-function activityIcon(type){return({ 'card-review':'🧠','new-card':'🌱',dictation:'🎧',shadowing:'🎙️','error-correction':'🛠️',reading:'📖',paraphrase:'🔁',production:'✍️',retell:'🗣️' })[type]||'•';}
-function openIeltsTab(tab){if(globalThis.VocabMasterIeltsHub?.openLegacyTab){globalThis.VocabMasterIeltsHub.openLegacyTab(tab);return;}const dialog=document.querySelector('#ieltsLabDialog');if(dialog&&!dialog.open)dialog.showModal();setTimeout(()=>document.querySelector(`[data-ielts-tab="${tab}"]`)?.click(),40);}
-function launchActivity(activity){if(!activity)return;if(activity.payload?.sentences?.length){globalThis.dispatchEvent(new CustomEvent('vocab:v10-open-sentence-loop',{detail:{sourceId:activity.sourceId,sourceType:activity.sourceType,title:activity.payload.label,sentences:activity.payload.sentences}}));return;}if(activity.payload?.tab){openIeltsTab(activity.payload.tab);return;}if(activity.payload?.contentId){globalThis.dispatchEvent(new CustomEvent('vocab:v10-open-content',{detail:{contentId:activity.payload.contentId}}));return;}const mode=activity.payload?.mode||'today';globalThis.VocabMasterApp?.startStudy?.(mode,{},'today');}
+function activityIcon(type){
+  return({'card-review':'🧠','new-card':'🌱',dictation:'🎧',shadowing:'🎙️','error-correction':'🛠️',reading:'📖',paraphrase:'🔁',production:'✍️'})[type]||'•';
+}
 
-async function renderPlan(){
-  const host=document.querySelector('#v10TodayPlan');if(!host)return;const plan=await buildTodayActivityPlan();const minutes=Math.max(1,Math.round(plan.estimatedSeconds/60));
-  host.innerHTML=`<div class="v10-today-head"><div><p class="eyebrow">UNIFIED TODAY V2</p><h3>Phiên kết hợp ${minutes} phút</h3><p>FSRS · lỗi cá nhân · câu nghe yếu · IELTS content · production</p></div><button class="primary-button" id="v10StartPlan" ${plan.activities.length?'':'disabled'}>Bắt đầu hoạt động đầu tiên</button></div><div class="v10-activity-strip">${plan.activities.length?plan.activities.map((row,index)=>`<button data-v10-activity="${escape(row.id)}"><span>${activityIcon(row.type)}</span><strong>${escape(row.payload?.label||row.type)}</strong><small>${Math.max(1,Math.round(row.estimatedSeconds/60))} phút${row.evidencePolicy?.affectsSchedule?' · FSRS evidence':' · coaching/content'}</small><em>${index+1}</em></button>`).join(''):'<p class="muted">Chưa có hoạt động phù hợp. Hãy thêm từ hoặc mở một bài IELTS.</p>'}</div><small class="v10-plan-coverage">${plan.coverage.cards} hoạt động gắn card · ${plan.coverage.errors} lỗi · ${plan.coverage.listening} nghe · ${plan.coverage.coaching} coaching · ${plan.coverage.content} content</small>`;
+function launchError(code,message){
+  return Object.assign(new Error(message),{code,productFailure:true});
+}
+
+async function durableActivity(displayed){
+  const stored=normalizeActivity(await getV10Record(V10_STORES.activities,displayed.id));
+  if(!stored.id||!stored.launchBinding)throw launchError('TODAY_PLAN_MISSING','Không tìm thấy durable Today activity.');
+  if(stored.launchBinding!==displayed.launchBinding||activityLaunchBinding(stored)!==stored.launchBinding)throw launchError('TODAY_PLAN_BINDING_MISMATCH','Today activity đã thay đổi sau khi render; hãy làm mới kế hoạch.');
+  if(stored.planDate!==localDateKey())throw launchError('TODAY_PLAN_STALE','Today activity thuộc ngày khác; hãy làm mới kế hoạch.');
+  return stored;
+}
+
+async function launchActivity(displayed){
+  const activity=await durableActivity(displayed);
+  if(activity.execution?.status!=='ready'||!READY_EXECUTORS.has(activity.execution.kind))throw launchError('TODAY_EXECUTOR_UNSUPPORTED','Hoạt động này đang coaching-only hoặc chưa có exact executor an toàn.');
+  if(activity.execution.kind==='core-card'||activity.execution.kind==='core-intro'){
+    const result=globalThis.VocabMasterApp?.startPlannedActivity?.(activity);
+    if(!result?.started)throw launchError(result?.code||'TODAY_CORE_LAUNCH_FAILED',result?.message||'Không thể mở exact Core target.');
+    return result;
+  }
+  if(activity.execution.kind==='ielts-error'){
+    const result=await globalThis.VocabMasterIeltsLab?.openErrorTarget?.({
+      errorId:activity.payload.errorId,sourceId:activity.target?.sourceId,sourceRevision:activity.target?.sourceRevision
+    });
+    if(!result?.opened)throw launchError(result?.code||'TODAY_ERROR_LAUNCH_FAILED',result?.message||'Không thể mở exact error target.');
+    return result;
+  }
+  if(activity.execution.kind==='content'){
+    const row=await getV10Record(V10_STORES.contentManifests,activity.payload.contentId);
+    if(!row||row.qualityStatus!=='verified')throw launchError('TODAY_SOURCE_STALE','Content target không còn verified.');
+    if(activity.target?.sourceId!==`v10-content:${row.id}`||activity.target?.sourceRevision!==contentRevision(row))throw launchError('TODAY_REVISION_STALE','Content target đã thay đổi sau khi lập kế hoạch.');
+    globalThis.dispatchEvent(new CustomEvent('vocab:v10-open-content',{detail:{contentId:row.id,activityId:activity.id,plannedTarget:activity.target}}));
+    return{started:true,activityId:activity.id,target:activity.target};
+  }
+  const asset=await getV10Record(V10_STORES.contentAssets,activity.sourceId);
+  if(!asset||activity.target?.sourceId!==`v10-content-asset:${asset.id}`||activity.target?.sourceRevision!==assetRevision(asset))throw launchError('TODAY_REVISION_STALE','Sentence target đã thay đổi sau khi lập kế hoạch.');
+  globalThis.dispatchEvent(new CustomEvent('vocab:v10-open-sentence-loop',{detail:{
+    activityId:activity.id,plannedTarget:activity.target,sourceId:asset.id,sourceType:activity.sourceType,
+    title:activity.payload.label,sentences:activity.payload.sentences
+  }}));
+  return{started:true,activityId:activity.id,target:activity.target};
+}
+
+function applyTodayStatus(){
+  const node=document.querySelector('#v10TodayStatus');
+  if(node){node.textContent=todayStatus.message;node.dataset.kind=todayStatus.kind;}
+}
+
+function setTodayStatus(message='',kind='neutral'){
+  todayStatus={message:String(message||''),kind:String(kind||'neutral')};
+  applyTodayStatus();
+}
+
+function setTodayRenderBusy(busy){
+  const host=document.querySelector('#v10TodayPlan');if(!host)return;
+  host.setAttribute('aria-busy',String(Boolean(busy)));
+  if(busy){
+    host.onclick=null;
+    host.querySelectorAll('button').forEach(button=>{button.disabled=true;});
+    return;
+  }
+  const refresh=host.querySelector('#v10RefreshPlan');if(refresh)refresh.disabled=false;
+  const morePractice=host.querySelector('#v10MorePractice');if(morePractice)morePractice.disabled=false;
+}
+
+function enqueueTodayAction(operation){
+  const task=todayActionTail.catch(()=>undefined).then(operation);
+  todayActionTail=task;
+  return task;
+}
+
+function enqueueRender(options={}){
+  pendingTodayRenders+=1;
+  setTodayRenderBusy(true);
+  const task=enqueueTodayAction(()=>renderPlan(options));
+  return task.finally(()=>{
+    pendingTodayRenders-=1;
+    setTodayRenderBusy(pendingTodayRenders>0);
+  });
+}
+
+function enqueueLaunch(activity){
+  return enqueueTodayAction(()=>launchActivity(activity));
+}
+
+async function renderPlan({force=false,degraded=false}={}){
+  const host=document.querySelector('#v10TodayPlan');if(!host)return;
+  if(degraded){
+    host.innerHTML='<div class="v10-today-head"><div><p class="eyebrow">TODAY · SAFE MODE</p><h3>Today tạm dừng trong Core-only degraded mode</h3><p>Không mở phiên học vì V10 durable plan/target verification không khả dụng. Quick Capture vẫn dùng adapter degraded đã verify.</p></div></div><p id="v10TodayStatus" data-kind="error">Không có schedule write hoặc RAM-only fallback.</p>';
+    setTodayStatus('Không có schedule write hoặc RAM-only fallback.','error');
+    return;
+  }
+  const plan=await buildTodayActivityPlan({force});
+  const minutes=Math.max(1,Math.round(plan.estimatedSeconds/60));
+  const firstReady=plan.activities.find(row=>row.execution?.status==='ready');
+  host.innerHTML=`<div class="v10-today-head"><div><p class="eyebrow">CANONICAL TODAY</p><h3>Phiên exact-target ${minutes} phút</h3><p>Mỗi launcher được bind vào durable activity, card/sense/skill/source revision; target stale sẽ fail closed.</p></div><div><button class="secondary-button" id="v10MorePractice">Luyện thêm</button><button class="secondary-button" id="v10RefreshPlan">Lập kế hoạch mới</button><button class="primary-button" id="v10StartPlan" ${firstReady?'':'disabled'}>Bắt đầu target khả dụng đầu tiên</button></div></div><div class="v10-activity-strip">${plan.activities.length?plan.activities.map((row,index)=>`<button data-v10-activity="${escape(row.id)}" data-today-execution="${escape(row.execution?.status||'blocked')}" ${row.execution?.status==='ready'?'':'disabled'}><span>${activityIcon(row.type)}</span><strong>${escape(row.payload?.label||row.type)}</strong><small>${Math.max(1,Math.round(row.estimatedSeconds/60))} phút · ${row.execution?.status==='ready'?(row.evidencePolicy?.affectsSchedule?'exact evidence target':'exact coaching target'):`blocked: ${escape(row.execution?.reason||'unsupported')}`}</small><em>${index+1}</em></button>`).join(''):'<p class="muted">Chưa có exact activity. Không mở phiên tổng hợp thay thế.</p>'}</div><p id="v10TodayStatus" aria-live="polite"></p><small class="v10-plan-coverage">${plan.coverage.cards} hoạt động gắn card · ${plan.coverage.errors} lỗi · ${plan.coverage.listening} nghe · ${plan.coverage.coaching} coaching · ${plan.coverage.content} content</small>`;
+  applyTodayStatus();
   host.dataset.activities=JSON.stringify(plan.activities.map(row=>row.id));
-  const byId=new Map(plan.activities.map(row=>[row.id,row]));host.onclick=event=>{const button=event.target.closest('[data-v10-activity]');if(button)launchActivity(byId.get(button.dataset.v10Activity));};document.querySelector('#v10StartPlan')?.addEventListener('click',()=>{if(plan.activities[0])launchActivity(plan.activities[0]);});
+  const byId=new Map(plan.activities.map(row=>[row.id,row]));
+  host.onclick=event=>{
+    const button=event.target.closest('[data-v10-activity]');
+    if(!button)return;
+    const activity=byId.get(button.dataset.v10Activity);
+    void enqueueLaunch(activity).then(()=>setTodayStatus('Đã mở đúng durable planned target.','success')).catch(error=>setTodayStatus(`${error.code||'TODAY_LAUNCH_FAILED'}: ${error.message}`,'error'));
+  };
+  document.querySelector('#v10StartPlan')?.addEventListener('click',()=>void enqueueLaunch(firstReady).then(()=>setTodayStatus('Đã mở đúng durable planned target.','success')).catch(error=>setTodayStatus(`${error.code||'TODAY_LAUNCH_FAILED'}: ${error.message}`,'error')));
+  document.querySelector('#v10MorePractice')?.addEventListener('click',()=>globalThis.VocabMasterApp?.openPractice?.());
+  document.querySelector('#v10RefreshPlan')?.addEventListener('click',()=>{
+    setTodayStatus();
+    void enqueueRender({force:true}).catch(error=>setTodayStatus(`${error.code||'TODAY_RENDER_FAILED'}: ${error.message}`,'error'));
+  });
 }
 
-function mountSection(){const today=document.querySelector('[data-view="today"]');if(!today||document.querySelector('#v10TodaySection'))return;const section=document.createElement('section');section.id='v10TodaySection';section.className='section-block v10-today-section';section.innerHTML='<div id="v10TodayPlan" aria-live="polite"></div>';const anchor=today.querySelector('.insight-section');if(anchor)anchor.insertAdjacentElement('afterend',section);else today.append(section);}
+function mountSection(){
+  const today=document.querySelector('[data-view="today"]');
+  if(!today)return null;
+  document.documentElement.dataset.todayCanonical='true';
+  today.dataset.todayEntry='canonical';
+  today.setAttribute('aria-label','Today');
+  const section=document.createElement('section');
+  section.id='v10TodaySection';
+  section.className='section-block v10-today-section';
+  section.innerHTML='<div id="v10TodayPlan" aria-live="polite"></div>';
+  today.replaceChildren(section);
+  return section;
+}
 
-export async function mountTodayPlannerV2(){mountSection();await renderPlan();globalThis.addEventListener('vocab:external-change',()=>void renderPlan());globalThis.addEventListener('vocab:ielts-data-saved',()=>void renderPlan());globalThis.addEventListener('vocab:v10-personal-content-ready',()=>void renderPlan());globalThis.addEventListener('vocab:v10-data-saved',event=>{if(!(event.detail?.stores||[]).includes(V10_STORES.activities))void renderPlan();});globalThis.addEventListener('hashchange',()=>{if(location.hash==='#today')void renderPlan();});globalThis.VocabMasterTodayV2={build:buildTodayActivityPlan,refresh:renderPlan,launch:launchActivity};}
+export async function mountTodayPlannerV2({degraded=false}={}){
+  if(!document.querySelector('#v10TodaySection'))mountSection();
+  await enqueueRender({degraded});
+  if(!degraded){
+    const refresh=()=>void enqueueRender().catch(error=>setTodayStatus(`${error.code||'TODAY_RENDER_FAILED'}: ${error.message}`,'error'));
+    globalThis.addEventListener('vocab:external-change',refresh);
+    globalThis.addEventListener('vocab:ielts-data-saved',refresh);
+    globalThis.addEventListener('vocab:v10-personal-content-ready',refresh);
+    globalThis.addEventListener('hashchange',()=>{if(location.hash==='#today')refresh();});
+  }
+  globalThis.VocabMasterTodayV2={build:options=>enqueueTodayAction(()=>buildTodayActivityPlan(options)),refresh:options=>enqueueRender(options),launch:activity=>enqueueLaunch(activity),binding:activityLaunchBinding};
+  return globalThis.VocabMasterTodayV2;
+}
+
+export const __testing=Object.freeze({assetRevision,cardTarget,contentRevision,errorRevision,launchProjection,resumeTodayPlan});

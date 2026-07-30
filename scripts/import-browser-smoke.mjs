@@ -19,7 +19,7 @@ try{
   assert.equal(await page.locator('#streakValue').textContent(),'0');
   assert.equal(await page.locator('#dailyPercent').textContent(),'0%');
 
-  await page.click('#openMorePractice');
+  await page.click('#v10MorePractice');
   await page.click('[data-practice="collocation"]');
   await page.waitForSelector('#studyOverlay.open .exercise-card');
   const prompt=(await page.locator('#exerciseHost h2').textContent())||'';

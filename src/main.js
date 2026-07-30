@@ -69,6 +69,12 @@ function reportBootError(title,error){
   const detail=error?.stack||error?.message||String(error||'Không có thông tin lỗi.');
   console.error(`[boot] ${title}`,error);
   restoreViewport();
+  if(/^(RESTORE_|DATABASE_|DURABLE_|STORAGE_LOCK_)/.test(String(error?.code||''))&&shell){
+    shell.inert=true;
+    shell.setAttribute('aria-busy','true');
+    shell.style.pointerEvents='none';
+    shell.style.opacity='.35';
+  }
   if(globalThis.__VOCAB_SHOW_BOOT_ERROR__)globalThis.__VOCAB_SHOW_BOOT_ERROR__(title,detail);
   else showNonBlockingBootError(title,detail);
 }
@@ -76,7 +82,26 @@ function reportBootError(title,error){
 function markBooted(){
   globalThis.__VOCAB_BOOTED__=true;
   restoreViewport();
+  if(shell){
+    shell.inert=false;
+    shell.removeAttribute('aria-busy');
+    shell.style.pointerEvents='';
+    shell.style.opacity='';
+  }
   document.getElementById('bootStatus')?.remove();
+}
+
+function markCoreOnlyDegradedMode(){
+  globalThis.__VOCAB_CORE_ONLY_DEGRADED__=true;
+  let notice=document.getElementById('coreOnlyDegradedNotice');
+  if(!notice){
+    notice=document.createElement('div');
+    notice.id='coreOnlyDegradedNotice';
+    notice.setAttribute('role','status');
+    Object.assign(notice.style,{margin:'12px 16px',padding:'12px 16px',borderRadius:'12px',background:'#fff4d6',color:'#5c3b00',font:'600 13px/1.45 system-ui'});
+    document.querySelector('main')?.prepend(notice);
+  }
+  notice.textContent='Chế độ Core-only degraded: dữ liệu Core được ghi và read-back bằng localStorage. IELTS và V10 đã bị vô hiệu hóa vì IndexedDB không khả dụng.';
 }
 
 function withTimeout(promise,timeoutMs,label){
@@ -101,9 +126,14 @@ async function clearDevelopmentPwaState(){
 
 async function initializeState(){
   const persistence=await import('./persistence.js');
-  const initial=await withTimeout(persistence.initializePersistence(),10_000,'Khởi tạo IndexedDB');
+  const {recoverInterruptedRestore}=await import('./ielts-backup.js');
+  await recoverInterruptedRestore();
+  await persistence.initializePersistence();
+  const initial=persistence.getCurrentState();
+  const storageStatus=await persistence.getPersistenceStatus();
   globalThis.__VOCAB_INITIAL_STATE__=initial;
-  return persistence;
+  globalThis.__VOCAB_STORAGE_STATUS__=storageStatus;
+  return{persistence,coreOnlyDegraded:storageStatus.storage==='localStorage-degraded'};
 }
 
 if(!isAiStudioPreview)document.getElementById('bootStatus')?.remove();
@@ -118,24 +148,31 @@ try{
     markBooted();
   }else{
     if(isLocalDevelopment)void clearDevelopmentPwaState();
-    const persistence=await initializeState();
+    const {persistence,coreOnlyDegraded}=await initializeState();
     await import('./settings-ui.js');
     await import('./app.js');
     if(isBrowserSmokeSeed)await globalThis.VocabMasterApp?.loadSampleDeck?.();
     const { mountCaptureInbox } = await import('./capture-inbox.js');
     const { mountRoadmapRuntime } = await import('./roadmap-runtime.js');
-    const { mountIeltsLab } = await import('./ielts-lab.js');
-    const { mountIeltsBackupBridge } = await import('./ielts-backup-bridge.js');
-    const { mountIeltsRuntimeGuard } = await import('./ielts-runtime-guard.js');
-    const { mountIeltsChoiceErrorBridge } = await import('./ielts-choice-error-bridge.js');
-    const { mountV10Runtime } = await import('./v10-runtime.js');
     await mountCaptureInbox();
     await mountRoadmapRuntime();
-    await mountIeltsLab();
-    mountIeltsBackupBridge();
-    mountIeltsRuntimeGuard();
-    mountIeltsChoiceErrorBridge();
-    await withTimeout(mountV10Runtime(),12_000,'Khởi tạo nền tảng v10');
+    if(coreOnlyDegraded){
+      const { mountTodayPlannerV2 } = await import('./today-planner-v2.js');
+      await mountTodayPlannerV2({degraded:true});
+      markCoreOnlyDegradedMode();
+    }
+    else{
+      const { mountIeltsLab } = await import('./ielts-lab.js');
+      const { mountIeltsBackupBridge } = await import('./ielts-backup-bridge.js');
+      const { mountIeltsRuntimeGuard } = await import('./ielts-runtime-guard.js');
+      const { mountIeltsChoiceErrorBridge } = await import('./ielts-choice-error-bridge.js');
+      const { mountV10Runtime } = await import('./v10-runtime.js');
+      await mountIeltsLab();
+      mountIeltsBackupBridge();
+      mountIeltsRuntimeGuard();
+      mountIeltsChoiceErrorBridge();
+      await withTimeout(mountV10Runtime(),12_000,'Khởi tạo nền tảng v10');
+    }
     await import('./pwa.js');
     await persistence.mountPersistenceUI();
     markBooted();

@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [domain,persistence,ui,runtimeGuard,content,player,api,server,main,sw,css,packageJson]=await Promise.all([
+const [domain,evidencePolicy,persistence,ui,todayPlanner,ieltsHub,runtimeGuard,content,player,api,server,main,sw,css,packageJson]=await Promise.all([
   readFile(new URL('../src/ielts-domain.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/evidence-policy.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-persistence.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-lab.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/today-planner-v2.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/ielts-hub-v2.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-runtime-guard.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-content.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-media-player.js',import.meta.url),'utf8'),
@@ -26,20 +29,27 @@ check('Phase 0: all durable stores exist',()=>{
 });
 
 check('Phase 0: one evidence gateway guards FSRS',()=>{
-  assert.ok(domain.includes('resolveIeltsEvidence'),'Evidence gateway missing');
-  assert.ok(domain.includes("activity==='shadowing'")&&domain.includes("reason:'shadowing-is-imitation'"),'Shadowing guard missing');
-  assert.ok(domain.includes("errorType==='spelling-only'")&&domain.includes('spelling-is-not-listening-retrieval'),'Spelling/listening distinction missing');
-  assert.ok(domain.includes('preselectedTarget')&&domain.includes('usedTargetCorrectly'),'Retell target guard missing');
-  assert.ok(ui.includes('resolveIeltsEvidence')&&ui.includes('commitEvidence'),'UI bypasses evidence gateway');
+  assert.ok(domain.includes('resolveIeltsEvidence')&&domain.includes('decideEvidence'),'Evidence gateway missing');
+  assert.ok(evidencePolicy.includes('COACHING_ACTIVITIES')&&evidencePolicy.includes("'shadowing'")&&evidencePolicy.includes('activity-is-coaching-only'),'Shadowing guard missing');
+  assert.ok(evidencePolicy.includes("attempt.errorType==='spelling-only'")&&evidencePolicy.includes('spelling-is-not-listening-retrieval'),'Spelling/listening distinction missing');
+  assert.ok(evidencePolicy.includes('learnerOutput')&&evidencePolicy.includes('targetUsed')&&evidencePolicy.includes('evaluation-is-not-verified'),'Retell target/output/evaluator guard missing');
+  assert.ok(evidencePolicy.includes('missing-receipt-id')&&evidencePolicy.includes('planned-target-mismatch')&&evidencePolicy.includes('assistance-exposed'),'Default-deny binding and assistance guards missing');
+  assert.ok(evidencePolicy.includes('SOURCE_AUTHORITIES')&&evidencePolicy.includes('EVALUATION_AUTHORITIES')&&evidencePolicy.includes('receiptBinding'),'Authoritative receipt binding missing');
+  assert.ok(ui.includes('buildIeltsEvidenceEnvelope'),'UI does not emit canonical evidence envelopes');
+  assert.doesNotMatch(ui,/applyFsrsRating|persistReviewResult|commitEvidence/,'IELTS UI contains a direct schedule write path');
+  assert.ok(ui.includes('selectedTargetIds.has(row.cardId)'),'Retell evaluator results are not restricted to preselected targets');
   assert.ok(runtimeGuard.includes('skillIsPlanned')&&runtimeGuard.includes("supportsSkill(option.value,'listening')")&&runtimeGuard.includes("supportsSkill(input.value,'production')"),'Card learning-goal guard missing');
   assert.ok(main.includes('mountIeltsRuntimeGuard'),'FSRS runtime guard is not mounted');
 });
 
-check('Phase 1: Error Notebook stores full evidence and deduplicates',()=>{
+check('Error Notebook stores full evidence and has one exact Today adapter',()=>{
   for(const field of ['learnerResponse','expectedResponse','correction','sourceRef','linkedCardIds','occurrenceCount','status'])assert.ok(domain.includes(field),`ErrorRecord missing ${field}`);
   assert.ok(persistence.includes("index('normalizedKey').get")&&persistence.includes('mergeErrorRecords'),'Persistent exact dedupe missing');
   assert.ok(ui.includes('installCoreErrorCapture'),'Existing core exercise bridge missing');
-  assert.ok(ui.includes('renderTodayErrors'),'Today integration missing');
+  assert.ok(ui.includes('openErrorTarget')&&ui.includes('state.selectedErrorId=id'),'Exact error target adapter missing');
+  assert.ok(todayPlanner.includes("execution.kind==='ielts-error'")&&todayPlanner.includes('openErrorTarget'),'Canonical Today does not use the exact error adapter');
+  assert.doesNotMatch(ui,/renderTodayErrors|ieltsTodayErrors|data-today-error/,'IELTS Lab still mounts a second Today widget');
+  assert.doesNotMatch(ieltsHub,/buildTodayActivityPlan|data-v10-hub-activity|data-v10-ielts-tab="today"/,'IELTS Hub still mounts a second Today planner');
 });
 
 check('Phase 2: Lexical Sets contain IELTS usage metadata and production',()=>{
