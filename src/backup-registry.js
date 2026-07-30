@@ -259,9 +259,19 @@ export function reconcilePhase4RestoreStores(inputStores,{appVersion='10.0.0'}={
   const stores=structuredClone(inputStores||{});
   const warnings=[];
   const installedRows=stores[V10_STORES.installedPacks]||[];
+  const phase4InstalledRows=installedRows.filter(row=>
+    Boolean(row?.packId)
+    ||row?.schemaVersion!=null
+    ||String(row?.id||'').startsWith('installed:')
+  );
   const lessonRows=stores[V10_STORES.contentManifests]||[];
   const receiptRows=stores[V10_STORES.packActivationReceipts]||[];
   const progressRows=stores[V10_STORES.contentProgress]||[];
+  const phase4ProgressRows=progressRows.filter(row=>
+    Boolean(row?.lessonId)
+    ||row?.schemaVersion!=null
+    ||row?.activityProgress!=null
+  );
   const effective=indexEffectiveRevocations({durable:stores[V10_STORES.packRevocations]||[]});
   const installedByPack=new Map();
 
@@ -272,9 +282,8 @@ export function reconcilePhase4RestoreStores(inputStores,{appVersion='10.0.0'}={
     warnings.push(`Phase 4 ${row.packId||row.id||'record'} quarantined: ${reason}.`);
   };
 
-  for(const installed of installedRows){
+  for(const installed of phase4InstalledRows){
     installedByPack.set(installed.packId,installed);
-    if(installed.state==='deleted')continue;
     if(Number(installed.schemaVersion)!==CONTENT_SCHEMA_VERSION){
       quarantine(installed,Number(installed.schemaVersion)>CONTENT_SCHEMA_VERSION?'unsupported-installed-pack-schema':'invalid-installed-pack-schema');
       continue;
@@ -283,6 +292,7 @@ export function reconcilePhase4RestoreStores(inputStores,{appVersion='10.0.0'}={
       quarantine(installed,'invalid-installed-pack-contract');
       continue;
     }
+    if(installed.state==='deleted')continue;
     const manifest=installed.manifestSnapshot;
     if(
       !manifest
@@ -358,7 +368,7 @@ export function reconcilePhase4RestoreStores(inputStores,{appVersion='10.0.0'}={
     }
   }
 
-  for(const progress of progressRows){
+  for(const progress of phase4ProgressRows){
     const lesson=lessonsById.get(progress.lessonId);
     const activityIds=new Set((lesson?.activities||[]).map(activity=>activity.id));
     const progressActivityIds=Object.keys(progress.activityProgress||{});

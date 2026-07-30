@@ -155,7 +155,7 @@ technical re-audit and does not close any external or editorial gate.
 ## Focused verification completed before the final-head gate
 
 - Phase 4 contracts/trust/installer/lifecycle/content/backup/migration:
-  53/53 tests passed.
+  54/54 tests passed.
 - Production browser shell: representative Listening, Reading and
   Lexical/Paraphrase lessons opened in Chrome with desktop and mobile viewport
   checks, keyboard focus and reduced-motion emulation.

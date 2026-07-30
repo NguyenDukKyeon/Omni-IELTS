@@ -233,6 +233,12 @@ test('progress with unsupported or missing lesson references is retained but nev
         completedActivityIds:[],
         status:'completed',
         updatedAt:Date.parse(activatedAt)
+      },
+      {
+        id:'lesson:future-progress',
+        schemaVersion:99,
+        lessonId:'lesson:future-progress',
+        opaqueFutureField:{keep:true}
       }
     ];
   });
@@ -243,6 +249,21 @@ test('progress with unsupported or missing lesson references is retained but nev
   const progress=validation.value.domains.v10.stores[V10_STORES.contentProgress];
   assert.equal(progress.find(row=>row.lessonId==='lesson:future').referenceState,'quarantined');
   assert.equal(progress.find(row=>row.lessonId==='lesson:missing').referenceState,'orphaned');
+  assert.equal(progress.find(row=>row.lessonId==='lesson:future-progress').quarantineReason,'unsupported-progress-schema');
+});
+
+test('unrecognized forward-compatible Phase 4 store records are retained without legacy reinterpretation',async()=>{
+  const envelope=await baseEnvelope();
+  const opaqueInstalled={id:'opaque-installed-record',owner:'future-extension',payload:{keep:true}};
+  const opaqueProgress={id:'opaque-progress-record',owner:'future-extension',payload:{keep:true}};
+  const candidate=rebuild(envelope,stores=>{
+    stores[V10_STORES.installedPacks]=[opaqueInstalled];
+    stores[V10_STORES.contentProgress]=[opaqueProgress];
+  });
+  const validation=validateFullBackupEnvelope(candidate);
+  assert.equal(validation.valid,true);
+  assert.deepEqual(validation.value.domains.v10.stores[V10_STORES.installedPacks],[opaqueInstalled]);
+  assert.deepEqual(validation.value.domains.v10.stores[V10_STORES.contentProgress],[opaqueProgress]);
 });
 
 test('CacheStorage is reconstructable and every Phase 4 durable store remains included',()=>{
