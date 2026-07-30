@@ -10,6 +10,35 @@ Phase 5 is an implementer handoff, not acceptance. No merge, deploy,
 production-provider claim, Phase 4 publication approval, Phase 6 work or Phase
 7 work is included.
 
+## Focused post-merge audit remediation
+
+PR #13 source `f56f84a0fe0398ac44d331d02df6a911bee62d50`
+passed exact-source CI run #266 and merged at
+`d654356078d2b4d44a03ba17809c7bedeb6c8f14`. The follow-up branch
+`codex/phase-5-audit-remediation` starts from that exact merge and remediates
+only the nine focused Phase 5 findings:
+
+- Gemini authorization is checked against the current durable consent
+  authority; forged, withdrawn and stale receipts fail before provider work.
+- Restore retains consent history but disables cloud and requires explicit
+  reactivation.
+- HTTP disconnect cancellation reaches the owned process tree; restart cleanup
+  journals, concurrency, media and disk reservations fail closed.
+- Canonical resolver jobs use heartbeat-renewed fenced leases, and cloud media
+  over the consented duration is rejected rather than clamped.
+- Local models require trusted digest/length verification and staged atomic
+  activation; ASR checkpoints bind engine, model and chunk versions.
+- Overlap merge distinguishes cross-chunk boundary duplicates from legitimate
+  repetition.
+- Timingless text import persists as private/unverified and `aligned: false`;
+  timing-dependent workspace activity rejects it.
+
+Each boundary has a deterministic regression probe. The focused Phase 5 suite
+now contains 45 passing tests. Live Whisper/Gemini coverage remains
+conditionally skipped because no model/binaries or approved cost-bearing
+credential were provisioned. Phase 5 remains
+`IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED`.
+
 ## Package delivery
 
 | Package | Commit | Delivered |
@@ -105,8 +134,9 @@ or any P5 package `ACCEPTED`.
   phase does not install a daemon or OS autostart service.
 - Public YouTube media only: authenticated/private/cookie extraction is
   deliberately unsupported.
-- Imported timingless text uses deterministic four-second segments and may need
-  learner editing before study.
+- Imported timingless text uses deterministic display ordering but is marked
+  unaligned and cannot enter timing-dependent study until real cue timing is
+  supplied.
 - Independent review must reproduce consent decline/version change, source
   rights denial, process cancellation/cleanup, paid-call suppression after
   caption success, desktop/mobile browser paths and backup/restore on the exact
