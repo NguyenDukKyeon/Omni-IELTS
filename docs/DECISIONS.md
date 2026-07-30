@@ -543,3 +543,44 @@ Decision: Phase 3 is independently accepted at source HEAD `96aa0172add84186fbe2
 Consequences: P4-00…P4-10 may be implemented without rewriting roadmap dependencies. This acceptance does not authorize Phase 5 ASR/cloud fallback, Phase 6 content factory/scale or Phase 7 personalization. Phase 5 remains locked.
 
 Revisit when: Phase 4 reaches its own exact-head CI, independent focused audit and merged-PR acceptance boundary. Implementer evidence must not mark Phase 4 or its packages `ACCEPTED`.
+
+## ADR-041 — Phase 4 separates immutable catalog bytes from durable learner truth
+
+Status: PROPOSED / REVIEW_REQUIRED
+
+Decision: published catalog manifests and media use immutable SHA-256 identities
+and CacheStorage namespaces because they are independently verifiable and
+redownloadable. IndexedDB version 7 owns signed last-known-good catalog state,
+install journals, installed-pack pointers, activation receipts, revocations,
+tombstones and learner progress. No durable operation may report success from a
+RAM fallback. Activation occurs only after every mandatory byte and lesson
+reference is verified, and an update installs side-by-side before one atomic
+pointer switch.
+
+The learner bundle contains only public verification roots. Private signing
+keys and authoring credentials are environment-provided to the isolated
+publishing scaffold and are never committed. HTTPS is transport only, not
+catalog authenticity. Unsigned legacy fixtures are explicitly excluded from
+the production trust path.
+
+AI-assisted sampler and Starter Pack material remains draft provenance.
+Production validation rejects pending rights, AI-only provenance, unnamed
+reviewers, missing review checks and unpublished timestamps. Therefore the
+bundled production catalog is validly signed but empty until named humans
+confirm ownership/license, pedagogy and accuracy, and a separate publisher
+signs the resulting artifact. This is an intentional release block, not a
+missing-data default.
+
+Consequences: clearing CacheStorage cannot delete progress. Portable backup
+contains install metadata, receipts, journals, tombstones, revocations and
+progress, while remote media bodies become digest-bearing reinstall stubs.
+Restore never fabricates verified media. Rollback may disable remote activation
+or select a retained verified revision, but it does not lower an IndexedDB
+version, remove unfamiliar stores or reinterpret a newer schema as empty.
+Revoked packs cannot start new lessons while historical evidence remains.
+
+Revisit when: an external content repository is provisioned and its named
+rights/review records are approved. Preserve the public-key/private-key
+boundary, immutable address semantics, weekly defect-review ordering and
+default-deny publication gate. Phase 5 ASR/cloud fallback and Phase 6 automated
+content factory remain outside this decision.

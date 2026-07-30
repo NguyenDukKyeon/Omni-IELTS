@@ -1,6 +1,6 @@
 # VocabMaster — Implementation Status
 
-Last updated: 2026-07-30, Phase 3 independently accepted and merged; Phase 4 implementation unlocked
+Last updated: 2026-07-30, Phase 4 implementation complete for internal review; publication approval remains fail-closed
 
 Phase 0 accepted source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
@@ -13,7 +13,32 @@ Phase 2 acceptance binding: merged `main` commit `cf28153352110cae510c92e2a8f911
 Phase 3 acceptance binding: independently accepted at source HEAD `96aa0172add84186fbe2970cde910b06a0d73672`; exact-head CI run #259 succeeded; PR #11 merged into `main` at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`.
 
 Active implementation branch: codex/phase-4-remote-content-platform
-Delivery status: `PHASE_3_ACCEPTED / PHASE_4_UNLOCKED / PHASE_5_LOCKED`
+Delivery status: `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED`
+
+Phase 4 is not accepted. The production signed catalog intentionally contains
+no packs because all 68 rights records and all 72 human-review records in the
+AI-assisted content draft remain pending. The platform, trust, install,
+lifecycle, backup/restore, UI and validator paths are implemented and focused
+green; the sampler and four weekly packs are structurally complete drafts only.
+External content-repository provisioning, named human rights/review approval,
+production signing, exact-head remote CI, independent focused audit and merge
+remain required. Phase 5 and Phase 6 remain locked.
+
+## Phase 4 delivery matrix
+
+| Package | Implementation state | Review boundary |
+|---|---|---|
+| P4-00 contracts | IMPLEMENTED / INTERNAL_GREEN | Versioned contracts and fail-closed publication validation; independent review required |
+| P4-01 catalog trust | IMPLEMENTED / INTERNAL_GREEN | Ed25519 root, canonical serialization, rotation metadata, replay/downgrade protection and durable last-known-good |
+| P4-02 installer | IMPLEMENTED / INTERNAL_GREEN | Content-addressed staging, journals, leases, typed recovery and atomic activation |
+| P4-03 lifecycle | IMPLEMENTED / INTERNAL_GREEN | Offline launch, update/delete/reinstall/revocation/rollback and exact Today inventory |
+| P4-04 publishing boundary | IMPLEMENTED_SCAFFOLD / PROVISIONING_PENDING | `content-repo/` is isolated and publishable; no external remote repository is claimed |
+| P4-05 sampler | DRAFT_VALIDATED / HUMAN_REVIEW_REQUIRED | Exactly 3 lessons; not production-publishable |
+| P4-06 week 1 | DRAFT_VALIDATED / HUMAN_REVIEW_REQUIRED | 2 Listening, 2 Reading, 2 Lexical/Paraphrase |
+| P4-07 week 2 | DRAFT_VALIDATED / HUMAN_REVIEW_REQUIRED | Publication depends on approved week-1 defect review |
+| P4-08 week 3 | DRAFT_VALIDATED / HUMAN_REVIEW_REQUIRED | Publication depends on approved week-2 defect review |
+| P4-09 week 4 | DRAFT_VALIDATED / HUMAN_REVIEW_REQUIRED | Publication depends on approved week-3 defect review |
+| P4-10 verification/release | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED | Local focused gates green; exact-head CI, independent ACCEPT and merge still required |
 
 Scope of this update: Phase 0 remains accepted at exact source commit `d869eb4` with PR #8 Ubuntu CI run 250 green. PR #9 was merged into `main` at `9da21e1`. GitHub Actions CI run 255 (`30533541002`) completed successfully on that exact merge commit. An independent read-only audit reviewed the cumulative 44-file P1 diff, reproduced `npm ci --no-audit --no-fund`, `npm run phase0:gate` (21/21), and `npm run phase1:verify` (22/22, including 233/233 unit/integration and all production browser suites) on clean `main`; no P0/P1 finding remained. P1-00…P1-08 are therefore accepted at `9da21e1` and unlock P2-00.
 
