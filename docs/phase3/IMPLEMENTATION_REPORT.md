@@ -1,12 +1,12 @@
 # Phase 3 — Full-video Learning Workspace implementation report
 
-Status: `IMPLEMENTED / REVIEW_REQUIRED`
+Status: `ACCEPTED / MERGED`
 
 Branch: `codex/phase-3-full-video-workspace`
 
 Baseline: clean `main` at `cf28153352110cae510c92e2a8f911a6d65497ca`.
 
-This is implementer evidence. It does not independently accept P3-00…P3-06 and does not unlock Phase 4 or Phase 5.
+This file began as implementer evidence. Phase 3 was subsequently independently accepted at source HEAD `96aa0172add84186fbe2970cde910b06a0d73672`; exact-head CI run #259 succeeded; PR #11 merged into `main` at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`. Phase 4 is unlocked. Phase 5 remains locked.
 
 ## Delivered scope
 
@@ -38,7 +38,15 @@ During implementation only focused Phase 3, resolver and V10 browser tests are r
 - `npm run test:v10-browser`
 - `npm test` exactly once
 
-The exact results and commit SHA belong in the PR handoff. Independent reviewer reproduction is still required before changing any P3 package to `ACCEPTED`.
+The exact results and commit SHA were independently reviewed at source HEAD `96aa0172add84186fbe2970cde910b06a0d73672`. Exact-head CI run #259 succeeded before PR #11 merged at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`.
+
+## Independent acceptance reconciliation
+
+- Accepted source HEAD: `96aa0172add84186fbe2970cde910b06a0d73672`.
+- Exact-head CI: run #259 succeeded.
+- Merge: PR #11 merged into `main` at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`.
+- Unlock: Phase 4 only.
+- Locked: Phase 5 remains locked.
 
 ## Known limitations
 

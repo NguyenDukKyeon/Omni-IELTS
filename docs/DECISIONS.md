@@ -533,3 +533,13 @@ Decision: one workspace controller owns player, virtual transcript rail, learnin
 Consequences: changing mode may deliberately rerender the active sentence, but cannot change sentence identity. A concurrent edit produces `TRANSCRIPT_EDIT_CONFLICT` instead of last-write-wins. No strict or assisted activity in this package bypasses EvidencePolicy, and no Retell score is fabricated. Mobile uses the same controller and canonical revision as desktop.
 
 Revisit when: a qualified independent Retell evaluator, variable-height virtualizer or cross-device transcript synchronization is introduced. Preserve semantic answer omission, assistance provenance and immutable history.
+
+## ADR-040 — Phase 3 independent acceptance unlocks Phase 4 only
+
+Status: CONFIRMED
+
+Decision: Phase 3 is independently accepted at source HEAD `96aa0172add84186fbe2970cde910b06a0d73672`. Exact-head CI run #259 succeeded, and PR #11 merged into `main` at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`. Phase 4 may therefore begin on the user-authorized branch `codex/phase-4-remote-content-platform`.
+
+Consequences: P4-00…P4-10 may be implemented without rewriting roadmap dependencies. This acceptance does not authorize Phase 5 ASR/cloud fallback, Phase 6 content factory/scale or Phase 7 personalization. Phase 5 remains locked.
+
+Revisit when: Phase 4 reaches its own exact-head CI, independent focused audit and merged-PR acceptance boundary. Implementer evidence must not mark Phase 4 or its packages `ACCEPTED`.

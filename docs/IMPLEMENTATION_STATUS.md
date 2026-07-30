@@ -1,6 +1,6 @@
 # VocabMaster — Implementation Status
 
-Last updated: 2026-07-30, Phase 2 accepted with recorded limitations; Phase 3 implementation ready for independent review
+Last updated: 2026-07-30, Phase 3 independently accepted and merged; Phase 4 implementation unlocked
 
 Phase 0 accepted source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
@@ -10,8 +10,10 @@ Phase 1 acceptance binding: merged PR #9 at `main` commit `9da21e1c3cb34b7372f1b
 
 Phase 2 acceptance binding: merged `main` commit `cf28153352110cae510c92e2a8f911a6d65497ca`; the remaining UI/reconnect/reload integration limitations were explicitly carried into Phase 3.
 
-Active implementation branch: codex/phase-3-full-video-workspace
-Delivery status: `PHASE_2_ACCEPTED / PHASE_3_IMPLEMENTED / REVIEW_REQUIRED`
+Phase 3 acceptance binding: independently accepted at source HEAD `96aa0172add84186fbe2970cde910b06a0d73672`; exact-head CI run #259 succeeded; PR #11 merged into `main` at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`.
+
+Active implementation branch: codex/phase-4-remote-content-platform
+Delivery status: `PHASE_3_ACCEPTED / PHASE_4_UNLOCKED / PHASE_5_LOCKED`
 
 Scope of this update: Phase 0 remains accepted at exact source commit `d869eb4` with PR #8 Ubuntu CI run 250 green. PR #9 was merged into `main` at `9da21e1`. GitHub Actions CI run 255 (`30533541002`) completed successfully on that exact merge commit. An independent read-only audit reviewed the cumulative 44-file P1 diff, reproduced `npm ci --no-audit --no-fund`, `npm run phase0:gate` (21/21), and `npm run phase1:verify` (22/22, including 233/233 unit/integration and all production browser suites) on clean `main`; no P0/P1 finding remained. P1-00…P1-08 are therefore accepted at `9da21e1` and unlock P2-00.
 
@@ -344,8 +346,8 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 | Phase 0 — Containment and Release Safety | ACCEPTED / GREEN | Baseline audit complete | P0-08 accepted at `d869eb4`; PR #8 Ubuntu CI run 250 passed |
 | Phase 1 — Core Product Unification | ACCEPTED / GREEN | P0-08 ACCEPTED | PR #9 merged at `9da21e1`; CI run 255 and independent reproduction passed |
 | Phase 2 — Caption-first Resolver | ACCEPTED / GREEN_WITH_LIMITATIONS | P1-05, P1-08 ACCEPTED | Merged at `cf281533`; accepted limitations are integrated into Phase 3 |
-| Phase 3 — Full-video Workspace | IMPLEMENTED / REVIEW_REQUIRED | P2-06 ACCEPTED | P3-00…P3-06 implemented on `codex/phase-3-full-video-workspace`; independent acceptance pending |
-| Phase 4 — Remote Content Platform | BLOCKED_BY_PHASE_1 | P1 contracts accepted; production activation also needs platform packages | Not started |
+| Phase 3 — Full-video Workspace | ACCEPTED / GREEN | P2-06 ACCEPTED | Independently accepted at `96aa017`; exact-head CI run #259 passed; PR #11 merged at `d1fe0db` |
+| Phase 4 — Remote Content Platform | UNLOCKED / NOT_STARTED | Phase 3 accepted and merged; P1 contracts accepted | Authorized on `codex/phase-4-remote-content-platform` |
 | Phase 5 — ASR/Cloud Fallback | BLOCKED_BY_PHASE_2 | P2-06 and policy approval | Not started |
 | Phase 6 — Content Factory/Scale | BLOCKED_BY_PHASE_4 | P4-10 ACCEPTED | Not started |
 | Phase 7 — Measurement/Personalization | BLOCKED | Clean event model; rollout also needs content/outcomes | Not started |
@@ -408,13 +410,13 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 | Package | Branch | Dependency | Status |
 |---|---|---|---|
-| P3-00 Workspace shell | codex/phase-3-full-video-workspace | P2-06 | IMPLEMENTED / REVIEW_REQUIRED |
-| P3-01 Progressive rail | codex/phase-3-full-video-workspace | P3-00 | IMPLEMENTED / REVIEW_REQUIRED |
-| P3-02 Visible transcript modes | codex/phase-3-full-video-workspace | P3-01 | IMPLEMENTED / REVIEW_REQUIRED |
-| P3-03 Dictation masking | codex/phase-3-full-video-workspace | P3-01, EvidencePolicy | IMPLEMENTED / REVIEW_REQUIRED |
-| P3-04 Real Retell | codex/phase-3-full-video-workspace | P3-03, event repositories | IMPLEMENTED / REVIEW_REQUIRED |
-| P3-05 Transcript editor | codex/phase-3-full-video-workspace | P1-05, P3-01 | IMPLEMENTED / REVIEW_REQUIRED |
-| P3-06 Workspace exit gate | codex/phase-3-full-video-workspace | P3-02–P3-05 | IMPLEMENTED / REVIEW_REQUIRED |
+| P3-00 Workspace shell | codex/phase-3-full-video-workspace | P2-06 | ACCEPTED @ `96aa017` |
+| P3-01 Progressive rail | codex/phase-3-full-video-workspace | P3-00 | ACCEPTED @ `96aa017` |
+| P3-02 Visible transcript modes | codex/phase-3-full-video-workspace | P3-01 | ACCEPTED @ `96aa017` |
+| P3-03 Dictation masking | codex/phase-3-full-video-workspace | P3-01, EvidencePolicy | ACCEPTED @ `96aa017` |
+| P3-04 Real Retell | codex/phase-3-full-video-workspace | P3-03, event repositories | ACCEPTED @ `96aa017` |
+| P3-05 Transcript editor | codex/phase-3-full-video-workspace | P1-05, P3-01 | ACCEPTED @ `96aa017` |
+| P3-06 Workspace exit gate | codex/phase-3-full-video-workspace | P3-02–P3-05 | ACCEPTED @ `96aa017` |
 
 ### Phase 4
 
@@ -502,12 +504,12 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 The Phase 1 implementation report is `docs/phase1/IMPLEMENTATION_REPORT.md` and remains the implementer handoff. This section records the separate acceptance evidence that unlocks Phase 2.
 
-## 8. Phase 3 remediation state
+## 8. Phase 3 acceptance state
 
-Phase 3 remediation remains `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED`. It is not accepted by this implementer evidence and does not unlock Phase 4 or Phase 5. The focused remediation adds atomic transcript child activation, unattached provider revisions, durable resolver recovery, fail-closed exact revision restoration, canonical assistance traces and local-first Strict Practice wording.
+Phase 3 was independently accepted at exact source HEAD `96aa0172add84186fbe2970cde910b06a0d73672`. Exact-head CI run #259 succeeded, and PR #11 merged into `main` at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`. This independently verified merge unlocks Phase 4. Phase 5 remains locked and is not part of the Phase 4 authorization.
 
 ## 9. Next acceptance action
 
-Current handoff: independent review of P3-00…P3-06 on the exact pushed head of `codex/phase-3-full-video-workspace`.
+Current handoff: implement P4-00…P4-10 on `codex/phase-4-remote-content-platform`, preserving the package dependencies and Phase 4 exit-gate rules.
 
-The reviewer must reproduce `phase3:verify`, static check, production build, related production-browser acceptance and the full regression result. Phase 3 stays `REVIEW_REQUIRED`; this implementer report does not unlock Phase 4 or Phase 5.
+Phase 4 must remain `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED` until exact-head CI is green, an independent focused audit returns ACCEPT, and the Phase 4 pull request is merged. Phase 5 remains locked.
