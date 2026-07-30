@@ -107,7 +107,9 @@ test('modified payload, invalid signature and unknown key fail closed',async()=>
     error=>error.code==='CATALOG_SIGNATURE_INVALID'
   );
   const invalid=await signed();
-  invalid.signature=`A${invalid.signature.slice(1)}`;
+  const corruptedSignature=Buffer.from(invalid.signature,'base64');
+  corruptedSignature[0]^=1;
+  invalid.signature=corruptedSignature.toString('base64');
   await assert.rejects(
     ()=>verifySignedCatalogEnvelope(invalid,{trustRoots:[trustRoot],now:nowMs}),
     error=>error.code==='CATALOG_SIGNATURE_INVALID'
