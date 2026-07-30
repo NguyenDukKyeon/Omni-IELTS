@@ -31,6 +31,18 @@ test('durable job restart turns an expired lease into typed retryable failure wi
   }finally{await rm(dir,{recursive:true,force:true});}
 });
 
+test('restart before lease expiry and later access both fail closed instead of returning an inert resolver job',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'resolver-lease-')),file=join(dir,'jobs.json');
+  try{
+    const first=new ResolverJobRepository({file,now:()=>100}),created=await first.getOrCreate({url:'abcDEF_1234'});await first.transition(created.job.id,'resolving',{lease:{owner:'dead-worker',until:9999}});
+    const restarted=new ResolverJobRepository({file,now:()=>101}),afterRestart=await restarted.get(created.job.id);
+    assert.equal(afterRestart.status,'failed');assert.equal(afterRestart.error.code,'RESTART_RECOVERY');
+    const recovery=await restarted.getOrCreate({url:'abcDEF_1234'});assert.equal(recovery.created,true);
+    await restarted.transition(recovery.job.id,'resolving',{lease:{owner:'dead-worker',until:100}});
+    assert.equal((await restarted.get(recovery.job.id)).status,'failed');
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
 test('yt-dlp adapter does not interpolate hostile input or disclose stderr credentials',async()=>{
   let observed;const fake=(_command,args,options)=>{observed={args,options};const child={pid:1,stdout:{on(){}},stderr:{on(){}},on(event,listener){if(event==='close')queueMicrotask(()=>listener(0));}};return child;};
   await runYtDlp('yt-dlp',['--dump-single-json','https://www.youtube.com/watch?v=abcDEF_1234;$(whoami)'],{spawnImpl:fake});

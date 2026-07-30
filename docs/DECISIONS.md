@@ -518,6 +518,12 @@ Consequences: no separate Phase 2 hardening branch is opened and no Phase 0/1 ga
 
 Revisit when: independent Phase 3 review requires a split package remediation or identifies a predecessor regression. Preserve the accepted Phase 2 boundary and exact-head acceptance rule.
 
+## ADR-039 — Phase 3 Strict Practice is local-first assistance control, not a device-owner security boundary
+
+Decision: Dictation Strict is displayed as Strict Practice. Before submission, the expected answer must be absent from visible and hidden exercise DOM, ARIA/accessibility text, data attributes and exercise-specific rendered state. Practice hints and all answer/correction exposure are recorded in the canonical AssistanceTrace, which remains schedule-ineligible. The app intentionally does not claim tamper resistance against a device owner inspecting the canonical local transcript with browser developer tools.
+
+Consequences: Phase 3 makes truthful local-first learning and FSRS claims without adding a trusted answer server or remote examination boundary. Transcript revisions remain the durable canonical source and are not treated as a secret.
+
 ## ADR-039 — Video Workspace disclosure, editing and Retell remain fail-closed
 
 Status: CONFIRMED

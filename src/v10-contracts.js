@@ -137,7 +137,7 @@ export function normalizeActivity(input={}){
   };
 }
 
-export function buildV10CoachingEnvelope({activityId,receiptId,activityType,sentence={},sourceId,cardId=null,skill,result='correct',learnerOutput='',assistance={}}={}){
+function legacyBuildV10CoachingEnvelope({activityId,receiptId,activityType,sentence={},sourceId,cardId=null,skill,result='correct',learnerOutput='',assistance={}}={}){
   const id=clean(activityId,180);const receipt=clean(receiptId,180);const source=clean(sourceId,180)||null;
   const sourceRevision=`v10-sentence-v1:${evidenceDigest(JSON.stringify({id:sentence.id||null,text:String(sentence.text||''),startMs:Number(sentence.startMs||0),endMs:Number(sentence.endMs||0),verified:sentence.verified===true}))}`;
   const target={cardId:clean(cardId,180)||null,skill:clean(skill,80)||null,sourceId:source,sourceRevision};
@@ -151,6 +151,17 @@ export function buildV10CoachingEnvelope({activityId,receiptId,activityType,sent
   return Object.freeze({run,attempt,receipt:canonicalReceipt,activitySpec,verification,decision});
 }
 
+export function buildV10CoachingEnvelope({activityId,receiptId,activityType,sentence={},sourceId,cardId=null,skill,result='correct',learnerOutput='',assistance={}}={}){
+  const id=clean(activityId,180),receipt=clean(receiptId,180),source=clean(sourceId,180)||null,occurredAt=Date.now();
+  const sourceRevision=`v10-sentence-v1:${evidenceDigest(JSON.stringify({id:sentence.id||null,text:String(sentence.text||''),startMs:Number(sentence.startMs||0),endMs:Number(sentence.endMs||0),verified:sentence.verified===true}))}`;
+  const target={cardId:clean(cardId,180)||null,skill:clean(skill,80)||null,sourceId:source,sourceRevision},events=[...(Array.isArray(assistance.events)?assistance.events:[])];
+  for(const [key,type] of [['practiceHintExposed','hint'],['hintUsed','hint'],['answerExposed','answer-exposed'],['correctionExposed','correction-exposed']])if((assistance[key]===true||(activityType==='dictation'&&['answerExposed','correctionExposed'].includes(key)))&&!events.some(event=>event?.type===type))events.push({type,at:occurredAt});
+  const activitySpec=createActivitySpec({id,type:clean(activityType,80),target,plannedAt:occurredAt,timezone:'UTC',policyVersion:'phase0-evidence-v1',executor:'v10-sentence-loop'}),run=createRun({id:`run:${id}`,activitySpec,status:'active',startedAt:occurredAt,timezone:'UTC'});
+  const trace=normalizeAssistanceTrace({...assistance,hintUsed:assistance.hintUsed===true||assistance.practiceHintExposed===true,answerExposed:assistance.answerExposed===true||activityType==='dictation',correctionExposed:assistance.correctionExposed===true||activityType==='dictation',events,id:`trace:${receipt}`,schemaVersion:1,collector:'v10-sentence-loop',complete:true,coaching:true});
+  const attempt=createAttempt({id:`attempt:${receipt}`,run,activitySpec,receiptId:receipt,activityType:activitySpec.type,result:clean(result,40),target,learnerOutput:String(learnerOutput||'').trim().slice(0,10_000),assistance:trace,occurredAt,timezone:'UTC'}),canonicalReceipt=createReceipt({id:receipt,run,activitySpec,attempt,status:result==='skipped'?'skipped':'completed',issuedAt:occurredAt,timezone:'UTC'}),verification={source:{id:`source:${sourceRevision}`,authority:'v10-source-registry',status:sentence.verified===true?'verified':'unverified',sourceId:source,sourceRevision}},decision=decideEvidence({attempt,activity:activitySpec,verification});
+  return Object.freeze({run,attempt,receipt:canonicalReceipt,activitySpec,verification,decision});
+}
+
 export function normalizeRetellStatus(input={}){
   return ['not-started','coaching-completed','skipped','unverified'].includes(input.retellStatus)?input.retellStatus:(input.step==='completed'||input.retellResponse?'unverified':'not-started');
 }
@@ -161,6 +172,8 @@ export function normalizeSentenceProgress(input={}){
     id:clean(input.id,180)||clean(input.sentenceId,180)||createV10Id('sentence-progress'),
     sentenceId:clean(input.sentenceId,180),
     sourceId:clean(input.sourceId,180)||null,
+    transcriptRevisionId:clean(input.transcriptRevisionId,240)||null,
+    learningMode:clean(input.learningMode,80)||'legacy',
     step,
     repeatCount:Math.max(0,Math.min(20,Number(input.repeatCount||0))),
     playbackRate:Math.max(.5,Math.min(2,Number(input.playbackRate||1))),

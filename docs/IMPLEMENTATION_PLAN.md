@@ -450,7 +450,7 @@ Exit gate Phase 2: caption cache hit không gọi provider; một metadata/whole
 
 ## Phase 3 — Full-video Learning Workspace
 
-Exit gate Phase 3: desktop bám interaction model video trái/transcript phải; mobile usable; rail progressive và seek chính xác; Dictation strict không có answer trong DOM/ARIA/clipboard; Practice ghi assistance; Retell lưu/evaluate thật hoặc coaching-only; edit tạo revision; mọi activity phát canonical receipt.
+Exit gate Phase 3: desktop bám interaction model video trái/transcript phải; mobile usable; rail progressive và seek chính xác; Strict Practice không có answer trong visible/hidden exercise DOM, ARIA/accessibility text, data attributes hoặc exercise-specific rendered state trước khi nộp; Practice ghi assistance; Retell lưu/evaluate thật hoặc coaching-only; edit tạo revision; mọi activity phát canonical receipt. Strict Practice is not a tamper-resistant examination boundary against a device owner inspecting canonical local data.
 
 ### P3-00 — Workspace shell, route và state controller
 

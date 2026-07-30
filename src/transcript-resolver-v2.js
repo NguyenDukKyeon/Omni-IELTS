@@ -1,6 +1,6 @@
 import { V10_STORES,TRANSCRIPT_PROVIDERS,validateSentenceSegments,normalizeKey,createV10Id } from './v10-contracts.js';
 import { listV10Records,putV10Record,getV10Record } from './v10-persistence.js';
-import { persistTranscriptAggregate } from './transcript-aggregate.js';
+import { createProviderTranscriptRevision,getTranscriptAggregate } from './transcript-aggregate.js';
 
 const SEGMENTER_VERSION='v10-sentence-segmenter-2';
 
@@ -80,14 +80,17 @@ async function saveTranscript(context,result){
   const segments=normalizeSegmentRows(result.segments,`youtube:${context.videoId}`);if(!segments.length)throw new Error('Transcript không có câu hợp lệ.');
   const durationSeconds=Math.max(0,finiteNumber(result.durationSeconds,0)),lastEnd=Math.max(0,...segments.map(row=>Number(row.endMs||0)/1000));
   const complete=Boolean(result.complete||(durationSeconds&&lastEnd>=durationSeconds-2));
-  const canonical=await persistTranscriptAggregate({
+  const canonical=await createProviderTranscriptRevision({
     source:{id:`transcript-source:youtube:${context.videoId}`,namespace:result.provider==='imported'?'private':'shared',externalId:context.videoId,sourceType:'youtube',title:result.title||'YouTube video',url:context.url,language:result.language||context.language,status:result.provider==='imported'?'verified':'unverified',complete},
     segments,
     provenance:{kind:'resolver',provider:result.provider,model:result.model||null,cacheKey:context.cacheKey}
   });
-  const segmentBindings=new Map(canonical.segments.map(segment=>[`${segment.startMs}:${segment.endMs}:${normalizeKey(segment.text)}`,segment.id]));
-  const boundSegments=segments.map(segment=>({...segment,transcriptRevisionId:canonical.revision.id,canonicalSegmentId:segmentBindings.get(`${segment.startMs}:${segment.endMs}:${normalizeKey(segment.text)}`)||null}));
-  const row={id:context.cacheKey,cacheKey:context.cacheKey,videoId:context.videoId,url:context.url,language:result.language||context.language,provider:result.provider,title:result.title||'YouTube video',segments:boundSegments,transcriptSourceId:canonical.source.id,transcriptRevisionId:canonical.revision.id,clip:{startSeconds:context.startSeconds,endSeconds:context.endSeconds},durationSeconds,complete:Boolean(complete),qualityStatus:result.provider==='gemini-progressive'?'needs-review':'available',cachedAt:Date.now(),lastAccessedAt:Date.now(),updatedAt:Date.now(),metadata:{model:result.model||null,previewFeature:Boolean(result.previewFeature),warnings:result.warnings||[],durationSeconds}};
+  const persistedSource=await getV10Record(V10_STORES.transcriptSources,canonical.source.id);
+  const activeRevisionId=persistedSource?.activeRevisionId||persistedSource?.latestRevisionId||canonical.revision.id;
+  const activeCanonical=activeRevisionId===canonical.revision.id?canonical:await getTranscriptAggregate(activeRevisionId);
+  if(!activeCanonical?.segments?.length)throw Object.assign(new Error('Canonical transcript revision không thể kích hoạt.'),{code:'TRANSCRIPT_ACTIVE_MISSING',revisionId:activeRevisionId});
+  const boundSegments=activeCanonical.segments.map(segment=>({...segment,transcriptRevisionId:activeCanonical.revision.id,canonicalSegmentId:segment.id}));
+  const row={id:context.cacheKey,cacheKey:context.cacheKey,videoId:context.videoId,url:context.url,language:result.language||context.language,provider:result.provider,title:result.title||'YouTube video',segments:boundSegments,transcriptSourceId:activeCanonical.source.id,transcriptRevisionId:activeCanonical.revision.id,clip:{startSeconds:context.startSeconds,endSeconds:context.endSeconds},durationSeconds,complete:Boolean(activeCanonical.revision.coverage?.complete),qualityStatus:'available',cachedAt:Date.now(),lastAccessedAt:Date.now(),updatedAt:Date.now(),metadata:{model:result.model||null,previewFeature:Boolean(result.previewFeature),warnings:result.warnings||[],durationSeconds}};
   await putV10Record(V10_STORES.transcriptCache,row,'transcript-cache-saved');globalThis.dispatchEvent(new CustomEvent('vocab:v10-transcript-ready',{detail:{...row,partial:!row.complete}}));return row;
 }
 

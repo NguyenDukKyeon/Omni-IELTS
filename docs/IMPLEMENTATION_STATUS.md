@@ -502,7 +502,11 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 The Phase 1 implementation report is `docs/phase1/IMPLEMENTATION_REPORT.md` and remains the implementer handoff. This section records the separate acceptance evidence that unlocks Phase 2.
 
-## 8. Next acceptance action
+## 8. Phase 3 remediation state
+
+Phase 3 remediation remains `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED`. It is not accepted by this implementer evidence and does not unlock Phase 4 or Phase 5. The focused remediation adds atomic transcript child activation, unattached provider revisions, durable resolver recovery, fail-closed exact revision restoration, canonical assistance traces and local-first Strict Practice wording.
+
+## 9. Next acceptance action
 
 Current handoff: independent review of P3-00…P3-06 on the exact pushed head of `codex/phase-3-full-video-workspace`.
 

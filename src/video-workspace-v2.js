@@ -1,7 +1,5 @@
 import { createYoutubeSentencePlayer } from './youtube-sentence-player.js';
-import { getV10Record } from './v10-persistence.js';
-import { V10_STORES } from './v10-contracts.js';
-import { getTranscriptAggregate,reviseTranscript } from './transcript-aggregate.js';
+import { getTranscriptAggregate,createChildAndActivate } from './transcript-aggregate.js';
 
 const MAX_FULL_VIDEO_SECONDS=4*60*60;
 const RESTORE_KEY='vocab-master:phase3-video-workspace';
@@ -9,7 +7,7 @@ const MODE_CONFIG=Object.freeze({
   normal:{label:'Normal',step:'listening',dictationMode:'strict'},
   noticing:{label:'Noticing',step:'noticing',dictationMode:'strict'},
   shadowing:{label:'Shadowing',step:'shadowing',dictationMode:'strict'},
-  'dictation-strict':{label:'Dictation Strict',step:'dictation',dictationMode:'strict'},
+  'dictation-strict':{label:'Strict Practice',step:'dictation',dictationMode:'strict'},
   'dictation-practice':{label:'Dictation Practice',step:'dictation',dictationMode:'practice'},
   retell:{label:'Retell',step:'retell',dictationMode:'strict'}
 });
@@ -21,7 +19,7 @@ const $$=(selector,root=document)=>[...root.querySelectorAll(selector)];
 const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const normalize=value=>String(value||'').toLowerCase().replace(/[^a-z0-9\s']/g,' ').replace(/\s+/g,' ').trim();
 
-function ensureStyles(){if(document.querySelector('link[href="/video-workspace-v2.css"]'))return;const link=document.createElement('link');link.rel='stylesheet';link.href='/video-workspace-v2.css';document.head.append(link);}
+function ensureStyles(){if(!globalThis.__v10WorkspacePlaybackSync){globalThis.__v10WorkspacePlaybackSync=true;document.addEventListener('click',event=>{if(!event.target.closest?.('[data-video-loop]'))return;queueMicrotask(()=>{const state=activeWorkspace;if(state)globalThis.VocabMasterWorkspacePlayback={revisionId:state.row.transcriptRevisionId,mode:state.mode,rate:state.rate,loop:state.loop};});});}if(document.querySelector('link[href="/video-workspace-v2.css"]'))return;const link=document.createElement('link');link.rel='stylesheet';link.href='/video-workspace-v2.css';document.head.append(link);}
 function formatDuration(seconds=0){const value=Math.max(0,Math.round(Number(seconds||0))),minutes=Math.floor(value/60),rest=value%60;return`${minutes}:${String(rest).padStart(2,'0')}`;}
 function setHubStatus(markup){const node=$('#v10VideoStatus');if(node)node.innerHTML=markup;}
 function setFormBusy(form,busy){for(const control of $$('input,button,select',form))control.disabled=busy;const button=$('button[type="submit"],button:not([type])',form);if(button)button.textContent=busy?'Đang lấy toàn bộ transcript…':'Dán URL và học';}
@@ -64,7 +62,7 @@ export function applyTranscriptEdit(segments,index,{text,startMs,endMs,action='u
   return rows;
 }
 
-async function loadWholeTranscript({url,startSeconds=0,onProgress=()=>{},signal=null,resumeJobId=null}={}){
+async function legacyLoadWholeTranscript({url,startSeconds=0,onProgress=()=>{},signal=null,resumeJobId=null}={}){
   const resolver=globalThis.VocabMasterTranscriptResolver;if(!resolver?.resolve||!resolver?.continue)throw new Error('Transcript Resolver chưa sẵn sàng.');
   const videoId=resolver.parseVideoId(url);if(!videoId)throw new Error('URL YouTube không hợp lệ.');
   if(!resumeJobId){const cached=await resolver.list(videoId).catch(()=>[]),completeCached=cached.find(row=>row.complete&&row.segments?.length);if(completeCached){onProgress({stage:'complete',segments:completeCached.segments.length,durationSeconds:completeCached.durationSeconds,cached:true});return{...completeCached,segments:preparePracticeSegments([completeCached])};}}
@@ -102,13 +100,29 @@ function mountWorkspaceLayout(context){
 
 function resetWorkspaceLayout(){const dialog=$('#v10SentenceLoopDialog'),layout=$('#v10VideoStudyLayout'),host=$('#v10SentenceYoutubeHost'),panel=$('#v10SentenceLoopPanel');activeWorkspace?.observer?.disconnect?.();activeWorkspace=null;if(!dialog||!layout)return;if(host)dialog.insertBefore(host,layout);if(panel)dialog.insertBefore(panel,layout);layout.remove();dialog.classList.remove('v10-video-workspace-dialog');}
 
-async function openMode(index=activeWorkspace?.index||0){
+async function legacyOpenMode(index=activeWorkspace?.index||0){
   const state=activeWorkspace;if(!state)return;const config=MODE_CONFIG[state.mode]||MODE_CONFIG.normal;await globalThis.VocabMasterSentenceLoop.open({...state.loopOptions,startIndex:index,startStep:config.step,dictationMode:config.dictationMode,transcriptRevisionId:state.row.transcriptRevisionId});updateActiveRail(index,{scroll:true});await state.player.playSegment(state.sentences[index],{rate:state.rate,loop:state.loop}).catch(()=>{});
 }
 
-async function saveEditor(action){
+async function openMode(index=activeWorkspace?.index||0){
+  const state=activeWorkspace;if(!state)return;const config=MODE_CONFIG[state.mode]||MODE_CONFIG.normal;
+  globalThis.VocabMasterWorkspacePlayback={revisionId:state.row.transcriptRevisionId,mode:state.mode,rate:state.rate,loop:state.loop};
+  await globalThis.VocabMasterSentenceLoop.open({...state.loopOptions,startIndex:index,startStep:config.step,dictationMode:config.dictationMode,transcriptRevisionId:state.row.transcriptRevisionId,learningMode:state.mode});updateActiveRail(index,{scroll:true});await state.player.playSegment(state.sentences[index],{rate:state.rate,loop:state.loop}).catch(()=>{});
+}
+
+async function legacySaveEditor(action){
   const state=activeWorkspace,editor=$('.v10-transcript-editor',state?.layout);if(!state||!editor)return;const error=$('[data-video-editor-error]',editor);error.textContent='';
   try{const source=await getV10Record(V10_STORES.transcriptSources,state.row.transcriptSourceId);if(!source||source.latestRevisionId!==state.row.transcriptRevisionId)throw Object.assign(new Error('Transcript đã có revision mới. Mở lại revision mới nhất trước khi sửa.'),{code:'TRANSCRIPT_EDIT_CONFLICT'});const segments=applyTranscriptEdit(state.sentences,state.index,{text:$('[data-video-edit-text]',editor).value,startMs:$('[data-video-edit-start]',editor).value,endMs:$('[data-video-edit-end]',editor).value,action});const aggregate=await reviseTranscript(state.row.transcriptRevisionId,segments,{provenance:{surface:'video-workspace',action}});state.row={...state.row,transcriptRevisionId:aggregate.revision.id,segments:aggregate.segments};state.sentences=aggregate.segments;state.loopOptions={...state.loopOptions,sentences:state.sentences};state.index=Math.min(state.index,state.sentences.length-1);editor.remove();state.editorOpen=false;updateDeepLink(state.row);persistRestoreState({videoId:state.row.videoId,revisionId:aggregate.revision.id,index:state.index,mode:state.mode,url:state.row.url});renderRail({scroll:true});await openMode(state.index);$('[data-video-live-status]',state.layout).textContent='Đã tạo revision mới';}catch(reason){error.textContent=reason.message;}}
+
+async function saveEditor(action){
+  const state=activeWorkspace,editor=$('.v10-transcript-editor',state?.layout);if(!state||!editor)return;
+  const error=$('[data-video-editor-error]',editor);error.textContent='';
+  try{
+    const segments=applyTranscriptEdit(state.sentences,state.index,{text:$('[data-video-edit-text]',editor).value,startMs:$('[data-video-edit-start]',editor).value,endMs:$('[data-video-edit-end]',editor).value,action});
+    const aggregate=await createChildAndActivate(state.row.transcriptRevisionId,segments,{provenance:{surface:'video-workspace',action}});
+    state.row={...state.row,transcriptRevisionId:aggregate.revision.id,segments:aggregate.segments};state.sentences=aggregate.segments;state.loopOptions={...state.loopOptions,sentences:state.sentences};state.index=Math.min(state.index,state.sentences.length-1);editor.remove();state.editorOpen=false;updateDeepLink(state.row);persistRestoreState({videoId:state.row.videoId,revisionId:aggregate.revision.id,index:state.index,mode:state.mode,url:state.row.url});renderRail({scroll:true});await openMode(state.index);$('[data-video-live-status]',state.layout).textContent='Đã tạo revision mới';
+  }catch(reason){error.textContent=reason.message;}
+}
 
 async function handleWorkspaceClick(event){
   const state=activeWorkspace;if(!state)return;
@@ -120,10 +134,16 @@ async function handleWorkspaceClick(event){
   const row=event.target.closest('[data-video-sentence-index]');if(!row)return;await openMode(Number(row.dataset.videoSentenceIndex));
 }
 
-async function handleWorkspaceChange(event){
+async function legacyHandleWorkspaceChange(event){
   const state=activeWorkspace;if(!state)return;
   if(event.target.matches('[data-video-rate]')){state.rate=Math.max(.5,Math.min(2,Number(event.target.value||1)));state.player.setPlaybackRate(state.rate);return;}
   if(event.target.matches('[data-video-mode]')){state.mode=MODE_CONFIG[event.target.value]?event.target.value:'normal';await openMode(state.index);}
+}
+
+async function handleWorkspaceChange(event){
+  const state=activeWorkspace;if(!state)return;
+  if(event.target.matches('[data-video-rate]')){state.rate=Math.max(.5,Math.min(2,Number(event.target.value||1)));globalThis.VocabMasterWorkspacePlayback={revisionId:state.row.transcriptRevisionId,mode:state.mode,rate:state.rate,loop:state.loop};state.player.setPlaybackRate(state.rate);persistRestoreState({videoId:state.row.videoId,revisionId:state.row.transcriptRevisionId,index:state.index,mode:state.mode,url:state.row.url});return;}
+  if(event.target.matches('[data-video-mode]')){state.mode=MODE_CONFIG[event.target.value]?event.target.value:'normal';persistRestoreState({videoId:state.row.videoId,revisionId:state.row.transcriptRevisionId,index:state.index,mode:state.mode,url:state.row.url});await openMode(state.index);}
 }
 
 export async function openVideoWorkspace(row,{startIndex=0,mode='normal'}={}){
@@ -132,6 +152,8 @@ export async function openVideoWorkspace(row,{startIndex=0,mode='normal'}={}){
   const player=createYoutubeSentencePlayer(row.videoId,sentences[startIndex]||sentences[0],{onTimeUpdate});const loopOptions={sourceId:`youtube:${row.videoId}`,sourceType:'video',title:row.title||'YouTube video',sentences,player};
   const config=MODE_CONFIG[mode]||MODE_CONFIG.normal;await globalThis.VocabMasterSentenceLoop.open({...loopOptions,startIndex,startStep:config.step,dictationMode:config.dictationMode,transcriptRevisionId:row.transcriptRevisionId});mountWorkspaceLayout({row:{...row,segments:sentences},sentences,player,loopOptions,startIndex,mode,durationSeconds:row.durationSeconds||0,complete:Boolean(row.complete)});
 }
+
+async function loadWholeTranscript(options={}){const row=await legacyLoadWholeTranscript(options);if(row.complete!==true||row.qualityStatus&&row.qualityStatus!=='available')throw Object.assign(new Error('Transcript chưa hoàn chỉnh hoặc chưa qua kiểm tra; không thể kích hoạt workspace.'),{code:'TRANSCRIPT_INCOMPLETE'});return row;}
 
 function progressMarkup(progress){
   const status=progress.status||progress.stage;if(status==='reconnecting')return`<p>● Đang nối lại progress stream (lần ${progress.reconnects})…</p><button class="secondary-button" data-video-cancel-job>Hủy</button>`;
@@ -152,13 +174,26 @@ async function startResolver({url,startSeconds=0,resumeJobId=null,form=null}){
 async function handleVideoForm(form){const data=new FormData(form),url=String(data.get('url')||''),startSeconds=Math.max(0,Number(data.get('startMinutes')||0)*60);await startResolver({url,startSeconds,form});}
 async function handleCachedVideo(button){const videoId=button.dataset.v10CachedVideo;if(!videoId)return;const rows=await globalThis.VocabMasterTranscriptResolver.list(videoId),complete=rows.find(row=>row.complete&&row.segments?.length);if(complete)return openVideoWorkspace(complete);const row=rows.find(item=>item.segments?.length);if(row)return openVideoWorkspace(row);throw new Error('Không có transcript cache để mở.');}
 
-async function restoreWorkspace(){
+async function legacyRestoreWorkspace(){
   const resolver=globalThis.VocabMasterTranscriptResolver;if(!resolver)return;
   let saved=null;try{saved=JSON.parse(sessionStorage.getItem(RESTORE_KEY)||'null');}catch{}
   const params=new URL(location.href).searchParams,videoId=params.get('videoWorkspace')||saved?.videoId,revisionId=params.get('transcriptRevision')||saved?.revisionId;
   if(revisionId){const aggregate=await getTranscriptAggregate(revisionId).catch(()=>null);if(aggregate?.segments?.length){await openVideoWorkspace({videoId,title:aggregate.source.title||'YouTube video',url:aggregate.source.url,language:aggregate.source.language,segments:aggregate.segments,transcriptSourceId:aggregate.source.id,transcriptRevisionId:aggregate.revision.id,durationSeconds:Number(aggregate.revision.coverage?.endMs||0)/1000,complete:Boolean(aggregate.revision.coverage?.complete)},{startIndex:saved?.index||0,mode:saved?.mode||'normal'});return;}}
   if(videoId){const rows=await resolver.list(videoId).catch(()=>[]),row=rows.find(item=>item.complete&&item.segments?.length)||rows.find(item=>item.segments?.length);if(row){await openVideoWorkspace(row,{startIndex:saved?.index||0,mode:saved?.mode||'normal'});return;}}
   const jobs=await resolver.listRecoverableJobs?.().catch(()=>[]);if(jobs?.[0]){const job=jobs[0],url=job.request?.source?.canonicalUrl;if(url){setHubStatus(`<p>Resolver job trước đó ${escape(job.status)}.</p><button class="secondary-button" data-video-resume-job="${escape(job.id)}" data-video-resume-url="${escape(url)}">Tiếp tục</button>`);}}
+}
+
+async function restoreWorkspace(){
+  const resolver=globalThis.VocabMasterTranscriptResolver;if(!resolver)return;
+  let saved=null;try{saved=JSON.parse(sessionStorage.getItem(RESTORE_KEY)||'null');}catch{}
+  const params=new URL(location.href).searchParams,requestedRevision=params.get('transcriptRevision'),videoId=params.get('videoWorkspace')||saved?.videoId,revisionId=requestedRevision||saved?.revisionId;
+  if(revisionId){
+    const aggregate=await getTranscriptAggregate(revisionId).catch(()=>null);
+    if(!aggregate?.source||!aggregate?.revision||!aggregate.segments?.length){setHubStatus('<p class="error">Không tìm thấy transcript revision đã yêu cầu. Không mở thay thế một bản cache khác.</p>');return;}
+    if(videoId&&aggregate.source.externalId&&aggregate.source.externalId!==videoId){setHubStatus('<p class="error">Transcript revision không thuộc video đang yêu cầu.</p>');return;}
+    await openVideoWorkspace({videoId:videoId||aggregate.source.externalId,title:aggregate.source.title||'YouTube video',url:aggregate.source.url,language:aggregate.source.language,segments:aggregate.segments,transcriptSourceId:aggregate.source.id,transcriptRevisionId:aggregate.revision.id,durationSeconds:Number(aggregate.revision.coverage?.endMs||0)/1000,complete:Boolean(aggregate.revision.coverage?.complete)},{startIndex:saved?.index||0,mode:saved?.mode||'normal'});return;
+  }
+  if(videoId){const rows=await resolver.list(videoId).catch(()=>[]),row=rows.find(item=>item.videoId===videoId&&item.complete===true&&item.qualityStatus==='available'&&item.segments?.length);if(row){await openVideoWorkspace(row,{startIndex:saved?.index||0,mode:saved?.mode||'normal'});return;}setHubStatus('<p class="error">Không có transcript hoàn chỉnh, hợp lệ để khôi phục.</p>');}
 }
 
 function interceptSubmit(event){const form=event.target;if(form?.id!=='v10VideoForm')return;event.preventDefault();event.stopImmediatePropagation();void handleVideoForm(form);}
