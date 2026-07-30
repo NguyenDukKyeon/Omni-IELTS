@@ -99,7 +99,7 @@ export async function commitCoreEvidence({card,rating,step,session,fsrsConfig,me
     evidence:{run:envelope.run,attempt:envelope.attempt,receipt:envelope.receipt,activity:envelope.activitySpec,verification:envelope.verification},
     metadata:{evidenceReason:decision.reason,policyVersion:decision.policyVersion,receiptBinding:decision.receiptBinding,evidenceType,predictedRetrievability}
   };
-  const persisted=await persist({card:result.card,event,metrics,reason:'core-evidence-committed'});
+  const persisted=await persist({card:result.card,event,metrics,reason:'core-evidence-committed',canonicalEnvelope:{...envelope,decision}});
   return persisted.inserted===false
     ?{inserted:false,decision,event:persisted.event,card,interval:null}
     :{inserted:true,decision,event,card:result.card,interval:result.interval};
