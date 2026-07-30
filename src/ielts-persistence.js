@@ -15,6 +15,8 @@ import {
   validateReadingPassage,
   validateTranscriptSegments
 } from './ielts-domain.js';
+import { databaseBlocked,durableStorageUnavailable,normalizeDatabaseOpenError } from './storage-safety.js';
+import { assertActiveRestoreToken,withDurableWriteLock } from './storage-lock.js';
 
 export const IELTS_DB_NAME='vocab-master-ielts';
 export const IELTS_DB_VERSION=1;
@@ -32,7 +34,7 @@ function nowRevision(){return Date.now()*1000+Math.floor(Math.random()*1000);}
 function indexedDbUnavailable(){return typeof indexedDB==='undefined';}
 function requestResult(request){return new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error('IndexedDB request failed'));});}
 function transactionDone(transaction){return new Promise((resolve,reject)=>{transaction.oncomplete=()=>resolve();transaction.onabort=()=>reject(transaction.error||new Error('IndexedDB transaction aborted'));transaction.onerror=()=>reject(transaction.error||new Error('IndexedDB transaction failed'));});}
-function enqueueWrite(task){const run=writeQueue.then(task,task);writeQueue=run.catch(()=>{});return run;}
+function enqueueWrite(task,{restoreToken=null}={}){if(restoreToken)return withDurableWriteLock(task,restoreToken);const locked=()=>withDurableWriteLock(task);const run=writeQueue.then(locked,locked);writeQueue=run.catch(()=>{});return run;}
 function emit(status,detail={}){globalThis.dispatchEvent?.(new CustomEvent('vocab:ielts-persistence',{detail:{status,...detail}}));}
 function assertStore(name){if(!STORE_LIST.includes(name))throw new Error(`IELTS store không hợp lệ: ${name}`);return name;}
 
@@ -52,8 +54,9 @@ function createIndexes(storeName,store){
 
 export function openIeltsDatabase(){
   if(databasePromise)return databasePromise;
-  if(indexedDbUnavailable())return Promise.resolve(null);
+  if(indexedDbUnavailable())return Promise.reject(durableStorageUnavailable(IELTS_DB_NAME));
   databasePromise=new Promise((resolve,reject)=>{
+    let blocked=false;
     const request=indexedDB.open(IELTS_DB_NAME,IELTS_DB_VERSION);
     request.onupgradeneeded=()=>{
       const database=request.result;
@@ -63,9 +66,9 @@ export function openIeltsDatabase(){
         createIndexes(storeName,store);
       }
     };
-    request.onsuccess=()=>{const database=request.result;database.onversionchange=()=>{database.close();databasePromise=null;};resolve(database);};
-    request.onerror=()=>{databasePromise=null;reject(request.error||new Error('Không thể mở IELTS IndexedDB.'));};
-    request.onblocked=()=>{databasePromise=null;reject(new Error('IELTS IndexedDB đang bị tab khác khóa.'));};
+    request.onsuccess=()=>{const database=request.result;if(blocked){database.close();return;}database.onversionchange=()=>{database.close();databasePromise=null;};resolve(database);};
+    request.onerror=()=>{const error=normalizeDatabaseOpenError(request.error,{database:IELTS_DB_NAME,supportedVersion:IELTS_DB_VERSION});databasePromise=null;reject(error);};
+    request.onblocked=()=>{blocked=true;databasePromise=null;reject(databaseBlocked(IELTS_DB_NAME));};
   });
   return databasePromise;
 }
@@ -202,8 +205,8 @@ export async function saveMediaProgress(input){
 
 export async function getMediaProgress(mediaSourceId){const rows=await getAll(IELTS_STORE_NAMES.mediaProgress);return rows.find(row=>row.mediaSourceId===mediaSourceId)||null;}
 
-export async function buildIeltsBackup(){
-  await writeQueue;
+export async function buildIeltsBackup({restoreToken=null}={}){
+  if(!restoreToken)await writeQueue;else assertActiveRestoreToken(restoreToken);
   let stores={};const database=await openIeltsDatabase();
   if(!database)for(const store of STORE_LIST)stores[store]=[...memory.get(store).values()].map(clone);
   else{
@@ -230,14 +233,11 @@ export function validateIeltsBackup(input){
 }
 
 export async function restoreIeltsBackup(input){
-  const result=validateIeltsBackup(input);if(!result.valid)throw new Error(result.errors.join('\n'));
-  emit('saving',{reason:'restore'});await enqueueWrite(async()=>{
-    const database=await openIeltsDatabase();
-    if(!database){for(const store of STORE_LIST){const map=memory.get(store);map.clear();for(const row of result.value.stores[store])map.set(row.key??row.id,clone(row));}return;}
-    const transaction=database.transaction(STORE_LIST,'readwrite');for(const storeName of STORE_LIST){const store=transaction.objectStore(storeName);store.clear();for(const row of result.value.stores[storeName])store.put(clone(row));}await transactionDone(transaction);
-  });
-  broadcast('ielts-backup-restored',STORE_LIST);emit('saved',{reason:'restore'});return result;
+  const {restoreIeltsBackupSafely}=await import('./ielts-backup.js');
+  return restoreIeltsBackupSafely(input);
 }
+
+export async function reopenIeltsDatabase({restoreToken=null}={}){if(!restoreToken)await writeQueue;else assertActiveRestoreToken(restoreToken);if(databasePromise){const database=await databasePromise.catch(()=>null);database?.close();databasePromise=null;}return openIeltsDatabase();}
 
 export async function downloadIeltsBackup(){
   const backup=await buildIeltsBackup();const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const anchor=document.createElement('a');anchor.href=url;anchor.download=`vocab-master-ielts-${new Date().toISOString().slice(0,10)}.json`;document.body.append(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);return backup;

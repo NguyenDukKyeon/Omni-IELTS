@@ -1,5 +1,7 @@
 import { V10_DB_NAME,V10_DB_VERSION,V10_STORES } from './v10-contracts.js';
 import { sha256Hex } from './backup-registry.js';
+import { databaseBlocked,durableStorageUnavailable,normalizeDatabaseOpenError } from './storage-safety.js';
+import { assertActiveRestoreToken,withDurableWriteLock } from './storage-lock.js';
 
 const STORE_LIST=Object.freeze(Object.values(V10_STORES));
 let databasePromise=null;
@@ -11,7 +13,7 @@ const clone=value=>value==null?value:structuredClone(value);
 const indexedDbUnavailable=()=>typeof indexedDB==='undefined';
 const requestResult=request=>new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error('IndexedDB request failed'));});
 const transactionDone=transaction=>new Promise((resolve,reject)=>{transaction.oncomplete=()=>resolve();transaction.onabort=()=>reject(transaction.error||new Error('IndexedDB transaction aborted'));transaction.onerror=()=>reject(transaction.error||new Error('IndexedDB transaction failed'));});
-const enqueue=task=>{const run=writeQueue.then(task,task);writeQueue=run.catch(()=>{});return run;};
+const enqueue=(task,{restoreToken=null}={})=>{if(restoreToken)return withDurableWriteLock(task,restoreToken);const locked=()=>withDurableWriteLock(task);const run=writeQueue.then(locked,locked);writeQueue=run.catch(()=>{});return run;};
 const assertStore=name=>{if(!STORE_LIST.includes(name))throw new Error(`V10 store không hợp lệ: ${name}`);return name;};
 
 function createIndexes(name,store){
@@ -33,8 +35,9 @@ function createIndexes(name,store){
 
 export function openV10Database(){
   if(databasePromise)return databasePromise;
-  if(indexedDbUnavailable())return Promise.resolve(null);
+  if(indexedDbUnavailable())return Promise.reject(durableStorageUnavailable(V10_DB_NAME));
   databasePromise=new Promise((resolve,reject)=>{
+    let blocked=false;
     const request=indexedDB.open(V10_DB_NAME,V10_DB_VERSION);
     request.onupgradeneeded=()=>{
       const database=request.result;
@@ -44,9 +47,9 @@ export function openV10Database(){
         createIndexes(name,store);
       }
     };
-    request.onsuccess=()=>{const database=request.result;database.onversionchange=()=>{database.close();databasePromise=null;};resolve(database);};
-    request.onerror=()=>{databasePromise=null;reject(request.error||new Error('Không thể mở Vocab Master v10 database.'));};
-    request.onblocked=()=>{databasePromise=null;reject(new Error('V10 database đang bị tab khác khóa.'));};
+    request.onsuccess=()=>{const database=request.result;if(blocked){database.close();return;}database.onversionchange=()=>{database.close();databasePromise=null;};resolve(database);};
+    request.onerror=()=>{const error=normalizeDatabaseOpenError(request.error,{database:V10_DB_NAME,supportedVersion:V10_DB_VERSION});databasePromise=null;reject(error);};
+    request.onblocked=()=>{blocked=true;databasePromise=null;reject(databaseBlocked(V10_DB_NAME));};
   });
   return databasePromise;
 }
@@ -115,8 +118,10 @@ export async function requestV10PersistentStorage(){
   if(!globalThis.navigator?.storage?.persist)return{supported:false,persisted:false};const already=await globalThis.navigator.storage.persisted?.().catch(()=>false);const persisted=already||await globalThis.navigator.storage.persist().catch(()=>false);return{supported:true,persisted};
 }
 
-export async function buildV10BackupStores(){
-  await writeQueue;
+export async function reopenV10Database({restoreToken=null}={}){if(!restoreToken)await writeQueue;else assertActiveRestoreToken(restoreToken);if(databasePromise){const database=await databasePromise.catch(()=>null);database?.close();databasePromise=null;}return openV10Database();}
+
+export async function buildV10BackupStores({restoreToken=null}={}){
+  if(!restoreToken)await writeQueue;else assertActiveRestoreToken(restoreToken);
   let stores;
   const database=await openV10Database();
   const names=STORE_LIST.filter(name=>name!==V10_STORES.coachingStats);
@@ -148,6 +153,7 @@ function canonicalJson(value,seen=new Set(),depth=0){
   const result=`{${Object.keys(value).sort().map(key=>`${JSON.stringify(key)}:${canonicalJson(value[key],seen,depth+1)}`).join(',')}}`;seen.delete(value);return result;
 }
 function backupTranscriptRecord(row={}){
+  if(row.backupRepresentation==='reconstructable-cache-stub-v1'&&!Object.hasOwn(row,'segments'))return clone(row);
   if(row.provider==='imported'||!RECONSTRUCTABLE_TRANSCRIPT_PROVIDERS.has(row.provider))return clone(row);
   const segments=Array.isArray(row.segments)?row.segments:[];
   const {segments:ignored,...stub}=clone(row);

@@ -55,8 +55,19 @@ export const BACKUP_EXTERNAL_REGISTRY=Object.freeze([
 
 const includedEntries=()=>BACKUP_STORE_REGISTRY.filter(row=>row.backupRule!=='exclude');
 const ownerEntries=owner=>includedEntries().filter(row=>row.owner===owner);
-const recordKey=row=>String(row?.key??row?.id??'');
+const registryEntry=(owner,store)=>BACKUP_STORE_REGISTRY.find(row=>row.owner===owner&&row.store===store);
 const codeUnitCompare=(left,right)=>left<right?-1:left>right?1:0;
+const portableIdbKey=value=>typeof value==='string'||(typeof value==='number'&&Number.isFinite(value))||(Array.isArray(value)&&value.length>0&&value.every(portableIdbKey));
+const UNIQUE_INDEX_FIELDS=Object.freeze([
+  ['ielts',IELTS_STORE_NAMES.errors,'normalizedKey'],
+  ['ielts',IELTS_STORE_NAMES.mediaSources,'videoId'],
+  ['ielts',IELTS_STORE_NAMES.transcriptionJobs,'cacheKey'],
+  ['ielts',IELTS_STORE_NAMES.mediaProgress,'mediaSourceId'],
+  ['v10',V10_STORES.collectionMemberships,'uniqueKey'],
+  ['v10',V10_STORES.lexicalTombstones,'lexicalItemId'],
+  ['v10',V10_STORES.transcriptCache,'cacheKey'],
+  ['v10',V10_STORES.contentProgress,'lessonId']
+]);
 
 function canonicalValue(value){
   if(Array.isArray(value))return value.map(canonicalValue);
@@ -64,12 +75,57 @@ function canonicalValue(value){
   return value;
 }
 
+function idbKeyFingerprint(value){return`${Array.isArray(value)?'array':typeof value}:${JSON.stringify(canonicalValue(value))}`;}
+function recordKey(owner,store,row){
+  const keyPath=registryEntry(owner,store)?.keyPath;
+  return keyPath&&row&&typeof row==='object'?row[keyPath]:undefined;
+}
+function recordKeyLabel(owner,store,row){
+  const value=recordKey(owner,store,row);
+  return value===undefined?'':String(value);
+}
+
 function normalizedStores(owner,stores={}){
-  return Object.fromEntries(ownerEntries(owner).map(({store})=>{
+  return Object.fromEntries(ownerEntries(owner).map(({store,keyPath})=>{
     const rows=Array.isArray(stores?.[store])?structuredClone(stores[store]):[];
-    rows.sort((left,right)=>codeUnitCompare(recordKey(left),recordKey(right)));
+    rows.sort((left,right)=>codeUnitCompare(idbKeyFingerprint(left?.[keyPath]),idbKeyFingerprint(right?.[keyPath])));
     return[store,rows.map(canonicalValue)];
   }));
+}
+
+function primaryKeyErrors(domains={}){
+  const errors=[];
+  for(const{owner,store,keyPath}of includedEntries()){
+    const rows=domains?.[owner]?.stores?.[store];
+    if(!Array.isArray(rows))continue;
+    const seen=new Set();
+    for(let index=0;index<rows.length;index++){
+      const row=rows[index];
+      if(!row||typeof row!=='object'||Array.isArray(row))continue;
+      if(!Object.hasOwn(row,keyPath)){errors.push(`${owner}.${store}[${index}] thieu keyPath ${keyPath}.`);continue;}
+      const rawKey=row[keyPath];
+      if(!portableIdbKey(rawKey)){errors.push(`${owner}.${store}[${index}].${keyPath} khong phai IndexedDB key hop le.`);continue;}
+      const fingerprint=idbKeyFingerprint(rawKey);
+      if(seen.has(fingerprint))errors.push(`${owner}.${store} trung keyPath ${keyPath}: ${String(rawKey)}.`);
+      else seen.add(fingerprint);
+    }
+  }
+  return errors;
+}
+
+function uniqueIndexErrors(domains={}){
+  const errors=[];
+  for(const[owner,store,field]of UNIQUE_INDEX_FIELDS){
+    const seen=new Set();
+    for(const row of domains?.[owner]?.stores?.[store]||[]){
+      if(row?.[field]===undefined)continue;
+      if(!portableIdbKey(row[field])){errors.push(`${owner}.${store} có unique index ${field} không phải IndexedDB key hợp lệ.`);continue;}
+      const key=JSON.stringify(canonicalValue(row[field]));
+      if(seen.has(key))errors.push(`${owner}.${store} trùng unique index ${field}: ${String(row[field])}.`);
+      else seen.add(key);
+    }
+  }
+  return errors;
 }
 
 export function canonicalBackupPayload(domains={}){
@@ -135,7 +191,7 @@ function sourceShapeErrors(rawDomains){
 }
 
 export function buildFullBackupEnvelope({core={},ielts={},v10={},exportedAt=new Date().toISOString()}={}){
-  const rawDomains={core:{stores:core},ielts:{stores:ielts},v10:{stores:v10}};const errors=[...sourceShapeErrors(rawDomains),...safetyErrorsForDomains(rawDomains)];if(errors.length)throw Object.assign(new Error(errors.join('\n')),{code:'BACKUP_PAYLOAD_UNSAFE'});
+  const rawDomains={core:{stores:core},ielts:{stores:ielts},v10:{stores:v10}};const errors=[...sourceShapeErrors(rawDomains),...safetyErrorsForDomains(rawDomains),...primaryKeyErrors(rawDomains),...uniqueIndexErrors(rawDomains)];if(errors.length)throw Object.assign(new Error(errors.join('\n')),{code:'BACKUP_PAYLOAD_UNSAFE'});
   const domains=canonicalBackupPayload(rawDomains);
   const stores=BACKUP_STORE_REGISTRY.map(row=>{const rows=row.backupRule==='exclude'?[]:domains[row.owner].stores[row.store];return{...row,recordCount:rows.length,contentDigest:row.backupRule==='exclude'?null:`sha256:${sha256Hex(JSON.stringify(rows))}`};});
   return{app:'Vocab Master',kind:FULL_BACKUP_KIND,schemaVersion:FULL_BACKUP_VERSION,registryVersion:BACKUP_REGISTRY_VERSION,exportedAt:String(exportedAt),manifest:{stores,external:structuredClone(BACKUP_EXTERNAL_REGISTRY)},domains,payloadDigest:canonicalBackupDigest(domains)};
@@ -162,6 +218,7 @@ export function validateFullBackupEnvelope(input){
   if(Number(input.registryVersion||0)!==BACKUP_REGISTRY_VERSION)errors.push(Number(input.registryVersion||0)>BACKUP_REGISTRY_VERSION?'Backup dung store registry moi hon ung dung.':'Backup thieu hoac sai store registry version.');
   const domains=input.domains&&typeof input.domains==='object'&&!Array.isArray(input.domains)?input.domains:{};
   const safetyErrors=safetyErrorsForDomains(domains);errors.push(...safetyErrors);if(safetyErrors.length)return{valid:false,errors,warnings,value:null};
+  errors.push(...primaryKeyErrors(domains),...uniqueIndexErrors(domains));
   for(const owner of ['core','ielts','v10']){
     const domain=domains[owner];if(!domain||typeof domain!=='object'||Array.isArray(domain)){errors.push(`Thieu domain ${owner}.`);continue;}
     const expectedOwner=ownerEntries(owner)[0];if(domain.database!==expectedOwner.database)errors.push(`${owner}.database khong khop registry.`);if(Number(domain.databaseVersion)!==expectedOwner.databaseVersion)errors.push(Number(domain.databaseVersion)>expectedOwner.databaseVersion?`${owner} database version moi hon ung dung.`:`${owner} database version khong khop registry.`);
@@ -169,13 +226,14 @@ export function validateFullBackupEnvelope(input){
     for(const store of required){
       if(!Object.hasOwn(stores,store)){errors.push(`${owner}.${store} bi thieu.`);continue;}
       const rows=stores[store];if(!Array.isArray(rows)){errors.push(`${owner}.${store} phai la array.`);continue;}if(rows.length>MAX_RECORDS_PER_STORE)errors.push(`${owner}.${store} vuot gioi han ${MAX_RECORDS_PER_STORE} records.`);
-      const keys=new Set();for(let index=0;index<rows.length;index++){const row=rows[index],key=recordKey(row);if(!row||typeof row!=='object'||Array.isArray(row))errors.push(`${owner}.${store}[${index}] phai la object.`);if(!key)errors.push(`${owner}.${store}[${index}] thieu id/key.`);else if(keys.has(key))errors.push(`${owner}.${store} trung key ${key}.`);else keys.add(key);const size=new TextEncoder().encode(JSON.stringify(row)).length;if(size>MAX_RECORD_BYTES)errors.push(`${owner}.${store}[${index}] vuot gioi han ${MAX_RECORD_BYTES} bytes.`);}
+      for(let index=0;index<rows.length;index++){const row=rows[index];if(!row||typeof row!=='object'||Array.isArray(row))errors.push(`${owner}.${store}[${index}] phai la object.`);const size=new TextEncoder().encode(JSON.stringify(row)).length;if(size>MAX_RECORD_BYTES)errors.push(`${owner}.${store}[${index}] vuot gioi han ${MAX_RECORD_BYTES} bytes.`);}
     }
     for(const store of Object.keys(stores))if(!required.has(store))errors.push(`${owner}.${store} khong thuoc payload allowlist.`);
   }
   const v10Stores=domains.v10?.stores||{};
-  for(const row of v10Stores[V10_STORES.transcriptCache]||[])if(row.backupRepresentation==='reconstructable-cache-stub-v1'&&Object.hasOwn(row,'segments'))errors.push(`v10.${V10_STORES.transcriptCache}/${recordKey(row)} stub con chua raw segments.`);
-  for(const row of v10Stores[V10_STORES.contentAssets]||[])if(row.backupRepresentation==='remote-cache-stub-v1'&&Object.hasOwn(row,'data'))errors.push(`v10.${V10_STORES.contentAssets}/${recordKey(row)} stub con chua raw data.`);
+  if((domains.core?.stores?.meta||[]).some(row=>String(row?.key||'')==='phase0RestoreJournal'))errors.push('core.meta chứa active restore journal.');
+  for(const row of v10Stores[V10_STORES.transcriptCache]||[])if(row.backupRepresentation==='reconstructable-cache-stub-v1'&&Object.hasOwn(row,'segments'))errors.push(`v10.${V10_STORES.transcriptCache}/${recordKeyLabel('v10',V10_STORES.transcriptCache,row)} stub con chua raw segments.`);
+  for(const row of v10Stores[V10_STORES.contentAssets]||[])if(row.backupRepresentation==='remote-cache-stub-v1'&&Object.hasOwn(row,'data'))errors.push(`v10.${V10_STORES.contentAssets}/${recordKeyLabel('v10',V10_STORES.contentAssets,row)} stub con chua raw data.`);
   if((v10Stores[V10_STORES.meta]||[]).some(row=>['schema','content-catalog'].includes(String(row?.key||''))))errors.push('v10.meta con chua reconstructable metadata.');
   validateManifest(input,domains,errors);
   const digest=canonicalBackupDigest(domains);if(String(input.payloadDigest||'')!==digest)errors.push('Backup payload SHA-256 digest khong khop noi dung canonical.');

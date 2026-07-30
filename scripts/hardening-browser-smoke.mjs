@@ -44,7 +44,7 @@ async function main(){
     cdp.on('Runtime.exceptionThrown',params=>runtimeErrors.push(params.exceptionDetails?.exception?.description||params.exceptionDetails?.text||'Runtime exception'));
     cdp.on('Runtime.consoleAPICalled',params=>{if(params.type==='error')runtimeErrors.push((params.args||[]).map(arg=>arg.value??arg.description??'').join(' ')||'console.error');});
     await cdp.send('Page.enable');await cdp.send('Runtime.enable');
-    const evaluate=async expression=>{const result=await cdp.send('Runtime.evaluate',{expression,returnByValue:true,userGesture:true});if(result.exceptionDetails)throw new Error(result.exceptionDetails.exception?.description||result.exceptionDetails.text);return result.result?.value;};
+    const evaluate=async expression=>{const result=await cdp.send('Runtime.evaluate',{expression,returnByValue:true,userGesture:true,awaitPromise:true});if(result.exceptionDetails)throw new Error(result.exceptionDetails.exception?.description||result.exceptionDetails.text);return result.result?.value;};
     const waitFor=async(expression,label,attempts=100)=>{for(let index=0;index<attempts;index+=1){if(await evaluate(`Boolean(${expression})`))return;await delay(100);}throw new Error(`Timed out waiting for ${label}`);};
 
     await waitFor('window.VocabMasterApp&&window.VocabMasterPersistence','app and persistence');
@@ -68,6 +68,20 @@ async function main(){
     await cdp.send('Page.reload',{ignoreCache:true});
     await waitFor('window.VocabMasterApp&&window.VocabMasterPersistence','app after reload');
     await waitFor(`window.VocabMasterApp&&window.VocabMasterApp.getState().cards.some(card=>card.front===${JSON.stringify(term)})`,'card restored from IndexedDB');
+
+    const interruptedTerm=`restore-interrupted-${Date.now()}`;
+    const restoreTargetDigest=await evaluate(`(async()=>{const module=await import('/src/ielts-backup.js');window.__P0_RESTORE_TARGET__=await module.buildCombinedBackup();return window.__P0_RESTORE_TARGET__.payloadDigest;})()`);
+    assert.match(restoreTargetDigest,/^sha256:/,'Restore browser fixture did not capture a canonical target.');
+    await evaluate(`(()=>{document.querySelector('[data-route="capture"]').click();document.getElementById('wordInput').value=${JSON.stringify(interruptedTerm)};document.getElementById('meaningInput').value='must roll forward to target';document.getElementById('addWordForm').requestSubmit();})()`);
+    await waitFor(`window.VocabMasterPersistence.getCurrentState().cards.some(card=>card.front===${JSON.stringify(interruptedTerm)})`,'post-backup mutation');
+    const crash=await evaluate(`(async()=>{const module=await import('/src/ielts-backup.js');try{await module.restoreCombinedBackup(window.__P0_RESTORE_TARGET__,{hooks:module.__testing.createCrashHook('ielts')});return{code:'unexpected-success'};}catch(error){return{code:error.code,recoveryPending:error.recoveryPending===true};}})()`);
+    assert.deepEqual(crash,{code:'SIMULATED_PROCESS_CRASH',recoveryPending:true},'Browser restore fixture did not leave a recoverable journal.');
+    await evaluate("window.__P0_RELOAD_MARKER__='old-context'");
+    await cdp.send('Page.reload',{ignoreCache:true});
+    await waitFor("window.__P0_RELOAD_MARKER__!=='old-context'&&window.__VOCAB_BOOTED__&&window.VocabMasterApp&&window.VocabMasterPersistence",'startup restore recovery');
+    assert.equal(await evaluate(`window.VocabMasterApp.getState().cards.some(card=>card.front===${JSON.stringify(term)})`),true,'Startup recovery lost the target card.');
+    assert.equal(await evaluate(`window.VocabMasterApp.getState().cards.some(card=>card.front===${JSON.stringify(interruptedTerm)})`),false,'Startup recovery did not restore the exact pre-mutation target.');
+    assert.equal(await evaluate("(async()=>{const core=await import('/src/persistence.js');return (await core.readCoreRestoreJournal())===undefined;})()"),true,'Startup recovery left an active restore journal.');
 
     await evaluate("document.querySelector('[data-route=\"today\"]').click();document.getElementById('weakPractice').click()");
     await waitFor("document.getElementById('studyOverlay').classList.contains('open')",'weak fallback study');
@@ -97,8 +111,27 @@ async function main(){
     await evaluate("document.getElementById('skipPronunciation').click()");
     await evaluate("document.getElementById('closeStudy').click()");
 
+    const degradedScript=await cdp.send('Page.addScriptToEvaluateOnNewDocument',{source:"Object.defineProperty(globalThis,'indexedDB',{configurable:true,value:undefined});"});
+    await evaluate("localStorage.removeItem('vocab-master-capture-drafts');window.__P0_RELOAD_MARKER__='before-degraded'");
+    await cdp.send('Page.reload',{ignoreCache:true});
+    await waitFor("window.__P0_RELOAD_MARKER__!=='before-degraded'&&window.__VOCAB_BOOTED__&&window.__VOCAB_CORE_ONLY_DEGRADED__===true",'Core-only degraded startup');
+    const degradedStatus=await evaluate("(async()=>window.VocabMasterPersistence.getPersistenceStatus())()");
+    assert.equal(degradedStatus.storage,'localStorage-degraded','Production boot did not enter the verified localStorage adapter.');
+    assert.equal(degradedStatus.durable,true,'Verified localStorage degraded mode was not labeled durable.');
+    assert.equal(degradedStatus.degraded,true,'Core-only boot was not labeled degraded.');
+    assert.equal(await evaluate("Boolean(window.__VOCAB_V10_READY__||document.getElementById('ieltsLabLauncher'))"),false,'IELTS/V10 mounted without IndexedDB.');
+    assert.match(await evaluate("document.getElementById('coreOnlyDegradedNotice')?.textContent||''"),/Core-only degraded.*IELTS.*V10/i,'Degraded limitation notice is missing.');
+    const degradedDraft=`degraded-draft-${Date.now()}`;
+    await evaluate(`(()=>{document.querySelector('[data-route="capture"]').click();document.getElementById('quickTerm').value=${JSON.stringify(degradedDraft)};document.getElementById('quickCaptureForm').requestSubmit();})()`);
+    await waitFor(`localStorage.getItem('vocab-master-capture-drafts')?.includes(${JSON.stringify(degradedDraft)})`,'degraded draft durable write');
+    await evaluate("window.__P0_RELOAD_MARKER__='degraded-reload'");
+    await cdp.send('Page.reload',{ignoreCache:true});
+    await waitFor("window.__P0_RELOAD_MARKER__!=='degraded-reload'&&window.__VOCAB_BOOTED__&&window.__VOCAB_CORE_ONLY_DEGRADED__===true",'Core-only degraded reload');
+    assert.equal(await evaluate(`localStorage.getItem('vocab-master-capture-drafts')?.includes(${JSON.stringify(degradedDraft)})===true`),true,'Degraded Quick Capture draft did not survive production reload.');
+    await cdp.send('Page.removeScriptToEvaluateOnNewDocument',{identifier:degradedScript.identifier});
+
     assert.deepEqual(runtimeErrors,[],`Runtime errors:\n${runtimeErrors.join('\n')}`);
-    console.log('Hardening browser smoke passed: Settings tabs, explicit IndexedDB restore, weak fallback and microphone-denied coaching recovery are operational.');
+    console.log('Hardening browser smoke passed: Settings tabs, IndexedDB reload, crash-journal startup recovery, Core-only degraded reload, weak fallback and microphone-denied coaching recovery are operational.');
     }catch(error){error.message+=`\n\nVite output:\n${serverOutput.slice(-4000)}\n\nBrowser output:\n${browserOutput.slice(-4000)}`;throw error;}
     finally{cdp?.close();}
   });

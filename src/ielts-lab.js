@@ -43,9 +43,9 @@ import {
   saveMediaProgress,
   getMediaProgress,
   downloadIeltsBackup,
-  validateIeltsBackup,
-  restoreIeltsBackup
+  validateIeltsBackup
 } from './ielts-persistence.js';
+import { restoreIeltsBackupSafely } from './ielts-backup.js';
 import { CURATED_LEXICAL_SETS, CURATED_PARAPHRASE_ITEMS, CURATED_READING_PASSAGES } from './ielts-content.js';
 import { YouTubeSegmentPlayer } from './ielts-media-player.js';
 
@@ -260,7 +260,7 @@ async function handleDialogSubmit(event){
   }catch(error){showStatus(error.message,'error');setBusy(false);}
 }
 async function handleDialogChange(event){
-  if(event.target.matches('[data-ielts-restore]')){const file=event.target.files?.[0];if(!file)return;try{const input=JSON.parse(await file.text());const validation=validateIeltsBackup(input);if(!validation.valid)throw new Error(validation.errors.join('\n'));await restoreIeltsBackup(input);showStatus(`Đã khôi phục IELTS backup${validation.warnings.length?` với ${validation.warnings.length} cảnh báo`:''}.`,'success');await renderLab();await renderTodayErrors();}catch(error){showStatus(error.message,'error');}finally{event.target.value='';}}
+  if(event.target.matches('[data-ielts-restore]')){const file=event.target.files?.[0];if(!file)return;try{const input=JSON.parse(await file.text());const validation=validateIeltsBackup(input);if(!validation.valid)throw new Error(validation.errors.join('\n'));await restoreIeltsBackupSafely(input);showStatus(`Đã khôi phục IELTS backup${validation.warnings.length?` với ${validation.warnings.length} cảnh báo`:''}.`,'success');await renderLab();await renderTodayErrors();}catch(error){showStatus(error.message,'error');}finally{event.target.value='';}}
   if(event.target.id==='errorStatusFilter'){const value=event.target.value;$$('[data-error-status]').forEach(row=>{row.hidden=value!=='all'&&row.dataset.errorStatus!==value;});}
   if(event.target.id==='mediaLoopToggle')state.player?.setLoop(event.target.checked);
   if(event.target.id==='mediaPlaybackRate'){const selected=state.player?.setPlaybackRate(Number(event.target.value));const source=await getIeltsRecord(IELTS_STORE_NAMES.mediaSources,state.mediaSourceId);if(source)await saveMediaProgress({mediaSourceId:source.id,lastSegmentId:state.currentSegmentId,lastPositionMs:state.player?.getCurrentTime()*1000||0,playbackRate:selected||1,sessionMinutes:Number($('#mediaSessionMinutes')?.value||20)});}

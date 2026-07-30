@@ -1,9 +1,20 @@
-import { downloadCombinedBackup,restoreCombinedBackup,validateCombinedBackup } from './ielts-backup.js';
-import { restoreIeltsBackup,validateIeltsBackup } from './ielts-persistence.js';
+import { DEGRADED_CORE_BACKUP_KIND,downloadCombinedBackup,restoreCombinedBackup,restoreIeltsBackupSafely,validateCombinedBackup } from './ielts-backup.js';
+import { validateIeltsBackup } from './ielts-persistence.js';
 import { FULL_BACKUP_KIND } from './backup-registry.js';
 
 let mounted=false;
 function announce(message,kind='info'){const node=document.getElementById('ieltsLabStatus');if(!node)return;node.className=`ielts-status ${kind}`;node.textContent=message;}
+
+export async function restoreIeltsBackupValue(value){
+  if(['combined-core-ielts',FULL_BACKUP_KIND,DEGRADED_CORE_BACKUP_KIND].includes(value?.kind)){
+    const validation=validateCombinedBackup(value);if(!validation.valid)throw new Error(validation.errors.join('\n'));
+    const result=await restoreCombinedBackup(value);
+    return{scope:value.kind===DEGRADED_CORE_BACKUP_KIND?'core-only':'combined',result,validation};
+  }
+  const validation=validateIeltsBackup(value);if(!validation.valid)throw new Error(validation.errors.join('\n'));
+  const result=await restoreIeltsBackupSafely(value);
+  return{scope:'ielts-only',result,validation};
+}
 
 export function mountIeltsBackupBridge(){
   if(mounted)return;mounted=true;
@@ -18,11 +29,13 @@ export function mountIeltsBackupBridge(){
     event.stopImmediatePropagation();const file=input.files?.[0];if(!file)return;
     try{
       const value=JSON.parse(await file.text());
-      if(value.kind==='combined-core-ielts'||value.kind===FULL_BACKUP_KIND){
-        const validation=validateCombinedBackup(value);if(!validation.valid)throw new Error(validation.errors.join('\n'));
-        const result=await restoreCombinedBackup(value);announce(`Đã khôi phục backup kết hợp${result.warnings.length?` với ${result.warnings.length} cảnh báo`:''}. Tải lại giao diện để đồng bộ toàn bộ Library.`,'success');globalThis.location.reload();
+      const restored=await restoreIeltsBackupValue(value);
+      if(restored.scope==='combined'){
+        announce(`Đã khôi phục backup kết hợp${restored.result.warnings.length?` với ${restored.result.warnings.length} cảnh báo`:''}. Tải lại giao diện để đồng bộ toàn bộ Library.`,'success');globalThis.location.reload();
+      }else if(restored.scope==='core-only'){
+        announce(`Đã khôi phục degraded Core backup và giữ nguyên IELTS/V10${restored.result.warnings.length?` với ${restored.result.warnings.length} cảnh báo`:''}. Tải lại giao diện để đồng bộ Library.`,'success');globalThis.location.reload();
       }else{
-        const validation=validateIeltsBackup(value);if(!validation.valid)throw new Error(validation.errors.join('\n'));await restoreIeltsBackup(value);announce(`Đã khôi phục IELTS backup cũ${validation.warnings.length?` với ${validation.warnings.length} cảnh báo`:''}.`,'success');globalThis.dispatchEvent(new CustomEvent('vocab:ielts-external-change',{detail:{reason:'ielts-backup-restored'}}));
+        announce(`Đã khôi phục IELTS backup cũ${restored.validation.warnings.length?` với ${restored.validation.warnings.length} cảnh báo`:''}.`,'success');globalThis.dispatchEvent(new CustomEvent('vocab:ielts-external-change',{detail:{reason:'ielts-backup-restored'}}));
       }
     }catch(error){announce(error.message,'error');}finally{input.value='';}
   },true);

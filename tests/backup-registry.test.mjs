@@ -94,6 +94,8 @@ test('vNext validation is fail-closed for shape, versions, digest, manifest and 
 
 test('export refuses missing stores and non-JSON values without silently dropping records',async()=>{
   const args=backupArgs(acceptedBackup);delete args.core.cards;assert.throws(()=>registry.buildFullBackupEnvelope(args),/Source domain core.cards/);
+  const spoofedId=backupArgs(acceptedBackup);spoofedId.core.cards[0].key='surrogate';delete spoofedId.core.cards[0].id;assert.throws(()=>registry.buildFullBackupEnvelope(spoofedId),/core\.cards\[0\] thieu keyPath id/);
+  const spoofedKey=backupArgs(acceptedBackup);spoofedKey.core.settings[0].id='surrogate';delete spoofedKey.core.settings[0].key;assert.throws(()=>registry.buildFullBackupEnvelope(spoofedKey),/core\.settings\[0\] thieu keyPath key/);
   for(const invalid of [new Blob(['binary']),new Date(),1n,()=>true,Infinity]){
     const next=backupArgs(acceptedBackup);next.core.cards[0].invalid=invalid;assert.throws(()=>registry.buildFullBackupEnvelope(next),error=>error.code==='BACKUP_PAYLOAD_UNSAFE');
   }
@@ -110,5 +112,5 @@ test('legacy IELTS and combined-v1 validators remain supported but reject partia
   const unknown=clone(legacyIelts);unknown.stores.future=[];assert.equal(ielts.validateIeltsBackup(unknown).valid,false);
   const legacyCombined={app:'Vocab Master',kind:'combined-core-ielts',schemaVersion:1,exportedAt:new Date().toISOString(),core:coreContracts.buildBackupDocument({cards:[],reviewEvents:[]}),ielts:legacyIelts};
   const validation=combined.validateCombinedBackup(legacyCombined);assert.equal(validation.valid,true,validation.errors.join('\n'));assert.equal(validation.format,'legacy-v1');
-  await assert.rejects(()=>combined.restoreCombinedBackup(acceptedBackup),error=>error.code==='VNEXT_STAGED_RESTORE_REQUIRED');
+  const restore=await combined.restoreCombinedBackup(acceptedBackup);assert.equal(restore.durable,true);
 });

@@ -400,8 +400,7 @@ export function applyFsrsRating(card, rating, now = Date.now(), config = runtime
       updatedAt: now,
       correct: Number(card.correct || 0) + (normalizedRating === 'again' ? 0 : 1),
       incorrect: Number(card.incorrect || 0) + (normalizedRating === 'again' ? 1 : 0),
-      transferDueAt: becameMastered && !card.transferPassedAt ? now + 7 * 86_400_000 : (card.transferDueAt ?? null),
-      reviewHistory: undefined
+      transferDueAt: becameMastered && !card.transferPassedAt ? now + 7 * 86_400_000 : (card.transferDueAt ?? null)
     },
     interval,
     log
