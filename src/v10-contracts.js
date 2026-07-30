@@ -3,7 +3,7 @@ import { createActivitySpec,createAttempt,createReceipt,createRun } from './lear
 
 export const V10_SCHEMA_VERSION=1;
 export const V10_DB_NAME='vocab-master-v10';
-export const V10_DB_VERSION=1;
+export const V10_DB_VERSION=5;
 
 export const V10_STORES=Object.freeze({
   sourceOccurrences:'sourceOccurrences',
@@ -11,6 +11,14 @@ export const V10_STORES=Object.freeze({
   collections:'collections',
   collectionMemberships:'collectionMemberships',
   lexicalTombstones:'lexicalTombstones',
+  workflowIntents:'workflowIntents',
+  transcriptSources:'transcriptSources',
+  transcriptRevisions:'transcriptRevisions',
+  canonicalTranscriptSegments:'canonicalTranscriptSegments',
+  globalErrorRecords:'globalErrorRecords',
+  globalErrorOccurrences:'globalErrorOccurrences',
+  repairQueue:'repairQueue',
+  todayRuns:'todayRuns',
   activities:'activities',
   sentenceProgress:'sentenceProgress',
   transcriptCache:'transcriptCache',
@@ -22,7 +30,7 @@ export const V10_STORES=Object.freeze({
   meta:'meta'
 });
 
-export const CAPTURE_STATUSES=Object.freeze(['captured','needs-review','ready','linked','rejected']);
+export const CAPTURE_STATUSES=Object.freeze(['captured','needs-review','ready','finalizing','linked','rejected','quarantined']);
 export const ACTIVITY_TYPES=Object.freeze(['card-review','new-card','dictation','shadowing','error-correction','reading','paraphrase','production','retell']);
 export const SENTENCE_STEPS=Object.freeze(['queued','listening','dictation','correction','noticing','shadowing','vocabulary','retell','completed']);
 export const CONTENT_QUALITY_STATUSES=Object.freeze(['draft','validated','verified','rejected','quarantined']);
@@ -117,6 +125,9 @@ export function normalizeActivity(input={}){
     planId:clean(input.planId,180)||null,
     planDate:clean(input.planDate,20)||null,
     plannedAt:Number(input.plannedAt||0)||null,
+    timezone:clean(input.timezone,120)||'UTC',
+    reasonCode:clean(input.reasonCode,120)||null,
+    activitySpec:input.activitySpec&&typeof input.activitySpec==='object'?structuredClone(input.activitySpec):null,
     launchBinding:clean(input.launchBinding,180)||null,
     status:['queued','active','completed','skipped','failed'].includes(input.status)?input.status:'queued',
     createdAt:Number(input.createdAt||Date.now()),

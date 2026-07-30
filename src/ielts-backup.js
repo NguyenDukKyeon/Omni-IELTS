@@ -43,7 +43,7 @@ const RESTORE_JOURNAL_VERSION=1;
 const MAX_RESTORE_STAGING_BYTES=256*1024*1024;
 const RESTORE_STAGING_MARGIN_BYTES=5*1024*1024;
 const OWNER_ORDER=Object.freeze(['core','ielts','v10']);
-const CORE_RESTORE_STORES=Object.freeze([STORE_NAMES.cards,STORE_NAMES.settings,STORE_NAMES.reviewEvents,STORE_NAMES.snapshots,STORE_NAMES.meta,STORE_NAMES.outbox,STORE_NAMES.captureDrafts]);
+const CORE_RESTORE_STORES=Object.freeze([STORE_NAMES.cards,STORE_NAMES.settings,STORE_NAMES.reviewEvents,STORE_NAMES.snapshots,STORE_NAMES.meta,STORE_NAMES.outbox,STORE_NAMES.captureDrafts,STORE_NAMES.learningEvents,STORE_NAMES.learningProjections,STORE_NAMES.learningDeadLetters]);
 const IELTS_RESTORE_STORES=Object.freeze(Object.values(IELTS_STORE_NAMES));
 const V10_RESTORE_STORES=Object.freeze(Object.values(V10_STORES).filter(name=>name!==V10_STORES.coachingStats));
 const createAttemptId=()=>globalThis.crypto?.randomUUID?.()||`restore-${Date.now()}-${Math.random().toString(36).slice(2,10)}`;

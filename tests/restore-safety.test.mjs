@@ -229,7 +229,7 @@ test('crash after canonical verification but before receipt remains recoverable'
   assert.equal(await currentLogicalDigest(),logicalDigest(targetEnvelope));
 });
 
-test('journal is additive at Core DB v4 so an old-version opener remains read-safe',async()=>{
+test('journal is additive at the current Core DB version so an old-version opener remains read-safe',async()=>{
   await backup.restoreCombinedBackup(baselineEnvelope);
   await assert.rejects(()=>backup.restoreCombinedBackup(targetEnvelope,{hooks:backup.__testing.createCrashHook('core')}),error=>error.code==='SIMULATED_PROCESS_CRASH');
   const opened=await new Promise((resolve,reject)=>{const request=indexedDB.open(core.DB_NAME,core.DB_VERSION);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});assert.equal(opened.version,core.DB_VERSION);opened.close();

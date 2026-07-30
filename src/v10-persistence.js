@@ -13,8 +13,36 @@ const V10_MIGRATIONS=Object.freeze([
   defineMigration({
     id:'p1-00-v10-opener-v1',
     digest:'v10-v1-stores-and-indexes:2026-07-30',
-    targetVersion:V10_DB_VERSION,
+    targetVersion:1,
     description:'Adopt the Phase 0 V10 v1 layout under the forward-compatible opener and durable migration ledger.'
+  }),
+  defineMigration({
+    id:'p1-03-v10-workflow-intents-v2',
+    digest:'v10-v2-cross-db-intents:2026-07-30',
+    targetVersion:2,
+    mode:'upgrade',
+    description:'Add durable cross-database workflow intents for idempotent reconciliation.'
+  }),
+  defineMigration({
+    id:'p1-05-v10-transcript-aggregate-v3',
+    digest:'v10-v3-transcript-source-revision-segments:2026-07-30',
+    targetVersion:3,
+    mode:'upgrade',
+    description:'Add canonical transcript sources, immutable revisions and stable segments.'
+  }),
+  defineMigration({
+    id:'p1-06-v10-global-errors-v4',
+    digest:'v10-v4-global-errors-occurrences-repairs:2026-07-30',
+    targetVersion:4,
+    mode:'upgrade',
+    description:'Add the event-derived global error repository and deterministic repair queue.'
+  }),
+  defineMigration({
+    id:'p1-08-v10-today-runs-v5',
+    digest:'v10-v5-exact-today-run-resume:2026-07-30',
+    targetVersion:5,
+    mode:'upgrade',
+    description:'Add durable exact-target Today run state for reload and multi-tab resume.'
   })
 ]);
 
@@ -31,6 +59,14 @@ function createIndexes(name,store){
   if(name===V10_STORES.collections){store.createIndex('kind','kind',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
   if(name===V10_STORES.collectionMemberships){store.createIndex('collectionId','collectionId',{unique:false});store.createIndex('lexicalItemId','lexicalItemId',{unique:false});store.createIndex('uniqueKey','uniqueKey',{unique:true});}
   if(name===V10_STORES.lexicalTombstones){store.createIndex('lexicalItemId','lexicalItemId',{unique:true});store.createIndex('deletedAt','deletedAt',{unique:false});}
+  if(name===V10_STORES.workflowIntents){store.createIndex('status','status',{unique:false});store.createIndex('kind','kind',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
+  if(name===V10_STORES.transcriptSources){store.createIndex('namespace','namespace',{unique:false});store.createIndex('externalId','externalId',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
+  if(name===V10_STORES.transcriptRevisions){store.createIndex('sourceId','sourceId',{unique:false});store.createIndex('parentRevisionId','parentRevisionId',{unique:false});store.createIndex('createdAt','createdAt',{unique:false});}
+  if(name===V10_STORES.canonicalTranscriptSegments){store.createIndex('revisionId','revisionId',{unique:false});store.createIndex('lineageId','lineageId',{unique:false});store.createIndex('sourceId','sourceId',{unique:false});}
+  if(name===V10_STORES.globalErrorRecords){store.createIndex('normalizedKey','normalizedKey',{unique:true});store.createIndex('status','status',{unique:false});store.createIndex('lastSeenAt','lastSeenAt',{unique:false});}
+  if(name===V10_STORES.globalErrorOccurrences){store.createIndex('errorRecordId','errorRecordId',{unique:false});store.createIndex('attemptId','attemptId',{unique:false});store.createIndex('occurredAt','occurredAt',{unique:false});}
+  if(name===V10_STORES.repairQueue){store.createIndex('errorRecordId','errorRecordId',{unique:false});store.createIndex('status','status',{unique:false});store.createIndex('dueAt','dueAt',{unique:false});}
+  if(name===V10_STORES.todayRuns){store.createIndex('activityId','activityId',{unique:true});store.createIndex('status','status',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
   if(name===V10_STORES.activities){store.createIndex('status','status',{unique:false});store.createIndex('dueAt','dueAt',{unique:false});store.createIndex('type','type',{unique:false});}
   if(name===V10_STORES.sentenceProgress){store.createIndex('sourceId','sourceId',{unique:false});store.createIndex('step','step',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
   if(name===V10_STORES.transcriptCache){store.createIndex('videoId','videoId',{unique:false});store.createIndex('cacheKey','cacheKey',{unique:true});store.createIndex('updatedAt','updatedAt',{unique:false});}
