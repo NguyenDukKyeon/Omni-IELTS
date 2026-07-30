@@ -1,5 +1,86 @@
 {
   "schemaVersion": 2,
-  "records": [],
-  "note": "AI-assisted drafts remain generated-draft until a human author/reviewer resolves authorship and source provenance."
+  "records": [
+    {
+      "id": "provenance:asset:sampler-listening-community-workshop:content",
+      "schemaVersion": 2,
+      "sourceType": "generated-draft",
+      "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+      "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+      "createdAt": "2026-07-30T12:00:00.000Z",
+      "aiDraft": true,
+      "kind": "structured-content-asset"
+    },
+    {
+      "id": "provenance:asset:sampler-listening-community-workshop:audio",
+      "schemaVersion": 2,
+      "sourceType": "generated-draft",
+      "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+      "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+      "createdAt": "2026-07-30T12:00:00.000Z",
+      "aiDraft": true,
+      "kind": "draft-audio-asset"
+    },
+    {
+      "id": "provenance:lesson:sampler-listening-community-workshop",
+      "schemaVersion": 2,
+      "sourceType": "generated-draft",
+      "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+      "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+      "createdAt": "2026-07-30T12:00:00.000Z",
+      "aiDraft": true,
+      "kind": "lesson"
+    },
+    {
+      "id": "provenance:asset:sampler-reading-public-benches:content",
+      "schemaVersion": 2,
+      "sourceType": "generated-draft",
+      "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+      "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+      "createdAt": "2026-07-30T12:00:00.000Z",
+      "aiDraft": true,
+      "kind": "structured-content-asset"
+    },
+    {
+      "id": "provenance:lesson:sampler-reading-public-benches",
+      "schemaVersion": 2,
+      "sourceType": "generated-draft",
+      "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+      "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+      "createdAt": "2026-07-30T12:00:00.000Z",
+      "aiDraft": true,
+      "kind": "lesson"
+    },
+    {
+      "id": "provenance:asset:sampler-lexical-cause-effect:content",
+      "schemaVersion": 2,
+      "sourceType": "generated-draft",
+      "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+      "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+      "createdAt": "2026-07-30T12:00:00.000Z",
+      "aiDraft": true,
+      "kind": "structured-content-asset"
+    },
+    {
+      "id": "provenance:lesson:sampler-lexical-cause-effect",
+      "schemaVersion": 2,
+      "sourceType": "generated-draft",
+      "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+      "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+      "createdAt": "2026-07-30T12:00:00.000Z",
+      "aiDraft": true,
+      "kind": "lesson"
+    },
+    {
+      "id": "provenance:pack:vocab-master-sampler",
+      "schemaVersion": 2,
+      "sourceType": "generated-draft",
+      "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+      "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+      "createdAt": "2026-07-30T12:00:00.000Z",
+      "aiDraft": true,
+      "kind": "pack"
+    }
+  ],
+  "note": "AI-assisted drafts require named human authorship and provenance review before publication."
 }

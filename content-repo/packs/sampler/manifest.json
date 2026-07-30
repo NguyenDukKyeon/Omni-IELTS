@@ -1,0 +1,901 @@
+{
+  "id": "pack:vocab-master-sampler",
+  "schemaVersion": 2,
+  "contentRevision": 1,
+  "contentAddress": "sha256:824b10ec184b40178f420b7033da6b039e6c806319146097e588398a23fa8067",
+  "title": "VocabMaster Three-Lesson Sampler",
+  "summary": "One Listening, one Reading and one Lexical/Paraphrase draft for controlled staging review.",
+  "assets": [
+    {
+      "id": "asset:sampler-listening-community-workshop:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:d81ad37dec93fee2b4abe56f83c9837624a578d46e4fe83f6d5e5fd1f0f8d801",
+      "sha256": "d81ad37dec93fee2b4abe56f83c9837624a578d46e4fe83f6d5e5fd1f0f8d801",
+      "byteLength": 2494,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/d81ad37dec93fee2b4abe56f83c9837624a578d46e4fe83f6d5e5fd1f0f8d801.json",
+      "retrievalUrl": "/content/immutable/sha256/d81ad37dec93fee2b4abe56f83c9837624a578d46e4fe83f6d5e5fd1f0f8d801.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for Booking a Community Workshop",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "rightsRecordId": "rights:asset:sampler-listening-community-workshop:content",
+      "provenanceRecordId": "provenance:asset:sampler-listening-community-workshop:content",
+      "humanReviewRecordId": "review:asset:sampler-listening-community-workshop:content",
+      "rights": {
+        "id": "rights:asset:sampler-listening-community-workshop:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:sampler-listening-community-workshop:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:sampler-listening-community-workshop:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:d81ad37dec93fee2b4abe56f83c9837624a578d46e4fe83f6d5e5fd1f0f8d801",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:sampler-listening-community-workshop:audio",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:5a998e42ce442e20182013657abe71e6fe9cc91771fa8ad3a244994fbab255e3",
+      "sha256": "5a998e42ce442e20182013657abe71e6fe9cc91771fa8ad3a244994fbab255e3",
+      "byteLength": 1164734,
+      "mediaType": "audio/wav",
+      "path": "assets/immutable/sha256/5a998e42ce442e20182013657abe71e6fe9cc91771fa8ad3a244994fbab255e3.wav",
+      "retrievalUrl": "/content/immutable/sha256/5a998e42ce442e20182013657abe71e6fe9cc91771fa8ad3a244994fbab255e3.wav",
+      "accessibilityLabel": "Spoken audio for Booking a Community Workshop; verified transcript is declared in asset:sampler-listening-community-workshop:content",
+      "generationNote": "Generated offline with Microsoft Zira Desktop for draft review; licensing and voice approval remain pending.",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "rightsRecordId": "rights:asset:sampler-listening-community-workshop:audio",
+      "provenanceRecordId": "provenance:asset:sampler-listening-community-workshop:audio",
+      "humanReviewRecordId": "review:asset:sampler-listening-community-workshop:audio",
+      "rights": {
+        "id": "rights:asset:sampler-listening-community-workshop:audio",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:sampler-listening-community-workshop:audio",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "draft-audio-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:sampler-listening-community-workshop:audio",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:5a998e42ce442e20182013657abe71e6fe9cc91771fa8ad3a244994fbab255e3",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "draft-audio-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:sampler-reading-public-benches:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:0058a5a33465b395156372f4f2132027fc81bc8695a9a403401eba3e9d624ad8",
+      "sha256": "0058a5a33465b395156372f4f2132027fc81bc8695a9a403401eba3e9d624ad8",
+      "byteLength": 2021,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/0058a5a33465b395156372f4f2132027fc81bc8695a9a403401eba3e9d624ad8.json",
+      "retrievalUrl": "/content/immutable/sha256/0058a5a33465b395156372f4f2132027fc81bc8695a9a403401eba3e9d624ad8.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for Why Public Benches Matter",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "reading-comprehension",
+          "paraphrase-recognition",
+          "distractor-recognition",
+          "micro-reading",
+          "paragraph-production"
+        ]
+      },
+      "rightsRecordId": "rights:asset:sampler-reading-public-benches:content",
+      "provenanceRecordId": "provenance:asset:sampler-reading-public-benches:content",
+      "humanReviewRecordId": "review:asset:sampler-reading-public-benches:content",
+      "rights": {
+        "id": "rights:asset:sampler-reading-public-benches:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:sampler-reading-public-benches:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:sampler-reading-public-benches:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:0058a5a33465b395156372f4f2132027fc81bc8695a9a403401eba3e9d624ad8",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:sampler-lexical-cause-effect:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:01c425236218e8748eb18ccf3c1f140b6cae026f75f7e0c59df19d28d9298bfa",
+      "sha256": "01c425236218e8748eb18ccf3c1f140b6cae026f75f7e0c59df19d28d9298bfa",
+      "byteLength": 1292,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/01c425236218e8748eb18ccf3c1f140b6cae026f75f7e0c59df19d28d9298bfa.json",
+      "retrievalUrl": "/content/immutable/sha256/01c425236218e8748eb18ccf3c1f140b6cae026f75f7e0c59df19d28d9298bfa.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for Clear Cause-and-Effect Paraphrases",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "controlled-recall",
+          "lexical-choice",
+          "sentence-production",
+          "paragraph-production",
+          "paraphrase-recognition"
+        ]
+      },
+      "rightsRecordId": "rights:asset:sampler-lexical-cause-effect:content",
+      "provenanceRecordId": "provenance:asset:sampler-lexical-cause-effect:content",
+      "humanReviewRecordId": "review:asset:sampler-lexical-cause-effect:content",
+      "rights": {
+        "id": "rights:asset:sampler-lexical-cause-effect:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:sampler-lexical-cause-effect:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:sampler-lexical-cause-effect:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:01c425236218e8748eb18ccf3c1f140b6cae026f75f7e0c59df19d28d9298bfa",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    }
+  ],
+  "lessons": [
+    {
+      "id": "lesson:sampler-listening-community-workshop",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:7e563fd0155ec4d5a5fa1614f311ff618afd329e2d8969bd6ca11fa96769933b",
+      "title": "Booking a Community Workshop",
+      "learningObjective": "Identify a changed time, room and booking condition in a short community-centre call.",
+      "estimatedMinutes": 10,
+      "difficulty": "B1",
+      "skill": "listening",
+      "topic": "Community services",
+      "lexicalTargets": [
+        {
+          "id": "lex:sampler-listening-community-workshop:1",
+          "term": "reserve a place",
+          "meaning": "secure a position before the event",
+          "register": "neutral-academic",
+          "usageNote": "Use “reserve a place” only with the meaning stated here."
+        },
+        {
+          "id": "lex:sampler-listening-community-workshop:2",
+          "term": "two places remain",
+          "meaning": "two spaces are still available",
+          "register": "neutral-academic",
+          "usageNote": "Use “two places remain” only with the meaning stated here."
+        },
+        {
+          "id": "lex:sampler-listening-community-workshop:3",
+          "term": "has moved from",
+          "meaning": "has changed location from",
+          "register": "neutral-academic",
+          "usageNote": "Use “has moved from” only with the meaning stated here."
+        },
+        {
+          "id": "lex:sampler-listening-community-workshop:4",
+          "term": "updated details",
+          "meaning": "the latest corrected information",
+          "register": "neutral-academic",
+          "usageNote": "Use “updated details” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:sampler-listening-community-workshop:content",
+        "asset:sampler-listening-community-workshop:audio"
+      ],
+      "activities": [
+        {
+          "id": "activity:sampler-listening-community-workshop:comprehension",
+          "type": "listening-comprehension",
+          "prompt": "Which detail changed in the recording?",
+          "options": [
+            {
+              "label": "The detail stated in sentence three"
+            },
+            {
+              "label": "A detail not mentioned in the recording"
+            }
+          ],
+          "answer": {
+            "text": "That session has moved from Room Four to the garden studio beside reception."
+          },
+          "feedback": "Use the exact changed detail rather than a plausible topic word.",
+          "target": {
+            "lessonId": "lesson:sampler-listening-community-workshop",
+            "activityId": "activity:sampler-listening-community-workshop:comprehension",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-listening-community-workshop:content",
+            "asset:sampler-listening-community-workshop:audio"
+          ]
+        },
+        {
+          "id": "activity:sampler-listening-community-workshop:dictation",
+          "type": "dictation",
+          "prompt": "Write the second sentence exactly as you hear it.",
+          "answer": {
+            "text": "The morning group is full, but two places remain in the session at half past two."
+          },
+          "feedback": "Check content words, function words and the stated detail.",
+          "target": {
+            "lessonId": "lesson:sampler-listening-community-workshop",
+            "activityId": "activity:sampler-listening-community-workshop:dictation",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-listening-community-workshop:content",
+            "asset:sampler-listening-community-workshop:audio"
+          ]
+        },
+        {
+          "id": "activity:sampler-listening-community-workshop:strict",
+          "type": "strict-practice",
+          "prompt": "Retrieve the fourth sentence without opening the transcript.",
+          "answer": {
+            "text": "Please arrive ten minutes early and bring a reusable water bottle."
+          },
+          "feedback": "Opening the answer makes this attempt coaching-only.",
+          "target": {
+            "lessonId": "lesson:sampler-listening-community-workshop",
+            "activityId": "activity:sampler-listening-community-workshop:strict",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-listening-community-workshop:content",
+            "asset:sampler-listening-community-workshop:audio"
+          ]
+        },
+        {
+          "id": "activity:sampler-listening-community-workshop:shadowing",
+          "type": "shadowing",
+          "prompt": "Shadow the final two sentences with thought-group pauses.",
+          "answer": {
+            "text": "Please arrive ten minutes early and bring a reusable water bottle. I will reserve one place and send the updated details by email."
+          },
+          "feedback": "Aim for rhythm and intelligibility; this is coaching, not independent evidence.",
+          "target": {
+            "lessonId": "lesson:sampler-listening-community-workshop",
+            "activityId": "activity:sampler-listening-community-workshop:shadowing",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-listening-community-workshop:content",
+            "asset:sampler-listening-community-workshop:audio"
+          ]
+        },
+        {
+          "id": "activity:sampler-listening-community-workshop:retell",
+          "type": "retell-coaching",
+          "prompt": "Retell the practical outcome in two sentences.",
+          "answer": {
+            "text": "Mention the main change and the required action, using reserve a place where suitable."
+          },
+          "feedback": "Retell remains coaching-only without an independent evaluator.",
+          "target": {
+            "lessonId": "lesson:sampler-listening-community-workshop",
+            "activityId": "activity:sampler-listening-community-workshop:retell",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-listening-community-workshop:content",
+            "asset:sampler-listening-community-workshop:audio"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "Booking a Community Workshop",
+        "language": "en",
+        "transcriptAssetId": "asset:sampler-listening-community-workshop:content",
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:sampler-listening-community-workshop",
+      "provenanceRecordId": "provenance:lesson:sampler-listening-community-workshop",
+      "humanReviewRecordId": "review:lesson:sampler-listening-community-workshop",
+      "rights": {
+        "id": "rights:lesson:sampler-listening-community-workshop",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:sampler-listening-community-workshop",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:sampler-listening-community-workshop",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:7e563fd0155ec4d5a5fa1614f311ff618afd329e2d8969bd6ca11fa96769933b",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "lesson:sampler-reading-public-benches",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:1ffe687e8285fd9db5f99bb2adc797ff3cab17f8182450a1f56ac2647c496d12",
+      "title": "Why Public Benches Matter",
+      "learningObjective": "Recognise a main claim, supporting detail and plausible distractor in a short urban-design passage.",
+      "estimatedMinutes": 12,
+      "difficulty": "B2",
+      "skill": "reading",
+      "topic": "Inclusive cities",
+      "lexicalTargets": [
+        {
+          "id": "lex:sampler-reading-public-benches:1",
+          "term": "street furniture",
+          "meaning": "objects installed in public streets for shared use",
+          "register": "neutral-academic",
+          "usageNote": "Use “street furniture” only with the meaning stated here."
+        },
+        {
+          "id": "lex:sampler-reading-public-benches:2",
+          "term": "limited mobility",
+          "meaning": "reduced ability to move easily",
+          "register": "neutral-academic",
+          "usageNote": "Use “limited mobility” only with the meaning stated here."
+        },
+        {
+          "id": "lex:sampler-reading-public-benches:3",
+          "term": "travel independently",
+          "meaning": "make a journey without assistance",
+          "register": "neutral-academic",
+          "usageNote": "Use “travel independently” only with the meaning stated here."
+        },
+        {
+          "id": "lex:sampler-reading-public-benches:4",
+          "term": "balanced approach",
+          "meaning": "a response that considers competing needs",
+          "register": "neutral-academic",
+          "usageNote": "Use “balanced approach” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:sampler-reading-public-benches:content"
+      ],
+      "activities": [
+        {
+          "id": "activity:sampler-reading-public-benches:main-claim",
+          "type": "reading-comprehension",
+          "prompt": "State the passage’s central claim in one sentence.",
+          "answer": {
+            "text": "Recognise a main claim, supporting detail and plausible distractor in a short urban-design passage."
+          },
+          "feedback": "A strong answer preserves the scope of the passage.",
+          "target": {
+            "lessonId": "lesson:sampler-reading-public-benches",
+            "activityId": "activity:sampler-reading-public-benches:main-claim",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-reading-public-benches:content"
+          ]
+        },
+        {
+          "id": "activity:sampler-reading-public-benches:paraphrase",
+          "type": "paraphrase-recognition",
+          "prompt": "Which expression best preserves “street furniture”?",
+          "options": [
+            {
+              "label": "objects installed in public streets for shared use"
+            },
+            {
+              "label": "an unrelated general improvement"
+            }
+          ],
+          "answer": {
+            "text": "objects installed in public streets for shared use"
+          },
+          "feedback": "Match meaning and claim strength, not just topic.",
+          "target": {
+            "lessonId": "lesson:sampler-reading-public-benches",
+            "activityId": "activity:sampler-reading-public-benches:paraphrase",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-reading-public-benches:content"
+          ]
+        },
+        {
+          "id": "activity:sampler-reading-public-benches:distractor",
+          "type": "distractor-recognition",
+          "prompt": "Identify a plausible statement that the passage does not establish.",
+          "answer": {
+            "text": "A broad universal claim that removes the passage’s stated limitation."
+          },
+          "feedback": "Distractors often repeat vocabulary while changing scope or causality.",
+          "target": {
+            "lessonId": "lesson:sampler-reading-public-benches",
+            "activityId": "activity:sampler-reading-public-benches:distractor",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-reading-public-benches:content"
+          ]
+        },
+        {
+          "id": "activity:sampler-reading-public-benches:micro-reading",
+          "type": "micro-reading",
+          "prompt": "Find the sentence that limits the main claim and explain its function.",
+          "answer": {
+            "text": "The limiting sentence prevents the evidence from supporting a broader conclusion."
+          },
+          "feedback": "Look for contrast markers and cautious reporting verbs.",
+          "target": {
+            "lessonId": "lesson:sampler-reading-public-benches",
+            "activityId": "activity:sampler-reading-public-benches:micro-reading",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-reading-public-benches:content"
+          ]
+        },
+        {
+          "id": "activity:sampler-reading-public-benches:production",
+          "type": "paragraph-production",
+          "prompt": "Write 70–90 words using “limited mobility” to evaluate the passage.",
+          "answer": {
+            "text": "A complete paragraph should state a claim, cite a passage detail and preserve one limitation."
+          },
+          "feedback": "This follow-up is coaching-only until independently evaluated.",
+          "target": {
+            "lessonId": "lesson:sampler-reading-public-benches",
+            "activityId": "activity:sampler-reading-public-benches:production",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-reading-public-benches:content"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "Why Public Benches Matter",
+        "language": "en",
+        "transcriptAssetId": null,
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "reading-comprehension",
+          "paraphrase-recognition",
+          "distractor-recognition",
+          "micro-reading",
+          "paragraph-production"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:sampler-reading-public-benches",
+      "provenanceRecordId": "provenance:lesson:sampler-reading-public-benches",
+      "humanReviewRecordId": "review:lesson:sampler-reading-public-benches",
+      "rights": {
+        "id": "rights:lesson:sampler-reading-public-benches",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:sampler-reading-public-benches",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:sampler-reading-public-benches",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:1ffe687e8285fd9db5f99bb2adc797ff3cab17f8182450a1f56ac2647c496d12",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "lesson:sampler-lexical-cause-effect",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:9f970ad28e2fa4577c02ca5ec96cd343f184160bdee78d8203752b9f0da9f7b7",
+      "title": "Clear Cause-and-Effect Paraphrases",
+      "learningObjective": "Distinguish cause, contribution and correlation when paraphrasing an academic claim.",
+      "estimatedMinutes": 9,
+      "difficulty": "B2",
+      "skill": "lexical-paraphrase",
+      "topic": "Academic argument",
+      "lexicalTargets": [
+        {
+          "id": "lex:sampler-lexical-cause-effect:1",
+          "term": "lead to",
+          "meaning": "produce a result directly",
+          "register": "neutral-academic",
+          "usageNote": "Use “lead to” only with the meaning stated here."
+        },
+        {
+          "id": "lex:sampler-lexical-cause-effect:2",
+          "term": "contribute to",
+          "meaning": "be one of several causes",
+          "register": "neutral-academic",
+          "usageNote": "Use “contribute to” only with the meaning stated here."
+        },
+        {
+          "id": "lex:sampler-lexical-cause-effect:3",
+          "term": "be associated with",
+          "meaning": "show a relationship without proving causation",
+          "register": "neutral-academic",
+          "usageNote": "Use “be associated with” only with the meaning stated here."
+        },
+        {
+          "id": "lex:sampler-lexical-cause-effect:4",
+          "term": "stem from",
+          "meaning": "originate in a stated cause",
+          "register": "neutral-academic",
+          "usageNote": "Use “stem from” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:sampler-lexical-cause-effect:content"
+      ],
+      "activities": [
+        {
+          "id": "activity:sampler-lexical-cause-effect:recall",
+          "type": "controlled-recall",
+          "prompt": "Recall a precise meaning for “lead to”.",
+          "answer": {
+            "text": "produce a result directly"
+          },
+          "feedback": "Keep the strength and grammatical role of the expression.",
+          "target": {
+            "lessonId": "lesson:sampler-lexical-cause-effect",
+            "activityId": "activity:sampler-lexical-cause-effect:recall",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-lexical-cause-effect:content"
+          ]
+        },
+        {
+          "id": "activity:sampler-lexical-cause-effect:choice",
+          "type": "lexical-choice",
+          "prompt": "Choose the expression matching: be one of several causes.",
+          "options": [
+            {
+              "label": "lead to"
+            },
+            {
+              "label": "contribute to"
+            },
+            {
+              "label": "be associated with"
+            },
+            {
+              "label": "stem from"
+            }
+          ],
+          "answer": {
+            "text": "contribute to"
+          },
+          "feedback": "Use the meaning note rather than surface similarity.",
+          "target": {
+            "lessonId": "lesson:sampler-lexical-cause-effect",
+            "activityId": "activity:sampler-lexical-cause-effect:choice",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-lexical-cause-effect:content"
+          ]
+        },
+        {
+          "id": "activity:sampler-lexical-cause-effect:sentence",
+          "type": "sentence-production",
+          "prompt": "Write one academic sentence using “lead to”.",
+          "answer": {
+            "text": "The sentence should use the expression in its stated sense and register."
+          },
+          "feedback": "Check collocation, grammar and claim strength.",
+          "target": {
+            "lessonId": "lesson:sampler-lexical-cause-effect",
+            "activityId": "activity:sampler-lexical-cause-effect:sentence",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-lexical-cause-effect:content"
+          ]
+        },
+        {
+          "id": "activity:sampler-lexical-cause-effect:paragraph",
+          "type": "paragraph-production",
+          "prompt": "Write 70–90 words using “lead to” and “contribute to”.",
+          "answer": {
+            "text": "The paragraph should connect both expressions coherently without changing their meanings."
+          },
+          "feedback": "Prefer a clear claim and one supporting example.",
+          "target": {
+            "lessonId": "lesson:sampler-lexical-cause-effect",
+            "activityId": "activity:sampler-lexical-cause-effect:paragraph",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-lexical-cause-effect:content"
+          ]
+        },
+        {
+          "id": "activity:sampler-lexical-cause-effect:paraphrase",
+          "type": "paraphrase-recognition",
+          "prompt": "Paraphrase “be associated with” without increasing certainty.",
+          "answer": {
+            "text": "show a relationship without proving causation"
+          },
+          "feedback": "Preserve modality and scope.",
+          "target": {
+            "lessonId": "lesson:sampler-lexical-cause-effect",
+            "activityId": "activity:sampler-lexical-cause-effect:paraphrase",
+            "contentRevision": 1
+          },
+          "assetIds": [
+            "asset:sampler-lexical-cause-effect:content"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "Clear Cause-and-Effect Paraphrases",
+        "language": "en",
+        "transcriptAssetId": null,
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "controlled-recall",
+          "lexical-choice",
+          "sentence-production",
+          "paragraph-production",
+          "paraphrase-recognition"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:sampler-lexical-cause-effect",
+      "provenanceRecordId": "provenance:lesson:sampler-lexical-cause-effect",
+      "humanReviewRecordId": "review:lesson:sampler-lexical-cause-effect",
+      "rights": {
+        "id": "rights:lesson:sampler-lexical-cause-effect",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:sampler-lexical-cause-effect",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:sampler-lexical-cause-effect",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:9f970ad28e2fa4577c02ca5ec96cd343f184160bdee78d8203752b9f0da9f7b7",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null
+    }
+  ],
+  "compatibility": {
+    "minimumAppVersion": "10.0.0",
+    "supportedActivityTypes": [
+      "listening-comprehension",
+      "dictation",
+      "strict-practice",
+      "shadowing",
+      "retell-coaching",
+      "reading-comprehension",
+      "paraphrase-recognition",
+      "distractor-recognition",
+      "micro-reading",
+      "paragraph-production",
+      "controlled-recall",
+      "lexical-choice",
+      "sentence-production"
+    ]
+  },
+  "rightsRecordId": "rights:pack:vocab-master-sampler",
+  "provenanceRecordId": "provenance:pack:vocab-master-sampler",
+  "humanReviewRecordId": "review:pack:vocab-master-sampler",
+  "rights": {
+    "id": "rights:pack:vocab-master-sampler",
+    "schemaVersion": 2,
+    "status": "pending",
+    "licenseId": "pending-human-rights-review",
+    "rightsHolder": null,
+    "basis": "No publication claim. Human rights verification is required.",
+    "assertedAt": null,
+    "expiresAt": null,
+    "aiAsserted": false
+  },
+  "provenance": {
+    "id": "provenance:pack:vocab-master-sampler",
+    "schemaVersion": 2,
+    "sourceType": "generated-draft",
+    "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+    "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+    "createdAt": "2026-07-30T12:00:00.000Z",
+    "aiDraft": true,
+    "kind": "pack"
+  },
+  "humanReview": {
+    "id": "review:pack:vocab-master-sampler",
+    "schemaVersion": 2,
+    "status": "pending",
+    "reviewerType": "human",
+    "reviewerId": null,
+    "reviewedAt": null,
+    "scopeDigest": "sha256:824b10ec184b40178f420b7033da6b039e6c806319146097e588398a23fa8067",
+    "checks": [],
+    "selfApprovedByAi": false,
+    "kind": "pack"
+  },
+  "publishedAt": null
+}

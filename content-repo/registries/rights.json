@@ -1,5 +1,94 @@
 {
   "schemaVersion": 2,
-  "records": [],
-  "note": "Records are generated per immutable item. Publication requires approved status and a human assertion."
+  "records": [
+    {
+      "id": "rights:asset:sampler-listening-community-workshop:content",
+      "schemaVersion": 2,
+      "status": "pending",
+      "licenseId": "pending-human-rights-review",
+      "rightsHolder": null,
+      "basis": "No publication claim. Human rights verification is required.",
+      "assertedAt": null,
+      "expiresAt": null,
+      "aiAsserted": false
+    },
+    {
+      "id": "rights:asset:sampler-listening-community-workshop:audio",
+      "schemaVersion": 2,
+      "status": "pending",
+      "licenseId": "pending-human-rights-review",
+      "rightsHolder": null,
+      "basis": "No publication claim. Human rights verification is required.",
+      "assertedAt": null,
+      "expiresAt": null,
+      "aiAsserted": false
+    },
+    {
+      "id": "rights:lesson:sampler-listening-community-workshop",
+      "schemaVersion": 2,
+      "status": "pending",
+      "licenseId": "pending-human-rights-review",
+      "rightsHolder": null,
+      "basis": "No publication claim. Human rights verification is required.",
+      "assertedAt": null,
+      "expiresAt": null,
+      "aiAsserted": false
+    },
+    {
+      "id": "rights:asset:sampler-reading-public-benches:content",
+      "schemaVersion": 2,
+      "status": "pending",
+      "licenseId": "pending-human-rights-review",
+      "rightsHolder": null,
+      "basis": "No publication claim. Human rights verification is required.",
+      "assertedAt": null,
+      "expiresAt": null,
+      "aiAsserted": false
+    },
+    {
+      "id": "rights:lesson:sampler-reading-public-benches",
+      "schemaVersion": 2,
+      "status": "pending",
+      "licenseId": "pending-human-rights-review",
+      "rightsHolder": null,
+      "basis": "No publication claim. Human rights verification is required.",
+      "assertedAt": null,
+      "expiresAt": null,
+      "aiAsserted": false
+    },
+    {
+      "id": "rights:asset:sampler-lexical-cause-effect:content",
+      "schemaVersion": 2,
+      "status": "pending",
+      "licenseId": "pending-human-rights-review",
+      "rightsHolder": null,
+      "basis": "No publication claim. Human rights verification is required.",
+      "assertedAt": null,
+      "expiresAt": null,
+      "aiAsserted": false
+    },
+    {
+      "id": "rights:lesson:sampler-lexical-cause-effect",
+      "schemaVersion": 2,
+      "status": "pending",
+      "licenseId": "pending-human-rights-review",
+      "rightsHolder": null,
+      "basis": "No publication claim. Human rights verification is required.",
+      "assertedAt": null,
+      "expiresAt": null,
+      "aiAsserted": false
+    },
+    {
+      "id": "rights:pack:vocab-master-sampler",
+      "schemaVersion": 2,
+      "status": "pending",
+      "licenseId": "pending-human-rights-review",
+      "rightsHolder": null,
+      "basis": "No publication claim. Human rights verification is required.",
+      "assertedAt": null,
+      "expiresAt": null,
+      "aiAsserted": false
+    }
+  ],
+  "note": "All draft rights records are pending. No ownership or licence approval is claimed."
 }

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "sampler-listening-community-workshop",
+  "skill": "listening",
+  "transcript": {
+    "segments": [
+      {
+        "id": "segment:sampler-listening-community-workshop:1",
+        "startMs": 0,
+        "endMs": 5250,
+        "text": "Good morning. I am calling about the Saturday photography workshop."
+      },
+      {
+        "id": "segment:sampler-listening-community-workshop:2",
+        "startMs": 5500,
+        "endMs": 10750,
+        "text": "The morning group is full, but two places remain in the session at half past two."
+      },
+      {
+        "id": "segment:sampler-listening-community-workshop:3",
+        "startMs": 11000,
+        "endMs": 16250,
+        "text": "That session has moved from Room Four to the garden studio beside reception."
+      },
+      {
+        "id": "segment:sampler-listening-community-workshop:4",
+        "startMs": 16500,
+        "endMs": 21750,
+        "text": "Please arrive ten minutes early and bring a reusable water bottle."
+      },
+      {
+        "id": "segment:sampler-listening-community-workshop:5",
+        "startMs": 22000,
+        "endMs": 27250,
+        "text": "I will reserve one place and send the updated details by email."
+      }
+    ]
+  },
+  "lexicalTargets": [
+    {
+      "id": "lex:sampler-listening-community-workshop:1",
+      "term": "reserve a place",
+      "meaning": "secure a position before the event",
+      "register": "neutral-academic",
+      "usageNote": "Use “reserve a place” only with the meaning stated here."
+    },
+    {
+      "id": "lex:sampler-listening-community-workshop:2",
+      "term": "two places remain",
+      "meaning": "two spaces are still available",
+      "register": "neutral-academic",
+      "usageNote": "Use “two places remain” only with the meaning stated here."
+    },
+    {
+      "id": "lex:sampler-listening-community-workshop:3",
+      "term": "has moved from",
+      "meaning": "has changed location from",
+      "register": "neutral-academic",
+      "usageNote": "Use “has moved from” only with the meaning stated here."
+    },
+    {
+      "id": "lex:sampler-listening-community-workshop:4",
+      "term": "updated details",
+      "meaning": "the latest corrected information",
+      "register": "neutral-academic",
+      "usageNote": "Use “updated details” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

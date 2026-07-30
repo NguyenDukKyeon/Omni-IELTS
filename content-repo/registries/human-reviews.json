@@ -1,5 +1,102 @@
 {
   "schemaVersion": 2,
-  "records": [],
-  "note": "One synthetic approval cannot cover all weeks. Reviews bind exact item digests and named human reviewers."
+  "records": [
+    {
+      "id": "review:asset:sampler-listening-community-workshop:content",
+      "schemaVersion": 2,
+      "status": "pending",
+      "reviewerType": "human",
+      "reviewerId": null,
+      "reviewedAt": null,
+      "scopeDigest": "sha256:d81ad37dec93fee2b4abe56f83c9837624a578d46e4fe83f6d5e5fd1f0f8d801",
+      "checks": [],
+      "selfApprovedByAi": false,
+      "kind": "structured-content-asset"
+    },
+    {
+      "id": "review:asset:sampler-listening-community-workshop:audio",
+      "schemaVersion": 2,
+      "status": "pending",
+      "reviewerType": "human",
+      "reviewerId": null,
+      "reviewedAt": null,
+      "scopeDigest": "sha256:5a998e42ce442e20182013657abe71e6fe9cc91771fa8ad3a244994fbab255e3",
+      "checks": [],
+      "selfApprovedByAi": false,
+      "kind": "draft-audio-asset"
+    },
+    {
+      "id": "review:lesson:sampler-listening-community-workshop",
+      "schemaVersion": 2,
+      "status": "pending",
+      "reviewerType": "human",
+      "reviewerId": null,
+      "reviewedAt": null,
+      "scopeDigest": "sha256:7e563fd0155ec4d5a5fa1614f311ff618afd329e2d8969bd6ca11fa96769933b",
+      "checks": [],
+      "selfApprovedByAi": false,
+      "kind": "lesson"
+    },
+    {
+      "id": "review:asset:sampler-reading-public-benches:content",
+      "schemaVersion": 2,
+      "status": "pending",
+      "reviewerType": "human",
+      "reviewerId": null,
+      "reviewedAt": null,
+      "scopeDigest": "sha256:0058a5a33465b395156372f4f2132027fc81bc8695a9a403401eba3e9d624ad8",
+      "checks": [],
+      "selfApprovedByAi": false,
+      "kind": "structured-content-asset"
+    },
+    {
+      "id": "review:lesson:sampler-reading-public-benches",
+      "schemaVersion": 2,
+      "status": "pending",
+      "reviewerType": "human",
+      "reviewerId": null,
+      "reviewedAt": null,
+      "scopeDigest": "sha256:1ffe687e8285fd9db5f99bb2adc797ff3cab17f8182450a1f56ac2647c496d12",
+      "checks": [],
+      "selfApprovedByAi": false,
+      "kind": "lesson"
+    },
+    {
+      "id": "review:asset:sampler-lexical-cause-effect:content",
+      "schemaVersion": 2,
+      "status": "pending",
+      "reviewerType": "human",
+      "reviewerId": null,
+      "reviewedAt": null,
+      "scopeDigest": "sha256:01c425236218e8748eb18ccf3c1f140b6cae026f75f7e0c59df19d28d9298bfa",
+      "checks": [],
+      "selfApprovedByAi": false,
+      "kind": "structured-content-asset"
+    },
+    {
+      "id": "review:lesson:sampler-lexical-cause-effect",
+      "schemaVersion": 2,
+      "status": "pending",
+      "reviewerType": "human",
+      "reviewerId": null,
+      "reviewedAt": null,
+      "scopeDigest": "sha256:9f970ad28e2fa4577c02ca5ec96cd343f184160bdee78d8203752b9f0da9f7b7",
+      "checks": [],
+      "selfApprovedByAi": false,
+      "kind": "lesson"
+    },
+    {
+      "id": "review:pack:vocab-master-sampler",
+      "schemaVersion": 2,
+      "status": "pending",
+      "reviewerType": "human",
+      "reviewerId": null,
+      "reviewedAt": null,
+      "scopeDigest": "sha256:824b10ec184b40178f420b7033da6b039e6c806319146097e588398a23fa8067",
+      "checks": [],
+      "selfApprovedByAi": false,
+      "kind": "pack"
+    }
+  ],
+  "note": "Every item has a distinct pending review record bound to its immutable digest. No review is fabricated."
 }
