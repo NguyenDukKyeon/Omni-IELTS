@@ -49,6 +49,10 @@ test('IELTS coaching envelopes retain canonical denied evidence without fabricat
   assert.equal(saved.evidenceAttempts[0].attempt.receiptId,'receipt:s1');
   assert.equal(saved.evidenceDecisions[0].affectsSchedule,false);
   assert.notEqual(sourceRevision,ieltsSourceRevision('segment',{id:'s1',text:'A changed transcript.',updatedAt:11}));
+  const failedRetell=sanitizeMediaAttempt({mediaSourceId:'media-1',segmentId:'s1',mode:'retell',learnerResponse:'Durable output',result:'coaching',evaluationStatus:'failed',evaluationError:'provider timeout'});
+  assert.equal(failedRetell.learnerResponse,'Durable output');
+  assert.equal(failedRetell.evaluationStatus,'failed');
+  assert.equal(failedRetell.evaluationError,'provider timeout');
 });
 
 test('revealed correction and unverified transcript cannot create independent evidence',()=>{

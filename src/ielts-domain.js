@@ -443,6 +443,8 @@ export function sanitizeMediaAttempt(input={}){
     linkedCardIds:[...new Set((Array.isArray(input.linkedCardIds)?input.linkedCardIds:[]).map(value=>cleanText(value,180)).filter(Boolean))],
     evidenceAttempts:Array.isArray(input.evidenceAttempts)?structuredClone(input.evidenceAttempts).slice(0,30):[],
     evidenceDecisions:Array.isArray(input.evidenceDecisions)?structuredClone(input.evidenceDecisions).slice(0,30):[],
+    evaluationStatus:['not-requested','pending','completed','failed'].includes(input.evaluationStatus)?input.evaluationStatus:'not-requested',
+    evaluationError:cleanText(input.evaluationError,1000)||null,
     completedAt:Number(input.completedAt||Date.now()),
     durationMs:Math.max(0,Number(input.durationMs||0))
   };

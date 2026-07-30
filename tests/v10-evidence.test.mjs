@@ -94,10 +94,13 @@ test('IELTS and V10 containment surfaces cannot bypass the schedule gateway',asy
   assert.doesNotMatch(ielts,/applyFsrsRating|persistReviewResult|commitEvidence|validated-provider/);
   assert.match(ielts,/buildIeltsEvidenceEnvelope/);
   assert.match(ielts,/selectedTargetIds\.has\(row\.cardId\)/);
+  assert.match(ielts,/return await submitMediaRetell\(form\)/);
   assert.match(ielts,/correctionExposed:true,answerExposed:true,coaching:true/);
   assert.match(ielts,/result:'coaching'/);
   assert.match(sentenceLoop,/progressWriteQueue/);
   assert.match(sentenceLoop,/runToken/);
+  assert.match(sentenceLoop,/if\(run\.transitioning\)return/);
+  assert.match(sentenceLoop,/run\.index!==expectedIndex/);
   assert.match(sentenceLoop,/retellStatus='skipped'/);
   assert.match(sentenceLoop,/retellStatus='coaching-completed'/);
   assert.match(sentenceLoop,/result:'coaching'/);

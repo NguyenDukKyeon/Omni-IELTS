@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   V10_STORES,SENTENCE_STEPS,lemmaKey,senseKey,normalizeCaptureCandidate,
-  normalizeSourceOccurrence,normalizeActivity,normalizeSentenceProgress,buildV10CoachingEnvelope,
+  normalizeSourceOccurrence,normalizeActivity,normalizeSentenceProgress,normalizeRetellStatus,buildV10CoachingEnvelope,
   normalizeContentManifest,validateContentManifest,validateSentenceSegments
 } from '../src/v10-contracts.js';
 
@@ -55,6 +55,10 @@ test('legacy Retell output is unverified while explicit Skip remains distinct',(
   const legacy=normalizeSentenceProgress({sentenceId:'legacy',step:'completed',retellResponse:'Legacy learner output'});
   assert.equal(legacy.retellStatus,'unverified');
   assert.equal(legacy.retellResponse,'Legacy learner output');
+  const legacyWithoutOutput=normalizeSentenceProgress({sentenceId:'legacy-empty',step:'completed'});
+  assert.equal(legacyWithoutOutput.retellStatus,'unverified');
+  assert.equal(legacyWithoutOutput.retellResponse,'');
+  assert.equal(normalizeRetellStatus({step:'completed'}),'unverified');
   const skipped=normalizeSentenceProgress({sentenceId:'skip',step:'completed',retellStatus:'skipped',retellResponse:''});
   assert.equal(skipped.retellStatus,'skipped');
   assert.equal(skipped.retellResponse,'');
@@ -62,11 +66,14 @@ test('legacy Retell output is unverified while explicit Skip remains distinct',(
 
 test('V10 Dictation and Retell are persisted as coaching-only canonical envelopes',()=>{
   const sentence={id:'s1',text:'The policy remains effective.',startMs:0,endMs:3000,verified:true};
-  const dictation=buildV10CoachingEnvelope({activityId:'dictation:s1',receiptId:'dictation-receipt:s1',activityType:'dictation',sentence,sourceId:'sentence:s1',cardId:'card-1',skill:'listening',result:'correct',learnerOutput:sentence.text});
+  const dictation=buildV10CoachingEnvelope({activityId:'dictation:s1',receiptId:'dictation-receipt:s1',activityType:'dictation',sentence,sourceId:'sentence:s1',cardId:'card-1',skill:'listening',result:'correct',learnerOutput:sentence.text,assistance:{coaching:false,complete:false,collector:'caller'}});
   const retell=buildV10CoachingEnvelope({activityId:'retell:s1',receiptId:'retell-receipt:s1',activityType:'retell',sentence,sourceId:'sentence:s1',cardId:'card-1',skill:'production',result:'coaching',learnerOutput:'The speaker says the policy still works.',assistance:{correctionExposed:true}});
   for(const envelope of [dictation,retell]){
     assert.equal(envelope.decision.affectsSchedule,false);
     assert.equal(envelope.decision.reason,'assistance-exposed');
+    assert.equal(envelope.attempt.assistance.coaching,true);
+    assert.equal(envelope.attempt.assistance.complete,true);
+    assert.equal(envelope.attempt.assistance.collector,'v10-sentence-loop');
     assert.equal(envelope.verification.evaluation,undefined);
   }
   const saved=normalizeSentenceProgress({sentenceId:'s1',retellResponse:retell.attempt.learnerOutput,retellStatus:'coaching-completed',evidenceAttempts:[dictation,retell]});
