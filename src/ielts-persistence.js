@@ -211,7 +211,7 @@ export async function replaceTranscriptSegments(mediaSourceId,input,{durationMs=
     source:{id:`transcript-source:ielts:${mediaSourceId}`,namespace:'private',externalId:mediaSourceId,sourceType:'ielts-media',language:segments[0]?.language||'en',status:'unverified',complete:result.complete===true},
     segments,
     provenance:{kind:'ielts-transcript-import',mediaSourceId}
-  });
+  },{activate:true});
   broadcast('ielts-transcript-replaced',[IELTS_STORE_NAMES.transcriptSegments]);
   return{...result,segments,transcriptSourceId:canonical.source.id,transcriptRevisionId:canonical.revision.id};
 }

@@ -45,3 +45,31 @@ test('legacy adapters are explicit, unverified and namespace-scoped',()=>{
   assert.equal(legacy.revision.provenance.kind,'legacy-import');
   assert.equal(legacy.segments.every(row=>row.revisionId===legacy.revision.id),true);
 });
+
+test('an edit preserves complete coverage from the active canonical revision',async()=>{
+  const first=await transcripts.persistTranscriptAggregate({source:{...source,id:'transcript-source:complete-edit',complete:true},segments,createdAt:350},{activate:true});
+  const edited=await transcripts.createChildAndActivate(first.revision.id,[segments[0],{...segments[1],text:'Complete edit.'}],{createdAt:351});
+  assert.equal(edited.revision.coverage.complete,true);
+});
+
+test('concurrent children compare-and-swap one active base and leave one immutable winner',async()=>{
+  const first=await transcripts.persistTranscriptAggregate({source:{...source,id:'transcript-source:cas'},segments,createdAt:400},{activate:true});
+  const [left,right]=await Promise.allSettled([
+    transcripts.createChildAndActivate(first.revision.id,[segments[0],{...segments[1],text:'Left edit.'}],{createdAt:401}),
+    transcripts.createChildAndActivate(first.revision.id,[segments[0],{...segments[1],text:'Right edit.'}],{createdAt:402})
+  ]);
+  assert.equal([left,right].filter(result=>result.status==='fulfilled').length,1);
+  assert.equal([left,right].filter(result=>result.status==='rejected')[0].reason.code,'TRANSCRIPT_EDIT_CONFLICT');
+  const active=await transcripts.getTranscriptAggregate(first.revision.id);
+  assert.notEqual(active.source.activeRevisionId,first.revision.id);
+});
+
+test('provider refresh is stored unattached and cannot replace an active user edit',async()=>{
+  const first=await transcripts.persistTranscriptAggregate({source:{...source,id:'transcript-source:provider'},segments,createdAt:500},{activate:true});
+  const edited=await transcripts.createChildAndActivate(first.revision.id,[segments[0],{...segments[1],text:'Learner correction.'}],{createdAt:501});
+  const refreshed=await transcripts.createProviderTranscriptRevision({source:{...source,id:'transcript-source:provider'},segments:[segments[0],{...segments[1],text:'Provider refresh.'}],createdAt:502});
+  const sourceAfter=await transcripts.getTranscriptAggregate(first.revision.id);
+  assert.notEqual(refreshed.revision.id,edited.revision.id);
+  assert.equal(sourceAfter.source.activeRevisionId,edited.revision.id);
+  assert.equal((await transcripts.getTranscriptAggregate(edited.revision.id)).segments[1].text,'Learner correction.');
+});

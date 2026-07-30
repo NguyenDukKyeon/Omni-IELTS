@@ -6,6 +6,7 @@ export const TRANSCRIPT_AGGREGATE_VERSION=1;
 
 const clone=value=>value==null?value:structuredClone(value);
 const clean=(value,max=2000)=>String(value??'').trim().replace(/\s+/g,' ').slice(0,max);
+let aggregateWriteQueue=Promise.resolve();
 
 function typedError(code,message,detail={}){
   return Object.assign(new Error(message),{code,durable:true,...detail});
@@ -79,32 +80,48 @@ export function createTranscriptAggregate({source={},segments=[],parentRevisionI
     title:clean(source.title,500)||null,
     url:clean(source.url,1200)||null,
     language:clean(source.language,40)||segmentRows[0].language,
+    status:['unverified','verified','edited'].includes(source.status)?source.status:'unverified',
     latestRevisionId:revisionId,
+    activeRevisionId:revisionId,
     createdAt:Number(source.createdAt||createdAt),
     updatedAt:Number(createdAt)
   };
   return Object.freeze({source:Object.freeze(sourceRecord),revision:Object.freeze(revision),segments:Object.freeze(segmentRows.map(Object.freeze))});
 }
 
-export async function persistTranscriptAggregate(input){
-  const aggregate=createTranscriptAggregate(input);
+function queueAggregateWrite(task){
+  const pending=aggregateWriteQueue.then(task,task);
+  aggregateWriteQueue=pending.catch(()=>{});
+  return pending;
+}
+
+async function persistAggregate(aggregate,{activate=false,reason='canonical-transcript-persisted'}={}){
   const names=[V10_STORES.transcriptSources,V10_STORES.transcriptRevisions,V10_STORES.canonicalTranscriptSegments];
-  await transactV10(names,async({stores,memory,requestResult})=>{
+  return queueAggregateWrite(()=>transactV10(names,async({stores,memory,requestResult})=>{
     const get=async(name,key)=>memory?clone(memory[name].get(key)):requestResult(stores[name].get(key));
     const put=(name,row)=>memory?memory[name].set(row.id,clone(row)):stores[name].put(clone(row));
     const existingRevision=await get(V10_STORES.transcriptRevisions,aggregate.revision.id);
     if(existingRevision&&existingRevision.contentDigest!==aggregate.revision.contentDigest)throw typedError('TRANSCRIPT_REVISION_COLLISION','Transcript revision ID collision.',{revisionId:aggregate.revision.id});
     const existingSource=await get(V10_STORES.transcriptSources,aggregate.source.id);
     if(existingSource&&existingSource.namespace!==aggregate.source.namespace)throw typedError('TRANSCRIPT_NAMESPACE_COLLISION','Transcript source không thể đổi private/shared namespace.',{sourceId:aggregate.source.id});
-    put(V10_STORES.transcriptSources,{...(existingSource||{}),...clone(aggregate.source),createdAt:existingSource?.createdAt||aggregate.source.createdAt});
+    const activeRevisionId=activate?aggregate.revision.id:(existingSource?.activeRevisionId||existingSource?.latestRevisionId||aggregate.revision.id);
+    put(V10_STORES.transcriptSources,{...(existingSource||{}),...clone(aggregate.source),status:existingSource?.status==='edited'&&!activate?'edited':aggregate.source.status,latestRevisionId:activeRevisionId,activeRevisionId,createdAt:existingSource?.createdAt||aggregate.source.createdAt});
     if(!existingRevision)put(V10_STORES.transcriptRevisions,aggregate.revision);
     for(const segment of aggregate.segments){
       const existing=await get(V10_STORES.canonicalTranscriptSegments,segment.id);
       if(existing&&learningContractDigest(existing)!==learningContractDigest(segment))throw typedError('TRANSCRIPT_SEGMENT_COLLISION','Transcript segment ID collision.',{segmentId:segment.id});
       if(!existing)put(V10_STORES.canonicalTranscriptSegments,segment);
     }
-  },'canonical-transcript-persisted');
-  return aggregate;
+    return aggregate;
+  },reason));
+}
+
+export async function persistTranscriptAggregate(input,{activate=false}={}){
+  return persistAggregate(createTranscriptAggregate(input),{activate,reason:'canonical-transcript-persisted'});
+}
+
+export async function createProviderTranscriptRevision(input){
+  return persistTranscriptAggregate(input,{activate:false});
 }
 
 export async function getTranscriptAggregate(revisionId){
@@ -116,7 +133,7 @@ export async function getTranscriptAggregate(revisionId){
   return{source,revision,segments};
 }
 
-export async function reviseTranscript(revisionId,segments,{provenance={},createdAt=Date.now()}={}){
+async function legacyReviseTranscript(revisionId,segments,{provenance={},createdAt=Date.now()}={}){
   const previous=await getTranscriptAggregate(revisionId);
   if(!previous)throw typedError('TRANSCRIPT_REVISION_NOT_FOUND','Không tìm thấy transcript revision để sửa.',{revisionId});
   return persistTranscriptAggregate({
@@ -126,6 +143,42 @@ export async function reviseTranscript(revisionId,segments,{provenance={},create
     provenance:{...clone(provenance),kind:'user-edit'},
     createdAt
   });
+}
+
+export async function createChildAndActivate(expectedActiveRevisionId,segments,{provenance={},createdAt=Date.now()}={}){
+  const previous=await getTranscriptAggregate(expectedActiveRevisionId);
+  if(!previous)throw typedError('TRANSCRIPT_REVISION_NOT_FOUND','Transcript revision không tồn tại.',{revisionId:expectedActiveRevisionId});
+  const aggregate=createTranscriptAggregate({source:{...previous.source,status:'edited',complete:previous.revision.coverage?.complete===true},segments,parentRevisionId:previous.revision.id,provenance:{...clone(provenance),kind:'user-edit'},createdAt});
+  const names=[V10_STORES.transcriptSources,V10_STORES.transcriptRevisions,V10_STORES.canonicalTranscriptSegments];
+  return queueAggregateWrite(()=>transactV10(names,async({stores,memory,requestResult})=>{
+    const get=async(name,key)=>memory?clone(memory[name].get(key)):requestResult(stores[name].get(key));
+    const put=(name,row)=>memory?memory[name].set(row.id,clone(row)):stores[name].put(clone(row));
+    const source=await get(V10_STORES.transcriptSources,previous.source.id);
+    const activeRevisionId=source?.activeRevisionId||source?.latestRevisionId||null;
+    if(!source||activeRevisionId!==expectedActiveRevisionId)throw typedError('TRANSCRIPT_EDIT_CONFLICT','Transcript active revision đã thay đổi.',{expectedActiveRevisionId,actualActiveRevisionId:activeRevisionId});
+    if(!(await get(V10_STORES.transcriptRevisions,expectedActiveRevisionId)))throw typedError('TRANSCRIPT_REVISION_NOT_FOUND','Transcript revision không tồn tại.',{revisionId:expectedActiveRevisionId});
+    const existingRevision=await get(V10_STORES.transcriptRevisions,aggregate.revision.id);
+    if(existingRevision&&existingRevision.contentDigest!==aggregate.revision.contentDigest)throw typedError('TRANSCRIPT_REVISION_COLLISION','Transcript revision ID collision.',{revisionId:aggregate.revision.id});
+    if(!existingRevision)put(V10_STORES.transcriptRevisions,aggregate.revision);
+    for(const segment of aggregate.segments){const existing=await get(V10_STORES.canonicalTranscriptSegments,segment.id);if(existing&&learningContractDigest(existing)!==learningContractDigest(segment))throw typedError('TRANSCRIPT_SEGMENT_COLLISION','Transcript segment ID collision.',{segmentId:segment.id});if(!existing)put(V10_STORES.canonicalTranscriptSegments,segment);}
+    put(V10_STORES.transcriptSources,{...source,...clone(aggregate.source),status:'edited',latestRevisionId:aggregate.revision.id,activeRevisionId:aggregate.revision.id,createdAt:source.createdAt});
+    return aggregate;
+  },'canonical-transcript-child-activated'));
+}
+
+export async function reviseTranscript(revisionId,segments,options={}){return createChildAndActivate(revisionId,segments,options);}
+
+export async function activateTranscriptRevision(revisionId,{expectedActiveRevisionId=null}={}){
+  const previous=await getTranscriptAggregate(revisionId);
+  if(!previous)throw typedError('TRANSCRIPT_REVISION_NOT_FOUND','Transcript revision không tồn tại.',{revisionId});
+  return queueAggregateWrite(()=>transactV10([V10_STORES.transcriptSources],async({stores,memory,requestResult})=>{
+    const source=memory?clone(memory[V10_STORES.transcriptSources].get(previous.source.id)):await requestResult(stores[V10_STORES.transcriptSources].get(previous.source.id));
+    const activeRevisionId=source?.activeRevisionId||source?.latestRevisionId||null;
+    if(!source||(expectedActiveRevisionId&&activeRevisionId!==expectedActiveRevisionId))throw typedError('TRANSCRIPT_ACTIVATION_CONFLICT','Transcript active revision đã thay đổi.',{expectedActiveRevisionId,actualActiveRevisionId:activeRevisionId});
+    const value={...source,latestRevisionId:revisionId,activeRevisionId:revisionId,updatedAt:Date.now()};
+    if(memory)memory[V10_STORES.transcriptSources].set(value.id,clone(value));else stores[V10_STORES.transcriptSources].put(clone(value));
+    return previous;
+  },'canonical-transcript-activated'));
 }
 
 export function adaptLegacyTranscript(input={}){

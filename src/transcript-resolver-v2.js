@@ -1,6 +1,6 @@
 import { V10_STORES,TRANSCRIPT_PROVIDERS,validateSentenceSegments,normalizeKey,createV10Id } from './v10-contracts.js';
 import { listV10Records,putV10Record,getV10Record } from './v10-persistence.js';
-import { persistTranscriptAggregate } from './transcript-aggregate.js';
+import { createProviderTranscriptRevision,getTranscriptAggregate } from './transcript-aggregate.js';
 
 const SEGMENTER_VERSION='v10-sentence-segmenter-2';
 
@@ -36,19 +36,43 @@ function normalizeSegmentRows(rows=[],sourceId='source'){
   const repaired=repairCaptionTimeline(merged);const validation=validateSentenceSegments(repaired);if(!validation.valid)throw new Error(`Transcript normalization lỗi: ${validation.errors.join(' ')}`);return validation.segments;
 }
 
-async function fetchJson(url,options={},timeoutMs=6500){const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),timeoutMs);try{const response=await fetch(url,{...options,signal:controller.signal});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||`HTTP ${response.status}`);return data;}finally{clearTimeout(timer);}}
+async function fetchJson(url,options={},timeoutMs=6500){const controller=new AbortController(),external=options.signal;const abort=()=>controller.abort(external?.reason);external?.addEventListener?.('abort',abort,{once:true});const timer=setTimeout(()=>controller.abort(),timeoutMs);try{const response=await fetch(url,{...options,signal:controller.signal});const data=await response.json().catch(()=>({}));if(!response.ok){const detail=data.error;throw Object.assign(new Error(typeof detail==='string'?detail:detail?.message||`HTTP ${response.status}`),{code:detail?.code||`HTTP_${response.status}`});}return data;}finally{clearTimeout(timer);external?.removeEventListener?.('abort',abort);}}
 async function localCacheProvider(context){const row=await getV10Record(V10_STORES.transcriptCache,context.cacheKey);if(!row?.segments?.length)throw new Error('cache-miss');return{...row,cacheHitProvider:'indexeddb',cached:true};}
-async function sharedCacheProvider(context){const query=new URLSearchParams({videoId:context.videoId,language:context.language,startSeconds:String(context.startSeconds),endSeconds:String(context.endSeconds)});const data=await fetchJson(`/api/transcript/cache?${query}`,{},2500);if(!data.segments?.length)throw new Error('shared-cache-miss');return{...data,provider:'shared-cache',cached:true};}
-async function backendProvider(context){
-  const created=await fetchJson('/api/transcript/jobs',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:context.url,videoId:context.videoId,language:context.language,namespace:'shared'})},25_000);
-  const jobId=created?.job?.id;if(!jobId)throw new Error('resolver-job-create-failed');
-  for(let attempt=0;attempt<300;attempt+=1){
-    const data=await fetchJson(`/api/transcript/jobs/${encodeURIComponent(jobId)}`,{},25_000);const job=data.job;
-    if(job?.status==='complete'&&Array.isArray(job.sentences)&&job.sentences.length)return{videoId:context.videoId,title:job.metadata?.title||'YouTube video',language:job.metadata?.track?.language||context.language,durationSeconds:job.metadata?.durationSeconds||0,segments:job.sentences,complete:true,provider:'caption-resolver-v2',jobId,coverage:job.coverage,artifact:job.artifact,captionSource:job.metadata?.track?.kind};
-    if(['failed','cancelled'].includes(job?.status))throw Object.assign(new Error(job.error?.message||'Caption resolver failed.'),{code:job.error?.code||job.status,jobId});
-    await new Promise(resolve=>setTimeout(resolve,100));
+async function sharedCacheProvider(context){const query=new URLSearchParams({url:context.url,videoId:context.videoId,language:context.language,startSeconds:String(context.startSeconds),endSeconds:String(context.endSeconds)});const data=await fetchJson(`/api/transcript/cache?${query}`,{},2500);if(!data.segments?.length)throw new Error('shared-cache-miss');return{...data,provider:'shared-cache',cached:true};}
+
+async function persistResolverJob(job,reason='resolver-job-updated'){if(!job?.id)return job;await putV10Record(V10_STORES.resolverJobs,{...job,requestKey:job.id,sourceRequestKey:job.request?.requestKey||job.sourceRequestKey||null,updatedAt:Date.now()},reason);return job;}
+async function persistResolverEvent(jobId,event){const sequence=Number(event?.sequence??event?.id??0);if(!jobId||!Number.isFinite(sequence))return;await putV10Record(V10_STORES.resolverEvents,{id:`resolver-client-event:${jobId}:${sequence}`,jobId,sequence,type:event.type||event.data?.status||'progress',data:event.data||{},at:Number(event.at||Date.now()),updatedAt:Date.now()},'resolver-event-received');}
+async function readResolverJob(jobId,signal){const data=await fetchJson(`/api/transcript/jobs/${encodeURIComponent(jobId)}`,{signal},25_000);return persistResolverJob(data.job);}
+function terminalJob(job){return['complete','failed','cancelled'].includes(job?.status);}
+function jobFailure(job){return Object.assign(new Error(job?.error?.message||`Caption resolver ${job?.status||'failed'}.`),{code:job?.error?.code||job?.status||'UNKNOWN',jobId:job?.id,retryable:job?.error?.retryable===true});}
+
+export async function waitForResolverJob(jobId,{signal,onProgress=()=>{},after=0}={}){
+  if(!jobId)throw new Error('Resolver job ID bị thiếu.');
+  const savedEvents=await listV10Records(V10_STORES.resolverEvents,{index:'jobId',query:jobId,sortBy:null}).catch(()=>[]);
+  let cursor=Math.max(Number(after||0),...savedEvents.map(row=>Number(row.sequence||0)),0);
+  const inspect=async(emit=true)=>{const job=await readResolverJob(jobId,signal);if(emit)onProgress({status:job.status,jobId,job});if(job?.status==='complete')return job;if(terminalJob(job))throw jobFailure(job);return null;};
+  const initial=await inspect();if(initial)return initial;
+  if(typeof EventSource==='undefined'){
+    for(let attempt=0;attempt<300;attempt+=1){if(signal?.aborted)throw Object.assign(new DOMException('Resolver đã bị hủy.','AbortError'),{jobId});await new Promise(resolve=>setTimeout(resolve,150));const job=await inspect();if(job)return job;}
+    throw Object.assign(new Error('Caption resolver quá thời gian.'),{code:'TIMEOUT',jobId});
   }
-  throw Object.assign(new Error('Caption resolver timed out.'),{code:'TIMEOUT',jobId});
+  return new Promise((resolve,reject)=>{
+    let settled=false,reconnects=0,stream=null;
+    const finish=(error,job)=>{if(settled)return;settled=true;stream?.close();signal?.removeEventListener?.('abort',abort);error?reject(error):resolve(job);};
+    const abort=()=>finish(Object.assign(new DOMException('Resolver đã bị hủy.','AbortError'),{jobId}));
+    const connect=()=>{if(settled)return;const query=cursor?`?after=${cursor}`:'';stream=new EventSource(`/api/transcript/jobs/${encodeURIComponent(jobId)}/events${query}`);const receive=async event=>{try{const payload=JSON.parse(event.data);cursor=Math.max(cursor,Number(event.lastEventId||payload.sequence||0));await persistResolverEvent(jobId,{...payload,sequence:cursor});onProgress({status:payload.type||payload.data?.status||'progress',jobId,event:payload,reconnected:reconnects>0});const job=await inspect(false);if(job)finish(null,job);}catch(error){finish(error);}};for(const type of ['queued','resolving','partial','complete','failed','cancelled'])stream.addEventListener(type,receive);stream.onmessage=receive;stream.onerror=async()=>{stream.close();try{const job=await inspect();if(job)return finish(null,job);reconnects+=1;onProgress({status:'reconnecting',jobId,reconnects});setTimeout(connect,Math.min(1000,100*reconnects));}catch(error){finish(error);}};};
+    signal?.addEventListener?.('abort',abort,{once:true});connect();
+  });
+}
+async function backendProvider(context){
+  let resumedJob=context.resumeJobId?await readResolverJob(context.resumeJobId,context.signal).catch(()=>null):null;
+  if(terminalJob(resumedJob)&&resumedJob.status!=='complete')resumedJob=null;
+  const created=resumedJob?{job:resumedJob,created:false}:await fetchJson('/api/transcript/jobs',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:context.url,videoId:context.videoId,language:context.language,namespace:'shared'}),signal:context.signal},25_000);
+  const jobId=created?.job?.id;if(!jobId)throw new Error('resolver-job-create-failed');
+  await persistResolverJob(created.job,'resolver-job-created');context.onProgress?.({status:created.job.status||'queued',jobId,job:created.job,resumed:Boolean(context.resumeJobId),deduplicated:created.created===false});
+  const job=await waitForResolverJob(jobId,{signal:context.signal,onProgress:context.onProgress});
+  if(!Array.isArray(job.sentences)||!job.sentences.length)throw Object.assign(new Error('Caption resolver hoàn tất nhưng không có câu.'),{code:'TRACK_INVALID',jobId});
+  return{videoId:context.videoId,title:job.metadata?.title||'YouTube video',language:job.metadata?.track?.language||context.language,durationSeconds:job.metadata?.durationSeconds||0,segments:job.sentences,complete:true,provider:'caption-resolver-v2',jobId,coverage:job.coverage,artifact:job.artifact,captionSource:job.metadata?.track?.kind};
 }
 const PROVIDERS={indexeddb:localCacheProvider,'shared-cache':sharedCacheProvider,'backend-provider':backendProvider};
 
@@ -56,21 +80,25 @@ async function saveTranscript(context,result){
   const segments=normalizeSegmentRows(result.segments,`youtube:${context.videoId}`);if(!segments.length)throw new Error('Transcript không có câu hợp lệ.');
   const durationSeconds=Math.max(0,finiteNumber(result.durationSeconds,0)),lastEnd=Math.max(0,...segments.map(row=>Number(row.endMs||0)/1000));
   const complete=Boolean(result.complete||(durationSeconds&&lastEnd>=durationSeconds-2));
-  const canonical=await persistTranscriptAggregate({
+  const canonical=await createProviderTranscriptRevision({
     source:{id:`transcript-source:youtube:${context.videoId}`,namespace:result.provider==='imported'?'private':'shared',externalId:context.videoId,sourceType:'youtube',title:result.title||'YouTube video',url:context.url,language:result.language||context.language,status:result.provider==='imported'?'verified':'unverified',complete},
     segments,
     provenance:{kind:'resolver',provider:result.provider,model:result.model||null,cacheKey:context.cacheKey}
   });
-  const segmentBindings=new Map(canonical.segments.map(segment=>[`${segment.startMs}:${segment.endMs}:${normalizeKey(segment.text)}`,segment.id]));
-  const boundSegments=segments.map(segment=>({...segment,transcriptRevisionId:canonical.revision.id,canonicalSegmentId:segmentBindings.get(`${segment.startMs}:${segment.endMs}:${normalizeKey(segment.text)}`)||null}));
-  const row={id:context.cacheKey,cacheKey:context.cacheKey,videoId:context.videoId,url:context.url,language:result.language||context.language,provider:result.provider,title:result.title||'YouTube video',segments:boundSegments,transcriptSourceId:canonical.source.id,transcriptRevisionId:canonical.revision.id,clip:{startSeconds:context.startSeconds,endSeconds:context.endSeconds},durationSeconds,complete:Boolean(complete),qualityStatus:result.provider==='gemini-progressive'?'needs-review':'available',cachedAt:Date.now(),lastAccessedAt:Date.now(),updatedAt:Date.now(),metadata:{model:result.model||null,previewFeature:Boolean(result.previewFeature),warnings:result.warnings||[],durationSeconds}};
+  const persistedSource=await getV10Record(V10_STORES.transcriptSources,canonical.source.id);
+  const activeRevisionId=persistedSource?.activeRevisionId||persistedSource?.latestRevisionId||canonical.revision.id;
+  const activeCanonical=activeRevisionId===canonical.revision.id?canonical:await getTranscriptAggregate(activeRevisionId);
+  if(!activeCanonical?.segments?.length)throw Object.assign(new Error('Canonical transcript revision không thể kích hoạt.'),{code:'TRANSCRIPT_ACTIVE_MISSING',revisionId:activeRevisionId});
+  const boundSegments=activeCanonical.segments.map(segment=>({...segment,transcriptRevisionId:activeCanonical.revision.id,canonicalSegmentId:segment.id}));
+  const row={id:context.cacheKey,cacheKey:context.cacheKey,videoId:context.videoId,url:context.url,language:result.language||context.language,provider:result.provider,title:result.title||'YouTube video',segments:boundSegments,transcriptSourceId:activeCanonical.source.id,transcriptRevisionId:activeCanonical.revision.id,clip:{startSeconds:context.startSeconds,endSeconds:context.endSeconds},durationSeconds,complete:Boolean(activeCanonical.revision.coverage?.complete),qualityStatus:'available',cachedAt:Date.now(),lastAccessedAt:Date.now(),updatedAt:Date.now(),metadata:{model:result.model||null,previewFeature:Boolean(result.previewFeature),warnings:result.warnings||[],durationSeconds}};
   await putV10Record(V10_STORES.transcriptCache,row,'transcript-cache-saved');globalThis.dispatchEvent(new CustomEvent('vocab:v10-transcript-ready',{detail:{...row,partial:!row.complete}}));return row;
 }
 
 async function firstSuccessful(tasks=[]){return new Promise((resolve,reject)=>{let pending=tasks.length,settled=false;const errors=[];if(!pending)return reject(new Error('Không có transcript provider.'));for(const task of tasks)task().then(value=>{if(settled)return;settled=true;resolve(value);}).catch(error=>{errors.push(error);pending-=1;if(!pending&&!settled)reject(new AggregateError(errors,'Không provider nào trả transcript.'));});});}
 
-export async function resolveTranscriptFast({url,language='en',startSeconds=0,firstChunkSeconds=60,providers=['indexeddb','shared-cache','backend-provider']}={}){
+export async function resolveTranscriptFast({url,language='en',startSeconds=0,firstChunkSeconds=60,providers=['indexeddb','shared-cache','backend-provider'],signal=null,onProgress=null,resumeJobId=null}={}){
   const videoId=parseYouTubeVideoId(url);if(!videoId)throw new Error('URL YouTube không hợp lệ.');const start=Math.max(0,finiteNumber(startSeconds,0)),endSeconds=Math.max(start+30,start+Math.min(180,finiteNumber(firstChunkSeconds,60)));const context={url,videoId,language,startSeconds:start,endSeconds,cacheKey:transcriptCacheKey({videoId,language,startSeconds:start,endSeconds})};
+  Object.assign(context,{signal,onProgress,resumeJobId});
   const selected=providers.filter(name=>TRANSCRIPT_PROVIDERS.includes(name)&&PROVIDERS[name]);let result,lastError;
   for(const name of selected){try{result=await PROVIDERS[name](context);break;}catch(error){lastError=error;if(name==='backend-provider')throw error;}}
   if(!result)throw lastError||new Error('Không tìm thấy caption phù hợp.');
@@ -85,4 +113,8 @@ export async function importTranscript({videoId=createV10Id('imported'),url='',t
 
 export async function listCachedTranscripts(videoId=null){const rows=await listV10Records(V10_STORES.transcriptCache,{sortBy:'lastAccessedAt'});return videoId?rows.filter(row=>row.videoId===videoId):rows;}
 
-export function mountTranscriptResolverV2(){globalThis.VocabMasterTranscriptResolver={resolve:resolveTranscriptFast,continue:continueTranscriptProgressively,import:importTranscript,list:listCachedTranscripts,parseVideoId:parseYouTubeVideoId};globalThis.addEventListener('vocab:v10-resolve-video',event=>{const detail=event.detail||{};void resolveTranscriptFast(detail).then(row=>{if(detail.openLoop!==false)globalThis.dispatchEvent(new CustomEvent('vocab:v10-open-sentence-loop',{detail:{sourceId:`youtube:${row.videoId}`,sourceType:'video',title:row.title,sentences:row.segments}}));}).catch(error=>globalThis.dispatchEvent(new CustomEvent('vocab:v10-transcript-status',{detail:{status:'failed',message:error.message}})));});}
+export async function cancelResolverJob(jobId){const result=await fetchJson(`/api/transcript/jobs/${encodeURIComponent(jobId)}/cancel`,{method:'POST',headers:{'content-type':'application/json'}},10_000);await persistResolverJob(result.job,'resolver-job-cancelled');return result.job;}
+export async function listRecoverableResolverJobs(){const jobs=await listV10Records(V10_STORES.resolverJobs,{sortBy:'updatedAt'});return jobs.filter(job=>!terminalJob(job)||(job.status==='failed'&&job.error?.retryable===true)).sort((a,b)=>Number(b.updatedAt||0)-Number(a.updatedAt||0));}
+export async function resumeResolverJob(jobId,options={}){const saved=await getV10Record(V10_STORES.resolverJobs,jobId);const url=saved?.request?.source?.canonicalUrl||saved?.request?.source?.url;if(!url)throw Object.assign(new Error('Không thể khôi phục URL của resolver job.'),{code:'RESUME_CONTEXT_MISSING',jobId});return resolveTranscriptFast({...options,url,language:saved.request?.language||'en',providers:['backend-provider'],resumeJobId:jobId});}
+
+export function mountTranscriptResolverV2(){globalThis.VocabMasterTranscriptResolver={resolve:resolveTranscriptFast,continue:continueTranscriptProgressively,import:importTranscript,list:listCachedTranscripts,cancel:cancelResolverJob,resume:resumeResolverJob,listRecoverableJobs:listRecoverableResolverJobs,parseVideoId:parseYouTubeVideoId};globalThis.addEventListener('vocab:v10-resolve-video',event=>{const detail=event.detail||{};void resolveTranscriptFast(detail).then(row=>{if(detail.openLoop!==false)globalThis.dispatchEvent(new CustomEvent('vocab:v10-open-sentence-loop',{detail:{sourceId:`youtube:${row.videoId}`,sourceType:'video',title:row.title,sentences:row.segments}}));}).catch(error=>globalThis.dispatchEvent(new CustomEvent('vocab:v10-transcript-status',{detail:{status:'failed',code:error.code||'UNKNOWN',message:error.message}})));});}
