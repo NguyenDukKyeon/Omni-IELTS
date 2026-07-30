@@ -1,4 +1,5 @@
 import { decideEvidence,evidenceDigest,normalizeAssistanceTrace } from './evidence-policy.js';
+import { createActivitySpec,createAttempt,createReceipt,createRun } from './learning-contracts.js';
 
 export const IELTS_SCHEMA_VERSION=1;
 export const IELTS_SESSION_MINUTES=Object.freeze([10,20,30]);
@@ -148,12 +149,15 @@ export function ieltsSourceRevision(prefix,value={}){
 export function buildIeltsEvidenceEnvelope({activityId,receiptId,activityType,cardId,skill,sourceId,sourceRevision,result,learnerOutput='',errorType=null,sourceVerified=false,assistance={},evaluation=null}={}){
   const id=cleanText(activityId,180);const receipt=cleanText(receiptId,180);const target={cardId:cleanText(cardId,180)||null,skill:cleanText(skill,80)||null,sourceId:cleanText(sourceId,180)||null,sourceRevision:cleanText(sourceRevision,180)||null};
   const attemptId=`attempt:${receipt}`;
-  const activitySpec={id,type:cleanText(activityType,80),target};
-  const attempt={id:attemptId,activityId:id,receiptId:receipt,activityType:activitySpec.type,result:cleanText(result,40),target,learnerOutput:cleanText(learnerOutput,10_000),errorType:cleanText(errorType,80)||null,assistance:normalizeAssistanceTrace({id:`trace:${receipt}`,schemaVersion:1,collector:'ielts-lab',complete:true,...assistance})};
+  const occurredAt=Date.now();
+  const activitySpec=createActivitySpec({id,type:cleanText(activityType,80),target,plannedAt:occurredAt,timezone:'UTC',policyVersion:'phase0-evidence-v1',executor:'ielts-lab'});
+  const run=createRun({id:`run:${id}`,activitySpec,status:'active',startedAt:occurredAt,timezone:'UTC'});
+  const attempt=createAttempt({id:attemptId,run,activitySpec,receiptId:receipt,activityType:activitySpec.type,result:cleanText(result,40),target,learnerOutput:cleanText(learnerOutput,10_000),errorType:cleanText(errorType,80)||null,assistance:normalizeAssistanceTrace({id:`trace:${receipt}`,schemaVersion:1,collector:'ielts-lab',complete:true,...assistance}),occurredAt,timezone:'UTC'});
+  const canonicalReceipt=createReceipt({id:receipt,run,activitySpec,attempt,status:result==='skipped'?'skipped':'completed',issuedAt:occurredAt,timezone:'UTC'});
   const verification={source:{id:`source:${sourceRevision}`,authority:'ielts-source-registry',status:sourceVerified?'verified':'unverified',sourceId:target.sourceId,sourceRevision:target.sourceRevision}};
   if(evaluation)verification.evaluation={id:cleanText(evaluation.id,180)||`evaluation:${receipt}`,authority:cleanText(evaluation.authority,80),status:cleanText(evaluation.status,40),attemptId,activityId:id,cardId:target.cardId,skill:target.skill,outputDigest:evidenceDigest(attempt.learnerOutput),targetUsed:evaluation.targetUsed===true};
   const decision=resolveIeltsEvidence({attempt,activitySpec,verification});
-  return Object.freeze({attempt,activitySpec,verification,decision});
+  return Object.freeze({run,attempt,receipt:canonicalReceipt,activitySpec,verification,decision});
 }
 
 export function sanitizeLexicalSet(input={}){
