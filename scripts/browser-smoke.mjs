@@ -187,8 +187,9 @@ async function main(){
     await waitFor("!document.getElementById('settingsDialog').open",'settings save and close');
     assert.equal(await evaluate("window.VocabMasterApp.getState().settings.minutes"),15,'Settings were not persisted to app state.');
 
-    await evaluate("document.querySelector('[data-route=\"today\"]').click()");
+    await evaluate(`(async()=>{const hashChanged=location.hash==='#today'?Promise.resolve():new Promise(resolve=>addEventListener('hashchange',resolve,{once:true}));document.querySelector('[data-route="today"]').click();await hashChanged;await window.VocabMasterTodayV2.refresh();})()`);
     await waitFor("document.querySelector('[data-view=\"today\"]')?.classList.contains('active')",'return to today');
+    await waitFor("document.getElementById('v10TodayPlan')?.getAttribute('aria-busy')==='false'&&!document.getElementById('v10MorePractice')?.disabled",'settled Today refresh');
     await evaluate("document.getElementById('v10MorePractice').click()");
     await waitFor("document.getElementById('practiceSheet').open",'practice dialog');
     await evaluate("document.querySelector('#practiceSheet [data-close-dialog]').click()");
