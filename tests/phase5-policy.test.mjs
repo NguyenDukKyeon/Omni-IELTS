@@ -9,9 +9,12 @@ import {
   createCloudConsent,
   isSharedPublicEligible,
   saveCloudConsent,
-  loadPhase5Preferences
+  loadPhase5Preferences,
+  PHASE5_CONSENT_HISTORY_PREFIX
 } from '../src/asr-fallback-policy.js';
 import { normalizeResolverRequest } from '../src/resolver-contracts.js';
+import { V10_STORES } from '../src/v10-contracts.js';
+import { listV10Records } from '../src/v10-persistence.js';
 
 test('Phase 5 defaults private with cloud and sharing disabled',()=>{
   const policy=buildFallbackPolicy({capabilities:{device:'desktop',online:true,companionAvailable:true,modelInstalled:true,cloudConfigured:true}});
@@ -31,14 +34,23 @@ test('shared-public requires every rights, auth, cookie and opt-in condition',()
 });
 
 test('cloud consent is explicit, versioned and durable without a credential',async()=>{
-  const declined=createCloudConsent({decision:'accepted'});
+  const subjectId='phase5-consent-subject:test-policy-subject';
+  const declined=createCloudConsent({decision:'accepted',subjectId});
   assert.equal(declined.decision,'declined');
-  const accepted=createCloudConsent({decision:'accepted',acknowledgesDataTransfer:true,acknowledgesRetention:true,acknowledgesProviderCost:true},1234);
+  const accepted=createCloudConsent({decision:'accepted',subjectId,acknowledgesDataTransfer:true,acknowledgesRetention:true,acknowledgesProviderCost:true},1234);
   assert.equal(accepted.consentVersion,CLOUD_CONSENT_VERSION);
   assert.equal(cloudConsentIsCurrent(accepted),true);
+  assert.equal(cloudConsentIsCurrent({...accepted,receiptId:'cloud-consent:forged'}),false);
   assert.equal(Object.keys(accepted).some(key=>/secret|token|apiKey/i.test(key)),false);
-  await saveCloudConsent(accepted);
-  assert.equal((await loadPhase5Preferences()).consent.receiptId,accepted.receiptId);
+  const durableAccepted=await saveCloudConsent({decision:'accepted',acknowledgesDataTransfer:true,acknowledgesRetention:true,acknowledgesProviderCost:true,updatedAt:2000});
+  const withdrawn=await saveCloudConsent({decision:'declined',updatedAt:2001});
+  const preferences=await loadPhase5Preferences();
+  assert.equal(preferences.consent.receiptId,withdrawn.receiptId);
+  assert.equal(cloudConsentIsCurrent(preferences.consent),false);
+  await assert.rejects(()=>saveCloudConsent(durableAccepted),error=>error.code==='CONSENT_REQUIRED');
+  const history=(await listV10Records(V10_STORES.meta,{sortBy:null})).filter(row=>row.key.startsWith(PHASE5_CONSENT_HISTORY_PREFIX));
+  assert.equal(history.some(row=>row.receiptId===durableAccepted.receiptId),true);
+  assert.equal(history.some(row=>row.receiptId===withdrawn.receiptId),true);
 });
 
 test('mobile never advertises a desktop companion capability',()=>{

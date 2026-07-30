@@ -58,13 +58,14 @@ export function parseTranscriptImport({text='',format='auto',language='en'}={}){
   if(value.length>TRANSCRIPT_IMPORT_MAX_CHARS)throw importError('IMPORT_INVALID','Transcript import vượt quá giới hạn 2 MB ký tự.');
   const selected=format==='auto'?(value.includes('-->')||/^\uFEFF?WEBVTT/i.test(value)?'timed':'text'):format;
   if(!['srt','vtt','timed','text'].includes(selected))throw importError('IMPORT_INVALID','Định dạng transcript không được hỗ trợ.');
-  return{format:selected==='text'?'text':selected,segments:selected==='text'?parsePlainText(value,language):parseTimed(value,language),private:true,verified:false};
+  const aligned=selected!=='text';
+  return{format:selected==='text'?'text':selected,segments:(selected==='text'?parsePlainText(value,language):parseTimed(value,language)).map(row=>({...row,aligned})),aligned,alignmentStatus:aligned?'cue-timed':'unaligned',private:true,verified:false};
 }
 
 export async function importTranscriptRescue({text,format='auto',language='en',url='',videoId=null,title='Imported transcript'}={}){
   const parsed=parseTranscriptImport({text,format,language});
-  const row=await importTranscript({videoId:videoId||createV10Id('imported'),url,title,language,segments:parsed.segments});
-  return{...row,importFormat:parsed.format};
+  const row=await importTranscript({videoId:videoId||createV10Id('imported'),url,title,language,segments:parsed.segments,aligned:parsed.aligned,alignmentStatus:parsed.alignmentStatus});
+  return{...row,importFormat:parsed.format,aligned:parsed.aligned,alignmentStatus:parsed.alignmentStatus};
 }
 
 export const __testing=Object.freeze({timestampMs,validateSegments});

@@ -20,7 +20,8 @@ function canonicalSegments(input=[]){
     language:clean(row.language,40)||'en',
     status:clean(row.status,60)||'unverified',
     confidence:Number.isFinite(Number(row.confidence))?Number(row.confidence):null,
-    speaker:clean(row.speaker,120)||null
+    speaker:clean(row.speaker,120)||null,
+    aligned:row.aligned!==false
   })).filter(row=>row.text&&row.endMs>row.startMs)
     .sort((left,right)=>left.startMs-right.startMs||left.endMs-right.endMs||left.text.localeCompare(right.text));
   if(!rows.length)throw typedError('TRANSCRIPT_REVISION_EMPTY','Transcript revision phải có ít nhất một segment.');
@@ -148,7 +149,7 @@ async function legacyReviseTranscript(revisionId,segments,{provenance={},created
 export async function createChildAndActivate(expectedActiveRevisionId,segments,{provenance={},createdAt=Date.now()}={}){
   const previous=await getTranscriptAggregate(expectedActiveRevisionId);
   if(!previous)throw typedError('TRANSCRIPT_REVISION_NOT_FOUND','Transcript revision không tồn tại.',{revisionId:expectedActiveRevisionId});
-  const aggregate=createTranscriptAggregate({source:{...previous.source,status:'edited',complete:previous.revision.coverage?.complete===true},segments,parentRevisionId:previous.revision.id,provenance:{...clone(provenance),kind:'user-edit'},createdAt});
+  const aggregate=createTranscriptAggregate({source:{...previous.source,status:'edited',complete:previous.revision.coverage?.complete===true},segments:segments.map(row=>({...row,aligned:previous.revision.provenance?.aligned!==false&&row.aligned!==false})),parentRevisionId:previous.revision.id,provenance:{...clone(provenance),kind:'user-edit',aligned:previous.revision.provenance?.aligned!==false,alignmentStatus:previous.revision.provenance?.alignmentStatus||'timed'},createdAt});
   const names=[V10_STORES.transcriptSources,V10_STORES.transcriptRevisions,V10_STORES.canonicalTranscriptSegments];
   return queueAggregateWrite(()=>transactV10(names,async({stores,memory,requestResult})=>{
     const get=async(name,key)=>memory?clone(memory[name].get(key)):requestResult(stores[name].get(key));

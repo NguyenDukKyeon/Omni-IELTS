@@ -4,7 +4,7 @@ import { isSharedPublicEligible,sanitizeFallbackRequest } from './asr-fallback-p
 export const RESOLVER_CONTRACT_VERSION=2;
 export const RESOLVER_JOB_STATES=Object.freeze(['queued','resolving','partial','complete','failed','cancelled']);
 export const RESOLVER_EVENT_TYPES=Object.freeze(['queued','resolving','metadata','artifact','partial','complete','failed','cancelled']);
-export const RESOLVER_ERROR_CODES=Object.freeze(['INVALID_SOURCE','PRIVATE_VIDEO','AGE_RESTRICTED','DELETED','NO_CAPTION','RATE_LIMITED','TIMEOUT','YTDLP_UNAVAILABLE','TRACK_INVALID','ARTIFACT_CORRUPT','CANCELLED','RESTART_RECOVERY','CONSENT_REQUIRED','RIGHTS_INELIGIBLE','LOCAL_COMPANION_UNAVAILABLE','MODEL_UNAVAILABLE','CLOUD_UNAVAILABLE','COST_CAP','MEDIA_LIMIT','PROCESS_FAILED','IMPORT_INVALID','UNKNOWN']);
+export const RESOLVER_ERROR_CODES=Object.freeze(['INVALID_SOURCE','PRIVATE_VIDEO','AGE_RESTRICTED','DELETED','NO_CAPTION','RATE_LIMITED','TIMEOUT','YTDLP_UNAVAILABLE','TRACK_INVALID','ARTIFACT_CORRUPT','CANCELLED','RESTART_RECOVERY','CONSENT_REQUIRED','RIGHTS_INELIGIBLE','LOCAL_COMPANION_UNAVAILABLE','MODEL_UNAVAILABLE','MODEL_INTEGRITY_FAILED','CLOUD_UNAVAILABLE','COST_CAP','MEDIA_LIMIT','PROCESS_FAILED','IMPORT_INVALID','UNKNOWN']);
 
 const clean=(value,max=1600)=>String(value??'').trim().replace(/\s+/g,' ').slice(0,max);
 export const resolverError=(code,message,detail={})=>Object.assign(new Error(message),{code:RESOLVER_ERROR_CODES.includes(code)?code:'UNKNOWN',retryable:['RATE_LIMITED','TIMEOUT','YTDLP_UNAVAILABLE','RESTART_RECOVERY'].includes(code),...detail});

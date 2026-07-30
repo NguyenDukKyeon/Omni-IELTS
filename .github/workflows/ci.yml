@@ -91,7 +91,7 @@ jobs:
         timeout-minutes: 8
         run: npm run phase4:verify
       - name: Run Phase 5 exact-head verification
-        if: github.event_name == 'pull_request' && github.head_ref == 'codex/phase-5-asr-cloud-fallback'
+        if: github.event_name == 'pull_request'
         timeout-minutes: 8
         run: npm run phase5:verify
       - run: npm run test:serve

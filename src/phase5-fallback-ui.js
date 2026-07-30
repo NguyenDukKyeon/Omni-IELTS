@@ -6,7 +6,7 @@ import {
   saveCloudConsent,
   saveFallbackSettings
 } from './asr-fallback-policy.js';
-import { getResolverCapabilities,parseYouTubeVideoId } from './transcript-resolver-v2.js';
+import { getResolverCapabilities,parseYouTubeVideoId,syncCloudConsent } from './transcript-resolver-v2.js';
 import { importTranscriptRescue } from './transcript-import.js';
 
 const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -83,10 +83,13 @@ export async function handlePhase5FallbackClick(target,root=document){
     const accepted=['data','retention','cost'].every(name=>root.querySelector(`[data-phase5-ack-${name}]`)?.checked);
     if(!accepted){setStatus('Cần xác nhận đủ dữ liệu, lưu giữ và chi phí trước khi bật Gemini.');return{handled:true,refresh:false};}
     const consent=await saveCloudConsent({decision:'accepted',acknowledgesDataTransfer:true,acknowledgesRetention:true,acknowledgesProviderCost:true,maxDurationSeconds:1200}),{settings}=await loadPhase5Preferences();
-    await saveFallbackSettings({...settings,cloudEnabled:true});setStatus(`Đã lưu consent ${consent.consentVersion}; cloud chỉ chạy khi server có khóa và nguồn đủ quyền.`);return{handled:true,refresh:true};
+    try{await syncCloudConsent(consent);await saveFallbackSettings({...settings,cloudEnabled:true});setStatus(`Đã lưu consent ${consent.consentVersion}; cloud chỉ chạy khi server có khóa và nguồn đủ quyền.`);return{handled:true,refresh:true};}
+    catch(error){await saveFallbackSettings({...settings,cloudEnabled:false});setStatus(`Không thể xác minh consent với server (${error.code||'CONSENT_REQUIRED'}); cloud vẫn tắt.`);return{handled:true,refresh:true,error};}
   }
   if(target.closest('[data-phase5-consent-decline]')){
-    await saveCloudConsent({decision:'declined'});const {settings}=await loadPhase5Preferences();await saveFallbackSettings({...settings,cloudEnabled:false});setStatus('Đã tắt Gemini; caption và import vẫn hoạt động.');return{handled:true,refresh:true};
+    const consent=await saveCloudConsent({decision:'declined'}),{settings}=await loadPhase5Preferences();await saveFallbackSettings({...settings,cloudEnabled:false});
+    try{await syncCloudConsent(consent);setStatus('Đã tắt Gemini; caption và import vẫn hoạt động.');return{handled:true,refresh:true};}
+    catch(error){setStatus('Gemini đã tắt trên thiết bị; server revocation chưa xác nhận, không tạo cloud job mới.');return{handled:true,refresh:true,error};}
   }
   if(target.closest('[data-phase5-import-submit]')){
     try{

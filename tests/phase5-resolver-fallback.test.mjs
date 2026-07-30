@@ -41,3 +41,21 @@ test('Gemini fallback reuses the failed caption job and never runs after caption
     await service.startCloud(created.job.id);await new Promise(resolve=>setTimeout(resolve,20));assert.equal(cloudCalls,1);
   }finally{await rm(root,{recursive:true,force:true});}
 });
+
+test('lease heartbeat and fencing prevent duplicate provider work and stale activation',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'phase5-fallback-fence-'));let now=10_000;const repository=new ResolverJobRepository({file:join(root,'jobs.json'),now:()=>now});
+  try{
+    const request={url:'https://youtu.be/dQw4w9WgXcQ',sharing:{visibility:'public',requiresAuth:false,cookiesUsed:false,rights:'eligible'},fallback:{enableGemini:true,consentVersion:CLOUD_CONSENT_VERSION,consentSubjectId:'phase5-consent-subject:lease-fixture',consentReceiptId:'cloud-consent:fixture',maxDurationSeconds:1200,maxBillableRequests:1}},created=await repository.getOrCreate(request);
+    await repository.transition(created.job.id,'resolving');await repository.transition(created.job.id,'failed',{error:{code:'NO_CAPTION'}});
+    let releaseProvider,cloudCalls=0;const held=new Promise(resolve=>{releaseProvider=resolve;}),cloudClient={health:async()=>({available:true}),transcribe:async()=>{cloudCalls++;await held;return{segments:[{startMs:0,endMs:1000,text:'one paid result'}],durationSeconds:1,billableRequests:1};}};
+    const serviceA=createAsrFallbackResolver({repository,cloudClient,localClient:{health:async()=>({available:false})},securityHeaders:type=>({'content-type':type}),leaseTtlMs:1000,heartbeatMs:10});
+    await serviceA.startCloud(created.job.id);for(let attempt=0;attempt<30&&cloudCalls===0;attempt++)await new Promise(resolve=>setTimeout(resolve,5));
+    now=10_900;await new Promise(resolve=>setTimeout(resolve,25));now=11_001;
+    const serviceB=createAsrFallbackResolver({repository,cloudClient,localClient:{health:async()=>({available:false})},securityHeaders:type=>({'content-type':type}),leaseTtlMs:1000,heartbeatMs:10});
+    await serviceB.startCloud(created.job.id);assert.equal(cloudCalls,1);assert.equal((await repository.get(created.job.id)).status,'partial');
+    const current=await repository.get(created.job.id);
+    await assert.rejects(()=>repository.transitionForWorker(created.job.id,'complete',{}, {owner:'stale-worker',fencingToken:Number(current.lease.fencingToken)-1}),error=>error.code==='RESTART_RECOVERY');
+    releaseProvider();for(let attempt=0;attempt<50&&(await repository.get(created.job.id)).status!=='complete';attempt++)await new Promise(resolve=>setTimeout(resolve,5));
+    assert.equal((await repository.get(created.job.id)).status,'complete');assert.equal(cloudCalls,1);
+  }finally{await rm(root,{recursive:true,force:true});}
+});

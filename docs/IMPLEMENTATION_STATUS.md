@@ -1,6 +1,6 @@
 # VocabMaster — Implementation Status
 
-Last updated: 2026-07-30, Phase 5 implementation complete for internal review; live providers and independent acceptance remain open
+Last updated: 2026-07-31, Phase 5 focused audit remediation implemented; exact-head review remains open
 
 Phase 0 accepted source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
@@ -12,7 +12,7 @@ Phase 2 acceptance binding: merged `main` commit `cf28153352110cae510c92e2a8f911
 
 Phase 3 acceptance binding: independently accepted at source HEAD `96aa0172add84186fbe2970cde910b06a0d73672`; exact-head CI run #259 succeeded; PR #11 merged into `main` at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`.
 
-Active implementation branch: codex/phase-5-asr-cloud-fallback
+Active implementation branch: codex/phase-5-audit-remediation
 Delivery status: `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED`
 
 Phase 5 is not accepted. It was explicitly authorized from merged `main`
@@ -23,6 +23,16 @@ Gemini is disabled by default and requires current explicit consent plus a
 public/no-auth/no-cookie/rights-eligible source. The local Whisper/model and
 Gemini paths are covered with deterministic fakes in this environment; no live
 binary, model, provider, credential or quality result is claimed.
+
+The Phase 5 source HEAD `f56f84a0fe0398ac44d331d02df6a911bee62d50`
+passed remote CI run #266 and merged through PR #13 at
+`d654356078d2b4d44a03ba17809c7bedeb6c8f14`. A focused post-merge technical
+audit identified nine Phase 5 defects. The remediation branch above starts
+exactly from that merge and adds deterministic regression coverage for durable
+Gemini consent/restore behavior, HTTP-to-process-tree cancellation, lease
+heartbeat/fencing, restart cleanup and resource bounds, over-cap duration
+rejection, model/checkpoint integrity, overlap merge semantics, and unaligned
+text import containment. This remediation does not mark Phase 5 accepted.
 
 ## Phase 5 delivery matrix
 
