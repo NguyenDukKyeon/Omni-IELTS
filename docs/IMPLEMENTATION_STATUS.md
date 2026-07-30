@@ -1,13 +1,13 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, cumulative no-voice remediation independently reaccepted; Ubuntu CI pending
+Last audited: 2026-07-30, Phase 0 cumulative remediation accepted and Ubuntu CI green
 
 Audited source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
 Active implementation branch: codex/implementation-roadmap (PR #8 integration head)
-Scope of this update: Phase 0 was independently accepted on Windows, but PR #8 CI runs 248 and 249 exposed a host-dependent Windows browser-path defect and a zero-speech-voice product reentrancy defect. The cumulative remediation also closes the P0-07 Today render/status race. Exact source commit `d869eb4` has passed three implementer gates and an independent reviewer gate with no P0/P1. Release authorization remains closed until the pushed PR #8 integration head passes Ubuntu CI. Phase 1 has not started.
+Scope of this update: Phase 0 was independently accepted on Windows, and PR #8 CI runs 248 and 249 then exposed a host-dependent Windows browser-path defect and a zero-speech-voice product reentrancy defect. The cumulative remediation also closes the P0-07 Today render/status race. Exact source commit `d869eb4` passed three implementer gates and an independent reviewer gate with no P0/P1; PR #8 Ubuntu CI run 250 passed on the pushed integration head. Phase 0 is accepted. Phase 1 has not started.
 
 ## 1. Provenance status
 
@@ -279,7 +279,23 @@ Independently accepted source commit pending Ubuntu confirmation: `d869eb444ea91
 | Independent reviewer | ACCEPTED exact source commit; audio 6/6, late-refresh/`voiceschanged` probe, Core browser and full gate 21/21 in 55.9 s with the same artifact digest; clean diff/worktree/cleanup and no P0/P1 |
 | Stable cumulative remediation patch ID | `66a72821e3df6f89d449ce428065f522f8ee163f` from PR #8 pre-remediation head `af663f3` |
 | Migration/rollback | No DB/store version or durable-data migration. Rollback reverts only source coordination/discovery changes; durable stores and records remain untouched |
-| Remaining release check | Push the documentation head to PR #8 and require GitHub Ubuntu CI to pass before restoring Phase 0 release authorization |
+| Release check | PR #8 Ubuntu CI run 250 passed on integration head `ebe276a`; final documentation-only head must remain CI green |
+
+#### PR #8 Ubuntu CI acceptance
+
+GitHub Actions run `30514506669` (CI run 250) passed on branch head `ebe276ac1b690ae561c288787089a4c275709bfb` and generated PR merge commit `09e29ab`. Environment: Ubuntu 24.04.4, Node `v22.23.1`, Chrome `150.0.7871.128`.
+
+| CI gate | Actual result |
+|---|---|
+| Install and verification | `npm ci`, full unit suite 192/192, static check, roadmap 12/12, IELTS 11/11, V10 focused 31/31 and V10 audit 55/55 PASS |
+| Production gates | Build, server smoke and preview smoke PASS |
+| Browser gates | Core, IELTS, V10 and Hardening PASS using deterministic `CHROME_BIN`; failure-report and fail-on-error steps were skipped only because their corresponding suites succeeded |
+| Verification artifact | ID `8748341990`, digest `sha256:9f9a22d33161cd6fbe6aa600bbec7558b7fef81a47e05615de620c01330feb24` |
+| Core browser artifact | ID `8748345840`, digest `sha256:97ce7b27f0fba1dfbc6e4ef7e16b7663617a757d7b3ec2190c2a92f7a8b98793` |
+| IELTS browser artifact | ID `8748346850`, digest `sha256:81d03a8b17b9fc66b662f0ff53438327bb96b1bc6cb8bf27e0b09ccbc78c3312` |
+| V10 browser artifact | ID `8748348279`, digest `sha256:91ec4d8ffbe63f6a49a6b5abff593d3587b44766b84d55aaf6bce766b4bcb265` |
+| Hardening artifact | ID `8748349382`, digest `sha256:ad30a26ee82ea1bec0be7a7c735e36d843b3ff30ed62b7c34b7ccc9b6a7c47aa` |
+| Migration/rollback | CI confirms the same migration/rollback matrix as the accepted source; the CI remediations add no DB version, destructive migration or durable-data mutation |
 
 #### Original Phase 0 acceptance evidence (historical)
 
@@ -319,8 +335,8 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 
 | Phase | Status | Entry gate | Exit state |
 |---|---|---|---|
-| Phase 0 — Containment and Release Safety | LOCALLY_REACCEPTED / CI_PENDING | Baseline audit complete | Cumulative source accepted; PR #8 Ubuntu CI required |
-| Phase 1 — Core Product Unification | NOT_STARTED / BLOCKED_BY_PHASE_0 | P0-08 ACCEPTED | Not started |
+| Phase 0 — Containment and Release Safety | ACCEPTED / GREEN | Baseline audit complete | P0-08 accepted at `d869eb4`; PR #8 Ubuntu CI run 250 passed |
+| Phase 1 — Core Product Unification | NOT_STARTED / ENTRY_GATE_SATISFIED | P0-08 ACCEPTED | Not started by explicit scope stop |
 | Phase 2 — Caption-first Resolver | BLOCKED_BY_PHASE_1 | P1-08 ACCEPTED | Not started |
 | Phase 3 — Full-video Workspace | BLOCKED_BY_PHASE_2 | P2-06 ACCEPTED | Not started |
 | Phase 4 — Remote Content Platform | BLOCKED_BY_PHASE_1 | P1 contracts accepted; production activation also needs platform packages | Not started |
@@ -459,16 +475,16 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [x] Empty speech-voice discovery cannot recursively block Settings or the browser runtime.
 - [x] Full phase0:gate passes three consecutive clean runs at one cumulative remediated exact source commit.
 - [x] Independent reviewer records P0-08 reacceptance at the cumulative remediated exact source commit.
-- [ ] PR #8 GitHub Actions passes on the pushed integration head under Ubuntu.
+- [x] PR #8 GitHub Actions passes on the pushed integration head under Ubuntu.
 
 Phase 1 authorization condition:
 
-The Today race and no-voice product defect are fixed, and the cumulative source is independently reaccepted. The Phase 1 entry condition remains closed until PR #8 GitHub Actions confirms the pushed integration head on Ubuntu. No Phase 1 branch, source change or migration has started.
+The Phase 1 entry condition is satisfied by exact source commit `d869eb4`, independent acceptance and PR #8 Ubuntu CI run 250. Per the task scope, no Phase 1 branch, source change or migration has started.
 
 ## 7. Next package
 
-Current package: P0-08 PR #8 Ubuntu CI confirmation.
+Current package: none. Phase 0 is complete; stop after PR #8 verification.
 
 Integration branch: `codex/implementation-roadmap` (head of PR #8).
 
-The cumulative P0-00/P0-07 remediation is independently accepted at exact source commit `d869eb4`. Phase 0 release authorization and P1-00 remain blocked until the pushed PR #8 integration head passes Ubuntu CI.
+The cumulative P0-00/P0-07 remediation is independently accepted at exact source commit `d869eb4`, and PR #8 Ubuntu CI is green. P1-00 is eligible but has not started.
