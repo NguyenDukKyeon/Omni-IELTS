@@ -3,26 +3,39 @@ import assert from 'node:assert/strict';
 import { readFile,stat } from 'node:fs/promises';
 import { resolve,dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { validateContentManifest,validateSentenceSegments,normalizeKey } from '../src/v10-contracts.js';
+import { validateSentenceSegments,normalizeKey } from '../src/v10-contracts.js';
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const readJson=async path=>JSON.parse(await readFile(resolve(root,path),'utf8'));
 
 const catalog=await readJson('public/content/catalog.json');
-const lessons=(catalog.packs||[]).flatMap(pack=>(pack.lessons||[]).map(lesson=>({...lesson,packId:pack.id})));
-
-test('remote catalog is versioned and contains no embedded lesson payloads',()=>{
-  assert.ok(Number(catalog.catalogVersion)>=1);
-  assert.ok(lessons.length>=3);
-  for(const lesson of lessons){
-    assert.equal(validateContentManifest(lesson).valid,true,lesson.id);
-    assert.equal('transcript'in lesson,false,`${lesson.id} embeds transcript in catalog`);
-    assert.equal('questions'in lesson,false,`${lesson.id} embeds questions in catalog`);
-    assert.ok(Object.values(lesson.assets).every(url=>String(url).startsWith('/content/')));
+const lessons=[
+  ['starter-b1-travel-plans',7],
+  ['starter-b2-course-enquiry',8],
+  ['starter-b2-urban-trees',8]
+].map(([id,sentenceCount])=>({
+  id,
+  sentenceCount,
+  assets:{
+    transcript:`/content/lessons/${id}/transcript.json`,
+    exercises:`/content/lessons/${id}/exercises.json`,
+    lexical:`/content/lessons/${id}/lexical.json`
   }
+}));
+
+test('production catalog is a signed versioned envelope with no unreviewed lesson payloads',()=>{
+  assert.equal(catalog.kind,'vocab-master-signed-catalog');
+  assert.equal(catalog.algorithm,'Ed25519');
+  assert.equal(catalog.signatureVersion,1);
+  assert.match(catalog.signature,/^[A-Za-z0-9+/]+=*$/);
+  assert.equal(catalog.payload.schemaVersion,2);
+  assert.equal(catalog.payload.catalogRevision,1);
+  assert.equal(catalog.payload.sequence,1);
+  assert.deepEqual(catalog.payload.entries,[]);
+  assert.equal('packs'in catalog,false);
 });
 
-test('all starter lesson assets exist and transcripts pass timestamp validation',async()=>{
+test('isolated unsigned development fixtures exist and transcripts pass timestamp validation',async()=>{
   for(const lesson of lessons){
     for(const url of Object.values(lesson.assets))await stat(resolve(root,'public',String(url).replace(/^\//,'')));
     const transcript=await readJson(`public${lesson.assets.transcript}`);
