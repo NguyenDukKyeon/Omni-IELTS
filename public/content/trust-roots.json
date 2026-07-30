@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "keys": [
+    {
+      "keyId": "vocab-master-production-2026-01",
+      "algorithm": "Ed25519",
+      "status": "active",
+      "usages": [
+        "catalog-signing"
+      ],
+      "validFrom": "2026-07-30T00:00:00.000Z",
+      "validUntil": "2027-08-30T00:00:00.000Z",
+      "publicKey": "qRpbsZKq/Ne1bkXDDoeiBvKIR3xv1EUJocN2eemkwOc="
+    }
+  ]
+}
