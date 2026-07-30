@@ -4,8 +4,8 @@ import { IELTS_STORE_NAMES } from './ielts-domain.js';
 import { V10_DB_NAME,V10_DB_VERSION,V10_STORES } from './v10-contracts.js';
 
 export const FULL_BACKUP_KIND='vocab-master-full';
-export const FULL_BACKUP_VERSION=2;
-export const BACKUP_REGISTRY_VERSION=1;
+export const FULL_BACKUP_VERSION=3;
+export const BACKUP_REGISTRY_VERSION=2;
 export const BACKUP_CLASSIFICATIONS=Object.freeze(['durable','reconstructable-cache','ephemeral']);
 
 const MAX_DEPTH=100;
@@ -49,6 +49,7 @@ export const BACKUP_EXTERNAL_REGISTRY=Object.freeze([
   Object.freeze({owner:'pwa',storage:'CacheStorage',store:'vocab-master-pwa-v10-static',classification:'reconstructable-cache',backupRule:'exclude',note:'Static application assets are installed again by the service worker.'}),
   Object.freeze({owner:'pwa',storage:'CacheStorage',store:'vocab-master-pwa-v10-runtime',classification:'reconstructable-cache',backupRule:'exclude',note:'Runtime responses are fetched again.'}),
   Object.freeze({owner:'v10',storage:'CacheStorage',store:'vocab-master-content-v1',classification:'reconstructable-cache',backupRule:'exclude',note:'Published content bytes are fetched again from retained manifest URLs.'}),
+  Object.freeze({owner:'v10',storage:'CacheStorage',store:'vocab-master-content-v2',classification:'reconstructable-cache',backupRule:'exclude',note:'Verified content-addressed pack bytes are redownloaded from retained immutable descriptors.'}),
   Object.freeze({owner:'pwa',storage:'CacheStorage',store:'vocab-master-pwa-v10-config',classification:'reconstructable-cache',backupRule:'exclude',note:'Reminder config is reconstructed from durable settings.'}),
   Object.freeze({owner:'core',storage:'sessionStorage',store:'vocab-local-sw-reset-v1',classification:'ephemeral',backupRule:'exclude',note:'One-session service-worker reset marker.'}),
   Object.freeze({owner:'core',storage:'sessionStorage',store:'vocab-master-gemini-key',classification:'ephemeral',backupRule:'exclude-secret',note:'Session-only API credentials must never enter a backup.'}),
@@ -69,7 +70,8 @@ const UNIQUE_INDEX_FIELDS=Object.freeze([
   ['v10',V10_STORES.collectionMemberships,'uniqueKey'],
   ['v10',V10_STORES.lexicalTombstones,'lexicalItemId'],
   ['v10',V10_STORES.transcriptCache,'cacheKey'],
-  ['v10',V10_STORES.contentProgress,'lessonId']
+  ['v10',V10_STORES.contentProgress,'lessonId'],
+  ['v10',V10_STORES.installedPacks,'packId']
 ]);
 
 function canonicalValue(value){
@@ -200,6 +202,32 @@ export function buildFullBackupEnvelope({core={},ielts={},v10={},exportedAt=new 
   return{app:'Vocab Master',kind:FULL_BACKUP_KIND,schemaVersion:FULL_BACKUP_VERSION,registryVersion:BACKUP_REGISTRY_VERSION,exportedAt:String(exportedAt),manifest:{stores,external:structuredClone(BACKUP_EXTERNAL_REGISTRY)},domains,payloadDigest:canonicalBackupDigest(domains)};
 }
 
+function upgradeLegacyV2Envelope(input){
+  if(Number(input?.schemaVersion)!==2||Number(input?.registryVersion)!==1)return null;
+  if(input.kind!==FULL_BACKUP_KIND)return{error:'Legacy v2 backup kind is invalid.'};
+  const domains=structuredClone(input.domains||{});
+  if(input.payloadDigest!==canonicalBackupDigest(domains))return{error:'Legacy v2 backup payload digest does not match.'};
+  for(const owner of ['core','ielts','v10']){
+    const stores=domains?.[owner]?.stores;
+    if(!stores||typeof stores!=='object'||Array.isArray(stores))return{error:`Legacy v2 backup is missing ${owner}.stores.`};
+    const allowed=new Set(ownerEntries(owner).map(row=>row.store));
+    const unknown=Object.keys(stores).filter(store=>!allowed.has(store));
+    if(unknown.length)return{error:`Legacy v2 backup contains unknown ${owner} stores: ${unknown.join(', ')}.`};
+    for(const store of allowed)if(!Object.hasOwn(stores,store))stores[store]=[];
+    domains[owner].database=ownerEntries(owner)[0].database;
+    domains[owner].databaseVersion=ownerEntries(owner)[0].databaseVersion;
+  }
+  return{
+    value:buildFullBackupEnvelope({
+      core:domains.core.stores,
+      ielts:domains.ielts.stores,
+      v10:domains.v10.stores,
+      exportedAt:input.exportedAt
+    }),
+    warning:'Legacy full-backup v2 was additively upgraded with empty Phase 4 install metadata stores; learner data was preserved.'
+  };
+}
+
 function validateManifest(input,domains,errors){
   if(!input?.manifest||!Array.isArray(input.manifest.stores)){errors.push('Backup manifest stores bi thieu.');return;}
   if(input.manifest.stores.length!==BACKUP_STORE_REGISTRY.length)errors.push('Backup manifest store count khong khop registry.');
@@ -215,6 +243,9 @@ function validateManifest(input,domains,errors){
 export function validateFullBackupEnvelope(input){
   const errors=[];const warnings=[];
   if(!input||typeof input!=='object'||Array.isArray(input))return{valid:false,errors:['Backup vNext phai la object.'],warnings,value:null};
+  const legacy=upgradeLegacyV2Envelope(input);
+  if(legacy?.error)return{valid:false,errors:[legacy.error],warnings,value:null};
+  if(legacy?.value){input=legacy.value;warnings.push(legacy.warning);}
   const envelopeSafety=jsonSafetyErrors(input,'backup');if(envelopeSafety.length)return{valid:false,errors:envelopeSafety,warnings,value:null};
   if(input.kind!==FULL_BACKUP_KIND)errors.push('Khong phai full backup Vocab Master vNext.');
   if(Number(input.schemaVersion||0)!==FULL_BACKUP_VERSION)errors.push(Number(input.schemaVersion||0)>FULL_BACKUP_VERSION?'Backup dung schema moi hon ung dung.':'Backup vNext thieu hoac sai schema version.');

@@ -39,7 +39,7 @@ test('Core, IELTS and V10 adopt one durable migration ledger entry and double-op
     assert.deepEqual(ledgers.map(rows=>rows.map(row=>row.migrationId)),[
       ['p1-00-core-opener-v1','p1-02-core-learning-events-v5'],
       ['p1-00-ielts-opener-v1'],
-      ['p1-00-v10-opener-v1','p1-03-v10-workflow-intents-v2','p1-05-v10-transcript-aggregate-v3','p1-06-v10-global-errors-v4','p1-08-v10-today-runs-v5','p2-01-v10-resolver-jobs-v6']
+      ['p1-00-v10-opener-v1','p1-03-v10-workflow-intents-v2','p1-05-v10-transcript-aggregate-v3','p1-06-v10-global-errors-v4','p1-08-v10-today-runs-v5','p2-01-v10-resolver-jobs-v6','p4-00-v10-content-platform-v7']
     ]);
     const appliedAt=ledgers.map(rows=>rows[0].appliedAt);
     databases.forEach(database=>database.close());
@@ -49,7 +49,7 @@ test('Core, IELTS and V10 adopt one durable migration ledger entry and double-op
       listMigrationLedger(reopened[1],(await import('../src/ielts-domain.js')).IELTS_STORE_NAMES.settings),
       listMigrationLedger(reopened[2],(await import('../src/v10-contracts.js')).V10_STORES.meta)
     ]);
-    assert.deepEqual(second.map(rows=>rows.length),[2,1,6]);
+    assert.deepEqual(second.map(rows=>rows.length),[2,1,7]);
     assert.deepEqual(second.map(rows=>rows[0].appliedAt),appliedAt);
     reopened.forEach(database=>database.close());
   }finally{
