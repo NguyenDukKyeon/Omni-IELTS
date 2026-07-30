@@ -16,6 +16,8 @@ export function createAsrFallbackResolver({repository,localClient,cloudClient,se
       try{
         job=await repository.get(jobId);
         if(!job.request?.fallback?.enableLocalAsr)throw resolverError('CONSENT_REQUIRED','Local ASR was not explicitly enabled for this resolver request.');
+        const sourcePolicy=job.request?.sourcePolicy||{};
+        if(sourcePolicy.visibility!=='public'||sourcePolicy.requiresAuth!==false||sourcePolicy.cookiesUsed!==false||sourcePolicy.rights!=='eligible')throw resolverError('RIGHTS_INELIGIBLE','Local ASR is limited to public, no-auth, no-cookie, rights-eligible sources.');
         const health=await localClient.health();if(!health.available)throw resolverError(health.code||'LOCAL_COMPANION_UNAVAILABLE','Local companion or model is unavailable.');
         const result=await localClient.transcribe({url:job.request.source.canonicalUrl,language:job.request.language,checkpoints:job.asrCheckpoints||{}},{signal:controller.signal,onBatch:async batch=>{
           const latest=await repository.get(jobId),checkpoints={...(latest.asrCheckpoints||{}),[batch.rangeId]:{status:'complete',segments:batch.segments,updatedAt:Date.now()}},sentences=mergeAsrBatches([latest.sentences||[],batch.segments||[]]);
@@ -38,6 +40,14 @@ export function createAsrFallbackResolver({repository,localClient,cloudClient,se
     async cancel(jobId){workers.get(jobId)?.controller.abort();workers.get(`cloud:${jobId}`)?.controller.abort();return repository.cancel(jobId);},
     isActive(jobId){return workers.has(jobId)||workers.has(`cloud:${jobId}`);},
     async handle(req,res,path){
+      if(path==='/api/transcript/capabilities'){
+        if(req.method!=='GET'){json(res,405,{error:{code:'METHOD_NOT_ALLOWED'}},securityHeaders);return true;}
+        const [local,cloud]=await Promise.all([
+          localClient?.health?.().catch(error=>({available:false,code:error?.code||'LOCAL_COMPANION_UNAVAILABLE'}))||{available:false,code:'LOCAL_COMPANION_UNAVAILABLE'},
+          cloudClient?.health?.().catch(error=>({available:false,code:error?.code||'CLOUD_UNAVAILABLE'}))||{available:false,code:'CLOUD_UNAVAILABLE'}
+        ]);
+        json(res,200,{caption:{available:true},local:{available:local.available===true,modelInstalled:local.modelInstalled===true,code:local.code||null},cloud:{available:cloud.available===true,configured:cloud.configured===true,code:cloud.code||null}},securityHeaders);return true;
+      }
       const match=path.match(/^\/api\/transcript\/jobs\/([^/]+)\/(local|cloud)-fallback$/);if(!match)return false;
       if(req.method!=='POST'){json(res,405,{error:{code:'METHOD_NOT_ALLOWED'}},securityHeaders);return true;}
       try{const jobId=decodeURIComponent(match[1]),job=match[2]==='cloud'?await this.startCloud(jobId):await this.start(jobId);json(res,202,{job},securityHeaders);}
