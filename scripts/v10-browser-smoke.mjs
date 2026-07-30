@@ -1,9 +1,20 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { browserLaunchArguments, runBrowserSuite, waitForHttp, withBrowserHarness } from './browser-harness.mjs';
 
 const APP_URL='http://127.0.0.1:3000/#today';
 const DEBUG_PORT=9555;
+const fixtureTranscript=JSON.parse(await readFile(resolve('public/content/lessons/starter-b1-travel-plans/transcript.json'),'utf8'));
+const fixtureLexical=JSON.parse(await readFile(resolve('public/content/lessons/starter-b1-travel-plans/lexical.json'),'utf8'));
+const fixtureTargets=new Map(fixtureLexical.targets.map(row=>[row.sentenceId,row.targets]));
+const sentenceLoopFixture={
+  sourceId:'starter-b1-travel-plans',
+  sourceType:'isolated-browser-fixture',
+  title:'Changing Travel Plans — isolated browser fixture',
+  sentences:fixtureTranscript.map(row=>({...row,verified:true,lexicalTargets:fixtureTargets.get(row.id)||[]}))
+};
 
 async function websocketText(data){if(typeof data==='string')return data;if(data&&typeof data.text==='function')return data.text();if(data instanceof ArrayBuffer)return new TextDecoder().decode(data);if(ArrayBuffer.isView(data))return new TextDecoder().decode(data);return String(data);}
 class CdpClient{
@@ -41,10 +52,10 @@ async function main(){
 
     const launcherBefore=await evaluate(`(()=>{const node=document.getElementById('openIeltsLabButton');return{id:node?.id||'',marker:node?.dataset.v10Launcher||'',disabled:Boolean(node?.disabled),count:document.querySelectorAll('#openIeltsLabButton').length,trace:window.__VOCAB_IELTS_LAUNCH_TRACE__||null};})()`);assert.equal(launcherBefore.marker,'hub',JSON.stringify(launcherBefore));assert.equal(launcherBefore.disabled,false,JSON.stringify(launcherBefore));assert.equal(launcherBefore.count,1,JSON.stringify(launcherBefore));
     await evaluate("document.getElementById('openIeltsLabButton').click()");await delay(50);const launcherAfter=await evaluate(`(()=>({trace:window.__VOCAB_IELTS_LAUNCH_TRACE__||null,hubOpen:Boolean(document.getElementById('v10IeltsHubDialog')?.open),legacyOpen:Boolean(document.getElementById('ieltsLabDialog')?.open)}))()`);assert.ok(String(launcherAfter.trace?.phase||'').startsWith('hub-'),JSON.stringify(launcherAfter));await waitFor("document.getElementById('v10IeltsHubDialog')?.open",'IELTS Hub open');assert.equal(await evaluate("document.querySelectorAll('#v10IeltsHubDialog [role=tab]').length"),3);
-    await evaluate("document.querySelector('[data-v10-ielts-tab=\"discover\"]').click()");await waitFor("document.querySelectorAll('.v10-content-card').length>=3",'remote starter catalog');
-    const catalogState=await evaluate(`(()=>({count:document.querySelectorAll('.v10-content-card').length,titles:[...document.querySelectorAll('.v10-content-card h3')].map(node=>node.textContent)}))()`);assert.ok(catalogState.count>=3);assert.ok(catalogState.titles.includes('Changing Travel Plans'));
+    await evaluate("document.querySelector('[data-v10-ielts-tab=\"discover\"]').click()");await waitFor("document.getElementById('v10ContentPacks')?.textContent.includes('Catalog')",'signed production catalog state');
+    const catalogState=await evaluate(`(()=>({count:document.querySelectorAll('#v10ContentPacks .v10-content-card').length,status:document.getElementById('v10ContentStatus')?.textContent,empty:Boolean(document.querySelector('#v10ContentPacks .ielts-empty')),runtimeFactory:Boolean(window.VocabMasterAiFactory)}))()`);assert.equal(catalogState.count,0);assert.match(catalogState.status,/Revision 1/);assert.match(catalogState.status,/sequence 1/);assert.equal(catalogState.empty,true);assert.equal(catalogState.runtimeFactory,false);
 
-    await evaluate("document.querySelector('[data-v10-open-content=\"starter-b1-travel-plans\"]').click()");await waitFor("document.getElementById('v10SentenceLoopDialog')?.open",'sentence loop opens from content');await waitFor("document.querySelector('[data-v10-loop-play]')",'listening step');
+    await evaluate(`window.VocabMasterSentenceLoop.open(${JSON.stringify(sentenceLoopFixture)})`);await waitFor("document.getElementById('v10SentenceLoopDialog')?.open",'sentence loop opens from isolated fixture');await waitFor("document.querySelector('[data-v10-loop-play]')",'listening step');
     await evaluate("document.querySelector('[data-v10-loop-play]').click()");await waitFor("!document.querySelector('[data-v10-next]').disabled",'listening repeat recorded');await evaluate("document.querySelector('[data-v10-next]').click()");await waitFor("document.getElementById('v10DictationForm')",'dictation step');
     await evaluate(`(()=>{const form=document.getElementById('v10DictationForm');form.querySelector('textarea').value='Hi Maya, I am calling because the train to Bristol has been cancelled.';form.requestSubmit();})()`);await waitFor("document.querySelector('input[name=\"v10ErrorType\"]')",'correction step');await evaluate("document.querySelector('input[name=\"v10ErrorType\"][value=\"spelling-only\"]').click()");await waitFor("!document.querySelector('[data-v10-next]').disabled",'error classification');await evaluate("document.querySelector('[data-v10-next]').click()");await waitFor("document.querySelector('.v10-thought-groups')",'noticing step');await evaluate("document.querySelector('[data-v10-next]').click()");await waitFor("document.querySelector('[data-v10-shadow-record]')",'shadowing step');assert.ok((await evaluate("document.querySelector('.v10-loop-card').textContent")).includes('không tạo FSRS'));
     await evaluate("document.querySelector('[data-v10-next]').click()");await waitFor("document.querySelector('[data-v10-save-target]')",'vocabulary step');await evaluate("document.querySelector('[data-v10-save-target]').click()");await waitFor("document.querySelector('[data-v10-save-target]').disabled",'lexical target captured');await evaluate("document.querySelector('[data-v10-next]').click()");await waitFor("document.getElementById('v10RetellForm')",'retell step');await evaluate("document.querySelector('[data-v10-skip-retell]').click()");await waitFor("document.querySelector('.v10-loop-card h2')?.textContent.includes('Đã bỏ qua Retell')",'explicit Retell skip completion');
@@ -96,7 +107,7 @@ async function main(){
 
     const audit=await evaluate("window.VocabMasterV10Audit.run()");assert.equal(audit.valid,true,JSON.stringify(audit.phases.filter(row=>!row.valid)));
     const serious=runtimeErrors.filter(text=>text&&!/favicon|net::ERR_ABORTED|speech|AudioContext|youtube/i.test(text));assert.deepEqual(serious,[],`Runtime errors: ${serious.join('\n')}`);
-    console.log(JSON.stringify({ok:true,version:ready.version,catalogLessons:catalogState.count,capturedTarget:'be cancelled',quickCapture:quickCaptureTerm,videoWorkspaceSentences:3,resolverCancel:true,strictMasking:true,workspaceReloadRevision:editedRevision,auditPhases:audit.phases.length,runtimeErrors:runtimeErrors.length},null,2));
+    console.log(JSON.stringify({ok:true,version:ready.version,productionCatalogPacks:catalogState.count,signedCatalogStatus:catalogState.status,runtimeFactory:false,capturedTarget:'be cancelled',quickCapture:quickCaptureTerm,videoWorkspaceSentences:3,resolverCancel:true,strictMasking:true,workspaceReloadRevision:editedRevision,auditPhases:audit.phases.length,runtimeErrors:runtimeErrors.length},null,2));
     }catch(error){error.message+=`\n\nVite output:\n${serverOutput.slice(-5000)}\n\nBrowser output:\n${browserOutput.slice(-5000)}`;throw error;}
     finally{cdp?.close();if(process.env.DEBUG_V10_SMOKE==='1'){console.error(serverOutput);console.error(browserOutput);}}
   });

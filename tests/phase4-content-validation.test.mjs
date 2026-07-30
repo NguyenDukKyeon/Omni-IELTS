@@ -45,14 +45,16 @@ test('AI-assisted content remains a draft and production publication fails close
 });
 
 test('production learner path has no unsigned fixture or active generation factory',async()=>{
-  const [platform,runtime,catalog,fixtureReadme]=await Promise.all([
+  const [platform,runtime,audit,catalog,fixtureReadme]=await Promise.all([
     readFile(resolve(root,'src/content-platform.js'),'utf8'),
     readFile(resolve(root,'src/v10-runtime.js'),'utf8'),
+    readFile(resolve(root,'src/v10-audit.js'),'utf8'),
     readJson('public/content/catalog.json'),
     readFile(resolve(root,'public/content/dev-fixtures/README.md'),'utf8')
   ]);
   assert.doesNotMatch(platform,/legacy-content-manifest\.json|from ['"].*unsigned/i);
   assert.doesNotMatch(runtime,/from ['"].*ai-content-factory/i);
+  assert.doesNotMatch(audit,/from ['"].*ai-content-factory/i);
   assert.deepEqual(catalog.payload.entries,[]);
   assert.match(fixtureReadme,/not\s+referenced by the production signed catalog/i);
 });
