@@ -1,13 +1,13 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, P0-02 independently accepted
+Last audited: 2026-07-30, P0-03 independently accepted
 
-Audited source commit: 2025b6320c8d72f116fbc2c0a9dcb4ae884697b6
+Audited source commit: 12b1cf8488fcacf4369a91e8b89a52dc93171f1f
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
 Active implementation branch: codex/phase-0-release-safety
-Scope of this update: governance/kickoff baseline, P0-00 Acceptance harness, P0-01 Evidence contract và P0-02 Core schedule gateway. P0-03 bắt đầu; Phase 0 product gate vẫn đỏ.
+Scope of this update: governance/kickoff baseline và P0-00 đến P0-03 đã independently accepted. P0-04 bắt đầu; Phase 0 product gate vẫn đỏ.
 
 ## 1. Provenance status
 
@@ -94,12 +94,29 @@ Accepted source commit: `2025b6320c8d72f116fbc2c0a9dcb4ae884697b6`.
 
 P0-02 does not rewrite legacy learning history. New qualified-evidence markers and review metadata are additive; legacy review/outbox rows without canonical evidence stay fail-closed and are preserved in quarantine rather than silently dropped. Rollback may disable the Core gateway code path but must preserve evidence envelopes, reason metadata and quarantine records.
 
+### P0-03 acceptance evidence
+
+Accepted source commit: `12b1cf8488fcacf4369a91e8b89a52dc93171f1f`.
+
+| Evidence | Actual result |
+|---|---|
+| Focused IELTS/V10 containment tests | PASS 34/34 |
+| `npm test` | PASS 142/142; 0 skipped/todo |
+| `npm run check` | PASS |
+| `npm run audit:ielts` | PASS 11/11 |
+| `npm run audit:v10` | PASS 55/55 |
+| `npm run build` | PASS; production bundle built successfully |
+| `npm run test:ielts-browser` | PASS: IELTS Dictation/Retell create no Core review event; evaluator 503 keeps a durable failed coaching attempt; successful Retell persists learner output and no fabricated evaluation receipt |
+| `npm run test:v10-browser` | PASS: empty Retell cannot complete; Skip is explicit; coaching output survives reload; stale cross-run save cannot overwrite the active run; double-click advances exactly one sentence |
+| Evidence boundary | PASS: IELTS/V10 coaching envelopes are canonical and default-denied; caller cannot override V10 coaching/collector/completeness; revealed correction and unverified transcript never schedule |
+| Independent review | ACCEPTED after four P1 findings were fixed; reviewer independently reran unit/static/audit/build/browser gates and found no remaining P0/P1 |
+
+P0-03 is an additive compatibility migration. Existing V10 `completed` progress without a durable learner output normalizes to `unverified`; explicit new `skipped` and `coaching-completed` states remain distinct. Existing attempts are not deleted. IELTS Retell now persists a stable coaching attempt as `pending` before evaluator I/O and updates the same ID to `completed` or `failed`. Rollback may hide the contained UI or stop reading new fields, but must retain learner output, evidence envelopes and evaluation status/error records.
+
 ## 3. Confirmed blockers
 
 | ID | Severity | Blocker | Required owner package |
 |---|---|---|---|
-| B-003 | P0/High | IELTS/Error repair can expose correction before an “independent” retry | P0-03 |
-| B-004 | P0/High | V10 Retell does not persist/evaluate learner output; current IELTS Retell browser path fails | P0-03, later P3-04 |
 | B-005 | P0/Critical | Backup omits V10 and some Core durable stores such as drafts/outbox | P0-04 |
 | B-006 | P0/Critical | Cross-DB restore is not crash-atomic; RAM fallback can look successful | P0-05 |
 | B-007 | P0/High | Legacy and V10 Capture/Inbox both mount; async Quick Capture is unsafe | P0-06 |
@@ -111,7 +128,7 @@ P0-02 does not rewrite legacy learning history. New qualified-evidence markers a
 | B-014 | P5/Critical | Cloud fallback consent/shared-cache policy and local process safety are not production-ready | P5-00–P5-05 |
 | B-015 | P7/High | Metrics/calibration are too weak for safe personalization or FSRS tuning | P7-00–P7-05 |
 
-Resolved at the current audited commit: B-001, B-002 and B-009. Core schedule writes are policy-gated and receipt-bound, skill unlock is based on successful qualified evidence, and the browser harness remains independently accepted.
+Resolved at the current audited commit: B-001, B-002, B-003, B-004 and B-009. Core schedule writes are policy-gated and receipt-bound; skill unlock is based on successful qualified evidence; IELTS/V10 exposed, unverified and Retell coaching paths cannot schedule; Retell learner output is durable across evaluator failure; and the browser harness remains independently accepted.
 
 ## 4. Phase status
 
@@ -147,8 +164,8 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 | P0-00 Acceptance harness | P0-00 | Baseline | ACCEPTED @ `33616e5` |
 | P0-01 Evidence contract | P0-01 | P0-00 | ACCEPTED @ `0ec315f` |
 | P0-02 Core evidence gateway | P0-02 | P0-01 | ACCEPTED @ `2025b63` |
-| P0-03 IELTS/V10 containment | P0-03 | P0-01 | IN_PROGRESS |
-| P0-04 Backup envelope | P0-04 | P0-00 | PLANNED |
+| P0-03 IELTS/V10 containment | P0-03 | P0-01 | ACCEPTED @ `12b1cf8` |
+| P0-04 Backup envelope | P0-04 | P0-00 | IN_PROGRESS |
 | P0-05 Restore safety | P0-05 | P0-04 | PLANNED |
 | P0-06 Capture containment | P0-06 | P0-00, P0-05 | PLANNED |
 | P0-07 Today containment | P0-07 | P0-00, P0-01 | PLANNED |
@@ -243,9 +260,9 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 ## 6. Phase 0 exit checklist
 
-- [ ] One central default-deny EvidencePolicy guards every schedule write.
-- [ ] Again/failure and assisted/unverified attempts cannot unlock or create positive review evidence.
-- [ ] Retell is real and persisted, or clearly coaching-only/disabled.
+- [x] One central default-deny EvidencePolicy guards every schedule write.
+- [x] Again/failure and assisted/unverified attempts cannot unlock or create positive review evidence.
+- [x] Retell is real and persisted, or clearly coaching-only/disabled.
 - [ ] Backup registry classifies every Core/IELTS/V10 store.
 - [ ] Export→reset→restore→restart sentinel count/digest matches every durable store.
 - [ ] Failure injection cannot leave mixed restore state presented as success.
@@ -262,8 +279,8 @@ P1-00 remains PHASE_BLOCKED until every checkbox above is checked and P0-08 is i
 
 ## 7. Next package
 
-Current package: P0-03 IELTS/V10 evidence containment.
+Current package: P0-04 durable store registry and backup envelope vNext.
 
 Phase branch: `codex/phase-0-release-safety`.
 
-P0-00 through P0-02 are independently accepted at their exact source commits. P0-03 is active. No Phase 1 work is authorized.
+P0-00 through P0-03 are independently accepted at their exact source commits. P0-04 is active. No Phase 1 work is authorized.

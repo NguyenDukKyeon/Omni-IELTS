@@ -379,3 +379,15 @@ Consequences: a caller cannot obtain a schedule write merely by constructing a s
 Evidence: P0-02 independently accepted source commit `2025b6320c8d72f116fbc2c0a9dcb4ae884697b6`; final full suite 136/136, focused compatibility matrix 21/21, static/roadmap/build/Core browser gates pass.
 
 Revisit when: a later migration tool can transform quarantined legacy rows using independently verifiable provenance; never infer or fabricate missing evidence.
+
+## ADR-030 — Phase 0 IELTS/V10 learning surfaces are explicitly coaching-only
+
+Status: CONFIRMED
+
+Decision: every current IELTS Dictation, Error Correction, lexical production and Retell path, plus the V10 sentence-loop Dictation and Retell path, is coaching-only because the same learning surface exposes transcript, correction or other preparation. These paths still persist canonical Attempt/ActivitySpec/source receipt/denied decision envelopes for audit, but they never fabricate evaluator receipts or write FSRS. V10 coaching constructors force authoritative collector/completeness/coaching fields after caller input. Retell requires non-empty learner output or an explicit Skip; IELTS persists the learner output before evaluator I/O and updates the same attempt to completed or failed.
+
+Consequences: Phase 0 intentionally records fewer reviews, but removes false independent evidence. Legacy V10 completion without learner output becomes `unverified`; new Skip and coaching completion remain semantically distinct. A later independent mode requires a separately reviewed UI with hidden answer surfaces, immutable source revision and a real target-bound evaluator receipt; it cannot weaken this containment in place.
+
+Evidence: P0-03 independently accepted source commit `12b1cf8488fcacf4369a91e8b89a52dc93171f1f`; full suite 142/142, focused containment 34/34, IELTS audit 11/11, V10 audit 55/55, build and both browser suites pass. Browser evidence includes evaluator failure with durable learner output, reload, empty/Skip, cross-run save race and same-run double-click transition.
+
+Revisit when: P3-03/P3-04 provides a genuinely independent Dictation/Retell surface and canonical event repositories; retain all coaching records and legacy-unverified markers during migration/rollback.
