@@ -486,4 +486,4 @@ export async function mountTodayPlannerV2({degraded=false}={}){
   return globalThis.VocabMasterTodayV2;
 }
 
-export const __testing=Object.freeze({assetRevision,cardTarget,contentRevision,errorRevision,launchProjection,resumeTodayPlan});
+export const __testing=Object.freeze({assetRevision,cardTarget,errorRevision,launchProjection,resumeTodayPlan});
