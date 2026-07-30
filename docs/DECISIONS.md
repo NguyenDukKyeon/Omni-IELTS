@@ -481,3 +481,29 @@ Ubuntu run 249 invalidated that release authorization by exposing a zero-voice r
 PR #8 Ubuntu CI run `30514506669` (run 250) passed on integration head `ebe276ac1b690ae561c288787089a4c275709bfb` and generated merge commit `09e29ab`. Ubuntu 24.04.4 with Node `v22.23.1` and Chrome `150.0.7871.128` passed unit/static/audit/build/server/preview plus Core, IELTS, V10 and Hardening browser gates. This restores Phase 0 release authorization for source commit `d869eb4`; a later documentation-only head must keep the PR check green but does not redefine the accepted product artifact.
 
 Revisit when: the build artifact format, required browser matrix or release topology changes. Preserve exact-commit binding, clean reproducibility, canonical digest comparison, product/infrastructure failure separation and independent review.
+
+## ADR-036 — Phase 1 uses one canonical learning spine with additive durable projections
+
+Status: IMPLEMENTED_PENDING_INDEPENDENT_ACCEPTANCE
+
+Decision: ActivitySpec, Run, Attempt, Receipt and EvidenceDecision are the canonical planning/execution/evidence contracts for Core, IELTS and V10. Core database version 5 stores each canonical envelope as four append-only events plus an idempotent projection and poison-event dead letter. One receipt/event identity can cause at most one Core review mutation. Legacy review/progress readers remain projections; a replay can rebuild canonical projections without inventing evidence.
+
+Cross-database lexical work is coordinated by V10 workflow intents with stable step IDs, durable checkpoints, bounded retries, actionable quarantine and additive tombstones. Capture finalization and lexical merge use those intents instead of dispatch-only completion. V10 versions 2–5 add workflow intents, canonical transcript source/revision/segments, global error records/occurrences/repairs and durable Today runs. No Phase 1 migration hard-deletes a legacy record or downgrades a database.
+
+Transcript edits create child revisions and never mutate historical source text used by attempts. Error totals reduce idempotent occurrences; only target-bound independent verified correction can resolve an error. Today composition is deterministic and due-first, and each runnable row owns an exact canonical ActivitySpec. The runner revalidates the durable binding, leases one active run across tabs, resumes the same run after reload and records target-matching receipts for completion, skip or cancel.
+
+Consequences: backup/restore registry coverage grows with every new physical store. Rollback builds may ignore additive stores but must not delete them. Targetless, stale, unknown-version, collision and unsupported-executor data fail closed or quarantine. The implementation may reduce runnable content when no exact target/executor exists; it cannot substitute a generic target.
+
+Evidence: implementer-focused P1 suites and the cumulative 233/233 unit/integration suite pass with zero skip/todo; Core, IELTS, V10 and Hardening production browser suites pass on Chrome `150.0.7871.188`. Exact clean-source reproduction, independent review and pushed CI remain pending, so this ADR records an implemented decision rather than Phase 1 acceptance.
+
+Revisit when: a fourth persistence owner joins the learning transaction, transcript identity must span cross-source alignment, or a new Today executor needs a target type not representable by the current exact learning target. Preserve append-only evidence, immutable source revision and default-deny schedule semantics.
+
+## ADR-037 — Phase 1 delivery uses one user-authorized phase branch without weakening package acceptance
+
+Status: CONFIRMED
+
+Decision: the user explicitly authorized `codex/phase-1-core-unification` for the complete phase. P1-00…P1-08 therefore share one delivery branch, while package boundaries remain visible through modules, focused tests and the implementation report. A later package may rely on the preceding implementation in this branch, but no implementer result is relabeled as independent `ACCEPTED`.
+
+Consequences: the phase can be reviewed as one cumulative diff, but Phase 2 remains blocked until an independent reviewer validates the clean exact source and CI. The single-branch topology does not waive migration, rollback, real IndexedDB, desktop/mobile browser or reconciliation evidence.
+
+Revisit when: the branch is split into package pull requests or the acceptance authority requests per-package exact commits. Preserve dependency order and do not infer acceptance from merge topology.

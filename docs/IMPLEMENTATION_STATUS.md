@@ -1,13 +1,15 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, Phase 0 cumulative remediation accepted and Ubuntu CI green
+Last audited: 2026-07-30, Phase 1 implementation complete; independent acceptance pending
 
 Audited source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
-Active implementation branch: codex/implementation-roadmap (PR #8 integration head)
-Scope of this update: Phase 0 was independently accepted on Windows, and PR #8 CI runs 248 and 249 then exposed a host-dependent Windows browser-path defect and a zero-speech-voice product reentrancy defect. The cumulative remediation also closes the P0-07 Today render/status race. Exact source commit `d869eb4` passed three implementer gates and an independent reviewer gate with no P0/P1; PR #8 Ubuntu CI run 250 passed on the pushed integration head. Phase 0 is accepted. Phase 1 has not started.
+Phase 1 exact source commit: pending authorized commit; current evidence is bound to the working tree described below.
+
+Active implementation branch: codex/phase-1-core-unification
+Scope of this update: Phase 0 remains accepted at exact source commit `d869eb4` with PR #8 Ubuntu CI run 250 green. P1-00…P1-08 are implemented cumulatively on the user-authorized Phase 1 branch with focused tests, full unit/integration coverage and production browser verification. This is implementer evidence only: no P1 package or Phase 1 exit is marked `ACCEPTED` until an independent reviewer reproduces the clean exact-source gate.
 
 ## 1. Provenance status
 
@@ -336,7 +338,7 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 | Phase | Status | Entry gate | Exit state |
 |---|---|---|---|
 | Phase 0 — Containment and Release Safety | ACCEPTED / GREEN | Baseline audit complete | P0-08 accepted at `d869eb4`; PR #8 Ubuntu CI run 250 passed |
-| Phase 1 — Core Product Unification | NOT_STARTED / ENTRY_GATE_SATISFIED | P0-08 ACCEPTED | Not started by explicit scope stop |
+| Phase 1 — Core Product Unification | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED | P0-08 ACCEPTED | P1-00…P1-08 implemented; independent acceptance and clean exact-source gate pending |
 | Phase 2 — Caption-first Resolver | BLOCKED_BY_PHASE_1 | P1-08 ACCEPTED | Not started |
 | Phase 3 — Full-video Workspace | BLOCKED_BY_PHASE_2 | P2-06 ACCEPTED | Not started |
 | Phase 4 — Remote Content Platform | BLOCKED_BY_PHASE_1 | P1 contracts accepted; production activation also needs platform packages | Not started |
@@ -376,15 +378,15 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 | Package | Branch | Dependency | Status |
 |---|---|---|---|
-| P1-00 Migration ledger | codex/p1-00-migration-ledger | P0-08 | NEXT |
-| P1-01 Learning contracts | codex/p1-01-learning-contracts | P1-00 | PLANNED |
-| P1-02 Event repositories | codex/p1-02-event-repositories | P1-01 | PLANNED |
-| P1-03 Cross-DB reconciler | codex/p1-03-cross-db-reconciler | P1-02 | PLANNED |
-| P1-04 Unified Capture | codex/p1-04-unified-capture | P1-03 | PLANNED |
-| P1-05 Transcript aggregate | codex/p1-05-transcript-aggregate | P1-02 | PLANNED |
-| P1-06 Error Repository | codex/p1-06-error-repository | P1-02, P1-05 | PLANNED |
-| P1-07 Today Composer | codex/p1-07-today-composer | P1-02, P1-04, P1-06 | PLANNED |
-| P1-08 Today Runner/cutover | codex/p1-08-today-runner-cutover | P1-07 | PLANNED |
+| P1-00 Migration ledger | codex/phase-1-core-unification | P0-08 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
+| P1-01 Learning contracts | codex/phase-1-core-unification | P1-00 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
+| P1-02 Event repositories | codex/phase-1-core-unification | P1-01 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
+| P1-03 Cross-DB reconciler | codex/phase-1-core-unification | P1-02 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
+| P1-04 Unified Capture | codex/phase-1-core-unification | P1-03 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
+| P1-05 Transcript aggregate | codex/phase-1-core-unification | P1-02 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
+| P1-06 Error Repository | codex/phase-1-core-unification | P1-02, P1-05 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
+| P1-07 Today Composer | codex/phase-1-core-unification | P1-02, P1-04, P1-06 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
+| P1-08 Today Runner/cutover | codex/phase-1-core-unification | P1-07 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
 
 ### Phase 2
 
@@ -477,14 +479,28 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [x] Independent reviewer records P0-08 reacceptance at the cumulative remediated exact source commit.
 - [x] PR #8 GitHub Actions passes on the pushed integration head under Ubuntu.
 
-Phase 1 authorization condition:
+## 7. Phase 1 implementation verification
 
-The Phase 1 entry condition is satisfied by exact source commit `d869eb4`, independent acceptance and PR #8 Ubuntu CI run 250. Per the task scope, no Phase 1 branch, source change or migration has started.
+- [x] Forward-compatible Core/IELTS/V10 openers retain migration ID/digest ledgers and fail closed on future/unknown schema.
+- [x] Core, IELTS and V10 emit the same versioned ActivitySpec, Run, Attempt and Receipt contract.
+- [x] Canonical learning events are append-only, idempotent, replayable and dead-letter poison records.
+- [x] Cross-database lexical workflows use durable intents, idempotent steps, tombstones and startup reconciliation.
+- [x] One CaptureItem state machine and one production Inbox own every capture source and quality gate.
+- [x] Transcript source/revision/segment persistence is immutable and preserves legacy adapters without deleting old caches.
+- [x] Global ErrorRecord/occurrence totals and repair queue are event-derived; coaching correction cannot become success evidence.
+- [x] Today composition is deterministic, due-first, timezone-bound and emits exact ActivitySpec rows.
+- [x] Today execution uses a registry, durable run resume, multi-tab lease and exact canonical receipts for skip/cancel.
+- [x] Focused P1 suites, full unit/integration tests, static checks, build and all production browser suites pass in the implementation workspace.
+- [ ] Clean exact-source `npm run phase1:verify` reproduction after an authorized commit.
+- [ ] Independent package/phase audit and acceptance.
+- [ ] Pushed branch CI on the accepted exact source.
 
-## 7. Next package
+The Phase 1 implementation report is `docs/phase1/IMPLEMENTATION_REPORT.md`. Phase 2 remains blocked because implementation evidence is not independent acceptance.
 
-Current package: none. Phase 0 is complete; stop after PR #8 verification.
+## 8. Next package
 
-Integration branch: `codex/implementation-roadmap` (head of PR #8).
+Current package: Phase 1 independent audit/acceptance.
 
-The cumulative P0-00/P0-07 remediation is independently accepted at exact source commit `d869eb4`, and PR #8 Ubuntu CI is green. P1-00 is eligible but has not started.
+Integration branch: `codex/phase-1-core-unification`.
+
+The cumulative P1 implementation is locally green but intentionally not labeled `ACCEPTED`. Do not unlock Phase 2 until a clean exact commit, independent review and pushed CI evidence are recorded.
