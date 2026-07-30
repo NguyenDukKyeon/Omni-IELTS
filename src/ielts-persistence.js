@@ -127,6 +127,8 @@ export async function upsertErrorRecord(input,reason='ielts-error-upserted'){
     if(!database){const map=memory.get(IELTS_STORE_NAMES.errors);const existing=[...map.values()].find(row=>row.normalizedKey===incoming.normalizedKey);const value=existing?mergeErrorRecords(existing,incoming):incoming;if(existing)map.delete(existing.id);map.set(value.id,value);return value;}
     const transaction=database.transaction(IELTS_STORE_NAMES.errors,'readwrite');const store=transaction.objectStore(IELTS_STORE_NAMES.errors);const existing=await requestResult(store.index('normalizedKey').get(incoming.normalizedKey));const value=existing?mergeErrorRecords(existing,incoming):incoming;store.put(value);await transactionDone(transaction);return value;
   });
+  const { recordErrorOccurrence }=await import('./error-repository.js');
+  await recordErrorOccurrence({...saved,occurrenceId:`ielts:${incoming.id}`,weight:incoming.occurrenceCount,provenance:{...saved.provenance,legacyId:saved.id,source:'ielts'}});
   broadcast(reason,[IELTS_STORE_NAMES.errors]);emit('saved',{storeName:IELTS_STORE_NAMES.errors});return saved;
 }
 
@@ -134,7 +136,13 @@ export async function setErrorStatus(id,status,evidenceAttempt=null){
   const current=await getOne(IELTS_STORE_NAMES.errors,id);if(!current)throw new Error('Không tìm thấy lỗi.');
   const evidenceAttempts=evidenceAttempt?[...(current.evidenceAttempts||[]),structuredClone(evidenceAttempt)].slice(-30):(current.evidenceAttempts||[]);
   const value=createErrorRecord({...current,status,evidenceAttempts,lastResolvedAt:status==='resolved'?Date.now():current.lastResolvedAt,resolutionAttempts:Number(current.resolutionAttempts||0)+(status==='practicing'?1:0),now:current.firstSeenAt});
-  await putOne(IELTS_STORE_NAMES.errors,value);broadcast('ielts-error-status',[IELTS_STORE_NAMES.errors]);return value;
+  await putOne(IELTS_STORE_NAMES.errors,value);
+  if(evidenceAttempt){
+    const { normalizeErrorOccurrence,recordCorrectionEvidence }=await import('./error-repository.js');
+    const normalized=normalizeErrorOccurrence({...value,provenance:{...value.provenance,legacyId:value.id,source:'ielts'}});
+    await recordCorrectionEvidence(normalized.errorRecordId,evidenceAttempt);
+  }
+  broadcast('ielts-error-status',[IELTS_STORE_NAMES.errors]);return value;
 }
 
 export async function saveLexicalSet(input){const result=validateLexicalSet(input);if(!result.valid&&result.value.status==='active')throw new Error(result.errors.join(' '));return saveIeltsRecord(IELTS_STORE_NAMES.lexicalSets,result.value,'ielts-lexical-set-saved');}
@@ -198,14 +206,29 @@ export async function replaceTranscriptSegments(mediaSourceId,input,{durationMs=
     if(!database){const map=memory.get(IELTS_STORE_NAMES.transcriptSegments);for(const[key,value]of map)if(value.mediaSourceId===mediaSourceId)map.delete(key);for(const row of segments)map.set(row.id,clone(row));return;}
     const transaction=database.transaction(IELTS_STORE_NAMES.transcriptSegments,'readwrite');const store=transaction.objectStore(IELTS_STORE_NAMES.transcriptSegments);const existing=await requestResult(store.index('mediaSourceId').getAll(mediaSourceId));for(const row of existing)store.delete(row.id);for(const row of segments)store.put(clone(row));await transactionDone(transaction);
   });
-  broadcast('ielts-transcript-replaced',[IELTS_STORE_NAMES.transcriptSegments]);return{...result,segments};
+  const { persistTranscriptAggregate }=await import('./transcript-aggregate.js');
+  const canonical=await persistTranscriptAggregate({
+    source:{id:`transcript-source:ielts:${mediaSourceId}`,namespace:'private',externalId:mediaSourceId,sourceType:'ielts-media',language:segments[0]?.language||'en',status:'unverified',complete:result.complete===true},
+    segments,
+    provenance:{kind:'ielts-transcript-import',mediaSourceId}
+  });
+  broadcast('ielts-transcript-replaced',[IELTS_STORE_NAMES.transcriptSegments]);
+  return{...result,segments,transcriptSourceId:canonical.source.id,transcriptRevisionId:canonical.revision.id};
 }
 
 export async function listTranscriptSegments(mediaSourceId){
   const database=await openIeltsDatabase();let rows;if(!database)rows=[...memory.get(IELTS_STORE_NAMES.transcriptSegments).values()].filter(row=>row.mediaSourceId===mediaSourceId).map(clone);else{const transaction=database.transaction(IELTS_STORE_NAMES.transcriptSegments,'readonly');rows=await requestResult(transaction.objectStore(IELTS_STORE_NAMES.transcriptSegments).index('mediaSourceId').getAll(mediaSourceId));await transactionDone(transaction);}return rows.sort((a,b)=>Number(a.order||0)-Number(b.order||0)||Number(a.startMs||0)-Number(b.startMs||0));
 }
 
-export async function saveMediaAttempt(input){return saveIeltsRecord(IELTS_STORE_NAMES.mediaAttempts,sanitizeMediaAttempt(input),'ielts-media-attempt');}
+export async function saveMediaAttempt(input){
+  const saved=await saveIeltsRecord(IELTS_STORE_NAMES.mediaAttempts,sanitizeMediaAttempt(input),'ielts-media-attempt');
+  const attempts=Array.isArray(input?.evidenceAttempts)?input.evidenceAttempts:[];
+  if(attempts.length){
+    const { persistLearningEnvelope }=await import('./persistence.js');
+    for(const envelope of attempts)await persistLearningEnvelope(envelope);
+  }
+  return saved;
+}
 
 export async function saveMediaProgress(input){
   const value={id:String(input.id||input.mediaSourceId||''),mediaSourceId:String(input.mediaSourceId||input.id||''),lastSegmentId:String(input.lastSegmentId||''),lastPositionMs:Math.max(0,Number(input.lastPositionMs||0)),completedSegmentIds:[...new Set((Array.isArray(input.completedSegmentIds)?input.completedSegmentIds:[]).map(String))],weakSegmentIds:[...new Set((Array.isArray(input.weakSegmentIds)?input.weakSegmentIds:[]).map(String))],playbackRate:Math.max(.25,Math.min(2,Number(input.playbackRate||1))),sessionMinutes:[10,20,30].includes(Number(input.sessionMinutes))?Number(input.sessionMinutes):20,updatedAt:Date.now()};
