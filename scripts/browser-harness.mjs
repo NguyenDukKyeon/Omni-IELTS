@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, win32 } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
 export const FAILURE_KIND=Object.freeze({
@@ -34,12 +34,12 @@ export function classifyHarnessError(error){
 
 export function browserCandidatePaths({platform=process.platform,env=process.env}={}){
   if(platform==='win32')return [
-    join(env.PROGRAMFILES||'','Google','Chrome','Application','chrome.exe'),
-    join(env['PROGRAMFILES(X86)']||'','Google','Chrome','Application','chrome.exe'),
-    join(env.LOCALAPPDATA||'','Google','Chrome','Application','chrome.exe'),
-    join(env.PROGRAMFILES||'','Microsoft','Edge','Application','msedge.exe'),
-    join(env['PROGRAMFILES(X86)']||'','Microsoft','Edge','Application','msedge.exe'),
-    join(env.LOCALAPPDATA||'','Microsoft','Edge','Application','msedge.exe')
+    win32.join(env.PROGRAMFILES||'','Google','Chrome','Application','chrome.exe'),
+    win32.join(env['PROGRAMFILES(X86)']||'','Google','Chrome','Application','chrome.exe'),
+    win32.join(env.LOCALAPPDATA||'','Google','Chrome','Application','chrome.exe'),
+    win32.join(env.PROGRAMFILES||'','Microsoft','Edge','Application','msedge.exe'),
+    win32.join(env['PROGRAMFILES(X86)']||'','Microsoft','Edge','Application','msedge.exe'),
+    win32.join(env.LOCALAPPDATA||'','Microsoft','Edge','Application','msedge.exe')
   ].filter(Boolean);
   if(platform==='darwin')return [
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
