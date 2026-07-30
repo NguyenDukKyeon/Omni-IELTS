@@ -507,3 +507,23 @@ Decision: the user explicitly authorized `codex/phase-1-core-unification` for th
 Consequences: the phase can be reviewed as one cumulative diff, but Phase 2 remains blocked until an independent reviewer validates the clean exact source and CI. The single-branch topology does not waive migration, rollback, real IndexedDB, desktop/mobile browser or reconciliation evidence.
 
 Revisit when: the branch is split into package pull requests or the acceptance authority requests per-package exact commits. Preserve dependency order and do not infer acceptance from merge topology.
+
+## ADR-038 — Phase 3 absorbs the accepted Phase 2 integration limitations
+
+Status: CONFIRMED
+
+Decision: Phase 2 is accepted at merged `main` commit `cf28153352110cae510c92e2a8f911a6d65497ca` with its recorded production-UI and continuity limitations. The user-authorized Phase 3 branch `codex/phase-3-full-video-workspace` delivers P3-00…P3-06 together and owns the first production integration of resolver cancel/resume/reload, SSE reconnect and canonical transcript activation. This changes delivery topology, not package acceptance: every P3 package remains `REVIEW_REQUIRED` until independent exact-head reproduction.
+
+Consequences: no separate Phase 2 hardening branch is opened and no Phase 0/1 gate is repeated unless this branch changes migration, EvidencePolicy, backup/restore or canonical persistence. Phase 3 may consume existing canonical transcript and evidence APIs, but cannot silently weaken them. Phase 4 and Phase 5 are not unlocked by implementer evidence.
+
+Revisit when: independent Phase 3 review requires a split package remediation or identifies a predecessor regression. Preserve the accepted Phase 2 boundary and exact-head acceptance rule.
+
+## ADR-039 — Video Workspace disclosure, editing and Retell remain fail-closed
+
+Status: CONFIRMED
+
+Decision: one workspace controller owns player, virtual transcript rail, learning mode and active canonical revision. Dictation Strict omits answer text from DOM, ARIA and copy surfaces before submit; Practice may expose a semantic hint only when the assistance trace records it. Transcript edits use optimistic base-revision validation and immutable child revisions. Retell persists learner output but remains coaching-only when no independent evaluator is present.
+
+Consequences: changing mode may deliberately rerender the active sentence, but cannot change sentence identity. A concurrent edit produces `TRANSCRIPT_EDIT_CONFLICT` instead of last-write-wins. No strict or assisted activity in this package bypasses EvidencePolicy, and no Retell score is fabricated. Mobile uses the same controller and canonical revision as desktop.
+
+Revisit when: a qualified independent Retell evaluator, variable-height virtualizer or cross-device transcript synchronization is introduced. Preserve semantic answer omission, assistance provenance and immutable history.

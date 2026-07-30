@@ -42,7 +42,9 @@
     "phase0:gate": "node scripts/phase0-gate.mjs",
     "phase1:verify": "node scripts/phase1-verify.mjs",
     "test:phase2": "node --test tests/caption-resolver-contracts.test.mjs tests/caption-resolver-v2.test.mjs tests/migration-ledger.test.mjs tests/transcript-aggregate.test.mjs tests/backup-registry.test.mjs tests/restore-safety.test.mjs tests/degraded-backup.test.mjs",
-    "phase2:verify": "node scripts/phase2-verify.mjs"
+    "phase2:verify": "node scripts/phase2-verify.mjs",
+    "test:phase3": "node --test tests/phase3-video-workspace.test.mjs tests/video-workspace-static.test.mjs tests/caption-resolver-v2.test.mjs tests/transcript-aggregate.test.mjs tests/v10-evidence.test.mjs",
+    "phase3:verify": "node scripts/phase3-verify.mjs"
   },
   "dependencies": {
     "ts-fsrs": "5.4.1",

@@ -1,6 +1,6 @@
 # VocabMaster — Implementation Status
 
-Last updated: 2026-07-30, Phase 1 independently accepted; Phase 2 P2-00 opened
+Last updated: 2026-07-30, Phase 2 accepted with recorded limitations; Phase 3 implementation ready for independent review
 
 Phase 0 accepted source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
@@ -8,8 +8,10 @@ Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15
 
 Phase 1 acceptance binding: merged PR #9 at `main` commit `9da21e1c3cb34b7372f1b33c541d7442dd0390c9`; source head was `ffe5acc812b6ae50d48833506abe15b3048c0b4b`.
 
-Active implementation branch: codex/phase-2-caption-first-resolver
-Delivery status: `PHASE_1_ACCEPTED / PHASE_2_IN_PROGRESS`
+Phase 2 acceptance binding: merged `main` commit `cf28153352110cae510c92e2a8f911a6d65497ca`; the remaining UI/reconnect/reload integration limitations were explicitly carried into Phase 3.
+
+Active implementation branch: codex/phase-3-full-video-workspace
+Delivery status: `PHASE_2_ACCEPTED / PHASE_3_IMPLEMENTED / REVIEW_REQUIRED`
 
 Scope of this update: Phase 0 remains accepted at exact source commit `d869eb4` with PR #8 Ubuntu CI run 250 green. PR #9 was merged into `main` at `9da21e1`. GitHub Actions CI run 255 (`30533541002`) completed successfully on that exact merge commit. An independent read-only audit reviewed the cumulative 44-file P1 diff, reproduced `npm ci --no-audit --no-fund`, `npm run phase0:gate` (21/21), and `npm run phase1:verify` (22/22, including 233/233 unit/integration and all production browser suites) on clean `main`; no P0/P1 finding remained. P1-00…P1-08 are therefore accepted at `9da21e1` and unlock P2-00.
 
@@ -341,8 +343,8 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 |---|---|---|---|
 | Phase 0 — Containment and Release Safety | ACCEPTED / GREEN | Baseline audit complete | P0-08 accepted at `d869eb4`; PR #8 Ubuntu CI run 250 passed |
 | Phase 1 — Core Product Unification | ACCEPTED / GREEN | P0-08 ACCEPTED | PR #9 merged at `9da21e1`; CI run 255 and independent reproduction passed |
-| Phase 2 — Caption-first Resolver | IN_PROGRESS | P1-05, P1-08 ACCEPTED | P2-00 opened on `codex/phase-2-caption-first-resolver` |
-| Phase 3 — Full-video Workspace | BLOCKED_BY_PHASE_2 | P2-06 ACCEPTED | Not started |
+| Phase 2 — Caption-first Resolver | ACCEPTED / GREEN_WITH_LIMITATIONS | P1-05, P1-08 ACCEPTED | Merged at `cf281533`; accepted limitations are integrated into Phase 3 |
+| Phase 3 — Full-video Workspace | IMPLEMENTED / REVIEW_REQUIRED | P2-06 ACCEPTED | P3-00…P3-06 implemented on `codex/phase-3-full-video-workspace`; independent acceptance pending |
 | Phase 4 — Remote Content Platform | BLOCKED_BY_PHASE_1 | P1 contracts accepted; production activation also needs platform packages | Not started |
 | Phase 5 — ASR/Cloud Fallback | BLOCKED_BY_PHASE_2 | P2-06 and policy approval | Not started |
 | Phase 6 — Content Factory/Scale | BLOCKED_BY_PHASE_4 | P4-10 ACCEPTED | Not started |
@@ -394,25 +396,25 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 | Package | Branch | Dependency | Status |
 |---|---|---|---|
-| P2-00 Resolver contract | codex/phase-2-caption-first-resolver | P1-05, P1-08 | IN_PROGRESS |
-| P2-01 Resolver jobs/SSE | codex/phase-2-caption-first-resolver | P2-00 | PLANNED |
-| P2-02 yt-dlp adapter | codex/phase-2-caption-first-resolver | P2-01 | PLANNED |
-| P2-03 Whole-track cache | codex/phase-2-caption-first-resolver | P2-02 | PLANNED |
-| P2-04 Caption normalizer | codex/phase-2-caption-first-resolver | P2-03 | PLANNED |
-| P2-05 Progressive client | codex/phase-2-caption-first-resolver | P2-01, P2-04 | PLANNED |
-| P2-06 Resolver exit gate | codex/phase-2-caption-first-resolver | P2-05 | PLANNED |
+| P2-00 Resolver contract | main | P1-05, P1-08 | ACCEPTED @ `cf281533` |
+| P2-01 Resolver jobs/SSE | main | P2-00 | ACCEPTED @ `cf281533` |
+| P2-02 yt-dlp adapter | main | P2-01 | ACCEPTED @ `cf281533` |
+| P2-03 Whole-track cache | main | P2-02 | ACCEPTED @ `cf281533` |
+| P2-04 Caption normalizer | main | P2-03 | ACCEPTED @ `cf281533` |
+| P2-05 Progressive client | main | P2-01, P2-04 | ACCEPTED_WITH_UI_LIMITATION @ `cf281533` |
+| P2-06 Resolver exit gate | main | P2-05 | ACCEPTED_WITH_RECORDED_LIMITATIONS @ `cf281533` |
 
 ### Phase 3
 
 | Package | Branch | Dependency | Status |
 |---|---|---|---|
-| P3-00 Workspace shell | codex/p3-00-workspace-shell | P2-06 | PHASE_BLOCKED |
-| P3-01 Progressive rail | codex/p3-01-progressive-rail | P3-00 | PHASE_BLOCKED |
-| P3-02 Visible transcript modes | codex/p3-02-visible-transcript-modes | P3-01 | PHASE_BLOCKED |
-| P3-03 Dictation masking | codex/p3-03-dictation-masking | P3-01, EvidencePolicy | PHASE_BLOCKED |
-| P3-04 Real Retell | codex/p3-04-real-retell | P3-03, event repositories | PHASE_BLOCKED |
-| P3-05 Transcript editor | codex/p3-05-transcript-editor | P1-05, P3-01 | PHASE_BLOCKED |
-| P3-06 Workspace exit gate | codex/p3-06-workspace-exit-gate | P3-02–P3-05 | PHASE_BLOCKED |
+| P3-00 Workspace shell | codex/phase-3-full-video-workspace | P2-06 | IMPLEMENTED / REVIEW_REQUIRED |
+| P3-01 Progressive rail | codex/phase-3-full-video-workspace | P3-00 | IMPLEMENTED / REVIEW_REQUIRED |
+| P3-02 Visible transcript modes | codex/phase-3-full-video-workspace | P3-01 | IMPLEMENTED / REVIEW_REQUIRED |
+| P3-03 Dictation masking | codex/phase-3-full-video-workspace | P3-01, EvidencePolicy | IMPLEMENTED / REVIEW_REQUIRED |
+| P3-04 Real Retell | codex/phase-3-full-video-workspace | P3-03, event repositories | IMPLEMENTED / REVIEW_REQUIRED |
+| P3-05 Transcript editor | codex/phase-3-full-video-workspace | P1-05, P3-01 | IMPLEMENTED / REVIEW_REQUIRED |
+| P3-06 Workspace exit gate | codex/phase-3-full-video-workspace | P3-02–P3-05 | IMPLEMENTED / REVIEW_REQUIRED |
 
 ### Phase 4
 
@@ -500,10 +502,8 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 The Phase 1 implementation report is `docs/phase1/IMPLEMENTATION_REPORT.md` and remains the implementer handoff. This section records the separate acceptance evidence that unlocks Phase 2.
 
-## 8. Next package
+## 8. Next acceptance action
 
-Current package: P2-00 Resolver contract, provider policy and golden corpus.
+Current handoff: independent review of P3-00…P3-06 on the exact pushed head of `codex/phase-3-full-video-workspace`.
 
-Integration branch/PR: `codex/phase-2-caption-first-resolver`.
-
-Phase 2 is unlocked by P1-05/P1-08 acceptance at `9da21e1`. P2 packages remain sequential and each still requires its own focused and cumulative evidence.
+The reviewer must reproduce `phase3:verify`, static check, production build, related production-browser acceptance and the full regression result. Phase 3 stays `REVIEW_REQUIRED`; this implementer report does not unlock Phase 4 or Phase 5.
