@@ -30,11 +30,12 @@ const pkg=JSON.parse(packageText),catalog=JSON.parse(catalogText),lessons=(catal
 
 check('Main mounts v10 runtime',mainSource.includes("import('./v10-runtime.js')")&&mainSource.includes('mountV10Runtime()'));
 check('V10 runtime is outside AI Studio preview',mainSource.indexOf("import('./v10-runtime.js')")>mainSource.indexOf('}else{'));
-check('Server exposes transcript resolver',serverSource.includes("/api/transcript/")&&serverSource.includes('createTranscriptResolverHandler'));
-check('yt-dlp path is subtitle-only',serverSource.includes('transcriptResolver')&&await read('server/transcript-resolver.mjs').then(text=>text.includes('--skip-download')&&!/--extract-audio|bestaudio|ffmpeg/.test(text)));
-const fastProviderIndex=clientTranscript.indexOf("providers=['indexeddb','shared-cache','local-companion','backend-provider']");
-const geminiFallbackIndex=clientTranscript.indexOf('result=await geminiProvider(context)',fastProviderIndex);
-check('Client fast path precedes Gemini fallback',fastProviderIndex>=0&&geminiFallbackIndex>fastProviderIndex);
+const resolverV2=await read('server/caption-resolver-v2.mjs');
+check('Server exposes durable caption resolver',serverSource.includes("/api/transcript/")&&serverSource.includes('createCaptionResolverV2')&&resolverV2.includes('/api/transcript/jobs'));
+check('yt-dlp path is subtitle-only',resolverV2.includes('--skip-download')&&!/--extract-audio|bestaudio|ffmpeg/.test(resolverV2));
+const fastProviderIndex=clientTranscript.indexOf("providers=['indexeddb','shared-cache','backend-provider']");
+const resolverProviderIndex=clientTranscript.indexOf('result=await PROVIDERS[name](context)',fastProviderIndex);
+check('Client uses deterministic caption-first resolver without ASR fallback',fastProviderIndex>=0&&resolverProviderIndex>fastProviderIndex&&!clientTranscript.includes('geminiProvider(context)'));
 check('Transcript is progressive',clientTranscript.includes('firstChunkSeconds=60')&&clientTranscript.includes('continueTranscriptProgressively'));
 check('YouTube sentence loop uses real segment player',videoPlayer.includes("import { YouTubeSegmentPlayer }")&&videoPlayer.includes('player.setSegment')&&ieltsHub.includes('createYoutubeSentencePlayer')&&ieltsHub.includes('openVideoLoop(row)'));
 check('YouTube embed failures are contained',videoPlayer.includes('void ready.catch')&&videoPlayer.includes("host.dataset.status='error'"));
