@@ -1,13 +1,13 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, PR #8 remediation recheck exposed a Today render race
+Last audited: 2026-07-30, cumulative PR #8 remediation independently reaccepted; Ubuntu CI pending
 
-Audited source commit: 67c5a275a450a8b88d2daf54e299538358bf8f00
+Audited source commit: 755bb88519161b981da9d9f954565d8201bdb341
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
 Active implementation branch: codex/implementation-roadmap (PR #8 integration head)
-Scope of this update: Phase 0 was independently accepted on Windows, but PR #8 CI run 248 exposed a host-dependent Windows browser-path construction defect in P0-00. That fix passed the hard gate and independent review. A required pre-push gate on the documentation head then exposed a concurrent Today render/status race in P0-07; Phase 0 is reopened until that product-path race is fixed and the cumulative exact source commit is reaccepted. Phase 1 has not started.
+Scope of this update: Phase 0 was independently accepted on Windows, but PR #8 CI run 248 exposed a host-dependent Windows browser-path construction defect in P0-00. The remediation also closes the P0-07 Today render/status race exposed by the required pre-push gate. The cumulative exact source commit has passed three implementer gates and an independent reviewer gate with no P0/P1. Release authorization remains closed until the pushed PR #8 integration head passes Ubuntu CI. Phase 1 has not started.
 
 ## 1. Provenance status
 
@@ -209,7 +209,7 @@ The uploaded `verification-output` artifact is ID `8747540809`, digest `sha256:2
 
 #### Remediation source evidence
 
-Accepted remediation source commit: `67c5a275a450a8b88d2daf54e299538358bf8f00`.
+Initially accepted portability-remediation source commit: `67c5a275a450a8b88d2daf54e299538358bf8f00`.
 
 | Evidence | Actual result |
 |---|---|
@@ -225,13 +225,34 @@ Accepted remediation source commit: `67c5a275a450a8b88d2daf54e299538358bf8f00`.
 | Independent review | ACCEPTED exact source commit; focused 12/12 and full gate 21/21 in 60.1 s with the same artifact digest, explicit Windows/Linux absolute-path probes, clean diff/worktree/cleanup and no P0/P1 |
 | Stable remediation patch ID | `00d5670cb4a7a9fe45492d8de99bdd9c45bc6d19` from PR #8 pre-remediation head `af663f3` |
 | Migration/rollback | No product data, schema, migration, cleanup or rollback behavior changed; rollback is the single browser-path source commit and does not touch durable stores |
-| Remaining release check | Push the documentation head to PR #8 and require GitHub Ubuntu CI to pass before restoring Phase 0 release authorization |
+| Status at this evidence point | A later required documentation-head gate exposed the separate Today race recorded below, so this exact commit no longer represented the cumulative remediation |
 
 #### Pre-push hardening failure baseline
 
 Exact documentation head `a07be19bbeb4be8be1f5211b4074c037ff895c91` passed gates 1–20, then `npm run phase0:gate` stopped at gate 21 with a `PRODUCT_FAILURE`: the stale Today target status reached `data-kind="error"` but its text was replaced with an empty string before the assertion could read `TODAY_TARGET_STALE`. The gate was not retried. Source inspection shows that `vocab:external-change` starts an unawaited asynchronous `renderPlan()` while the old activity remains clickable; a launch can correctly set the stale-target error on one status node and the concurrent render can then replace that node. The fix must serialize Today renders and make the controlled browser fixture await the completed refresh before launch without weakening the stale-target, no-session or zero-review assertions.
 
 The first full gate on cumulative source commit `4b24a4f675d870614d0749263f0f29ad67512c74` was also discarded: after gates 1–17 passed, Core browser smoke changed the route to Today and immediately clicked `#v10MorePractice` while the new serialized `hashchange` refresh had explicitly set `aria-busy="true"` and disabled the old controls. A disabled button performs no click action, so the unchanged practice-dialog assertion timed out. This is a controlled-fixture readiness defect introduced by the safe busy contract, not evidence that `openPractice()` failed. The fixture must wait for the Today host to report not busy and for the button to be enabled; the dialog assertion and timeout remain unchanged.
+
+#### Cumulative remediation reacceptance
+
+Independently accepted source commit pending Ubuntu confirmation: `755bb88519161b981da9d9f954565d8201bdb341`.
+
+| Evidence | Actual result |
+|---|---|
+| Source remediation | Windows install candidates use host-independent `win32.join`; Today build/refresh/launch and event refresh share one serial queue; pending renders disable stale controls and preserve status across DOM replacement |
+| Controlled browser readiness | Core and Hardening fixtures await the public Today refresh/busy contract before acting; stale-target, no-session, zero-review and practice-dialog assertions and timeouts remain unchanged |
+| `npm run phase0:gate` clean run 1 | PASS 21/21 in 50.9 s |
+| `npm run phase0:gate` clean run 2 | PASS 21/21 in 51.9 s |
+| `npm run phase0:gate` clean run 3 | PASS 21/21 in 51.7 s |
+| Matrix per implementer gate | Restore/rollback 28/28, full suite 191/191, browser harness 12/12, static/audits/build/server/preview and Core/IELTS/V10/Hardening browser suites PASS; 0 failed/skipped/todo |
+| Environment | Windows `10.0.26200` x64; Node `v24.15.0`; Chrome `150.0.7871.188` |
+| Canonical artifact | 26 files, 741650 bytes, SHA-256 `320deca5b672a6801c6aab07c436cdd66b68287c5c74ec69ce87ac329c477f92` on all three runs |
+| Independent reviewer | ACCEPTED exact source commit; browser harness 12/12, Today 4/4, Hardening PASS and full gate 21/21 in 56.2 s with the same artifact digest; clean diff/worktree/cleanup and no P0/P1 |
+| Stable cumulative remediation patch ID | `4b1c7099258f891b19b1ca405060c6f9ffc27a2c` from PR #8 pre-remediation head `af663f3` |
+| Migration/rollback | No DB/store version or durable-data migration. Rollback reverts the browser-path and Today coordination source commits; compatible durable records remain untouched |
+| Remaining release check | Push the documentation head to PR #8 and require GitHub Ubuntu CI to pass before restoring Phase 0 release authorization |
+
+#### Original Phase 0 acceptance evidence (historical)
 
 | Evidence | Actual result |
 |---|---|
@@ -269,7 +290,7 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 
 | Phase | Status | Entry gate | Exit state |
 |---|---|---|---|
-| Phase 0 — Containment and Release Safety | REOPENED / PRODUCT_GATE_RED | Baseline audit complete | P0-07 render race fix and cumulative P0-08 reacceptance required |
+| Phase 0 — Containment and Release Safety | LOCALLY_REACCEPTED / CI_PENDING | Baseline audit complete | Cumulative source accepted; PR #8 Ubuntu CI required |
 | Phase 1 — Core Product Unification | NOT_STARTED / BLOCKED_BY_PHASE_0 | P0-08 ACCEPTED | Not started |
 | Phase 2 — Caption-first Resolver | BLOCKED_BY_PHASE_1 | P1-08 ACCEPTED | Not started |
 | Phase 3 — Full-video Workspace | BLOCKED_BY_PHASE_2 | P2-06 ACCEPTED | Not started |
@@ -405,19 +426,19 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [x] Quick Capture survives submit failure/reload and only one Inbox is visible.
 - [x] Only one Today is visible and every launch preserves exact card/sense/skill/source revision.
 - [x] Browser discovery is host-independent and deterministic; cleanup remains verified and critical assertions cannot skip.
-- [ ] Concurrent Today refresh cannot erase or race a stale-target launch result.
-- [ ] Full phase0:gate passes three consecutive clean runs at one cumulative remediated exact source commit.
-- [ ] Independent reviewer records P0-08 reacceptance at the cumulative remediated exact source commit.
+- [x] Concurrent Today refresh cannot erase or race a stale-target launch result.
+- [x] Full phase0:gate passes three consecutive clean runs at one cumulative remediated exact source commit.
+- [x] Independent reviewer records P0-08 reacceptance at the cumulative remediated exact source commit.
 - [ ] PR #8 GitHub Actions passes on the pushed integration head under Ubuntu.
 
 Phase 1 authorization condition:
 
-The Phase 1 entry condition remains closed until the Today race is fixed, the cumulative source is independently reaccepted and PR #8 GitHub Actions confirms the remediation on Ubuntu. No Phase 1 branch, source change or migration has started.
+The Today race is fixed and the cumulative source is independently reaccepted. The Phase 1 entry condition remains closed until PR #8 GitHub Actions confirms the pushed integration head on Ubuntu. No Phase 1 branch, source change or migration has started.
 
 ## 7. Next package
 
-Current package: P0-07 Today render-race remediation, followed by P0-08 cumulative reacceptance and PR #8 Ubuntu CI confirmation.
+Current package: P0-08 PR #8 Ubuntu CI confirmation.
 
 Integration branch: `codex/implementation-roadmap` (head of PR #8).
 
-The P0-00 portability remediation remains independently accepted at exact commit `67c5a27`, but cumulative release authorization is reopened by the later hardening product-path failure. P1-00 remains blocked and has not started.
+The cumulative P0-00/P0-07 remediation is independently accepted at exact source commit `755bb88`. Phase 0 release authorization and P1-00 remain blocked until the pushed PR #8 integration head passes Ubuntu CI.
