@@ -46,6 +46,12 @@ test('legacy adapters are explicit, unverified and namespace-scoped',()=>{
   assert.equal(legacy.segments.every(row=>row.revisionId===legacy.revision.id),true);
 });
 
+test('an edit preserves complete coverage from the active canonical revision',async()=>{
+  const first=await transcripts.persistTranscriptAggregate({source:{...source,id:'transcript-source:complete-edit',complete:true},segments,createdAt:350},{activate:true});
+  const edited=await transcripts.createChildAndActivate(first.revision.id,[segments[0],{...segments[1],text:'Complete edit.'}],{createdAt:351});
+  assert.equal(edited.revision.coverage.complete,true);
+});
+
 test('concurrent children compare-and-swap one active base and leave one immutable winner',async()=>{
   const first=await transcripts.persistTranscriptAggregate({source:{...source,id:'transcript-source:cas'},segments,createdAt:400},{activate:true});
   const [left,right]=await Promise.allSettled([

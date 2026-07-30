@@ -101,10 +101,12 @@ test('coaching activities never become evidence even with success-shaped input',
 });
 
 test('Practice hint and Dictation reveal traces are canonical and never schedule eligible',()=>{
-  const envelope=buildV10CoachingEnvelope({activityId:'dictation-practice',receiptId:'practice-receipt',activityType:'dictation',sentence:{id:'s',text:'A sentence.',verified:true},sourceId:'source',skill:'listening',result:'correct',learnerOutput:'A sentence.',assistance:{practiceHintExposed:true}});
+  const events=[{type:'hint',at:101},{type:'answer-exposed',at:102},{type:'correction-exposed',at:103}],envelope=buildV10CoachingEnvelope({activityId:'dictation-practice',receiptId:'practice-receipt',activityType:'dictation',sentence:{id:'s',text:'A sentence.',verified:true},sourceId:'source',skill:'listening',result:'correct',learnerOutput:'A sentence.',assistance:{hintUsed:true,answerExposed:true,correctionExposed:true,events}});
   assert.equal(envelope.attempt.assistance.hintUsed,true);
   assert.equal(envelope.attempt.assistance.events.some(event=>event.type==='hint'),true);
   assert.equal(envelope.attempt.assistance.events.some(event=>event.type==='answer-exposed'),true);
   assert.equal(envelope.attempt.assistance.events.some(event=>event.type==='correction-exposed'),true);
   assert.equal(envelope.decision.eligible,false);
+  const unexposed=buildV10CoachingEnvelope({activityId:'dictation-unexposed',receiptId:'unexposed-receipt',activityType:'dictation',sentence:{id:'s',text:'A sentence.',verified:true},sourceId:'source',skill:'listening',result:'correct',learnerOutput:'A sentence.',assistance:{coaching:true}});
+  assert.equal(unexposed.attempt.assistance.events.length,0,'generic builder must not invent UI exposure events');
 });

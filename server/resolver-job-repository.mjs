@@ -5,6 +5,7 @@ import { createResolverJob,resolverError,transitionResolverJob } from '../src/re
 const clone=value=>value==null?value:structuredClone(value);
 const active=job=>['resolving','partial'].includes(job?.status);
 const terminal=job=>['complete','failed','cancelled'].includes(job?.status);
+const claimable=job=>job?.status==='queued'||active(job);
 
 export class ResolverJobRepository {
   constructor({file=resolve(process.env.RESOLVER_DATA_DIR||'.data','resolver-jobs-v2.json'),now=()=>Date.now()}={}){this.file=file;this.now=now;this.loaded=false;this.rows=new Map();this.events=new Map();this.queue=Promise.resolve();}
@@ -15,9 +16,10 @@ export class ResolverJobRepository {
     const next=transitionResolverJob(job,'failed',{now,detail:{error:{code:'RESTART_RECOVERY',message:'Resolver worker không còn hoạt động; job sẽ được thử lại an toàn.',retryable:true}}});
     this.rows.set(job.id,next.job);this.events.set(`resolver-event:${job.id}:${next.event.id}`,next.event);return next.job;
   }
-  reconcile({restart=false}={}){const now=this.now(),changed=[];for(const job of this.rows.values())if(active(job)&&(restart||Number(job.lease?.until||0)<=now))changed.push(this.failForRecovery(job,now));return changed;}
+  reconcile({restart=false}={}){const now=this.now(),changed=[];for(const job of this.rows.values()){if(job.status==='queued'){if(job.lease){this.rows.set(job.id,{...job,lease:null,updatedAt:now});changed.push(this.rows.get(job.id));}continue;}if(active(job)&&(restart||Number(job.lease?.until||0)<=now))changed.push(this.failForRecovery(job,now));}return changed;}
   async reconcileExpired(){return this.serial(async()=>this.reconcile({restart:false}).map(clone));}
   async recoverUnowned(jobId){return this.serial(async()=>{const job=this.rows.get(jobId);if(!active(job))return clone(job)||null;return clone(this.failForRecovery(job));});}
+  async claimForWorker(jobId,owner,ttlMs=60_000){return this.serial(async()=>{this.reconcile({restart:false});const current=this.rows.get(jobId);if(!current||terminal(current))return{job:clone(current)||null,claimed:false};if(!claimable(current))return{job:clone(current),claimed:false};if(active(current))return{job:clone(current),claimed:false};const now=this.now(),result=transitionResolverJob(current,'resolving',{now,detail:{lease:{owner:String(owner),until:now+Math.max(1_000,Number(ttlMs)||60_000)}}});this.rows.set(jobId,result.job);this.events.set(`resolver-event:${jobId}:${result.event.id}`,result.event);return{job:clone(result.job),claimed:true,event:clone(result.event)};});}
   async getOrCreate(request){return this.serial(async()=>{this.reconcile({restart:false});const draft=createResolverJob({request,updatedAt:this.now()});const existing=[...this.rows.values()].find(job=>job.request.requestKey===draft.request.requestKey&&!['failed','cancelled'].includes(job.status));if(existing)return{job:clone(existing),created:false};this.rows.set(draft.id,draft);const event={id:`resolver-event:${draft.id}:0`,jobId:draft.id,sequence:0,type:'queued',at:this.now(),data:{status:'queued'}};this.events.set(event.id,event);return{job:clone(draft),created:true};});}
   async findComplete(request){return this.serial(async()=>{this.reconcile({restart:false});const draft=createResolverJob({request,updatedAt:this.now()});return clone([...this.rows.values()].find(job=>job.request.requestKey===draft.request.requestKey&&job.status==='complete')||null);});}
   async retry(request){return this.serial(async()=>{const draft=createResolverJob({request,nonce:`retry:${this.now()}:${Math.random()}`,updatedAt:this.now()});this.rows.set(draft.id,draft);const event={id:`resolver-event:${draft.id}:0`,jobId:draft.id,sequence:0,type:'queued',at:this.now(),data:{status:'queued',retryOf:request.requestKey}};this.events.set(event.id,event);return{job:clone(draft),created:true,retry:true};});}

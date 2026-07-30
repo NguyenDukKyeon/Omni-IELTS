@@ -43,6 +43,11 @@ test('restart before lease expiry and later access both fail closed instead of r
   }finally{await rm(dir,{recursive:true,force:true});}
 });
 
+test('restart claims a durable queued job through duplicate HTTP POST without duplicating work or terminal events',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'resolver-queued-restart-')),file=join(dir,'jobs.json'),source={url:'https://www.youtube.com/watch?v=abcDEF_1234',language:'en',namespace:'shared'};
+  try{const before=new ResolverJobRepository({file}),queued=await before.getOrCreate(source),restarted=new ResolverJobRepository({file});await withResolver({repository:restarted},async base=>{const [left,right]=await Promise.all([requestJson(base,'/api/transcript/jobs',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(source)}),requestJson(base,'/api/transcript/jobs',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(source)})]);assert.equal(left.body.job.id,queued.job.id);assert.equal(right.body.job.id,queued.job.id);assert.equal(left.body.created,false);assert.equal(right.body.created,false);const complete=await waitForJob(base,queued.job.id,'complete'),events=await restarted.eventsAfter(queued.job.id,0);assert.equal(complete.id,queued.job.id);assert.equal(restarted.rows.size,1);assert.equal(events.filter(event=>event.type==='complete').length,1);assert.equal(events.filter(event=>event.type==='resolving').length,1);});}finally{await rm(dir,{recursive:true,force:true});}
+});
+
 test('yt-dlp adapter does not interpolate hostile input or disclose stderr credentials',async()=>{
   let observed;const fake=(_command,args,options)=>{observed={args,options};const child={pid:1,stdout:{on(){}},stderr:{on(){}},on(event,listener){if(event==='close')queueMicrotask(()=>listener(0));}};return child;};
   await runYtDlp('yt-dlp',['--dump-single-json','https://www.youtube.com/watch?v=abcDEF_1234;$(whoami)'],{spawnImpl:fake});

@@ -148,7 +148,7 @@ async function legacyReviseTranscript(revisionId,segments,{provenance={},created
 export async function createChildAndActivate(expectedActiveRevisionId,segments,{provenance={},createdAt=Date.now()}={}){
   const previous=await getTranscriptAggregate(expectedActiveRevisionId);
   if(!previous)throw typedError('TRANSCRIPT_REVISION_NOT_FOUND','Transcript revision không tồn tại.',{revisionId:expectedActiveRevisionId});
-  const aggregate=createTranscriptAggregate({source:{...previous.source,status:'edited'},segments,parentRevisionId:previous.revision.id,provenance:{...clone(provenance),kind:'user-edit'},createdAt});
+  const aggregate=createTranscriptAggregate({source:{...previous.source,status:'edited',complete:previous.revision.coverage?.complete===true},segments,parentRevisionId:previous.revision.id,provenance:{...clone(provenance),kind:'user-edit'},createdAt});
   const names=[V10_STORES.transcriptSources,V10_STORES.transcriptRevisions,V10_STORES.canonicalTranscriptSegments];
   return queueAggregateWrite(()=>transactV10(names,async({stores,memory,requestResult})=>{
     const get=async(name,key)=>memory?clone(memory[name].get(key)):requestResult(stores[name].get(key));
