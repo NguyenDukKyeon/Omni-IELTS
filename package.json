@@ -30,9 +30,17 @@
     "test:today": "node --test tests/today-containment.test.mjs",
     "test:p1-migrations": "node --test tests/migration-ledger.test.mjs",
     "test:p1-contracts": "node --test tests/learning-contracts.test.mjs",
+    "test:p1-events": "node --test tests/event-repository.test.mjs",
+    "test:p1-reconciler": "node --test tests/cross-db-reconciler.test.mjs",
+    "test:p1-capture": "node --test tests/unified-capture-domain.test.mjs tests/capture-containment.test.mjs tests/capture-degraded.test.mjs",
+    "test:p1-transcripts": "node --test tests/transcript-aggregate.test.mjs tests/v10-transcript.test.mjs tests/ielts-persistence.test.mjs",
+    "test:p1-errors": "node --test tests/error-repository.test.mjs tests/ielts-evidence.test.mjs",
+    "test:p1-today": "node --test tests/today-composer.test.mjs tests/today-containment.test.mjs",
+    "test:p1-runner": "node --test tests/today-runner.test.mjs tests/today-containment.test.mjs tests/v10-primary-ia.test.mjs",
     "test:phase0-release": "node --test tests/phase0-release-gate.test.mjs",
     "phase0:harness": "node scripts/phase0-gate.mjs --harness",
-    "phase0:gate": "node scripts/phase0-gate.mjs"
+    "phase0:gate": "node scripts/phase0-gate.mjs",
+    "phase1:verify": "node scripts/phase1-verify.mjs"
   },
   "dependencies": {
     "ts-fsrs": "5.4.1",
