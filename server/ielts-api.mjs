@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto';
 import {
   parseYouTubeUrl,
-  validateTranscriptSegments,
   validateLabItem,
   validateReadingPassage,
   validateRetellFeedback,
@@ -12,13 +11,6 @@ import {
 const requests=new Map();
 const cache=new Map();
 
-const TRANSCRIPT_SCHEMA={
-  type:'object',
-  properties:{
-    title:{type:'string'},language:{type:'string'},durationSeconds:{type:'number'},
-    segments:{type:'array',maxItems:800,items:{type:'object',properties:{startMs:{type:'number'},endMs:{type:'number'},text:{type:'string'},speaker:{type:'string'},confidence:{type:'number'}},required:['startMs','endMs','text']}}
-  },required:['title','language','durationSeconds','segments']
-};
 const PARAPHRASE_SCHEMA={
   type:'object',properties:{item:{type:'object',properties:{prompt:{type:'string'},context:{type:'string'},options:{type:'array',minItems:3,maxItems:4,items:{type:'object',properties:{id:{type:'string'},text:{type:'string'},correct:{type:'boolean'},rationale:{type:'string'}},required:['id','text','correct','rationale']}}},required:['prompt','context','options']}},required:['item']
 };
@@ -54,15 +46,6 @@ async function generateStructured(req,{parts,schema,kind,models,defaultModel,tim
   }finally{clearTimeout(timer);}
 }
 
-function normalizeTranscriptResponse(data,{clipStartSeconds,clipEndSeconds,mediaSourceId}){
-  const clipStartMs=Math.round(clipStartSeconds*1000);const clipEndMs=Math.round(clipEndSeconds*1000);const clipDurationMs=clipEndMs-clipStartMs;
-  let rows=Array.isArray(data.segments)?data.segments:[];const maxEnd=Math.max(0,...rows.map(row=>Number(row?.endMs||0)));
-  if(clipStartMs>0&&maxEnd<=clipDurationMs+2000)rows=rows.map(row=>({...row,startMs:Number(row.startMs||0)+clipStartMs,endMs:Number(row.endMs||0)+clipStartMs}));
-  rows=rows.map((row,index)=>({id:`${mediaSourceId}:segment:${index+1}`,mediaSourceId,order:index,startMs:Number(row.startMs||0),endMs:Number(row.endMs||0),text:clean(row.text,2500),speaker:clean(row.speaker,100)||null,confidence:Number.isFinite(Number(row.confidence))?Math.max(0,Math.min(1,Number(row.confidence))):null,confidenceSource:'model-estimate',status:'needs-review',userCorrected:false,language:clean(data.language,30)||'en'}));
-  const validation=validateTranscriptSegments(rows,{durationMs:clipEndMs});if(!validation.valid)throw new Error(`Transcript không vượt qua validation: ${validation.errors.join(' ')}`);
-  return{title:clean(data.title,300)||'YouTube video',language:clean(data.language,30)||'en',durationSeconds:Math.max(clipEndSeconds,Number(data.durationSeconds||0)),segments:validation.segments,warnings:validation.warnings};
-}
-
 export function createIeltsApiHandler({securityHeaders,aiModels,defaultAiModel}){
   const models=aiModels instanceof Set?aiModels:new Set(aiModels||[]);const defaultModel=defaultAiModel||[...models][0]||'gemini-3.5-flash';
   const json=(res,status,data)=>{res.writeHead(status,{...securityHeaders('application/json; charset=utf-8'),'cache-control':'no-store'});res.end(JSON.stringify(data));};
@@ -72,12 +55,8 @@ export function createIeltsApiHandler({securityHeaders,aiModels,defaultAiModel})
     try{
       assertSameOrigin(req);const body=await readJson(req,120_000);
       if(path==='/api/ielts/transcript'){
-        const parsed=parseYouTubeUrl(body.url);if(!parsed.valid)return json(res,400,{error:parsed.error});
-        const startSeconds=Math.max(0,Number(body.startSeconds??parsed.startSeconds??0));const requestedMinutes=Math.max(1,Math.min(20,Number(body.minutes||20)));const endSeconds=Math.max(startSeconds+30,Math.min(startSeconds+requestedMinutes*60,Number(body.endSeconds||startSeconds+requestedMinutes*60)));
-        const mediaSourceId=clean(body.mediaSourceId,180)||`youtube:${parsed.videoId}`;
-        const prompt=`Transcribe the spoken English in this public YouTube clip. Return sentence-level segments suitable for language dictation. Timestamps MUST be absolute milliseconds from the beginning of the original YouTube video, not relative to the clip. Preserve contractions and meaningful punctuation. Exclude music-only or silence. Prefer segments of 3–20 seconds and split long speech at natural thought groups. Language requested: ${JSON.stringify(clean(body.language,30)||'en')}. Never invent speech that is not audible. Confidence is only a rough model estimate from 0 to 1.`;
-        const parts=[{fileData:{fileUri:parsed.canonicalUrl,mimeType:'video/*'},videoMetadata:{startOffset:`${startSeconds}s`,endOffset:`${endSeconds}s`}},{text:prompt}];
-        const result=await generateStructured(req,{parts,schema:TRANSCRIPT_SCHEMA,kind:'transcript',models,defaultModel,timeout:120_000,useCache:true});const normalized=normalizeTranscriptResponse(result.data,{clipStartSeconds:startSeconds,clipEndSeconds:endSeconds,mediaSourceId});return json(res,200,{...normalized,model:result.model,cached:result.cached,videoId:parsed.videoId,canonicalUrl:parsed.canonicalUrl,clip:{startSeconds,endSeconds},previewFeature:true});
+        const checked=parseYouTubeUrl(body.url);if(!checked.valid)return json(res,400,{error:checked.error});
+        return json(res,409,{error:'Cloud transcript moved to the Phase 5 resolver and requires explicit versioned consent; client API keys are not accepted for ASR.'});
       }
       if(path==='/api/ielts/paraphrase-draft'){
         const sourceText=clean(body.sourceText,1800),context=clean(body.context,2500),kind=body.kind==='distractor'?'distractor':'paraphrase';if(sourceText.length<8)return json(res,400,{error:'Câu nguồn quá ngắn.'});

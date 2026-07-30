@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [domain,evidencePolicy,persistence,ui,todayPlanner,ieltsHub,runtimeGuard,content,player,api,server,main,sw,css,packageJson]=await Promise.all([
+const [domain,evidencePolicy,persistence,ui,todayPlanner,ieltsHub,runtimeGuard,content,player,api,resolver,geminiProvider,fallbackPolicy,server,main,sw,css,packageJson]=await Promise.all([
   readFile(new URL('../src/ielts-domain.js',import.meta.url),'utf8'),
   readFile(new URL('../src/evidence-policy.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-persistence.js',import.meta.url),'utf8'),
@@ -12,6 +12,9 @@ const [domain,evidencePolicy,persistence,ui,todayPlanner,ieltsHub,runtimeGuard,c
   readFile(new URL('../src/ielts-content.js',import.meta.url),'utf8'),
   readFile(new URL('../src/ielts-media-player.js',import.meta.url),'utf8'),
   readFile(new URL('../server/ielts-api.mjs',import.meta.url),'utf8'),
+  readFile(new URL('../src/transcript-resolver-v2.js',import.meta.url),'utf8'),
+  readFile(new URL('../server/gemini-asr-provider.mjs',import.meta.url),'utf8'),
+  readFile(new URL('../src/asr-fallback-policy.js',import.meta.url),'utf8'),
   readFile(new URL('../server/server.mjs',import.meta.url),'utf8'),
   readFile(new URL('../src/main.js',import.meta.url),'utf8'),
   readFile(new URL('../public/sw.js',import.meta.url),'utf8'),
@@ -75,10 +78,12 @@ check('Phase 4: Reading requires passage, attempts, evidence and rationales',()=
   assert.ok(ui.includes('captureReadingCard'),'Reading to Library flow missing');
 });
 
-check('Phase 5: Media URL, auto transcript, player, editor, attempts and progress are real',()=>{
+check('Phase 5: Media URL, caption-first fallback, player, editor, attempts and progress are real',()=>{
   assert.ok(domain.includes('parseYouTubeUrl'),'YouTube URL parser missing');
-  assert.ok(api.includes('fileData')&&api.includes('videoMetadata')&&api.includes('/api/ielts/transcript'),'Direct URL transcript route missing');
-  assert.ok(api.includes('startOffset')&&api.includes('endOffset'),'20-minute clip metadata missing');
+  assert.ok(api.includes('/api/ielts/transcript')&&api.includes('requires explicit versioned consent'),'Legacy automatic cloud route does not fail closed');
+  assert.ok(geminiProvider.includes('fileData')&&geminiProvider.includes('videoMetadata')&&geminiProvider.includes('validateGeminiFallbackRequest'),'Explicit Gemini fallback adapter missing');
+  assert.ok(geminiProvider.includes('startOffset')&&geminiProvider.includes('endOffset')&&fallbackPolicy.includes('maxDurationSeconds'),'20-minute consented clip metadata missing');
+  assert.ok(resolver.indexOf('resolveTranscriptFast')<resolver.indexOf('startResolverFallback(captionError.jobId'),'Caption is not ordered before ASR fallback');
   assert.ok(player.includes('enablejsapi')&&player.includes('seekTo')&&player.includes('getCurrentTime'),'A–B controllable iframe missing');
   assert.ok(ui.includes('splitTranscriptSegment')&&ui.includes('mergeTranscriptSegments'),'Transcript editor split/merge missing');
   assert.ok(ui.includes('saveMediaAttempt')&&ui.includes('saveMediaProgress'),'Media attempt/progress persistence missing');

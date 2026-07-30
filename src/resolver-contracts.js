@@ -1,9 +1,10 @@
 import { learningContractDigest } from './learning-contracts.js';
+import { isSharedPublicEligible,sanitizeFallbackRequest } from './asr-fallback-policy.js';
 
 export const RESOLVER_CONTRACT_VERSION=2;
 export const RESOLVER_JOB_STATES=Object.freeze(['queued','resolving','partial','complete','failed','cancelled']);
 export const RESOLVER_EVENT_TYPES=Object.freeze(['queued','resolving','metadata','artifact','partial','complete','failed','cancelled']);
-export const RESOLVER_ERROR_CODES=Object.freeze(['INVALID_SOURCE','PRIVATE_VIDEO','AGE_RESTRICTED','DELETED','NO_CAPTION','RATE_LIMITED','TIMEOUT','YTDLP_UNAVAILABLE','TRACK_INVALID','ARTIFACT_CORRUPT','CANCELLED','RESTART_RECOVERY','UNKNOWN']);
+export const RESOLVER_ERROR_CODES=Object.freeze(['INVALID_SOURCE','PRIVATE_VIDEO','AGE_RESTRICTED','DELETED','NO_CAPTION','RATE_LIMITED','TIMEOUT','YTDLP_UNAVAILABLE','TRACK_INVALID','ARTIFACT_CORRUPT','CANCELLED','RESTART_RECOVERY','CONSENT_REQUIRED','RIGHTS_INELIGIBLE','LOCAL_COMPANION_UNAVAILABLE','MODEL_UNAVAILABLE','CLOUD_UNAVAILABLE','COST_CAP','MEDIA_LIMIT','PROCESS_FAILED','IMPORT_INVALID','UNKNOWN']);
 
 const clean=(value,max=1600)=>String(value??'').trim().replace(/\s+/g,' ').slice(0,max);
 export const resolverError=(code,message,detail={})=>Object.assign(new Error(message),{code:RESOLVER_ERROR_CODES.includes(code)?code:'UNKNOWN',retryable:['RATE_LIMITED','TIMEOUT','YTDLP_UNAVAILABLE','RESTART_RECOVERY'].includes(code),...detail});
@@ -23,9 +24,13 @@ export function parseYouTubeSource(input=''){
 export function normalizeResolverRequest(input={}){
   const source=parseYouTubeSource(input.url||input.videoId||'');
   const language=clean(input.language||'en',32).replace('_','-')||'en';
-  const namespace=input.namespace==='private'?'private':'shared';
+  const sharing=input.sharing&&typeof input.sharing==='object'?input.sharing:{};
+  const namespace=input.namespace==='shared'&&isSharedPublicEligible({...sharing,explicitShareOptIn:true})?'shared':'private';
+  if(input.namespace==='shared'&&namespace!=='shared')throw resolverError('RIGHTS_INELIGIBLE','Shared-public cache requires a public, no-auth, no-cookie, rights-eligible source and explicit opt-in.');
   if(namespace==='shared'&&input.privateArtifact===true)throw resolverError('INVALID_SOURCE','Private artifact không thể vào shared resolver cache.');
-  return Object.freeze({version:RESOLVER_CONTRACT_VERSION,source,language,namespace,requestKey:`resolver:${learningContractDigest({sourceId:source.sourceId,language,namespace,contract:RESOLVER_CONTRACT_VERSION})}`,requestedAt:Number(input.requestedAt||Date.now())});
+  const fallback=sanitizeFallbackRequest(input.fallback);
+  const sourcePolicy={visibility:clean(sharing.visibility||'unknown',40),requiresAuth:sharing.requiresAuth===false?false:true,cookiesUsed:sharing.cookiesUsed===false?false:true,rights:clean(sharing.rights||'unknown',40)};
+  return Object.freeze({version:RESOLVER_CONTRACT_VERSION,source,sourcePolicy,language,namespace,fallback,requestKey:`resolver:${learningContractDigest({sourceId:source.sourceId,sourcePolicy,language,namespace,fallback,contract:RESOLVER_CONTRACT_VERSION})}`,requestedAt:Number(input.requestedAt||Date.now())});
 }
 
 export function createResolverJob(input={}){

@@ -90,6 +90,10 @@ jobs:
         if: github.event_name == 'pull_request' || github.ref == 'refs/heads/codex/phase-4-remote-content-platform'
         timeout-minutes: 8
         run: npm run phase4:verify
+      - name: Run Phase 5 exact-head verification
+        if: github.event_name == 'pull_request' && github.head_ref == 'codex/phase-5-asr-cloud-fallback'
+        timeout-minutes: 8
+        run: npm run phase5:verify
       - run: npm run test:serve
       - run: npm run test:preview
       - name: Run browser interaction smoke

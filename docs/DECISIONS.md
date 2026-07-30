@@ -603,3 +603,55 @@ rights/review records are approved. Preserve the public-key/private-key
 boundary, immutable address semantics, weekly defect-review ordering and
 default-deny publication gate. Phase 5 ASR/cloud fallback and Phase 6 automated
 content factory remain outside this decision.
+
+## ADR-042 — Phase 5 is caption-first, private by default and capability-honest
+
+Status: PROPOSED / REVIEW_REQUIRED
+
+Decision: the user explicitly authorized P5-00 through P5-05 on one cumulative
+branch from `main` baseline `fc6057fa66c510b0cd12a7fb9e1e74a6379b4225`.
+This uses the accepted P2-06 durable resolver entry gate and does not accept or
+modify Phase 4 rights and human-review records. The canonical provider order
+always attempts the existing caption resolver before any ASR path.
+
+Local ASR is a desktop companion capability bound to loopback, authenticated by
+a pairing token and restricted to allowlisted origins. It receives only a
+canonical public YouTube source after explicit rights/no-auth/no-cookie checks,
+owns every process argument and temporary path, emits progressive private
+unverified batches into the existing ResolverJob, and deletes task media on
+success, error or cancellation. Models are optional reconstructable device
+cache and are never auto-downloaded or exported.
+
+Gemini is disabled by default. It requires a current versioned consent receipt
+covering data transfer, provider retention and possible cost, a server-side
+credential, and the same public/no-auth/no-cookie/rights-eligible source
+contract. The adapter sends the public media URL directly, creates no uploaded
+temporary provider file, permits at most one billable request with one 429
+retry, and stores output only as a private unverified canonical transcript
+revision. Client-supplied ASR credentials and the legacy automatic cloud
+transcript route fail closed.
+
+Mobile never advertises the desktop companion. It retains caption, explicitly
+consented Gemini when provisioned, and strict SRT/VTT/text import recovery.
+Import rejects malformed, overlapping and duplicate timed cues; timingless text
+gets deterministic local timing. Every import uses the existing Transcript
+aggregate as private/unverified data. No parallel transcript or resolver-job
+repository and no EvidencePolicy exception are introduced.
+
+Migration is additive: Phase 5 preferences and consent live in existing V10
+metadata, range checkpoints live in existing resolver jobs, and provider/import
+outputs use existing transcript sources, immutable revisions and segments.
+Full backup preserves consent, settings, imports and checkpoints while omitting
+credentials, models and raw media. Rollback disables Local and Gemini adapters,
+ignores additive fields and preserves already-created private transcript
+revisions; it never lowers an IndexedDB version or deletes learner data.
+
+Consequences: deterministic fake binaries/providers are the CI authority for
+control flow, consent, cost, retry, cleanup and persistence. They are not
+evidence of live Whisper accuracy, device performance, Gemini availability or
+provider quality. Live smoke is an explicit provisioning-dependent review item.
+Phase 5 remains `REVIEW_REQUIRED`; Phase 6 and Phase 7 are not authorized.
+
+Revisit when: a reviewed mobile on-device ASR, a different approved server
+provider, changed Gemini retention/billing terms or private/authenticated media
+support materially changes the capability, privacy, rights or cost boundary.

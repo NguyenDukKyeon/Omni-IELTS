@@ -47,7 +47,15 @@
     "phase3:verify": "node scripts/phase3-verify.mjs",
     "test:phase4": "node --test tests/phase4-content-contracts.test.mjs tests/phase4-catalog-trust.test.mjs tests/phase4-pack-installer.test.mjs tests/phase4-pack-lease.test.mjs tests/phase4-content-lifecycle.test.mjs tests/phase4-content-validation.test.mjs tests/phase4-backup-restore.test.mjs tests/migration-ledger.test.mjs",
     "test:phase4-browser": "node scripts/phase4-browser-smoke.mjs",
-    "phase4:verify": "node scripts/phase4-verify.mjs"
+    "phase4:verify": "node scripts/phase4-verify.mjs",
+    "test:p5-policy": "node --test tests/phase5-policy.test.mjs",
+    "test:p5-companion": "node --test tests/phase5-local-companion.test.mjs",
+    "test:p5-local-asr": "node --test tests/phase5-local-asr.test.mjs",
+    "test:p5-resume": "node --test tests/phase5-local-asr.test.mjs tests/phase5-resolver-fallback.test.mjs",
+    "test:p5-gemini": "node --test tests/phase5-gemini.test.mjs tests/ielts-api.test.mjs",
+    "test:phase5": "node --test tests/phase5-policy.test.mjs tests/phase5-local-companion.test.mjs tests/phase5-local-asr.test.mjs tests/phase5-resolver-fallback.test.mjs tests/phase5-gemini.test.mjs tests/phase5-import.test.mjs tests/phase5-ui.test.mjs tests/phase5-backup.test.mjs tests/ielts-api.test.mjs tests/caption-resolver-v2.test.mjs",
+    "test:phase5-browser": "node scripts/phase5-browser-smoke.mjs",
+    "phase5:verify": "node scripts/phase5-verify.mjs"
   },
   "dependencies": {
     "ts-fsrs": "5.4.1",

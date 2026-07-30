@@ -1,5 +1,6 @@
 import { createYoutubeSentencePlayer } from './youtube-sentence-player.js';
 import { getTranscriptAggregate,createChildAndActivate } from './transcript-aggregate.js';
+import { phase5RecoveryMessage,phase5RequestPolicy } from './phase5-fallback-ui.js';
 
 const MAX_FULL_VIDEO_SECONDS=4*60*60;
 const RESTORE_KEY='vocab-master:phase3-video-workspace';
@@ -74,12 +75,12 @@ export function applyTranscriptEdit(segments,index,{text,startMs,endMs,action='u
   return rows;
 }
 
-async function legacyLoadWholeTranscript({url,startSeconds=0,onProgress=()=>{},signal=null,resumeJobId=null}={}){
-  const resolver=globalThis.VocabMasterTranscriptResolver;if(!resolver?.resolve||!resolver?.continue)throw new Error('Transcript Resolver chưa sẵn sàng.');
+async function legacyLoadWholeTranscript({url,startSeconds=0,onProgress=()=>{},signal=null,resumeJobId=null,policy={},sharing=null}={}){
+  const resolver=globalThis.VocabMasterTranscriptResolver,resolve=resolver?.resolveWithFallback||resolver?.resolve;if(!resolve||!resolver?.continue)throw new Error('Transcript Resolver chưa sẵn sàng.');
   const videoId=resolver.parseVideoId(url);if(!videoId)throw new Error('URL YouTube không hợp lệ.');
   if(!resumeJobId){const cached=await resolver.list(videoId).catch(()=>[]),completeCached=cached.find(row=>row.complete&&row.segments?.length);if(completeCached){onProgress({stage:'complete',segments:completeCached.segments.length,durationSeconds:completeCached.durationSeconds,cached:true});return{...completeCached,segments:preparePracticeSegments([completeCached])};}}
   onProgress({stage:'first'});
-  const first=await resolver.resolve({url,startSeconds,firstChunkSeconds:180,providers:['indexeddb','shared-cache','backend-provider'],signal,resumeJobId,onProgress:event=>onProgress({stage:'resolver',...event})});
+  const first=await resolve({url,startSeconds,firstChunkSeconds:180,providers:['indexeddb','shared-cache','backend-provider'],policy,sharing,signal,resumeJobId,onProgress:event=>onProgress({stage:'resolver',...event})});
   const durationSeconds=Math.min(MAX_FULL_VIDEO_SECONDS,Math.max(0,Number(first.durationSeconds||first.metadata?.durationSeconds||0))),chunks=[first],firstEnd=Math.max(startSeconds,Number(first.clip?.endSeconds||durationSeconds||startSeconds+180));
   if(!first.complete&&durationSeconds>firstEnd+1){onProgress({stage:'remaining',durationSeconds,loadedSeconds:firstEnd-startSeconds,segments:first.segments.length});try{const more=await resolver.continue({url,startSeconds:firstEnd,totalSeconds:durationSeconds-firstEnd,chunkSeconds:180,onChunk:(row,completed)=>onProgress({stage:'remaining',durationSeconds,loadedSeconds:firstEnd-startSeconds+completed.reduce((sum,item)=>sum+Math.max(0,Number(item.clip?.endSeconds||0)-Number(item.clip?.startSeconds||0)),0),segments:first.segments.length+completed.reduce((sum,item)=>sum+(item.segments?.length||0),0)})});chunks.push(...more);}catch(error){if(signal?.aborted)throw error;console.warn('[video workspace] progressive transcript partial',error);}}
   const segments=preparePracticeSegments(chunks),lastEnd=Math.max(0,...segments.map(row=>Number(row.endMs||0)/1000)),complete=Boolean(first.complete||(durationSeconds&&lastEnd>=durationSeconds-2));onProgress({stage:'complete',segments:segments.length,durationSeconds,complete});
@@ -175,11 +176,12 @@ function progressMarkup(progress){
   return'<p>● Đang tìm caption…</p>';
 }
 
-async function startResolver({url,startSeconds=0,resumeJobId=null,form=null}){
-  activeResolver?.controller?.abort();const controller=new AbortController();activeResolver={controller,jobId:resumeJobId,url,startSeconds,form};if(form)setFormBusy(form,true);
+async function startResolver({url,startSeconds=0,resumeJobId=null,form=null,policy=null,sharing=null}){
+  if(!policy){const request=await phase5RequestPolicy(document.getElementById('v10IeltsHubDialog')||document);policy=request.policy;sharing=request.sharing;}
+  activeResolver?.controller?.abort();const controller=new AbortController();activeResolver={controller,jobId:resumeJobId,url,startSeconds,form,policy,sharing};if(form)setFormBusy(form,true);
   setHubStatus('<p>● Đang tìm caption-first transcript…</p><p>Thông thường mất khoảng 10–30 giây với video có caption.</p><button class="secondary-button" data-video-cancel-job>Hủy</button>');
-  try{const row=await loadWholeTranscript({url,startSeconds,resumeJobId,signal:controller.signal,onProgress:progress=>{if(progress.jobId)activeResolver.jobId=progress.jobId;setHubStatus(progressMarkup(progress));}});activeResolver=null;await openVideoWorkspace(row);}
-  catch(error){if(error.name==='AbortError'||error.code==='CANCELLED')setHubStatus('<p>Đã hủy resolver. Bạn có thể tiếp tục từ job đã lưu hoặc thử lại.</p>');else setHubStatus(`<p class="error">${escape(error.message)}</p><button class="secondary-button" data-video-retry-resolver>Thử lại</button>`);}
+  try{const row=await loadWholeTranscript({url,startSeconds,resumeJobId,policy,sharing,signal:controller.signal,onProgress:progress=>{if(progress.jobId)activeResolver.jobId=progress.jobId;setHubStatus(progressMarkup(progress));}});activeResolver=null;await openVideoWorkspace(row);}
+  catch(error){if(error.name==='AbortError'||error.code==='CANCELLED')setHubStatus('<p>Đã hủy resolver. Bạn có thể tiếp tục từ job đã lưu hoặc thử lại.</p>');else setHubStatus(`<p class="error">${escape(error.message)}</p><p>${escape(phase5RecoveryMessage(error))}</p><button class="secondary-button" data-video-retry-resolver>Thử lại</button>`);}
   finally{if(form)setFormBusy(form,false);}
 }
 
