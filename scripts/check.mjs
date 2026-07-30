@@ -24,9 +24,11 @@ const [html,css,experience,settingsCss,app,audio,main,learning,progress,fsrsAdap
   readFile(new URL('./browser-smoke.mjs',import.meta.url),'utf8'),
   readFile(new URL('./browser-smoke-entry.mjs',import.meta.url),'utf8')
 ]);
-const[restoreCoordinator,storageLock]=await Promise.all([
+const[restoreCoordinator,storageLock,captureInbox,unifiedCapture]=await Promise.all([
   readFile(new URL('../src/ielts-backup.js',import.meta.url),'utf8'),
-  readFile(new URL('../src/storage-lock.js',import.meta.url),'utf8')
+  readFile(new URL('../src/storage-lock.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/capture-inbox.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/unified-capture-v2.js',import.meta.url),'utf8')
 ]);
 
 const requiredIds=[
@@ -124,6 +126,10 @@ assert.ok(persistence.includes('restoreBackupDocument'),'Validated restore path 
 assert.ok(persistence.includes("restoreCoreBackupSafely}=await import('./ielts-backup.js')"),'Core restore bypasses the cross-database coordinator');
 assert.ok(restoreCoordinator.includes('withExclusiveStorageLock')&&restoreCoordinator.includes('reopenAndVerify'),'Restore coordinator must hold an exclusive lock through durable read-back');
 assert.ok(storageLock.includes("request(LOCK_NAME,{mode}")&&storageLock.includes("mode:'shared'"),'Durable writes must use the deterministic shared/exclusive storage lock');
+assert.ok(captureInbox.includes("panel.dataset.captureEntry='canonical'")&&captureInbox.includes('data-capture-inbox="canonical"'),'Canonical Capture/Inbox entry point is missing');
+assert.doesNotMatch(unifiedCapture,/v10CapturePanel|insertAdjacentElement\(['"]afterend/,'Legacy V10 must not mount a second Capture Inbox implementation');
+assert.ok(unifiedCapture.includes('configureCaptureInbox')&&unifiedCapture.includes('withExclusiveStorageLock'),'V10 Capture must reuse the canonical Inbox and migrate under the storage lock');
+assert.ok(unifiedCapture.indexOf('await reopenV10Database')<unifiedCapture.indexOf('await deleteCaptureDraft'),'Capture migration must reopen the target before deleting the durable source');
 assert.ok(persistence.includes('persistReviewResult'),'Card and review event atomic persistence path missing');
 assert.ok(persistence.includes('writeQueue'),'Serialized write queue missing');
 assert.doesNotMatch(persistence,/Storage\.prototype\.(setItem|removeItem)/,'Storage prototype monkey-patching must be removed');

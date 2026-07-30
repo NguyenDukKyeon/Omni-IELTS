@@ -86,9 +86,9 @@ export async function listV10Records(storeName,{index=null,query=null,sortBy='up
 
 export async function getV10Record(storeName,key){return withStore(assertStore(storeName),'readonly',async(store,map)=>map?clone(map.get(key)):requestResult(store.get(key)));}
 
-export async function putV10Record(storeName,value,reason='v10-record-saved'){
+export async function putV10Record(storeName,value,reason='v10-record-saved',{restoreToken=null}={}){
   const name=assertStore(storeName);const row={...clone(value),updatedAt:Number(value?.updatedAt||Date.now())};const key=name===V10_STORES.meta?row.key:row.id;if(!key)throw new Error(`${name} thiếu khóa.`);
-  return enqueue(async()=>{await withStore(name,'readwrite',async(store,map)=>{if(map)map.set(key,clone(row));else store.put(clone(row));});broadcast(reason,[name]);return clone(row);});
+  return enqueue(async()=>{await withStore(name,'readwrite',async(store,map)=>{if(map)map.set(key,clone(row));else store.put(clone(row));});broadcast(reason,[name]);return clone(row);},{restoreToken});
 }
 
 export async function putV10Records(storeName,values,reason='v10-records-saved'){

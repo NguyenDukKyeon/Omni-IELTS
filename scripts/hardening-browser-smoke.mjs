@@ -111,7 +111,7 @@ async function main(){
     await evaluate("document.getElementById('skipPronunciation').click()");
     await evaluate("document.getElementById('closeStudy').click()");
 
-    const degradedScript=await cdp.send('Page.addScriptToEvaluateOnNewDocument',{source:"Object.defineProperty(globalThis,'indexedDB',{configurable:true,value:undefined});"});
+    const degradedScript=await cdp.send('Page.addScriptToEvaluateOnNewDocument',{source:"(()=>{Object.defineProperty(globalThis,'indexedDB',{configurable:true,value:undefined});const nativeSetItem=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(globalThis.__P0_CAPTURE_WRITE_FAILURE__===true&&key==='vocab-master-capture-drafts')throw new DOMException('simulated quota','QuotaExceededError');return nativeSetItem.call(this,key,value);};})()"});
     await evaluate("localStorage.removeItem('vocab-master-capture-drafts');window.__P0_RELOAD_MARKER__='before-degraded'");
     await cdp.send('Page.reload',{ignoreCache:true});
     await waitFor("window.__P0_RELOAD_MARKER__!=='before-degraded'&&window.__VOCAB_BOOTED__&&window.__VOCAB_CORE_ONLY_DEGRADED__===true",'Core-only degraded startup');
@@ -121,13 +121,30 @@ async function main(){
     assert.equal(degradedStatus.degraded,true,'Core-only boot was not labeled degraded.');
     assert.equal(await evaluate("Boolean(window.__VOCAB_V10_READY__||document.getElementById('ieltsLabLauncher'))"),false,'IELTS/V10 mounted without IndexedDB.');
     assert.match(await evaluate("document.getElementById('coreOnlyDegradedNotice')?.textContent||''"),/Core-only degraded.*IELTS.*V10/i,'Degraded limitation notice is missing.');
+    const corruptRaw='{corrupt-json';const corruptDraft=`corrupt-source-${Date.now()}`;
+    await evaluate(`(()=>{document.querySelector('[data-route="capture"]').click();localStorage.setItem('vocab-master-capture-drafts',${JSON.stringify(corruptRaw)});const term=document.getElementById('quickTerm');term.value=${JSON.stringify(corruptDraft)};term.dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('quickCaptureForm').requestSubmit();})()`);
+    await waitFor("document.getElementById('quickCaptureStatus')?.dataset.kind==='error'",'corrupt degraded source failure');
+    const corruptCapture=await evaluate(`(()=>({term:document.getElementById('quickTerm').value,stored:localStorage.getItem('vocab-master-capture-drafts'),status:document.getElementById('quickCaptureStatus').textContent}))()`);
+    assert.equal(corruptCapture.term,corruptDraft,'Corrupt degraded source reset the Quick Capture form.');
+    assert.equal(corruptCapture.stored,corruptRaw,'Quick Capture overwrote corrupt durable source data.');
+    assert.match(corruptCapture.status,/raw value/i,'Corrupt degraded source did not report that the raw value was preserved.');
+    await evaluate("localStorage.removeItem('vocab-master-capture-drafts')");
     const degradedDraft=`degraded-draft-${Date.now()}`;
-    await evaluate(`(()=>{document.querySelector('[data-route="capture"]').click();document.getElementById('quickTerm').value=${JSON.stringify(degradedDraft)};document.getElementById('quickCaptureForm').requestSubmit();})()`);
+    await evaluate(`(()=>{const term=document.getElementById('quickTerm');const context=document.getElementById('quickContext');term.value=${JSON.stringify(degradedDraft)};context.value='must survive failure';term.dispatchEvent(new Event('input',{bubbles:true}));context.dispatchEvent(new Event('input',{bubbles:true}));window.__P0_CAPTURE_WRITE_FAILURE__=true;document.getElementById('quickCaptureForm').requestSubmit();})()`);
+    await waitFor("document.getElementById('quickCaptureStatus')?.dataset.kind==='error'",'degraded durable write failure');
+    const failedCapture=await evaluate(`(()=>({term:document.getElementById('quickTerm').value,context:document.getElementById('quickContext').value,stored:localStorage.getItem('vocab-master-capture-drafts')||'',status:document.getElementById('quickCaptureStatus').textContent}))()`);
+    assert.equal(failedCapture.term,degradedDraft,'Failed Quick Capture reset the term.');
+    assert.equal(failedCapture.context,'must survive failure','Failed Quick Capture reset the context.');
+    assert.doesNotMatch(failedCapture.stored,new RegExp(degradedDraft),'Failed Quick Capture was reported despite an unverified write.');
+    assert.match(failedCapture.status,/Chưa lưu.*vẫn được giữ/i,'Failed Quick Capture did not explain that input was retained.');
+    await evaluate("(()=>{window.__P0_CAPTURE_WRITE_FAILURE__=false;const form=document.getElementById('quickCaptureForm');form.requestSubmit();form.requestSubmit();})()");
     await waitFor(`localStorage.getItem('vocab-master-capture-drafts')?.includes(${JSON.stringify(degradedDraft)})`,'degraded draft durable write');
+    const degradedCapture=await evaluate(`(()=>({count:JSON.parse(localStorage.getItem('vocab-master-capture-drafts')||'[]').filter(row=>row.term===${JSON.stringify(degradedDraft)}).length,term:document.getElementById('quickTerm').value,status:document.getElementById('quickCaptureStatus').dataset.kind}))()`);
+    assert.deepEqual(degradedCapture,{count:1,term:'',status:'success'},'Quick Capture retry/double-submit was not idempotent or reset before durable success.');
     await evaluate("window.__P0_RELOAD_MARKER__='degraded-reload'");
     await cdp.send('Page.reload',{ignoreCache:true});
     await waitFor("window.__P0_RELOAD_MARKER__!=='degraded-reload'&&window.__VOCAB_BOOTED__&&window.__VOCAB_CORE_ONLY_DEGRADED__===true",'Core-only degraded reload');
-    assert.equal(await evaluate(`localStorage.getItem('vocab-master-capture-drafts')?.includes(${JSON.stringify(degradedDraft)})===true`),true,'Degraded Quick Capture draft did not survive production reload.');
+    assert.equal(await evaluate(`JSON.parse(localStorage.getItem('vocab-master-capture-drafts')||'[]').filter(row=>row.term===${JSON.stringify(degradedDraft)}).length===1`),true,'Degraded Quick Capture draft did not survive production reload exactly once.');
     await cdp.send('Page.removeScriptToEvaluateOnNewDocument',{identifier:degradedScript.identifier});
 
     assert.deepEqual(runtimeErrors,[],`Runtime errors:\n${runtimeErrors.join('\n')}`);

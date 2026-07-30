@@ -33,6 +33,7 @@ export const CORE_OPERATIONAL_META_KEYS=Object.freeze([REVISION_META_KEY,'lastSn
 
 const DAILY_DATE_KEY='vocab-master-daily-date';
 const INITIALIZED_META_KEY='databaseInitialized';
+const CAPTURE_DRAFTS_FALLBACK_KEY='vocab-master-capture-drafts';
 const OPERATIONAL_META_KEYS=new Set(CORE_OPERATIONAL_META_KEYS);
 let databasePromise=null;
 let snapshotTimer=null;
@@ -59,6 +60,27 @@ const NATIVE_STORAGE=getNativeStorage();
 function clone(value){return value==null?value:structuredClone(value);}
 function safeParse(value,fallback){try{return value==null?fallback:JSON.parse(value);}catch{return fallback;}}
 function indexedDbUnavailable(){return typeof indexedDB==='undefined';}
+function readFallbackCaptureDrafts(){
+  let raw;
+  try{raw=NATIVE_STORAGE?.getItem(CAPTURE_DRAFTS_FALLBACK_KEY);}
+  catch(cause){
+    throw Object.assign(new Error('Không thể đọc nguồn Quick Capture degraded; không ghi đè dữ liệu chưa kiểm chứng.'),{
+      code:'DURABLE_CAPTURE_SOURCE_UNREADABLE',database:DB_NAME,storage:'localStorage',durable:false,sourcePreserved:true,cause
+    });
+  }
+  if(raw==null)return[];
+  let rows;
+  try{rows=JSON.parse(raw);}
+  catch(cause){
+    throw Object.assign(new Error('Nguồn Quick Capture degraded chứa JSON không hợp lệ; raw value được giữ nguyên.'),{
+      code:'DURABLE_CAPTURE_SOURCE_CORRUPT',database:DB_NAME,storage:'localStorage',durable:false,sourcePreserved:true,cause
+    });
+  }
+  if(!Array.isArray(rows))throw Object.assign(new Error('Nguồn Quick Capture degraded không phải danh sách; raw value được giữ nguyên.'),{
+    code:'DURABLE_CAPTURE_SOURCE_CORRUPT',database:DB_NAME,storage:'localStorage',durable:false,sourcePreserved:true
+  });
+  return rows;
+}
 function nowRevision(){return Date.now()*1000+Math.floor(Math.random()*1000);}
 function emitStatus(status,detail={}){globalThis.dispatchEvent?.(new CustomEvent('vocab:persistence-status',{detail:{status,...detail}}));}
 function enqueueWrite(task,{restoreToken=null}={}){
@@ -913,15 +935,24 @@ export async function persistImportBatch({cards=[],updates=[]}={},reason='import
 }
 
 export async function listCaptureDrafts(){
-  if(indexedDbUnavailable())return safeParse(NATIVE_STORAGE?.getItem('vocab-master-capture-drafts'),[]);
+  if(indexedDbUnavailable())return readFallbackCaptureDrafts();
   return(await getAll(STORE_NAMES.captureDrafts)).sort((a,b)=>Number(b.updatedAt||0)-Number(a.updatedAt||0));
 }
-export async function persistCaptureDraft(draft){
+export async function persistCaptureDraft(draft,{restoreToken=null}={}){
   const value={id:String(draft?.id||('draft-'+Date.now()+'-'+Math.random().toString(36).slice(2,8))),term:String(draft?.term||'').trim(),sourceContext:String(draft?.sourceContext||'').trim(),sourceLabel:String(draft?.sourceLabel||'').trim(),meaning:String(draft?.meaning||'').trim(),status:String(draft?.status||'captured'),createdAt:Number(draft?.createdAt||Date.now()),updatedAt:Date.now()};
-  if(indexedDbUnavailable()){const rows=await listCaptureDrafts();writeVerifiedFallbackEntries([['vocab-master-capture-drafts',JSON.stringify([value,...rows.filter(row=>row.id!==value.id)])]]);return value;}
-  await putOne(STORE_NAMES.captureDrafts,value);return value;
+  return withDurableWriteLock(async()=>{
+    if(indexedDbUnavailable()){const rows=await listCaptureDrafts();writeVerifiedFallbackEntries([[CAPTURE_DRAFTS_FALLBACK_KEY,JSON.stringify([value,...rows.filter(row=>row.id!==value.id)])]]);return value;}
+    await putOne(STORE_NAMES.captureDrafts,value,{restoreToken});
+    const stored=await getOne(STORE_NAMES.captureDrafts,value.id);
+    if(JSON.stringify(stored)!==JSON.stringify(value))throw Object.assign(new Error('Capture draft commit xong nhưng read-back không khớp.'),{code:'DURABLE_CAPTURE_VERIFY_FAILED',durable:false,draftId:value.id});
+    return value;
+  },restoreToken);
 }
-export async function deleteCaptureDraft(id){
-  if(indexedDbUnavailable()){const rows=await listCaptureDrafts();writeVerifiedFallbackEntries([['vocab-master-capture-drafts',JSON.stringify(rows.filter(row=>row.id!==id))]]);return true;}
-  await deleteOne(STORE_NAMES.captureDrafts,String(id));return true;
+export async function deleteCaptureDraft(id,{restoreToken=null}={}){
+  return withDurableWriteLock(async()=>{
+    if(indexedDbUnavailable()){const rows=await listCaptureDrafts();writeVerifiedFallbackEntries([[CAPTURE_DRAFTS_FALLBACK_KEY,JSON.stringify(rows.filter(row=>row.id!==id))]]);return true;}
+    await deleteOne(STORE_NAMES.captureDrafts,String(id),{restoreToken});
+    if(await getOne(STORE_NAMES.captureDrafts,String(id)))throw Object.assign(new Error('Capture draft vẫn tồn tại sau delete commit.'),{code:'DURABLE_CAPTURE_DELETE_VERIFY_FAILED',durable:false,draftId:String(id)});
+    return true;
+  },restoreToken);
 }

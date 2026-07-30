@@ -26,6 +26,7 @@
     "test:browser-harness": "node --test tests/browser-harness.test.mjs",
     "test:backup": "node --test tests/backup-registry.test.mjs",
     "test:restore": "node --test tests/restore-safety.test.mjs tests/degraded-backup.test.mjs",
+    "test:capture": "node --test tests/capture-containment.test.mjs tests/capture-degraded.test.mjs",
     "phase0:harness": "node scripts/phase0-gate.mjs --harness",
     "phase0:gate": "node scripts/phase0-gate.mjs"
   },
