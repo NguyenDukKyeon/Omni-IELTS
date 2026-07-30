@@ -533,3 +533,73 @@ Decision: one workspace controller owns player, virtual transcript rail, learnin
 Consequences: changing mode may deliberately rerender the active sentence, but cannot change sentence identity. A concurrent edit produces `TRANSCRIPT_EDIT_CONFLICT` instead of last-write-wins. No strict or assisted activity in this package bypasses EvidencePolicy, and no Retell score is fabricated. Mobile uses the same controller and canonical revision as desktop.
 
 Revisit when: a qualified independent Retell evaluator, variable-height virtualizer or cross-device transcript synchronization is introduced. Preserve semantic answer omission, assistance provenance and immutable history.
+
+## ADR-040 — Phase 3 independent acceptance unlocks Phase 4 only
+
+Status: CONFIRMED
+
+Decision: Phase 3 is independently accepted at source HEAD `96aa0172add84186fbe2970cde910b06a0d73672`. Exact-head CI run #259 succeeded, and PR #11 merged into `main` at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`. Phase 4 may therefore begin on the user-authorized branch `codex/phase-4-remote-content-platform`.
+
+Consequences: P4-00…P4-10 may be implemented without rewriting roadmap dependencies. This acceptance does not authorize Phase 5 ASR/cloud fallback, Phase 6 content factory/scale or Phase 7 personalization. Phase 5 remains locked.
+
+Revisit when: Phase 4 reaches its own exact-head CI, independent focused audit and merged-PR acceptance boundary. Implementer evidence must not mark Phase 4 or its packages `ACCEPTED`.
+
+## ADR-041 — Phase 4 separates immutable catalog bytes from durable learner truth
+
+Status: PROPOSED / REVIEW_REQUIRED
+
+Decision: published catalog manifests and media use immutable SHA-256 identities
+and CacheStorage namespaces because they are independently verifiable and
+redownloadable. IndexedDB version 7 owns signed last-known-good catalog state,
+install journals, installed-pack pointers, activation receipts, revocations,
+tombstones and learner progress. No durable operation may report success from a
+RAM fallback. Activation occurs only after every mandatory byte and lesson
+reference is verified, and an update installs side-by-side before one atomic
+pointer switch.
+
+The learner bundle contains only public verification roots. Private signing
+keys and authoring credentials are environment-provided to the isolated
+publishing scaffold and are never committed. HTTPS is transport only, not
+catalog authenticity. Unsigned legacy fixtures are explicitly excluded from
+the production trust path.
+
+AI-assisted sampler and Starter Pack material remains draft provenance.
+Production validation rejects pending rights, AI-only provenance, unnamed
+reviewers, missing review checks and unpublished timestamps. Therefore the
+bundled production catalog is validly signed but empty until named humans
+confirm ownership/license, pedagogy and accuracy, and a separate publisher
+signs the resulting artifact. This is an intentional release block, not a
+missing-data default.
+
+Consequences: clearing CacheStorage cannot delete progress. Portable backup
+contains install metadata, receipts, journals, tombstones, revocations and
+progress, while remote media bodies become digest-bearing reinstall stubs.
+Restore never fabricates verified media. Rollback may disable remote activation
+or select a retained verified revision, but it does not lower an IndexedDB
+version, remove unfamiliar stores or reinterpret a newer schema as empty.
+Revoked packs cannot start new lessons while historical evidence remains.
+
+Technical remediation clarification: lesson identity is the SHA-256 and byte
+length of deterministic canonical lesson bytes, and human review binds that
+exact content address. Activity asset references are lesson-scoped, and remote
+activities expose the canonical learning target plus exact pack, lesson and
+activity revision fields. Durable revocations are monotonic device evidence:
+they are unioned with valid current-catalog revocations and cannot be cleared
+by omission, rollback or restore. An expired last-known-good catalog may
+support policy-approved offline launch of already-installed compatible,
+non-revoked content, but it cannot drive discovery, install, update or Today.
+
+Catalog sequence equality is digest-bound inside the IndexedDB write
+transaction. Key rotation requires explicit predecessor authorization in
+addition to bundled key validity; only a designated bootstrap key may
+establish first trust. Fallback installer leases renew with immutable fencing
+generations and are checked again inside atomic activation. Restored Phase 4
+records remain non-active until schema, pointer/receipt, compatibility,
+revocation, content contract and redownloadable cache state are reconciled;
+unsupported records are retained in quarantine rather than reinterpreted.
+
+Revisit when: an external content repository is provisioned and its named
+rights/review records are approved. Preserve the public-key/private-key
+boundary, immutable address semantics, weekly defect-review ordering and
+default-deny publication gate. Phase 5 ASR/cloud fallback and Phase 6 automated
+content factory remain outside this decision.

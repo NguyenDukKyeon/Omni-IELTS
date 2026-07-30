@@ -1,88 +1,21 @@
 {
-  "catalogVersion": 1,
-  "updatedAt": "2026-07-29T15:30:00.000Z",
-  "packs": [
-    {
-      "id": "starter-sentence-loop",
-      "title": "Starter Sentence Loop",
-      "description": "Bộ nhỏ để trải nghiệm Dictation, Noticing, Shadowing và lưu từ mà không phụ thuộc AI realtime.",
-      "lessons": [
-        {
-          "id": "starter-b1-travel-plans",
-          "title": "Changing Travel Plans",
-          "description": "Cuộc hội thoại ngắn về thay đổi lịch trình và xác nhận thông tin.",
-          "contentVersion": 1,
-          "level": "B1",
-          "listeningDifficulty": 3,
-          "accent": "British",
-          "topic": "Daily conversation",
-          "skills": ["dictation", "shadowing", "vocabulary"],
-          "ieltsRelevance": "Listening Sections 1–2",
-          "durationSeconds": 62,
-          "sentenceCount": 7,
-          "verified": true,
-          "qualityStatus": "verified",
-          "license": "original-internal",
-          "provenance": {"source": "VocabMaster original", "verifiedBy": "implementation-audit", "verifiedAt": "2026-07-29T15:30:00.000Z"},
-          "assets": {
-            "transcript": "/content/lessons/starter-b1-travel-plans/transcript.json",
-            "lexical": "/content/lessons/starter-b1-travel-plans/lexical.json",
-            "exercises": "/content/lessons/starter-b1-travel-plans/exercises.json"
-          },
-          "estimatedBytes": 8500,
-          "minimumAppVersion": "10.0.0"
-        },
-        {
-          "id": "starter-b2-urban-trees",
-          "title": "Urban Trees and Heat",
-          "description": "Bài nói học thuật ngắn về cây xanh đô thị và hiệu ứng đảo nhiệt.",
-          "contentVersion": 1,
-          "level": "B2",
-          "listeningDifficulty": 6,
-          "accent": "British",
-          "topic": "Environment",
-          "skills": ["dictation", "shadowing", "reading", "vocabulary"],
-          "ieltsRelevance": "Academic Listening and Reading",
-          "durationSeconds": 86,
-          "sentenceCount": 8,
-          "verified": true,
-          "qualityStatus": "verified",
-          "license": "original-internal",
-          "provenance": {"source": "VocabMaster original", "verifiedBy": "implementation-audit", "verifiedAt": "2026-07-29T15:30:00.000Z"},
-          "assets": {
-            "transcript": "/content/lessons/starter-b2-urban-trees/transcript.json",
-            "lexical": "/content/lessons/starter-b2-urban-trees/lexical.json",
-            "exercises": "/content/lessons/starter-b2-urban-trees/exercises.json"
-          },
-          "estimatedBytes": 10500,
-          "minimumAppVersion": "10.0.0"
-        },
-        {
-          "id": "starter-b2-course-enquiry",
-          "title": "Course Enquiry by Phone",
-          "description": "Cuộc gọi hỏi thông tin khóa học với số liệu, spelling và xác nhận chi tiết.",
-          "contentVersion": 1,
-          "level": "B2",
-          "listeningDifficulty": 5,
-          "accent": "Australian",
-          "topic": "Education",
-          "skills": ["dictation", "shadowing", "paraphrase", "vocabulary"],
-          "ieltsRelevance": "Listening Section 1",
-          "durationSeconds": 78,
-          "sentenceCount": 8,
-          "verified": true,
-          "qualityStatus": "verified",
-          "license": "original-internal",
-          "provenance": {"source": "VocabMaster original", "verifiedBy": "implementation-audit", "verifiedAt": "2026-07-29T15:30:00.000Z"},
-          "assets": {
-            "transcript": "/content/lessons/starter-b2-course-enquiry/transcript.json",
-            "lexical": "/content/lessons/starter-b2-course-enquiry/lexical.json",
-            "exercises": "/content/lessons/starter-b2-course-enquiry/exercises.json"
-          },
-          "estimatedBytes": 9800,
-          "minimumAppVersion": "10.0.0"
-        }
-      ]
-    }
-  ]
+  "kind": "vocab-master-signed-catalog",
+  "signatureVersion": 1,
+  "algorithm": "Ed25519",
+  "keyId": "vocab-master-production-2026-01",
+  "payload": {
+    "schemaVersion": 2,
+    "catalogId": "catalog:vocab-master-production",
+    "sequence": 1,
+    "catalogRevision": 1,
+    "issuedAt": "2026-07-30T12:00:00.000Z",
+    "expiresAt": "2027-07-30T12:00:00.000Z",
+    "keyId": "vocab-master-production-2026-01",
+    "supportedKeyIds": [
+      "vocab-master-production-2026-01"
+    ],
+    "entries": [],
+    "revocations": []
+  },
+  "signature": "baieIZnwHRF+P28tw+PgP3dwfOWd2/O5SSxIQpPc+rVH07+4JIDak8+ZacwUZKrHtJlplefczdiqMn0lbZzpBg=="
 }

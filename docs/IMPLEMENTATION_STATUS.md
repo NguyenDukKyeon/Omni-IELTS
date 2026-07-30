@@ -1,6 +1,6 @@
 # VocabMaster — Implementation Status
 
-Last updated: 2026-07-30, Phase 2 accepted with recorded limitations; Phase 3 implementation ready for independent review
+Last updated: 2026-07-30, Phase 4 implementation complete for internal review; publication approval remains fail-closed
 
 Phase 0 accepted source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
@@ -10,8 +10,35 @@ Phase 1 acceptance binding: merged PR #9 at `main` commit `9da21e1c3cb34b7372f1b
 
 Phase 2 acceptance binding: merged `main` commit `cf28153352110cae510c92e2a8f911a6d65497ca`; the remaining UI/reconnect/reload integration limitations were explicitly carried into Phase 3.
 
-Active implementation branch: codex/phase-3-full-video-workspace
-Delivery status: `PHASE_2_ACCEPTED / PHASE_3_IMPLEMENTED / REVIEW_REQUIRED`
+Phase 3 acceptance binding: independently accepted at source HEAD `96aa0172add84186fbe2970cde910b06a0d73672`; exact-head CI run #259 succeeded; PR #11 merged into `main` at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`.
+
+Active implementation branch: codex/phase-4-remote-content-platform
+Delivery status: `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED`
+
+Phase 4 is not accepted. The production signed catalog intentionally contains
+no packs because all 68 rights records and all 72 human-review records in the
+AI-assisted content draft remain pending. The platform, trust, install,
+lifecycle, backup/restore, UI and validator paths are implemented and focused
+green; the sampler and four weekly packs are structurally complete drafts only.
+External content-repository provisioning, named human rights/review approval,
+production signing, exact-head remote CI, independent focused audit and merge
+remain required. Phase 5 and Phase 6 remain locked.
+
+## Phase 4 delivery matrix
+
+| Package | Implementation state | Review boundary |
+|---|---|---|
+| P4-00 contracts | IMPLEMENTED / INTERNAL_GREEN | Versioned contracts and fail-closed publication validation; independent review required |
+| P4-01 catalog trust | IMPLEMENTED / INTERNAL_GREEN | Ed25519 root, canonical serialization, rotation metadata, replay/downgrade protection and durable last-known-good |
+| P4-02 installer | IMPLEMENTED / INTERNAL_GREEN | Content-addressed staging, journals, leases, typed recovery and atomic activation |
+| P4-03 lifecycle | IMPLEMENTED / INTERNAL_GREEN | Offline launch, update/delete/reinstall/revocation/rollback and exact Today inventory |
+| P4-04 publishing boundary | IMPLEMENTED_SCAFFOLD / PROVISIONING_PENDING | `content-repo/` is isolated and publishable; no external remote repository is claimed |
+| P4-05 sampler | DRAFT_VALIDATED / HUMAN_REVIEW_REQUIRED | Exactly 3 lessons; not production-publishable |
+| P4-06 week 1 | DRAFT_VALIDATED / HUMAN_REVIEW_REQUIRED | 2 Listening, 2 Reading, 2 Lexical/Paraphrase |
+| P4-07 week 2 | DRAFT_VALIDATED / HUMAN_REVIEW_REQUIRED | Publication depends on approved week-1 defect review |
+| P4-08 week 3 | DRAFT_VALIDATED / HUMAN_REVIEW_REQUIRED | Publication depends on approved week-2 defect review |
+| P4-09 week 4 | DRAFT_VALIDATED / HUMAN_REVIEW_REQUIRED | Publication depends on approved week-3 defect review |
+| P4-10 verification/release | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED | Local focused gates green; exact-head CI, independent ACCEPT and merge still required |
 
 Scope of this update: Phase 0 remains accepted at exact source commit `d869eb4` with PR #8 Ubuntu CI run 250 green. PR #9 was merged into `main` at `9da21e1`. GitHub Actions CI run 255 (`30533541002`) completed successfully on that exact merge commit. An independent read-only audit reviewed the cumulative 44-file P1 diff, reproduced `npm ci --no-audit --no-fund`, `npm run phase0:gate` (21/21), and `npm run phase1:verify` (22/22, including 233/233 unit/integration and all production browser suites) on clean `main`; no P0/P1 finding remained. P1-00…P1-08 are therefore accepted at `9da21e1` and unlock P2-00.
 
@@ -344,8 +371,8 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 | Phase 0 — Containment and Release Safety | ACCEPTED / GREEN | Baseline audit complete | P0-08 accepted at `d869eb4`; PR #8 Ubuntu CI run 250 passed |
 | Phase 1 — Core Product Unification | ACCEPTED / GREEN | P0-08 ACCEPTED | PR #9 merged at `9da21e1`; CI run 255 and independent reproduction passed |
 | Phase 2 — Caption-first Resolver | ACCEPTED / GREEN_WITH_LIMITATIONS | P1-05, P1-08 ACCEPTED | Merged at `cf281533`; accepted limitations are integrated into Phase 3 |
-| Phase 3 — Full-video Workspace | IMPLEMENTED / REVIEW_REQUIRED | P2-06 ACCEPTED | P3-00…P3-06 implemented on `codex/phase-3-full-video-workspace`; independent acceptance pending |
-| Phase 4 — Remote Content Platform | BLOCKED_BY_PHASE_1 | P1 contracts accepted; production activation also needs platform packages | Not started |
+| Phase 3 — Full-video Workspace | ACCEPTED / GREEN | P2-06 ACCEPTED | Independently accepted at `96aa017`; exact-head CI run #259 passed; PR #11 merged at `d1fe0db` |
+| Phase 4 — Remote Content Platform | UNLOCKED / NOT_STARTED | Phase 3 accepted and merged; P1 contracts accepted | Authorized on `codex/phase-4-remote-content-platform` |
 | Phase 5 — ASR/Cloud Fallback | BLOCKED_BY_PHASE_2 | P2-06 and policy approval | Not started |
 | Phase 6 — Content Factory/Scale | BLOCKED_BY_PHASE_4 | P4-10 ACCEPTED | Not started |
 | Phase 7 — Measurement/Personalization | BLOCKED | Clean event model; rollout also needs content/outcomes | Not started |
@@ -408,29 +435,29 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 | Package | Branch | Dependency | Status |
 |---|---|---|---|
-| P3-00 Workspace shell | codex/phase-3-full-video-workspace | P2-06 | IMPLEMENTED / REVIEW_REQUIRED |
-| P3-01 Progressive rail | codex/phase-3-full-video-workspace | P3-00 | IMPLEMENTED / REVIEW_REQUIRED |
-| P3-02 Visible transcript modes | codex/phase-3-full-video-workspace | P3-01 | IMPLEMENTED / REVIEW_REQUIRED |
-| P3-03 Dictation masking | codex/phase-3-full-video-workspace | P3-01, EvidencePolicy | IMPLEMENTED / REVIEW_REQUIRED |
-| P3-04 Real Retell | codex/phase-3-full-video-workspace | P3-03, event repositories | IMPLEMENTED / REVIEW_REQUIRED |
-| P3-05 Transcript editor | codex/phase-3-full-video-workspace | P1-05, P3-01 | IMPLEMENTED / REVIEW_REQUIRED |
-| P3-06 Workspace exit gate | codex/phase-3-full-video-workspace | P3-02–P3-05 | IMPLEMENTED / REVIEW_REQUIRED |
+| P3-00 Workspace shell | codex/phase-3-full-video-workspace | P2-06 | ACCEPTED @ `96aa017` |
+| P3-01 Progressive rail | codex/phase-3-full-video-workspace | P3-00 | ACCEPTED @ `96aa017` |
+| P3-02 Visible transcript modes | codex/phase-3-full-video-workspace | P3-01 | ACCEPTED @ `96aa017` |
+| P3-03 Dictation masking | codex/phase-3-full-video-workspace | P3-01, EvidencePolicy | ACCEPTED @ `96aa017` |
+| P3-04 Real Retell | codex/phase-3-full-video-workspace | P3-03, event repositories | ACCEPTED @ `96aa017` |
+| P3-05 Transcript editor | codex/phase-3-full-video-workspace | P1-05, P3-01 | ACCEPTED @ `96aa017` |
+| P3-06 Workspace exit gate | codex/phase-3-full-video-workspace | P3-02–P3-05 | ACCEPTED @ `96aa017` |
 
 ### Phase 4
 
 | Package | Branch/repository | Dependency | Status |
 |---|---|---|---|
-| P4-00 Content contracts | codex/p4-00-content-contracts | P1-01, P1-05 | PHASE_BLOCKED |
-| P4-01 Remote catalog | codex/p4-01-remote-catalog | P4-00, staging/key runbook | PHASE_BLOCKED |
-| P4-02 Pack Installer | codex/p4-02-pack-installer | P4-01, P1-00 | PHASE_BLOCKED |
-| P4-03 Pack lifecycle | codex/p4-03-pack-lifecycle | P4-02 | PHASE_BLOCKED |
-| P4-04 Content repo scaffold | VocabMaster-content/codex/p4-04-content-repo-scaffold | P4-00, external provisioning | PHASE_BLOCKED |
-| P4-05 Sampler | VocabMaster-content/codex/p4-05-sampler | P4-04, P4-01 staging | PHASE_BLOCKED |
-| P4-06 Foundations Week 1 | VocabMaster-content/codex/p4-06-foundations-week-1 | P4-05 | PHASE_BLOCKED |
-| P4-07 Foundations Week 2 | VocabMaster-content/codex/p4-07-foundations-week-2 | P4-06 | PHASE_BLOCKED |
-| P4-08 Foundations Week 3 | VocabMaster-content/codex/p4-08-foundations-week-3 | P4-07 | PHASE_BLOCKED |
-| P4-09 Foundations Week 4 | VocabMaster-content/codex/p4-09-foundations-week-4 | P4-08 | PHASE_BLOCKED |
-| P4-10 Content exit gate | codex/p4-10-content-platform-exit | P4-03, P4-09 | PHASE_BLOCKED |
+| P4-00 Content contracts | codex/phase-4-remote-content-platform | P1-01, P1-05 | IMPLEMENTED / REVIEW_REQUIRED |
+| P4-01 Remote catalog | codex/phase-4-remote-content-platform | P4-00, staging/key runbook | IMPLEMENTED / REVIEW_REQUIRED |
+| P4-02 Pack Installer | codex/phase-4-remote-content-platform | P4-01, P1-00 | IMPLEMENTED / REVIEW_REQUIRED |
+| P4-03 Pack lifecycle | codex/phase-4-remote-content-platform | P4-02 | IMPLEMENTED / REVIEW_REQUIRED |
+| P4-04 Content repo scaffold | content-repo/ scaffold | P4-00, external provisioning | SCAFFOLD_IMPLEMENTED / EXTERNAL_PROVISIONING_PENDING |
+| P4-05 Sampler | content-repo/ scaffold | P4-04, P4-01 staging | DRAFT_IMPLEMENTED / EDITORIAL_GATES_PENDING |
+| P4-06 Foundations Week 1 | content-repo/ scaffold | P4-05 | DRAFT_IMPLEMENTED / EDITORIAL_GATES_PENDING |
+| P4-07 Foundations Week 2 | content-repo/ scaffold | P4-06 | DRAFT_IMPLEMENTED / EDITORIAL_GATES_PENDING |
+| P4-08 Foundations Week 3 | content-repo/ scaffold | P4-07 | DRAFT_IMPLEMENTED / EDITORIAL_GATES_PENDING |
+| P4-09 Foundations Week 4 | content-repo/ scaffold | P4-08 | DRAFT_IMPLEMENTED / EDITORIAL_GATES_PENDING |
+| P4-10 Content exit gate | codex/phase-4-remote-content-platform | P4-03, P4-09 | BLOCKED / REVIEW_AND_EXTERNAL_GATES |
 
 ### Phase 5
 
@@ -502,12 +529,15 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 The Phase 1 implementation report is `docs/phase1/IMPLEMENTATION_REPORT.md` and remains the implementer handoff. This section records the separate acceptance evidence that unlocks Phase 2.
 
-## 8. Phase 3 remediation state
+## 8. Phase 3 acceptance state
 
-Phase 3 remediation remains `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED`. It is not accepted by this implementer evidence and does not unlock Phase 4 or Phase 5. The focused remediation adds atomic transcript child activation, unattached provider revisions, durable resolver recovery, fail-closed exact revision restoration, canonical assistance traces and local-first Strict Practice wording.
+Phase 3 was independently accepted at exact source HEAD `96aa0172add84186fbe2970cde910b06a0d73672`. Exact-head CI run #259 succeeded, and PR #11 merged into `main` at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`. This independently verified merge unlocks Phase 4. Phase 5 remains locked and is not part of the Phase 4 authorization.
 
 ## 9. Next acceptance action
 
-Current handoff: independent review of P3-00…P3-06 on the exact pushed head of `codex/phase-3-full-video-workspace`.
+Current handoff: independently re-audit the remediated technical platform on
+PR #12. External repository/CDN provisioning, production signing-key custody,
+named rights approval, human lesson review, sequential weekly defect review
+and production publication remain open.
 
-The reviewer must reproduce `phase3:verify`, static check, production build, related production-browser acceptance and the full regression result. Phase 3 stays `REVIEW_REQUIRED`; this implementer report does not unlock Phase 4 or Phase 5.
+Phase 4 must remain `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED` until exact-head CI is green, an independent focused audit returns ACCEPT, and the Phase 4 pull request is merged. Phase 5 remains locked.

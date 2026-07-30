@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w1-lexical-academic-stance",
+  "skill": "lexical-paraphrase",
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w1-lexical-academic-stance:1",
+      "term": "the evidence indicates",
+      "meaning": "the data points towards",
+      "register": "neutral-academic",
+      "usageNote": "Use “the evidence indicates” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-lexical-academic-stance:2",
+      "term": "the author argues",
+      "meaning": "the writer presents a reasoned position",
+      "register": "neutral-academic",
+      "usageNote": "Use “the author argues” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-lexical-academic-stance:3",
+      "term": "the findings suggest",
+      "meaning": "the results tentatively support",
+      "register": "neutral-academic",
+      "usageNote": "Use “the findings suggest” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-lexical-academic-stance:4",
+      "term": "the report acknowledges",
+      "meaning": "the document openly recognises",
+      "register": "neutral-academic",
+      "usageNote": "Use “the report acknowledges” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

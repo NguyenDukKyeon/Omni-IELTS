@@ -1,0 +1,2048 @@
+{
+  "id": "pack:ielts-foundations-week-4",
+  "schemaVersion": 2,
+  "contentRevision": 1,
+  "contentAddress": "sha256:7021341156f52f79758dc3d657b00d1d395f5efe5e5adf632a3042c0d148ad5c",
+  "title": "IELTS Foundations — Week 4",
+  "summary": "Six vocabulary-focused IELTS foundation lessons; not a mock exam or band predictor.",
+  "assets": [
+    {
+      "id": "asset:foundations-w4-listening-conference-registration:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:20ea5c51ca70839f90474ad9f7b69256fb427bf846dc84414ba985a12b3a42b2",
+      "sha256": "20ea5c51ca70839f90474ad9f7b69256fb427bf846dc84414ba985a12b3a42b2",
+      "byteLength": 2670,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/20ea5c51ca70839f90474ad9f7b69256fb427bf846dc84414ba985a12b3a42b2.json",
+      "retrievalUrl": "/content/immutable/sha256/20ea5c51ca70839f90474ad9f7b69256fb427bf846dc84414ba985a12b3a42b2.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for Conference Registration Correction",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w4-listening-conference-registration:content",
+      "provenanceRecordId": "provenance:asset:foundations-w4-listening-conference-registration:content",
+      "humanReviewRecordId": "review:asset:foundations-w4-listening-conference-registration:content",
+      "rights": {
+        "id": "rights:asset:foundations-w4-listening-conference-registration:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w4-listening-conference-registration:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w4-listening-conference-registration:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:20ea5c51ca70839f90474ad9f7b69256fb427bf846dc84414ba985a12b3a42b2",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:foundations-w4-listening-conference-registration:audio",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:d8877e45cd1b01c41bdb44ab3f09731104004fe9b14a03a4478643e669e0c7a4",
+      "sha256": "d8877e45cd1b01c41bdb44ab3f09731104004fe9b14a03a4478643e669e0c7a4",
+      "byteLength": 1193174,
+      "mediaType": "audio/wav",
+      "path": "assets/immutable/sha256/d8877e45cd1b01c41bdb44ab3f09731104004fe9b14a03a4478643e669e0c7a4.wav",
+      "retrievalUrl": "/content/immutable/sha256/d8877e45cd1b01c41bdb44ab3f09731104004fe9b14a03a4478643e669e0c7a4.wav",
+      "accessibilityLabel": "Spoken audio for Conference Registration Correction; verified transcript is declared in asset:foundations-w4-listening-conference-registration:content",
+      "generationNote": "Generated offline with Microsoft Zira Desktop for draft review; licensing and voice approval remain pending.",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w4-listening-conference-registration:audio",
+      "provenanceRecordId": "provenance:asset:foundations-w4-listening-conference-registration:audio",
+      "humanReviewRecordId": "review:asset:foundations-w4-listening-conference-registration:audio",
+      "rights": {
+        "id": "rights:asset:foundations-w4-listening-conference-registration:audio",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w4-listening-conference-registration:audio",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "draft-audio-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w4-listening-conference-registration:audio",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:d8877e45cd1b01c41bdb44ab3f09731104004fe9b14a03a4478643e669e0c7a4",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "draft-audio-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:foundations-w4-listening-refill-scheme:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:af50fb8363ca2f89709ec886cbd6210bc0b02420505848e9942973099b03f745",
+      "sha256": "af50fb8363ca2f89709ec886cbd6210bc0b02420505848e9942973099b03f745",
+      "byteLength": 2633,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/af50fb8363ca2f89709ec886cbd6210bc0b02420505848e9942973099b03f745.json",
+      "retrievalUrl": "/content/immutable/sha256/af50fb8363ca2f89709ec886cbd6210bc0b02420505848e9942973099b03f745.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for Water Refill Scheme Briefing",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w4-listening-refill-scheme:content",
+      "provenanceRecordId": "provenance:asset:foundations-w4-listening-refill-scheme:content",
+      "humanReviewRecordId": "review:asset:foundations-w4-listening-refill-scheme:content",
+      "rights": {
+        "id": "rights:asset:foundations-w4-listening-refill-scheme:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w4-listening-refill-scheme:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w4-listening-refill-scheme:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:af50fb8363ca2f89709ec886cbd6210bc0b02420505848e9942973099b03f745",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:foundations-w4-listening-refill-scheme:audio",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:6ba8f78847000f4e977b536324fe418ccc14a83abf1195b8d27861bba9c8095f",
+      "sha256": "6ba8f78847000f4e977b536324fe418ccc14a83abf1195b8d27861bba9c8095f",
+      "byteLength": 1165164,
+      "mediaType": "audio/wav",
+      "path": "assets/immutable/sha256/6ba8f78847000f4e977b536324fe418ccc14a83abf1195b8d27861bba9c8095f.wav",
+      "retrievalUrl": "/content/immutable/sha256/6ba8f78847000f4e977b536324fe418ccc14a83abf1195b8d27861bba9c8095f.wav",
+      "accessibilityLabel": "Spoken audio for Water Refill Scheme Briefing; verified transcript is declared in asset:foundations-w4-listening-refill-scheme:content",
+      "generationNote": "Generated offline with Microsoft Zira Desktop for draft review; licensing and voice approval remain pending.",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w4-listening-refill-scheme:audio",
+      "provenanceRecordId": "provenance:asset:foundations-w4-listening-refill-scheme:audio",
+      "humanReviewRecordId": "review:asset:foundations-w4-listening-refill-scheme:audio",
+      "rights": {
+        "id": "rights:asset:foundations-w4-listening-refill-scheme:audio",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w4-listening-refill-scheme:audio",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "draft-audio-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w4-listening-refill-scheme:audio",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:6ba8f78847000f4e977b536324fe418ccc14a83abf1195b8d27861bba9c8095f",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "draft-audio-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:foundations-w4-reading-remote-commuting:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:7f554ab7f2e1fc3e17715074397d6f1fcc196a6a5900b57d18bdcac4565a1f2b",
+      "sha256": "7f554ab7f2e1fc3e17715074397d6f1fcc196a6a5900b57d18bdcac4565a1f2b",
+      "byteLength": 2081,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/7f554ab7f2e1fc3e17715074397d6f1fcc196a6a5900b57d18bdcac4565a1f2b.json",
+      "retrievalUrl": "/content/immutable/sha256/7f554ab7f2e1fc3e17715074397d6f1fcc196a6a5900b57d18bdcac4565a1f2b.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for Remote Work and Commuting Rebound",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "reading-comprehension",
+          "paraphrase-recognition",
+          "distractor-recognition",
+          "micro-reading",
+          "paragraph-production"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w4-reading-remote-commuting:content",
+      "provenanceRecordId": "provenance:asset:foundations-w4-reading-remote-commuting:content",
+      "humanReviewRecordId": "review:asset:foundations-w4-reading-remote-commuting:content",
+      "rights": {
+        "id": "rights:asset:foundations-w4-reading-remote-commuting:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w4-reading-remote-commuting:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w4-reading-remote-commuting:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:7f554ab7f2e1fc3e17715074397d6f1fcc196a6a5900b57d18bdcac4565a1f2b",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:foundations-w4-reading-biodiversity-corridors:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:49fcb13750f9d6f78899acd82c3bc101e77ff09c1c1c553999068cf591d85dea",
+      "sha256": "49fcb13750f9d6f78899acd82c3bc101e77ff09c1c1c553999068cf591d85dea",
+      "byteLength": 2077,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/49fcb13750f9d6f78899acd82c3bc101e77ff09c1c1c553999068cf591d85dea.json",
+      "retrievalUrl": "/content/immutable/sha256/49fcb13750f9d6f78899acd82c3bc101e77ff09c1c1c553999068cf591d85dea.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for When Green Corridors Become Ecological",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "reading-comprehension",
+          "paraphrase-recognition",
+          "distractor-recognition",
+          "micro-reading",
+          "paragraph-production"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w4-reading-biodiversity-corridors:content",
+      "provenanceRecordId": "provenance:asset:foundations-w4-reading-biodiversity-corridors:content",
+      "humanReviewRecordId": "review:asset:foundations-w4-reading-biodiversity-corridors:content",
+      "rights": {
+        "id": "rights:asset:foundations-w4-reading-biodiversity-corridors:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w4-reading-biodiversity-corridors:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w4-reading-biodiversity-corridors:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:49fcb13750f9d6f78899acd82c3bc101e77ff09c1c1c553999068cf591d85dea",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:foundations-w4-lexical-evaluation:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:0cfb746d1b2140c8898df67857c3ba10911e8751edef6157967d4997b324215c",
+      "sha256": "0cfb746d1b2140c8898df67857c3ba10911e8751edef6157967d4997b324215c",
+      "byteLength": 1453,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/0cfb746d1b2140c8898df67857c3ba10911e8751edef6157967d4997b324215c.json",
+      "retrievalUrl": "/content/immutable/sha256/0cfb746d1b2140c8898df67857c3ba10911e8751edef6157967d4997b324215c.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for Evaluation without Overclaiming",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "controlled-recall",
+          "lexical-choice",
+          "sentence-production",
+          "paragraph-production",
+          "paraphrase-recognition"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w4-lexical-evaluation:content",
+      "provenanceRecordId": "provenance:asset:foundations-w4-lexical-evaluation:content",
+      "humanReviewRecordId": "review:asset:foundations-w4-lexical-evaluation:content",
+      "rights": {
+        "id": "rights:asset:foundations-w4-lexical-evaluation:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w4-lexical-evaluation:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w4-lexical-evaluation:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:0cfb746d1b2140c8898df67857c3ba10911e8751edef6157967d4997b324215c",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:foundations-w4-lexical-synthesis:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:fe42f0cb295aa8cec89bd52d5c7cc06f58b8af028358af3a72bc4fe3ea69b90c",
+      "sha256": "fe42f0cb295aa8cec89bd52d5c7cc06f58b8af028358af3a72bc4fe3ea69b90c",
+      "byteLength": 1400,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/fe42f0cb295aa8cec89bd52d5c7cc06f58b8af028358af3a72bc4fe3ea69b90c.json",
+      "retrievalUrl": "/content/immutable/sha256/fe42f0cb295aa8cec89bd52d5c7cc06f58b8af028358af3a72bc4fe3ea69b90c.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for Synthesising Related Claims",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "controlled-recall",
+          "lexical-choice",
+          "sentence-production",
+          "paragraph-production",
+          "paraphrase-recognition"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w4-lexical-synthesis:content",
+      "provenanceRecordId": "provenance:asset:foundations-w4-lexical-synthesis:content",
+      "humanReviewRecordId": "review:asset:foundations-w4-lexical-synthesis:content",
+      "rights": {
+        "id": "rights:asset:foundations-w4-lexical-synthesis:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w4-lexical-synthesis:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w4-lexical-synthesis:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:fe42f0cb295aa8cec89bd52d5c7cc06f58b8af028358af3a72bc4fe3ea69b90c",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    }
+  ],
+  "lessons": [
+    {
+      "id": "lesson:foundations-w4-listening-conference-registration",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:46562de8512685f7b9aeef5a26d966277413a4eb9a39f061e615a14c83406bbb",
+      "title": "Conference Registration Correction",
+      "learningObjective": "Recover corrected spelling, payment status and a changed session choice.",
+      "estimatedMinutes": 10,
+      "difficulty": "C1",
+      "skill": "listening",
+      "topic": "Professional events",
+      "lexicalTargets": [
+        {
+          "id": "lex:foundations-w4-listening-conference-registration:1",
+          "term": "payment has cleared",
+          "meaning": "the transaction has completed",
+          "register": "neutral-academic",
+          "usageNote": "Use “payment has cleared” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-listening-conference-registration:2",
+          "term": "still shows pending",
+          "meaning": "continues to display an incomplete status",
+          "register": "neutral-academic",
+          "usageNote": "Use “still shows pending” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-listening-conference-registration:3",
+          "term": "replace the panel with",
+          "meaning": "change one session for another",
+          "register": "neutral-academic",
+          "usageNote": "Use “replace the panel with” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-listening-conference-registration:4",
+          "term": "corrected badge",
+          "meaning": "a name card with fixed information",
+          "register": "neutral-academic",
+          "usageNote": "Use “corrected badge” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:foundations-w4-listening-conference-registration:content",
+        "asset:foundations-w4-listening-conference-registration:audio"
+      ],
+      "activities": [
+        {
+          "id": "activity:foundations-w4-listening-conference-registration:comprehension",
+          "type": "listening-comprehension",
+          "prompt": "Which detail changed in the recording?",
+          "options": [
+            {
+              "label": "The detail stated in sentence three"
+            },
+            {
+              "label": "A detail not mentioned in the recording"
+            }
+          ],
+          "answer": {
+            "text": "Please replace the afternoon policy panel with the workshop on evidence visualisation."
+          },
+          "feedback": "Use the exact changed detail rather than a plausible topic word.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-listening-conference-registration",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-listening-conference-registration:comprehension",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-listening-conference-registration:comprehension",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w4-listening-conference-registration",
+            "sourceRevision": "sha256:eeb6986cc91a0c755f537dabe7709335de500ab9b2c4082d5e9c5493ec8ccf7a"
+          },
+          "assetIds": [
+            "asset:foundations-w4-listening-conference-registration:content",
+            "asset:foundations-w4-listening-conference-registration:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-listening-conference-registration:dictation",
+          "type": "dictation",
+          "prompt": "Write the second sentence exactly as you hear it.",
+          "answer": {
+            "text": "The payment has cleared, although the confirmation email still shows pending."
+          },
+          "feedback": "Check content words, function words and the stated detail.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-listening-conference-registration",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-listening-conference-registration:dictation",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-listening-conference-registration:dictation",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w4-listening-conference-registration",
+            "sourceRevision": "sha256:afea9b9faa2ed8f9e82295008f83fecb50a318fec4753f4e2fd3fc8fff873a74"
+          },
+          "assetIds": [
+            "asset:foundations-w4-listening-conference-registration:content",
+            "asset:foundations-w4-listening-conference-registration:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-listening-conference-registration:strict",
+          "type": "strict-practice",
+          "prompt": "Retrieve the fourth sentence without opening the transcript.",
+          "answer": {
+            "text": "The workshop is in Cedar Room and begins at one fifteen."
+          },
+          "feedback": "Opening the answer makes this attempt coaching-only.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-listening-conference-registration",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-listening-conference-registration:strict",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-listening-conference-registration:strict",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w4-listening-conference-registration",
+            "sourceRevision": "sha256:40fa9abe599a30f359b74d58694787002fe8f158d4b17047a12531fb4f06bd96"
+          },
+          "assetIds": [
+            "asset:foundations-w4-listening-conference-registration:content",
+            "asset:foundations-w4-listening-conference-registration:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-listening-conference-registration:shadowing",
+          "type": "shadowing",
+          "prompt": "Shadow the final two sentences with thought-group pauses.",
+          "answer": {
+            "text": "The workshop is in Cedar Room and begins at one fifteen. A corrected badge and schedule will be available at the registration desk."
+          },
+          "feedback": "Aim for rhythm and intelligibility; this is coaching, not independent evidence.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-listening-conference-registration",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-listening-conference-registration:shadowing",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-listening-conference-registration:shadowing",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w4-listening-conference-registration",
+            "sourceRevision": "sha256:3e8a83c83b27f09904583243ea8725467918267f156c5ff38d604cabee370166"
+          },
+          "assetIds": [
+            "asset:foundations-w4-listening-conference-registration:content",
+            "asset:foundations-w4-listening-conference-registration:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-listening-conference-registration:retell",
+          "type": "retell-coaching",
+          "prompt": "Retell the practical outcome in two sentences.",
+          "answer": {
+            "text": "Mention the main change and the required action, using payment has cleared where suitable."
+          },
+          "feedback": "Retell remains coaching-only without an independent evaluator.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-listening-conference-registration",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-listening-conference-registration:retell",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-listening-conference-registration:retell",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w4-listening-conference-registration",
+            "sourceRevision": "sha256:29bc19d9c32e8a5ed60e43c4ceafa77101dd112fb20db6718f515cc07fa544c2"
+          },
+          "assetIds": [
+            "asset:foundations-w4-listening-conference-registration:content",
+            "asset:foundations-w4-listening-conference-registration:audio"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "Conference Registration Correction",
+        "language": "en",
+        "transcriptAssetId": "asset:foundations-w4-listening-conference-registration:content",
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:foundations-w4-listening-conference-registration",
+      "provenanceRecordId": "provenance:lesson:foundations-w4-listening-conference-registration",
+      "humanReviewRecordId": "review:lesson:foundations-w4-listening-conference-registration",
+      "rights": {
+        "id": "rights:lesson:foundations-w4-listening-conference-registration",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:foundations-w4-listening-conference-registration",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:foundations-w4-listening-conference-registration",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:46562de8512685f7b9aeef5a26d966277413a4eb9a39f061e615a14c83406bbb",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null,
+      "sha256": "46562de8512685f7b9aeef5a26d966277413a4eb9a39f061e615a14c83406bbb",
+      "byteLength": 7954
+    },
+    {
+      "id": "lesson:foundations-w4-listening-refill-scheme",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:373d25c637203096707e188fc3fa105a18d47a3d6031e4600393339ed2269e22",
+      "title": "Water Refill Scheme Briefing",
+      "learningObjective": "Track eligibility, inspection requirements and reporting procedures in a scheme briefing.",
+      "estimatedMinutes": 10,
+      "difficulty": "C1",
+      "skill": "listening",
+      "topic": "Public health",
+      "lexicalTargets": [
+        {
+          "id": "lex:foundations-w4-listening-refill-scheme:1",
+          "term": "without requiring a purchase",
+          "meaning": "without making buying something a condition",
+          "register": "neutral-academic",
+          "usageNote": "Use “without requiring a purchase” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-listening-refill-scheme:2",
+          "term": "hygiene inspection",
+          "meaning": "a check of cleanliness and safety",
+          "register": "neutral-academic",
+          "usageNote": "Use “hygiene inspection” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-listening-refill-scheme:3",
+          "term": "interruption to service",
+          "meaning": "a period when service is unavailable",
+          "register": "neutral-academic",
+          "usageNote": "Use “interruption to service” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-listening-refill-scheme:4",
+          "term": "participation records",
+          "meaning": "data showing involvement in a programme",
+          "register": "neutral-academic",
+          "usageNote": "Use “participation records” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:foundations-w4-listening-refill-scheme:content",
+        "asset:foundations-w4-listening-refill-scheme:audio"
+      ],
+      "activities": [
+        {
+          "id": "activity:foundations-w4-listening-refill-scheme:comprehension",
+          "type": "listening-comprehension",
+          "prompt": "Which detail changed in the recording?",
+          "options": [
+            {
+              "label": "The detail stated in sentence three"
+            },
+            {
+              "label": "A detail not mentioned in the recording"
+            }
+          ],
+          "answer": {
+            "text": "Staff should rinse reusable bottles only when a customer requests it."
+          },
+          "feedback": "Use the exact changed detail rather than a plausible topic word.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-listening-refill-scheme",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-listening-refill-scheme:comprehension",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-listening-refill-scheme:comprehension",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w4-listening-refill-scheme",
+            "sourceRevision": "sha256:487f85a3b9400e64eb2df0e62520112d0ca62e623b574da9683bfdda9a42cbc2"
+          },
+          "assetIds": [
+            "asset:foundations-w4-listening-refill-scheme:content",
+            "asset:foundations-w4-listening-refill-scheme:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-listening-refill-scheme:dictation",
+          "type": "dictation",
+          "prompt": "Write the second sentence exactly as you hear it.",
+          "answer": {
+            "text": "Each location will receive a window sticker after a basic hygiene inspection."
+          },
+          "feedback": "Check content words, function words and the stated detail.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-listening-refill-scheme",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-listening-refill-scheme:dictation",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-listening-refill-scheme:dictation",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w4-listening-refill-scheme",
+            "sourceRevision": "sha256:8a00a922fce6817c0b1cc505b179f55227642735fed215675e7eca8721c09d8b"
+          },
+          "assetIds": [
+            "asset:foundations-w4-listening-refill-scheme:content",
+            "asset:foundations-w4-listening-refill-scheme:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-listening-refill-scheme:strict",
+          "type": "strict-practice",
+          "prompt": "Retrieve the fourth sentence without opening the transcript.",
+          "answer": {
+            "text": "Any interruption to water service must be reported through the council portal."
+          },
+          "feedback": "Opening the answer makes this attempt coaching-only.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-listening-refill-scheme",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-listening-refill-scheme:strict",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-listening-refill-scheme:strict",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w4-listening-refill-scheme",
+            "sourceRevision": "sha256:51c1d6164175007af0023dcb299690bc04c8d89f13869e92e173e8cae4c359c5"
+          },
+          "assetIds": [
+            "asset:foundations-w4-listening-refill-scheme:content",
+            "asset:foundations-w4-listening-refill-scheme:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-listening-refill-scheme:shadowing",
+          "type": "shadowing",
+          "prompt": "Shadow the final two sentences with thought-group pauses.",
+          "answer": {
+            "text": "Any interruption to water service must be reported through the council portal. The first review will compare participation records after twelve weeks."
+          },
+          "feedback": "Aim for rhythm and intelligibility; this is coaching, not independent evidence.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-listening-refill-scheme",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-listening-refill-scheme:shadowing",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-listening-refill-scheme:shadowing",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w4-listening-refill-scheme",
+            "sourceRevision": "sha256:98a7ef798dca01e9504d8bd448aa882b073255baeef8f395b10610f3907b1154"
+          },
+          "assetIds": [
+            "asset:foundations-w4-listening-refill-scheme:content",
+            "asset:foundations-w4-listening-refill-scheme:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-listening-refill-scheme:retell",
+          "type": "retell-coaching",
+          "prompt": "Retell the practical outcome in two sentences.",
+          "answer": {
+            "text": "Mention the main change and the required action, using without requiring a purchase where suitable."
+          },
+          "feedback": "Retell remains coaching-only without an independent evaluator.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-listening-refill-scheme",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-listening-refill-scheme:retell",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-listening-refill-scheme:retell",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w4-listening-refill-scheme",
+            "sourceRevision": "sha256:2f08757211fe4bef65b7331fa070df14adac38781e0f7b796f21a3e184bc97c5"
+          },
+          "assetIds": [
+            "asset:foundations-w4-listening-refill-scheme:content",
+            "asset:foundations-w4-listening-refill-scheme:audio"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "Water Refill Scheme Briefing",
+        "language": "en",
+        "transcriptAssetId": "asset:foundations-w4-listening-refill-scheme:content",
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:foundations-w4-listening-refill-scheme",
+      "provenanceRecordId": "provenance:lesson:foundations-w4-listening-refill-scheme",
+      "humanReviewRecordId": "review:lesson:foundations-w4-listening-refill-scheme",
+      "rights": {
+        "id": "rights:lesson:foundations-w4-listening-refill-scheme",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:foundations-w4-listening-refill-scheme",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:foundations-w4-listening-refill-scheme",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:373d25c637203096707e188fc3fa105a18d47a3d6031e4600393339ed2269e22",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null,
+      "sha256": "373d25c637203096707e188fc3fa105a18d47a3d6031e4600393339ed2269e22",
+      "byteLength": 7573
+    },
+    {
+      "id": "lesson:foundations-w4-reading-remote-commuting",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:15afd8b99430e1a9f6582912246c292931bc1f95d219a291f9a595f03ac32305",
+      "title": "Remote Work and Commuting Rebound",
+      "learningObjective": "Evaluate why fewer commuting days do not translate directly into proportional emission cuts.",
+      "estimatedMinutes": 12,
+      "difficulty": "C1",
+      "skill": "reading",
+      "topic": "Work and transport",
+      "lexicalTargets": [
+        {
+          "id": "lex:foundations-w4-reading-remote-commuting:1",
+          "term": "net transport effect",
+          "meaning": "the overall result after gains and losses",
+          "register": "neutral-academic",
+          "usageNote": "Use “net transport effect” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-reading-remote-commuting:2",
+          "term": "not automatically proportional",
+          "meaning": "not necessarily equal in relative size",
+          "register": "neutral-academic",
+          "usageNote": "Use “not automatically proportional” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-reading-remote-commuting:3",
+          "term": "rebound effects",
+          "meaning": "behavioural changes that reduce an expected benefit",
+          "register": "neutral-academic",
+          "usageNote": "Use “rebound effects” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-reading-remote-commuting:4",
+          "term": "trip substitution",
+          "meaning": "replacing one kind of journey with another",
+          "register": "neutral-academic",
+          "usageNote": "Use “trip substitution” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:foundations-w4-reading-remote-commuting:content"
+      ],
+      "activities": [
+        {
+          "id": "activity:foundations-w4-reading-remote-commuting:main-claim",
+          "type": "reading-comprehension",
+          "prompt": "State the passage’s central claim in one sentence.",
+          "answer": {
+            "text": "Evaluate why fewer commuting days do not translate directly into proportional emission cuts."
+          },
+          "feedback": "A strong answer preserves the scope of the passage.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-reading-remote-commuting",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-reading-remote-commuting:main-claim",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-reading-remote-commuting:main-claim",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w4-reading-remote-commuting",
+            "sourceRevision": "sha256:69812fef7eb337e4eb8547a4af0c8c826b88f5df8b4af18767d50d46cbd89b88"
+          },
+          "assetIds": [
+            "asset:foundations-w4-reading-remote-commuting:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-reading-remote-commuting:paraphrase",
+          "type": "paraphrase-recognition",
+          "prompt": "Which expression best preserves “net transport effect”?",
+          "options": [
+            {
+              "label": "the overall result after gains and losses"
+            },
+            {
+              "label": "an unrelated general improvement"
+            }
+          ],
+          "answer": {
+            "text": "the overall result after gains and losses"
+          },
+          "feedback": "Match meaning and claim strength, not just topic.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-reading-remote-commuting",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-reading-remote-commuting:paraphrase",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-reading-remote-commuting:paraphrase",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w4-reading-remote-commuting",
+            "sourceRevision": "sha256:26e5bc71bd09cb03c728b11e86f0bd6bc232bfb083c2aa73fc91e88fe884ff4a"
+          },
+          "assetIds": [
+            "asset:foundations-w4-reading-remote-commuting:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-reading-remote-commuting:distractor",
+          "type": "distractor-recognition",
+          "prompt": "Identify a plausible statement that the passage does not establish.",
+          "answer": {
+            "text": "A broad universal claim that removes the passage’s stated limitation."
+          },
+          "feedback": "Distractors often repeat vocabulary while changing scope or causality.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-reading-remote-commuting",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-reading-remote-commuting:distractor",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-reading-remote-commuting:distractor",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w4-reading-remote-commuting",
+            "sourceRevision": "sha256:514a2e5610702f034542fcf4c24d7ef51429f950a50a7968b0cfb213393f2ee7"
+          },
+          "assetIds": [
+            "asset:foundations-w4-reading-remote-commuting:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-reading-remote-commuting:micro-reading",
+          "type": "micro-reading",
+          "prompt": "Find the sentence that limits the main claim and explain its function.",
+          "answer": {
+            "text": "The limiting sentence prevents the evidence from supporting a broader conclusion."
+          },
+          "feedback": "Look for contrast markers and cautious reporting verbs.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-reading-remote-commuting",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-reading-remote-commuting:micro-reading",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-reading-remote-commuting:micro-reading",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w4-reading-remote-commuting",
+            "sourceRevision": "sha256:551b935d1dbf36762ec8b8d5b5e77c98336ef4b76e792dabb59902bf547a5ce4"
+          },
+          "assetIds": [
+            "asset:foundations-w4-reading-remote-commuting:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-reading-remote-commuting:production",
+          "type": "paragraph-production",
+          "prompt": "Write 70–90 words using “not automatically proportional” to evaluate the passage.",
+          "answer": {
+            "text": "A complete paragraph should state a claim, cite a passage detail and preserve one limitation."
+          },
+          "feedback": "This follow-up is coaching-only until independently evaluated.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-reading-remote-commuting",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-reading-remote-commuting:production",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-reading-remote-commuting:production",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w4-reading-remote-commuting",
+            "sourceRevision": "sha256:0b6114572baf17b7386869c754a0939dd7c0e7e75f1911612a34de226b8f866b"
+          },
+          "assetIds": [
+            "asset:foundations-w4-reading-remote-commuting:content"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "Remote Work and Commuting Rebound",
+        "language": "en",
+        "transcriptAssetId": null,
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "reading-comprehension",
+          "paraphrase-recognition",
+          "distractor-recognition",
+          "micro-reading",
+          "paragraph-production"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:foundations-w4-reading-remote-commuting",
+      "provenanceRecordId": "provenance:lesson:foundations-w4-reading-remote-commuting",
+      "humanReviewRecordId": "review:lesson:foundations-w4-reading-remote-commuting",
+      "rights": {
+        "id": "rights:lesson:foundations-w4-reading-remote-commuting",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:foundations-w4-reading-remote-commuting",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:foundations-w4-reading-remote-commuting",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:15afd8b99430e1a9f6582912246c292931bc1f95d219a291f9a595f03ac32305",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null,
+      "sha256": "15afd8b99430e1a9f6582912246c292931bc1f95d219a291f9a595f03ac32305",
+      "byteLength": 7318
+    },
+    {
+      "id": "lesson:foundations-w4-reading-biodiversity-corridors",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:aad5c1c5acf870942d9437fe94ac0069ff9ae6f793caf986080715e48729bcdb",
+      "title": "When Green Corridors Become Ecological",
+      "learningObjective": "Distinguish visual continuity from evidence of functional habitat connectivity.",
+      "estimatedMinutes": 12,
+      "difficulty": "C1",
+      "skill": "reading",
+      "topic": "Biodiversity planning",
+      "lexicalTargets": [
+        {
+          "id": "lex:foundations-w4-reading-biodiversity-corridors:1",
+          "term": "visual continuity",
+          "meaning": "an unbroken appearance",
+          "register": "neutral-academic",
+          "usageNote": "Use “visual continuity” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-reading-biodiversity-corridors:2",
+          "term": "ecological connectivity",
+          "meaning": "the ability of organisms to move through habitats",
+          "register": "neutral-academic",
+          "usageNote": "Use “ecological connectivity” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-reading-biodiversity-corridors:3",
+          "term": "ground-dwelling",
+          "meaning": "living mainly at ground level",
+          "register": "neutral-academic",
+          "usageNote": "Use “ground-dwelling” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-reading-biodiversity-corridors:4",
+          "term": "functional corridors",
+          "meaning": "routes shown to support ecological movement",
+          "register": "neutral-academic",
+          "usageNote": "Use “functional corridors” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:foundations-w4-reading-biodiversity-corridors:content"
+      ],
+      "activities": [
+        {
+          "id": "activity:foundations-w4-reading-biodiversity-corridors:main-claim",
+          "type": "reading-comprehension",
+          "prompt": "State the passage’s central claim in one sentence.",
+          "answer": {
+            "text": "Distinguish visual continuity from evidence of functional habitat connectivity."
+          },
+          "feedback": "A strong answer preserves the scope of the passage.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-reading-biodiversity-corridors",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-reading-biodiversity-corridors:main-claim",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-reading-biodiversity-corridors:main-claim",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w4-reading-biodiversity-corridors",
+            "sourceRevision": "sha256:c2951bfee6c504ba5e3949a1c4b8b58e84b82a12677f4350f5daef3536890ec7"
+          },
+          "assetIds": [
+            "asset:foundations-w4-reading-biodiversity-corridors:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-reading-biodiversity-corridors:paraphrase",
+          "type": "paraphrase-recognition",
+          "prompt": "Which expression best preserves “visual continuity”?",
+          "options": [
+            {
+              "label": "an unbroken appearance"
+            },
+            {
+              "label": "an unrelated general improvement"
+            }
+          ],
+          "answer": {
+            "text": "an unbroken appearance"
+          },
+          "feedback": "Match meaning and claim strength, not just topic.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-reading-biodiversity-corridors",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-reading-biodiversity-corridors:paraphrase",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-reading-biodiversity-corridors:paraphrase",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w4-reading-biodiversity-corridors",
+            "sourceRevision": "sha256:3e05d138529434cd551b3195a91d2d598845cc20321194876d4325f98703c464"
+          },
+          "assetIds": [
+            "asset:foundations-w4-reading-biodiversity-corridors:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-reading-biodiversity-corridors:distractor",
+          "type": "distractor-recognition",
+          "prompt": "Identify a plausible statement that the passage does not establish.",
+          "answer": {
+            "text": "A broad universal claim that removes the passage’s stated limitation."
+          },
+          "feedback": "Distractors often repeat vocabulary while changing scope or causality.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-reading-biodiversity-corridors",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-reading-biodiversity-corridors:distractor",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-reading-biodiversity-corridors:distractor",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w4-reading-biodiversity-corridors",
+            "sourceRevision": "sha256:4f33feba3756cadd73ec7d80e4707837fcc0eb31e64659ef360f259f16dbc02e"
+          },
+          "assetIds": [
+            "asset:foundations-w4-reading-biodiversity-corridors:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-reading-biodiversity-corridors:micro-reading",
+          "type": "micro-reading",
+          "prompt": "Find the sentence that limits the main claim and explain its function.",
+          "answer": {
+            "text": "The limiting sentence prevents the evidence from supporting a broader conclusion."
+          },
+          "feedback": "Look for contrast markers and cautious reporting verbs.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-reading-biodiversity-corridors",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-reading-biodiversity-corridors:micro-reading",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-reading-biodiversity-corridors:micro-reading",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w4-reading-biodiversity-corridors",
+            "sourceRevision": "sha256:e386c4d0b4c583338a6408805ef8ebca5d76f107f47eaa7cf3d40abda3d512ca"
+          },
+          "assetIds": [
+            "asset:foundations-w4-reading-biodiversity-corridors:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-reading-biodiversity-corridors:production",
+          "type": "paragraph-production",
+          "prompt": "Write 70–90 words using “ecological connectivity” to evaluate the passage.",
+          "answer": {
+            "text": "A complete paragraph should state a claim, cite a passage detail and preserve one limitation."
+          },
+          "feedback": "This follow-up is coaching-only until independently evaluated.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-reading-biodiversity-corridors",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-reading-biodiversity-corridors:production",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-reading-biodiversity-corridors:production",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w4-reading-biodiversity-corridors",
+            "sourceRevision": "sha256:5c3244c1214cc9c25a83f9de574da6f515bb5201296726ace8fc91244d7e62d0"
+          },
+          "assetIds": [
+            "asset:foundations-w4-reading-biodiversity-corridors:content"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "When Green Corridors Become Ecological",
+        "language": "en",
+        "transcriptAssetId": null,
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "reading-comprehension",
+          "paraphrase-recognition",
+          "distractor-recognition",
+          "micro-reading",
+          "paragraph-production"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:foundations-w4-reading-biodiversity-corridors",
+      "provenanceRecordId": "provenance:lesson:foundations-w4-reading-biodiversity-corridors",
+      "humanReviewRecordId": "review:lesson:foundations-w4-reading-biodiversity-corridors",
+      "rights": {
+        "id": "rights:lesson:foundations-w4-reading-biodiversity-corridors",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:foundations-w4-reading-biodiversity-corridors",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:foundations-w4-reading-biodiversity-corridors",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:aad5c1c5acf870942d9437fe94ac0069ff9ae6f793caf986080715e48729bcdb",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null,
+      "sha256": "aad5c1c5acf870942d9437fe94ac0069ff9ae6f793caf986080715e48729bcdb",
+      "byteLength": 7448
+    },
+    {
+      "id": "lesson:foundations-w4-lexical-evaluation",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:7f761d307c27aa6077bc5f24329dc03f2259a917182fad361cf08673680c3aa9",
+      "title": "Evaluation without Overclaiming",
+      "learningObjective": "Combine benefit, limitation and evidence quality in a measured evaluation.",
+      "estimatedMinutes": 9,
+      "difficulty": "C1",
+      "skill": "lexical-paraphrase",
+      "topic": "Critical evaluation",
+      "lexicalTargets": [
+        {
+          "id": "lex:foundations-w4-lexical-evaluation:1",
+          "term": "offers a plausible benefit",
+          "meaning": "provides a credible possible advantage",
+          "register": "neutral-academic",
+          "usageNote": "Use “offers a plausible benefit” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-lexical-evaluation:2",
+          "term": "evidence remains limited",
+          "meaning": "the available support is still insufficient",
+          "register": "neutral-academic",
+          "usageNote": "Use “evidence remains limited” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-lexical-evaluation:3",
+          "term": "outweigh the drawback",
+          "meaning": "be more important than the disadvantage",
+          "register": "neutral-academic",
+          "usageNote": "Use “outweigh the drawback” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-lexical-evaluation:4",
+          "term": "warrants further investigation",
+          "meaning": "justifies additional research",
+          "register": "neutral-academic",
+          "usageNote": "Use “warrants further investigation” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:foundations-w4-lexical-evaluation:content"
+      ],
+      "activities": [
+        {
+          "id": "activity:foundations-w4-lexical-evaluation:recall",
+          "type": "controlled-recall",
+          "prompt": "Recall a precise meaning for “offers a plausible benefit”.",
+          "answer": {
+            "text": "provides a credible possible advantage"
+          },
+          "feedback": "Keep the strength and grammatical role of the expression.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-lexical-evaluation",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-lexical-evaluation:recall",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-lexical-evaluation:recall",
+            "senseId": null,
+            "skill": "recall",
+            "sourceId": "remote-content:lesson:foundations-w4-lexical-evaluation",
+            "sourceRevision": "sha256:faf89bb72e5d426f25b600a10c4f8751aecbbc9df72a951cb09989b63819a247"
+          },
+          "assetIds": [
+            "asset:foundations-w4-lexical-evaluation:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-lexical-evaluation:choice",
+          "type": "lexical-choice",
+          "prompt": "Choose the expression matching: the available support is still insufficient.",
+          "options": [
+            {
+              "label": "offers a plausible benefit"
+            },
+            {
+              "label": "evidence remains limited"
+            },
+            {
+              "label": "outweigh the drawback"
+            },
+            {
+              "label": "warrants further investigation"
+            }
+          ],
+          "answer": {
+            "text": "evidence remains limited"
+          },
+          "feedback": "Use the meaning note rather than surface similarity.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-lexical-evaluation",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-lexical-evaluation:choice",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-lexical-evaluation:choice",
+            "senseId": null,
+            "skill": "collocation",
+            "sourceId": "remote-content:lesson:foundations-w4-lexical-evaluation",
+            "sourceRevision": "sha256:30a6ef7d9ee05065b83b8561f3215e5f22c0056f5b014b6e8ebb9007e6fa1ff7"
+          },
+          "assetIds": [
+            "asset:foundations-w4-lexical-evaluation:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-lexical-evaluation:sentence",
+          "type": "sentence-production",
+          "prompt": "Write one academic sentence using “offers a plausible benefit”.",
+          "answer": {
+            "text": "The sentence should use the expression in its stated sense and register."
+          },
+          "feedback": "Check collocation, grammar and claim strength.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-lexical-evaluation",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-lexical-evaluation:sentence",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-lexical-evaluation:sentence",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w4-lexical-evaluation",
+            "sourceRevision": "sha256:990a9fbb35d09bcf88295be6163e9f89bc1246b4775523b76ca7c92c602817ea"
+          },
+          "assetIds": [
+            "asset:foundations-w4-lexical-evaluation:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-lexical-evaluation:paragraph",
+          "type": "paragraph-production",
+          "prompt": "Write 70–90 words using “offers a plausible benefit” and “evidence remains limited”.",
+          "answer": {
+            "text": "The paragraph should connect both expressions coherently without changing their meanings."
+          },
+          "feedback": "Prefer a clear claim and one supporting example.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-lexical-evaluation",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-lexical-evaluation:paragraph",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-lexical-evaluation:paragraph",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w4-lexical-evaluation",
+            "sourceRevision": "sha256:9c97f73ceeddd8b31b2ef4eabd8d3434d3538a332b5b489da939e9338b55b803"
+          },
+          "assetIds": [
+            "asset:foundations-w4-lexical-evaluation:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-lexical-evaluation:paraphrase",
+          "type": "paraphrase-recognition",
+          "prompt": "Paraphrase “outweigh the drawback” without increasing certainty.",
+          "answer": {
+            "text": "be more important than the disadvantage"
+          },
+          "feedback": "Preserve modality and scope.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-lexical-evaluation",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-lexical-evaluation:paraphrase",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-lexical-evaluation:paraphrase",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w4-lexical-evaluation",
+            "sourceRevision": "sha256:f86b3b2bb2af74d5612dd3c4a39b46eb11f85da8517b1f5f9c74970cf78d25ca"
+          },
+          "assetIds": [
+            "asset:foundations-w4-lexical-evaluation:content"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "Evaluation without Overclaiming",
+        "language": "en",
+        "transcriptAssetId": null,
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "controlled-recall",
+          "lexical-choice",
+          "sentence-production",
+          "paragraph-production",
+          "paraphrase-recognition"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:foundations-w4-lexical-evaluation",
+      "provenanceRecordId": "provenance:lesson:foundations-w4-lexical-evaluation",
+      "humanReviewRecordId": "review:lesson:foundations-w4-lexical-evaluation",
+      "rights": {
+        "id": "rights:lesson:foundations-w4-lexical-evaluation",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:foundations-w4-lexical-evaluation",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:foundations-w4-lexical-evaluation",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:7f761d307c27aa6077bc5f24329dc03f2259a917182fad361cf08673680c3aa9",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null,
+      "sha256": "7f761d307c27aa6077bc5f24329dc03f2259a917182fad361cf08673680c3aa9",
+      "byteLength": 6942
+    },
+    {
+      "id": "lesson:foundations-w4-lexical-synthesis",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:5a49e15311ea6075d2ff7d6cebce537f460fd2c9ea32d9bbcec72ba6ee224aac",
+      "title": "Synthesising Related Claims",
+      "learningObjective": "Connect agreement, qualification and divergence across sources.",
+      "estimatedMinutes": 9,
+      "difficulty": "C1",
+      "skill": "lexical-paraphrase",
+      "topic": "Source synthesis",
+      "lexicalTargets": [
+        {
+          "id": "lex:foundations-w4-lexical-synthesis:1",
+          "term": "both accounts emphasise",
+          "meaning": "the two sources give importance to",
+          "register": "neutral-academic",
+          "usageNote": "Use “both accounts emphasise” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-lexical-synthesis:2",
+          "term": "the latter qualifies",
+          "meaning": "the second source limits the earlier claim",
+          "register": "neutral-academic",
+          "usageNote": "Use “the latter qualifies” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-lexical-synthesis:3",
+          "term": "converge on",
+          "meaning": "reach a similar conclusion about",
+          "register": "neutral-academic",
+          "usageNote": "Use “converge on” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w4-lexical-synthesis:4",
+          "term": "diverge in their explanation",
+          "meaning": "offer different accounts of why",
+          "register": "neutral-academic",
+          "usageNote": "Use “diverge in their explanation” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:foundations-w4-lexical-synthesis:content"
+      ],
+      "activities": [
+        {
+          "id": "activity:foundations-w4-lexical-synthesis:recall",
+          "type": "controlled-recall",
+          "prompt": "Recall a precise meaning for “both accounts emphasise”.",
+          "answer": {
+            "text": "the two sources give importance to"
+          },
+          "feedback": "Keep the strength and grammatical role of the expression.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-lexical-synthesis",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-lexical-synthesis:recall",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-lexical-synthesis:recall",
+            "senseId": null,
+            "skill": "recall",
+            "sourceId": "remote-content:lesson:foundations-w4-lexical-synthesis",
+            "sourceRevision": "sha256:71c5f19a2f2c89bc1b5685a42ebf6fa3e6efd5a14553b3017d73fb538698b2de"
+          },
+          "assetIds": [
+            "asset:foundations-w4-lexical-synthesis:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-lexical-synthesis:choice",
+          "type": "lexical-choice",
+          "prompt": "Choose the expression matching: the second source limits the earlier claim.",
+          "options": [
+            {
+              "label": "both accounts emphasise"
+            },
+            {
+              "label": "the latter qualifies"
+            },
+            {
+              "label": "converge on"
+            },
+            {
+              "label": "diverge in their explanation"
+            }
+          ],
+          "answer": {
+            "text": "the latter qualifies"
+          },
+          "feedback": "Use the meaning note rather than surface similarity.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-lexical-synthesis",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-lexical-synthesis:choice",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-lexical-synthesis:choice",
+            "senseId": null,
+            "skill": "collocation",
+            "sourceId": "remote-content:lesson:foundations-w4-lexical-synthesis",
+            "sourceRevision": "sha256:552b51c36f5231eb0aed8906c57e85d04f303f3b074ebd692f2eb6ca09f601d4"
+          },
+          "assetIds": [
+            "asset:foundations-w4-lexical-synthesis:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-lexical-synthesis:sentence",
+          "type": "sentence-production",
+          "prompt": "Write one academic sentence using “both accounts emphasise”.",
+          "answer": {
+            "text": "The sentence should use the expression in its stated sense and register."
+          },
+          "feedback": "Check collocation, grammar and claim strength.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-lexical-synthesis",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-lexical-synthesis:sentence",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-lexical-synthesis:sentence",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w4-lexical-synthesis",
+            "sourceRevision": "sha256:1ce5d5a93a8a440e551c2731b4cd31efca10783f5912b2da613e3f1cc3a072ac"
+          },
+          "assetIds": [
+            "asset:foundations-w4-lexical-synthesis:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-lexical-synthesis:paragraph",
+          "type": "paragraph-production",
+          "prompt": "Write 70–90 words using “both accounts emphasise” and “the latter qualifies”.",
+          "answer": {
+            "text": "The paragraph should connect both expressions coherently without changing their meanings."
+          },
+          "feedback": "Prefer a clear claim and one supporting example.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-lexical-synthesis",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-lexical-synthesis:paragraph",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-lexical-synthesis:paragraph",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w4-lexical-synthesis",
+            "sourceRevision": "sha256:23b0788d83566bc734f523465e61097527b4ed36e338e2c64783b6a070f44792"
+          },
+          "assetIds": [
+            "asset:foundations-w4-lexical-synthesis:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w4-lexical-synthesis:paraphrase",
+          "type": "paraphrase-recognition",
+          "prompt": "Paraphrase “converge on” without increasing certainty.",
+          "answer": {
+            "text": "reach a similar conclusion about"
+          },
+          "feedback": "Preserve modality and scope.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-4",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w4-lexical-synthesis",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w4-lexical-synthesis:paraphrase",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w4-lexical-synthesis:paraphrase",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w4-lexical-synthesis",
+            "sourceRevision": "sha256:096a1eb454760b1b33d78e37f222a35fa1f95cb0731564da51a72fa872b0c557"
+          },
+          "assetIds": [
+            "asset:foundations-w4-lexical-synthesis:content"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "Synthesising Related Claims",
+        "language": "en",
+        "transcriptAssetId": null,
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "controlled-recall",
+          "lexical-choice",
+          "sentence-production",
+          "paragraph-production",
+          "paraphrase-recognition"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:foundations-w4-lexical-synthesis",
+      "provenanceRecordId": "provenance:lesson:foundations-w4-lexical-synthesis",
+      "humanReviewRecordId": "review:lesson:foundations-w4-lexical-synthesis",
+      "rights": {
+        "id": "rights:lesson:foundations-w4-lexical-synthesis",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:foundations-w4-lexical-synthesis",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:foundations-w4-lexical-synthesis",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:5a49e15311ea6075d2ff7d6cebce537f460fd2c9ea32d9bbcec72ba6ee224aac",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null,
+      "sha256": "5a49e15311ea6075d2ff7d6cebce537f460fd2c9ea32d9bbcec72ba6ee224aac",
+      "byteLength": 6775
+    }
+  ],
+  "compatibility": {
+    "minimumAppVersion": "10.0.0",
+    "supportedActivityTypes": [
+      "listening-comprehension",
+      "dictation",
+      "strict-practice",
+      "shadowing",
+      "retell-coaching",
+      "reading-comprehension",
+      "paraphrase-recognition",
+      "distractor-recognition",
+      "micro-reading",
+      "paragraph-production",
+      "controlled-recall",
+      "lexical-choice",
+      "sentence-production"
+    ]
+  },
+  "rightsRecordId": "rights:pack:ielts-foundations-week-4",
+  "provenanceRecordId": "provenance:pack:ielts-foundations-week-4",
+  "humanReviewRecordId": "review:pack:ielts-foundations-week-4",
+  "rights": {
+    "id": "rights:pack:ielts-foundations-week-4",
+    "schemaVersion": 2,
+    "status": "pending",
+    "licenseId": "pending-human-rights-review",
+    "rightsHolder": null,
+    "basis": "No publication claim. Human rights verification is required.",
+    "assertedAt": null,
+    "expiresAt": null,
+    "aiAsserted": false
+  },
+  "provenance": {
+    "id": "provenance:pack:ielts-foundations-week-4",
+    "schemaVersion": 2,
+    "sourceType": "generated-draft",
+    "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+    "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+    "createdAt": "2026-07-30T12:00:00.000Z",
+    "aiDraft": true,
+    "kind": "pack"
+  },
+  "humanReview": {
+    "id": "review:pack:ielts-foundations-week-4",
+    "schemaVersion": 2,
+    "status": "pending",
+    "reviewerType": "human",
+    "reviewerId": null,
+    "reviewedAt": null,
+    "scopeDigest": "sha256:7021341156f52f79758dc3d657b00d1d395f5efe5e5adf632a3042c0d148ad5c",
+    "checks": [],
+    "selfApprovedByAi": false,
+    "kind": "pack"
+  },
+  "publishedAt": null,
+  "weeklyDefectReviewRecordId": "review:defect:foundations-week-4"
+}

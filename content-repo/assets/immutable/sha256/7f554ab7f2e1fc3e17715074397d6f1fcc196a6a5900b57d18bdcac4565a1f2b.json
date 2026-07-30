@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w4-reading-remote-commuting",
+  "skill": "reading",
+  "passage": "Hybrid work reduces the number of routine commuting trips for many employees, but the net transport effect is not automatically proportional. Some households move farther from workplaces when daily attendance is no longer required. Others use saved commuting time for additional non-work journeys. Office energy use may also remain high when buildings serve fewer people on any given day. These rebound effects do not erase the potential benefit of hybrid work; they show why evaluations must include residential choices, trip substitution and building operation rather than counting avoided commutes alone.",
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w4-reading-remote-commuting:1",
+      "term": "net transport effect",
+      "meaning": "the overall result after gains and losses",
+      "register": "neutral-academic",
+      "usageNote": "Use “net transport effect” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-reading-remote-commuting:2",
+      "term": "not automatically proportional",
+      "meaning": "not necessarily equal in relative size",
+      "register": "neutral-academic",
+      "usageNote": "Use “not automatically proportional” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-reading-remote-commuting:3",
+      "term": "rebound effects",
+      "meaning": "behavioural changes that reduce an expected benefit",
+      "register": "neutral-academic",
+      "usageNote": "Use “rebound effects” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-reading-remote-commuting:4",
+      "term": "trip substitution",
+      "meaning": "replacing one kind of journey with another",
+      "register": "neutral-academic",
+      "usageNote": "Use “trip substitution” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

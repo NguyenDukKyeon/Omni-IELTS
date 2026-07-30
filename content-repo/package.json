@@ -1,0 +1,17 @@
+{
+  "name": "vocab-master-content-publication",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate:drafts": "node scripts/validate-content.mjs --mode=draft",
+    "validate:publish": "node scripts/validate-content.mjs --mode=publish",
+    "build:staging": "node scripts/build-publication.mjs --channel=staging",
+    "build:production": "node scripts/build-publication.mjs --channel=production",
+    "sign:staging": "node scripts/sign-catalog.mjs --channel=staging",
+    "sign:production": "node scripts/sign-catalog.mjs --channel=production"
+  },
+  "engines": {
+    "node": ">=20.19"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w2-reading-coastal-restoration",
+  "skill": "reading",
+  "passage": "Coastal dunes protect inland areas, yet damaged dunes cannot always be rebuilt by simply adding sand. Loose sand may blow away before plants establish roots. Some restoration teams install low, flexible barriers that slow the wind without blocking it completely. Sand settles around the barriers, creating small ridges where native grasses can take hold. The method requires monitoring because a barrier placed in the wrong direction can redirect erosion. Its value lies in working with local movement rather than attempting to freeze a changing coastline.",
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w2-reading-coastal-restoration:1",
+      "term": "establish roots",
+      "meaning": "develop a stable root system",
+      "register": "neutral-academic",
+      "usageNote": "Use “establish roots” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w2-reading-coastal-restoration:2",
+      "term": "settles around",
+      "meaning": "comes to rest near",
+      "register": "neutral-academic",
+      "usageNote": "Use “settles around” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w2-reading-coastal-restoration:3",
+      "term": "redirect erosion",
+      "meaning": "change where material is worn away",
+      "register": "neutral-academic",
+      "usageNote": "Use “redirect erosion” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w2-reading-coastal-restoration:4",
+      "term": "working with local movement",
+      "meaning": "using existing natural processes",
+      "register": "neutral-academic",
+      "usageNote": "Use “working with local movement” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

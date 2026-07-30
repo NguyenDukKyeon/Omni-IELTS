@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w3-listening-garden-meeting",
+  "skill": "listening",
+  "transcript": {
+    "segments": [
+      {
+        "id": "segment:foundations-w3-listening-garden-meeting:1",
+        "startMs": 0,
+        "endMs": 5250,
+        "text": "The compost delivery has been delayed until Wednesday morning."
+      },
+      {
+        "id": "segment:foundations-w3-listening-garden-meeting:2",
+        "startMs": 5500,
+        "endMs": 10750,
+        "text": "We still need three volunteers to move the bags beside the tool shed."
+      },
+      {
+        "id": "segment:foundations-w3-listening-garden-meeting:3",
+        "startMs": 11000,
+        "endMs": 16250,
+        "text": "Please do not place compost directly around the young herb plants."
+      },
+      {
+        "id": "segment:foundations-w3-listening-garden-meeting:4",
+        "startMs": 16500,
+        "endMs": 21750,
+        "text": "Mina will label the shared beds before the weekend planting session."
+      },
+      {
+        "id": "segment:foundations-w3-listening-garden-meeting:5",
+        "startMs": 22000,
+        "endMs": 27250,
+        "text": "If heavy rain is forecast, the session will move to Sunday afternoon."
+      }
+    ]
+  },
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w3-listening-garden-meeting:1",
+      "term": "has been delayed",
+      "meaning": "will happen later than planned",
+      "register": "neutral-academic",
+      "usageNote": "Use “has been delayed” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w3-listening-garden-meeting:2",
+      "term": "tool shed",
+      "meaning": "a small building for equipment",
+      "register": "neutral-academic",
+      "usageNote": "Use “tool shed” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w3-listening-garden-meeting:3",
+      "term": "shared beds",
+      "meaning": "garden plots used by the group",
+      "register": "neutral-academic",
+      "usageNote": "Use “shared beds” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w3-listening-garden-meeting:4",
+      "term": "heavy rain is forecast",
+      "meaning": "a large amount of rain is predicted",
+      "register": "neutral-academic",
+      "usageNote": "Use “heavy rain is forecast” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

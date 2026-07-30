@@ -1,0 +1,2048 @@
+{
+  "id": "pack:ielts-foundations-week-2",
+  "schemaVersion": 2,
+  "contentRevision": 1,
+  "contentAddress": "sha256:34143cb914b775a596015ac596bb3465495b3cefb63b09b05256a61a8aaafcce",
+  "title": "IELTS Foundations — Week 2",
+  "summary": "Six vocabulary-focused IELTS foundation lessons; not a mock exam or band predictor.",
+  "assets": [
+    {
+      "id": "asset:foundations-w2-listening-museum-briefing:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:e16900661f00fd16c1249def8ec643ddaf4dcc30a7bb28db966f18fb8c789427",
+      "sha256": "e16900661f00fd16c1249def8ec643ddaf4dcc30a7bb28db966f18fb8c789427",
+      "byteLength": 2495,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/e16900661f00fd16c1249def8ec643ddaf4dcc30a7bb28db966f18fb8c789427.json",
+      "retrievalUrl": "/content/immutable/sha256/e16900661f00fd16c1249def8ec643ddaf4dcc30a7bb28db966f18fb8c789427.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for Museum Volunteer Briefing",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w2-listening-museum-briefing:content",
+      "provenanceRecordId": "provenance:asset:foundations-w2-listening-museum-briefing:content",
+      "humanReviewRecordId": "review:asset:foundations-w2-listening-museum-briefing:content",
+      "rights": {
+        "id": "rights:asset:foundations-w2-listening-museum-briefing:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w2-listening-museum-briefing:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w2-listening-museum-briefing:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:e16900661f00fd16c1249def8ec643ddaf4dcc30a7bb28db966f18fb8c789427",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:foundations-w2-listening-museum-briefing:audio",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:cfcdbb34dd7a62fb1706eda80b7513194368efe143f407e4216c1aba9f75de99",
+      "sha256": "cfcdbb34dd7a62fb1706eda80b7513194368efe143f407e4216c1aba9f75de99",
+      "byteLength": 1013712,
+      "mediaType": "audio/wav",
+      "path": "assets/immutable/sha256/cfcdbb34dd7a62fb1706eda80b7513194368efe143f407e4216c1aba9f75de99.wav",
+      "retrievalUrl": "/content/immutable/sha256/cfcdbb34dd7a62fb1706eda80b7513194368efe143f407e4216c1aba9f75de99.wav",
+      "accessibilityLabel": "Spoken audio for Museum Volunteer Briefing; verified transcript is declared in asset:foundations-w2-listening-museum-briefing:content",
+      "generationNote": "Generated offline with Microsoft Zira Desktop for draft review; licensing and voice approval remain pending.",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w2-listening-museum-briefing:audio",
+      "provenanceRecordId": "provenance:asset:foundations-w2-listening-museum-briefing:audio",
+      "humanReviewRecordId": "review:asset:foundations-w2-listening-museum-briefing:audio",
+      "rights": {
+        "id": "rights:asset:foundations-w2-listening-museum-briefing:audio",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w2-listening-museum-briefing:audio",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "draft-audio-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w2-listening-museum-briefing:audio",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:cfcdbb34dd7a62fb1706eda80b7513194368efe143f407e4216c1aba9f75de99",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "draft-audio-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:foundations-w2-listening-transport-change:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:3f833962352bc25463d7e79c5f650fceb252e8448f2f80252014b8e7235e824d",
+      "sha256": "3f833962352bc25463d7e79c5f650fceb252e8448f2f80252014b8e7235e824d",
+      "byteLength": 2508,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/3f833962352bc25463d7e79c5f650fceb252e8448f2f80252014b8e7235e824d.json",
+      "retrievalUrl": "/content/immutable/sha256/3f833962352bc25463d7e79c5f650fceb252e8448f2f80252014b8e7235e824d.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for Temporary Bus Route Change",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w2-listening-transport-change:content",
+      "provenanceRecordId": "provenance:asset:foundations-w2-listening-transport-change:content",
+      "humanReviewRecordId": "review:asset:foundations-w2-listening-transport-change:content",
+      "rights": {
+        "id": "rights:asset:foundations-w2-listening-transport-change:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w2-listening-transport-change:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w2-listening-transport-change:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:3f833962352bc25463d7e79c5f650fceb252e8448f2f80252014b8e7235e824d",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:foundations-w2-listening-transport-change:audio",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:695c66fdee914a2b7d65f0db41c61dfbea1528a33d9bcc99c5b30713d9be148f",
+      "sha256": "695c66fdee914a2b7d65f0db41c61dfbea1528a33d9bcc99c5b30713d9be148f",
+      "byteLength": 1056928,
+      "mediaType": "audio/wav",
+      "path": "assets/immutable/sha256/695c66fdee914a2b7d65f0db41c61dfbea1528a33d9bcc99c5b30713d9be148f.wav",
+      "retrievalUrl": "/content/immutable/sha256/695c66fdee914a2b7d65f0db41c61dfbea1528a33d9bcc99c5b30713d9be148f.wav",
+      "accessibilityLabel": "Spoken audio for Temporary Bus Route Change; verified transcript is declared in asset:foundations-w2-listening-transport-change:content",
+      "generationNote": "Generated offline with Microsoft Zira Desktop for draft review; licensing and voice approval remain pending.",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w2-listening-transport-change:audio",
+      "provenanceRecordId": "provenance:asset:foundations-w2-listening-transport-change:audio",
+      "humanReviewRecordId": "review:asset:foundations-w2-listening-transport-change:audio",
+      "rights": {
+        "id": "rights:asset:foundations-w2-listening-transport-change:audio",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w2-listening-transport-change:audio",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "draft-audio-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w2-listening-transport-change:audio",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:695c66fdee914a2b7d65f0db41c61dfbea1528a33d9bcc99c5b30713d9be148f",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "draft-audio-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:foundations-w2-reading-coastal-restoration:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:185c160f61bb06379f9e7c15d7c4e34f5274402fbf31857e61d7c77b452e11e3",
+      "sha256": "185c160f61bb06379f9e7c15d7c4e34f5274402fbf31857e61d7c77b452e11e3",
+      "byteLength": 1965,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/185c160f61bb06379f9e7c15d7c4e34f5274402fbf31857e61d7c77b452e11e3.json",
+      "retrievalUrl": "/content/immutable/sha256/185c160f61bb06379f9e7c15d7c4e34f5274402fbf31857e61d7c77b452e11e3.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for Restoring Dunes with Flexible Barriers",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "reading-comprehension",
+          "paraphrase-recognition",
+          "distractor-recognition",
+          "micro-reading",
+          "paragraph-production"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w2-reading-coastal-restoration:content",
+      "provenanceRecordId": "provenance:asset:foundations-w2-reading-coastal-restoration:content",
+      "humanReviewRecordId": "review:asset:foundations-w2-reading-coastal-restoration:content",
+      "rights": {
+        "id": "rights:asset:foundations-w2-reading-coastal-restoration:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w2-reading-coastal-restoration:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w2-reading-coastal-restoration:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:185c160f61bb06379f9e7c15d7c4e34f5274402fbf31857e61d7c77b452e11e3",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:foundations-w2-reading-food-waste:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:c3ce5586630b5047b97a86bb6a6edc98779f1f84994c2e08157c4dad350f3be4",
+      "sha256": "c3ce5586630b5047b97a86bb6a6edc98779f1f84994c2e08157c4dad350f3be4",
+      "byteLength": 1888,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/c3ce5586630b5047b97a86bb6a6edc98779f1f84994c2e08157c4dad350f3be4.json",
+      "retrievalUrl": "/content/immutable/sha256/c3ce5586630b5047b97a86bb6a6edc98779f1f84994c2e08157c4dad350f3be4.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for A Campus Food-Waste Trial",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "reading-comprehension",
+          "paraphrase-recognition",
+          "distractor-recognition",
+          "micro-reading",
+          "paragraph-production"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w2-reading-food-waste:content",
+      "provenanceRecordId": "provenance:asset:foundations-w2-reading-food-waste:content",
+      "humanReviewRecordId": "review:asset:foundations-w2-reading-food-waste:content",
+      "rights": {
+        "id": "rights:asset:foundations-w2-reading-food-waste:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w2-reading-food-waste:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w2-reading-food-waste:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:c3ce5586630b5047b97a86bb6a6edc98779f1f84994c2e08157c4dad350f3be4",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:foundations-w2-lexical-comparison:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:0af64c21609303350e09f06fbe5060a096c71e80d7df26cf3500516e361579ac",
+      "sha256": "0af64c21609303350e09f06fbe5060a096c71e80d7df26cf3500516e361579ac",
+      "byteLength": 1327,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/0af64c21609303350e09f06fbe5060a096c71e80d7df26cf3500516e361579ac.json",
+      "retrievalUrl": "/content/immutable/sha256/0af64c21609303350e09f06fbe5060a096c71e80d7df26cf3500516e361579ac.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for Comparison and Contrast",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "controlled-recall",
+          "lexical-choice",
+          "sentence-production",
+          "paragraph-production",
+          "paraphrase-recognition"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w2-lexical-comparison:content",
+      "provenanceRecordId": "provenance:asset:foundations-w2-lexical-comparison:content",
+      "humanReviewRecordId": "review:asset:foundations-w2-lexical-comparison:content",
+      "rights": {
+        "id": "rights:asset:foundations-w2-lexical-comparison:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w2-lexical-comparison:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w2-lexical-comparison:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:0af64c21609303350e09f06fbe5060a096c71e80d7df26cf3500516e361579ac",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    },
+    {
+      "id": "asset:foundations-w2-lexical-trends:content",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:fb670550bb627fcabad2d9e21d9b3d147f91e8f0412d6020c426814c53931084",
+      "sha256": "fb670550bb627fcabad2d9e21d9b3d147f91e8f0412d6020c426814c53931084",
+      "byteLength": 1341,
+      "mediaType": "application/json",
+      "path": "assets/immutable/sha256/fb670550bb627fcabad2d9e21d9b3d147f91e8f0412d6020c426814c53931084.json",
+      "retrievalUrl": "/content/immutable/sha256/fb670550bb627fcabad2d9e21d9b3d147f91e8f0412d6020c426814c53931084.json",
+      "accessibilityLabel": "Structured transcript, passage and lexical data for Describing Trends Carefully",
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "controlled-recall",
+          "lexical-choice",
+          "sentence-production",
+          "paragraph-production",
+          "paraphrase-recognition"
+        ]
+      },
+      "rightsRecordId": "rights:asset:foundations-w2-lexical-trends:content",
+      "provenanceRecordId": "provenance:asset:foundations-w2-lexical-trends:content",
+      "humanReviewRecordId": "review:asset:foundations-w2-lexical-trends:content",
+      "rights": {
+        "id": "rights:asset:foundations-w2-lexical-trends:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:asset:foundations-w2-lexical-trends:content",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "structured-content-asset"
+      },
+      "humanReview": {
+        "id": "review:asset:foundations-w2-lexical-trends:content",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:fb670550bb627fcabad2d9e21d9b3d147f91e8f0412d6020c426814c53931084",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "structured-content-asset"
+      },
+      "publishedAt": null
+    }
+  ],
+  "lessons": [
+    {
+      "id": "lesson:foundations-w2-listening-museum-briefing",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:ed7a2433f92779451e2958a58b962cf5daf8e27ffd5b5e169fce0f444627e618",
+      "title": "Museum Volunteer Briefing",
+      "learningObjective": "Follow task assignments and a changed meeting point in a volunteer briefing.",
+      "estimatedMinutes": 10,
+      "difficulty": "B1",
+      "skill": "listening",
+      "topic": "Volunteering",
+      "lexicalTargets": [
+        {
+          "id": "lex:foundations-w2-listening-museum-briefing:1",
+          "term": "family day",
+          "meaning": "an event designed for families",
+          "register": "neutral-academic",
+          "usageNote": "Use “family day” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-listening-museum-briefing:2",
+          "term": "guide visitors",
+          "meaning": "show guests where to go",
+          "register": "neutral-academic",
+          "usageNote": "Use “guide visitors” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-listening-museum-briefing:3",
+          "term": "prepare activity tables",
+          "meaning": "set up places for practical tasks",
+          "register": "neutral-academic",
+          "usageNote": "Use “prepare activity tables” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-listening-museum-briefing:4",
+          "term": "team leader",
+          "meaning": "the person coordinating a group",
+          "register": "neutral-academic",
+          "usageNote": "Use “team leader” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:foundations-w2-listening-museum-briefing:content",
+        "asset:foundations-w2-listening-museum-briefing:audio"
+      ],
+      "activities": [
+        {
+          "id": "activity:foundations-w2-listening-museum-briefing:comprehension",
+          "type": "listening-comprehension",
+          "prompt": "Which detail changed in the recording?",
+          "options": [
+            {
+              "label": "The detail stated in sentence three"
+            },
+            {
+              "label": "A detail not mentioned in the recording"
+            }
+          ],
+          "answer": {
+            "text": "Blue badge volunteers will guide visitors to the new science gallery."
+          },
+          "feedback": "Use the exact changed detail rather than a plausible topic word.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-listening-museum-briefing",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-listening-museum-briefing:comprehension",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-museum-briefing:comprehension",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-museum-briefing",
+            "sourceRevision": "sha256:afdcb58ddc139d42de8e67cce400ee9814c362d88b2054748cb7d3444203838f"
+          },
+          "assetIds": [
+            "asset:foundations-w2-listening-museum-briefing:content",
+            "asset:foundations-w2-listening-museum-briefing:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-listening-museum-briefing:dictation",
+          "type": "dictation",
+          "prompt": "Write the second sentence exactly as you hear it.",
+          "answer": {
+            "text": "The briefing will start in the education room, not the front hall."
+          },
+          "feedback": "Check content words, function words and the stated detail.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-listening-museum-briefing",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-listening-museum-briefing:dictation",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-museum-briefing:dictation",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-museum-briefing",
+            "sourceRevision": "sha256:9e93f8ac88f58014c60558effef13a03c3fb4375a8b8c69f813ad995a4f91fc7"
+          },
+          "assetIds": [
+            "asset:foundations-w2-listening-museum-briefing:content",
+            "asset:foundations-w2-listening-museum-briefing:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-listening-museum-briefing:strict",
+          "type": "strict-practice",
+          "prompt": "Retrieve the fourth sentence without opening the transcript.",
+          "answer": {
+            "text": "Green badge volunteers should prepare activity tables near the cafe."
+          },
+          "feedback": "Opening the answer makes this attempt coaching-only.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-listening-museum-briefing",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-listening-museum-briefing:strict",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-museum-briefing:strict",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-museum-briefing",
+            "sourceRevision": "sha256:d0c14c6f2bebbb8695896681ee51b916db1e63ed34f4a31caccf44502bce68fd"
+          },
+          "assetIds": [
+            "asset:foundations-w2-listening-museum-briefing:content",
+            "asset:foundations-w2-listening-museum-briefing:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-listening-museum-briefing:shadowing",
+          "type": "shadowing",
+          "prompt": "Shadow the final two sentences with thought-group pauses.",
+          "answer": {
+            "text": "Green badge volunteers should prepare activity tables near the cafe. Meet your team leader at eight forty-five so the doors can open at nine."
+          },
+          "feedback": "Aim for rhythm and intelligibility; this is coaching, not independent evidence.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-listening-museum-briefing",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-listening-museum-briefing:shadowing",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-museum-briefing:shadowing",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-museum-briefing",
+            "sourceRevision": "sha256:167b159a6db85b327e9c6ce7e119f982925f3536579c7bdd86a6f5862ea6ff4f"
+          },
+          "assetIds": [
+            "asset:foundations-w2-listening-museum-briefing:content",
+            "asset:foundations-w2-listening-museum-briefing:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-listening-museum-briefing:retell",
+          "type": "retell-coaching",
+          "prompt": "Retell the practical outcome in two sentences.",
+          "answer": {
+            "text": "Mention the main change and the required action, using family day where suitable."
+          },
+          "feedback": "Retell remains coaching-only without an independent evaluator.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-listening-museum-briefing",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-listening-museum-briefing:retell",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-museum-briefing:retell",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-museum-briefing",
+            "sourceRevision": "sha256:a8e781e2813b120c3fff9cf24d426a2311001be95572f54314d1e39741bdfeb4"
+          },
+          "assetIds": [
+            "asset:foundations-w2-listening-museum-briefing:content",
+            "asset:foundations-w2-listening-museum-briefing:audio"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "Museum Volunteer Briefing",
+        "language": "en",
+        "transcriptAssetId": "asset:foundations-w2-listening-museum-briefing:content",
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:foundations-w2-listening-museum-briefing",
+      "provenanceRecordId": "provenance:lesson:foundations-w2-listening-museum-briefing",
+      "humanReviewRecordId": "review:lesson:foundations-w2-listening-museum-briefing",
+      "rights": {
+        "id": "rights:lesson:foundations-w2-listening-museum-briefing",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:foundations-w2-listening-museum-briefing",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:foundations-w2-listening-museum-briefing",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:ed7a2433f92779451e2958a58b962cf5daf8e27ffd5b5e169fce0f444627e618",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null,
+      "sha256": "ed7a2433f92779451e2958a58b962cf5daf8e27ffd5b5e169fce0f444627e618",
+      "byteLength": 7499
+    },
+    {
+      "id": "lesson:foundations-w2-listening-transport-change",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:1694e21a3e9705e3d4da6b97f414b563e5134ec980ecb8f96cc8182e2df319f2",
+      "title": "Temporary Bus Route Change",
+      "learningObjective": "Identify an altered stop, duration and alternative route from a transport announcement.",
+      "estimatedMinutes": 10,
+      "difficulty": "B1",
+      "skill": "listening",
+      "topic": "Public transport",
+      "lexicalTargets": [
+        {
+          "id": "lex:foundations-w2-listening-transport-change:1",
+          "term": "will affect",
+          "meaning": "will change or influence",
+          "register": "neutral-academic",
+          "usageNote": "Use “will affect” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-listening-transport-change:2",
+          "term": "temporary stop",
+          "meaning": "a short-term boarding point",
+          "register": "neutral-academic",
+          "usageNote": "Use “temporary stop” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-listening-transport-change:3",
+          "term": "during the works",
+          "meaning": "while construction is taking place",
+          "register": "neutral-academic",
+          "usageNote": "Use “during the works” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-listening-transport-change:4",
+          "term": "resume service",
+          "meaning": "begin operating normally again",
+          "register": "neutral-academic",
+          "usageNote": "Use “resume service” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:foundations-w2-listening-transport-change:content",
+        "asset:foundations-w2-listening-transport-change:audio"
+      ],
+      "activities": [
+        {
+          "id": "activity:foundations-w2-listening-transport-change:comprehension",
+          "type": "listening-comprehension",
+          "prompt": "Which detail changed in the recording?",
+          "options": [
+            {
+              "label": "The detail stated in sentence three"
+            },
+            {
+              "label": "A detail not mentioned in the recording"
+            }
+          ],
+          "answer": {
+            "text": "Use the temporary stop on King Street beside the post office."
+          },
+          "feedback": "Use the exact changed detail rather than a plausible topic word.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-listening-transport-change",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-listening-transport-change:comprehension",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-transport-change:comprehension",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-transport-change",
+            "sourceRevision": "sha256:a90d52837d7fee990d4d27d8fde703b5033161dc77a2f047651358daef84e559"
+          },
+          "assetIds": [
+            "asset:foundations-w2-listening-transport-change:content",
+            "asset:foundations-w2-listening-transport-change:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-listening-transport-change:dictation",
+          "type": "dictation",
+          "prompt": "Write the second sentence exactly as you hear it.",
+          "answer": {
+            "text": "Buses will not stop outside the central market for approximately ten days."
+          },
+          "feedback": "Check content words, function words and the stated detail.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-listening-transport-change",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-listening-transport-change:dictation",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-transport-change:dictation",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-transport-change",
+            "sourceRevision": "sha256:902c540af567c8ee24bfdab1715d911621544172c5e250a5fd0c626e370888ae"
+          },
+          "assetIds": [
+            "asset:foundations-w2-listening-transport-change:content",
+            "asset:foundations-w2-listening-transport-change:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-listening-transport-change:strict",
+          "type": "strict-practice",
+          "prompt": "Retrieve the fourth sentence without opening the transcript.",
+          "answer": {
+            "text": "Passengers for the hospital may find Route Twelve more direct during the works."
+          },
+          "feedback": "Opening the answer makes this attempt coaching-only.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-listening-transport-change",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-listening-transport-change:strict",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-transport-change:strict",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-transport-change",
+            "sourceRevision": "sha256:384187ac49a0321895eab4aafa36a952b3387df8709ac13cbd9a9e01ce4ab2cf"
+          },
+          "assetIds": [
+            "asset:foundations-w2-listening-transport-change:content",
+            "asset:foundations-w2-listening-transport-change:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-listening-transport-change:shadowing",
+          "type": "shadowing",
+          "prompt": "Shadow the final two sentences with thought-group pauses.",
+          "answer": {
+            "text": "Passengers for the hospital may find Route Twelve more direct during the works. Normal service is expected to resume on the eighteenth of August."
+          },
+          "feedback": "Aim for rhythm and intelligibility; this is coaching, not independent evidence.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-listening-transport-change",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-listening-transport-change:shadowing",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-transport-change:shadowing",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-transport-change",
+            "sourceRevision": "sha256:1a3d3b61cd3e351961cb124e205e5315cbbfe5fe961b121f09677ce11b3aec2e"
+          },
+          "assetIds": [
+            "asset:foundations-w2-listening-transport-change:content",
+            "asset:foundations-w2-listening-transport-change:audio"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-listening-transport-change:retell",
+          "type": "retell-coaching",
+          "prompt": "Retell the practical outcome in two sentences.",
+          "answer": {
+            "text": "Mention the main change and the required action, using will affect where suitable."
+          },
+          "feedback": "Retell remains coaching-only without an independent evaluator.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-listening-transport-change",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-listening-transport-change:retell",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-transport-change:retell",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-transport-change",
+            "sourceRevision": "sha256:e54d45eb48f51e3d32699bdd647d3f0a586e68acda9569892876f85d81cbacf1"
+          },
+          "assetIds": [
+            "asset:foundations-w2-listening-transport-change:content",
+            "asset:foundations-w2-listening-transport-change:audio"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "Temporary Bus Route Change",
+        "language": "en",
+        "transcriptAssetId": "asset:foundations-w2-listening-transport-change:content",
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "listening-comprehension",
+          "dictation",
+          "strict-practice",
+          "shadowing",
+          "retell-coaching"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:foundations-w2-listening-transport-change",
+      "provenanceRecordId": "provenance:lesson:foundations-w2-listening-transport-change",
+      "humanReviewRecordId": "review:lesson:foundations-w2-listening-transport-change",
+      "rights": {
+        "id": "rights:lesson:foundations-w2-listening-transport-change",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:foundations-w2-listening-transport-change",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:foundations-w2-listening-transport-change",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:1694e21a3e9705e3d4da6b97f414b563e5134ec980ecb8f96cc8182e2df319f2",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null,
+      "sha256": "1694e21a3e9705e3d4da6b97f414b563e5134ec980ecb8f96cc8182e2df319f2",
+      "byteLength": 7570
+    },
+    {
+      "id": "lesson:foundations-w2-reading-coastal-restoration",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:0507bbb78a01eed93ba02232369c1d4af268be6c998c1817fef85933268fdef5",
+      "title": "Restoring Dunes with Flexible Barriers",
+      "learningObjective": "Recognise how a restoration method changes wind and sand movement.",
+      "estimatedMinutes": 12,
+      "difficulty": "B2",
+      "skill": "reading",
+      "topic": "Coastal ecology",
+      "lexicalTargets": [
+        {
+          "id": "lex:foundations-w2-reading-coastal-restoration:1",
+          "term": "establish roots",
+          "meaning": "develop a stable root system",
+          "register": "neutral-academic",
+          "usageNote": "Use “establish roots” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-reading-coastal-restoration:2",
+          "term": "settles around",
+          "meaning": "comes to rest near",
+          "register": "neutral-academic",
+          "usageNote": "Use “settles around” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-reading-coastal-restoration:3",
+          "term": "redirect erosion",
+          "meaning": "change where material is worn away",
+          "register": "neutral-academic",
+          "usageNote": "Use “redirect erosion” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-reading-coastal-restoration:4",
+          "term": "working with local movement",
+          "meaning": "using existing natural processes",
+          "register": "neutral-academic",
+          "usageNote": "Use “working with local movement” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:foundations-w2-reading-coastal-restoration:content"
+      ],
+      "activities": [
+        {
+          "id": "activity:foundations-w2-reading-coastal-restoration:main-claim",
+          "type": "reading-comprehension",
+          "prompt": "State the passage’s central claim in one sentence.",
+          "answer": {
+            "text": "Recognise how a restoration method changes wind and sand movement."
+          },
+          "feedback": "A strong answer preserves the scope of the passage.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-reading-coastal-restoration",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-reading-coastal-restoration:main-claim",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-coastal-restoration:main-claim",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-coastal-restoration",
+            "sourceRevision": "sha256:decc470ea7f47abb53381f73f18c322b8d7da4a549fb813ac5a4934beffb522d"
+          },
+          "assetIds": [
+            "asset:foundations-w2-reading-coastal-restoration:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-reading-coastal-restoration:paraphrase",
+          "type": "paraphrase-recognition",
+          "prompt": "Which expression best preserves “establish roots”?",
+          "options": [
+            {
+              "label": "develop a stable root system"
+            },
+            {
+              "label": "an unrelated general improvement"
+            }
+          ],
+          "answer": {
+            "text": "develop a stable root system"
+          },
+          "feedback": "Match meaning and claim strength, not just topic.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-reading-coastal-restoration",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-reading-coastal-restoration:paraphrase",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-coastal-restoration:paraphrase",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-coastal-restoration",
+            "sourceRevision": "sha256:a560df4fd69faffb7833ca86e89f8a7693fced681302c76ba08dda57c48e3b7f"
+          },
+          "assetIds": [
+            "asset:foundations-w2-reading-coastal-restoration:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-reading-coastal-restoration:distractor",
+          "type": "distractor-recognition",
+          "prompt": "Identify a plausible statement that the passage does not establish.",
+          "answer": {
+            "text": "A broad universal claim that removes the passage’s stated limitation."
+          },
+          "feedback": "Distractors often repeat vocabulary while changing scope or causality.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-reading-coastal-restoration",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-reading-coastal-restoration:distractor",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-coastal-restoration:distractor",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-coastal-restoration",
+            "sourceRevision": "sha256:5fbe137d5f680604f357ecd9d021ab2f3678bfbffe60c7b019cf3368bf8ba9a6"
+          },
+          "assetIds": [
+            "asset:foundations-w2-reading-coastal-restoration:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-reading-coastal-restoration:micro-reading",
+          "type": "micro-reading",
+          "prompt": "Find the sentence that limits the main claim and explain its function.",
+          "answer": {
+            "text": "The limiting sentence prevents the evidence from supporting a broader conclusion."
+          },
+          "feedback": "Look for contrast markers and cautious reporting verbs.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-reading-coastal-restoration",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-reading-coastal-restoration:micro-reading",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-coastal-restoration:micro-reading",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-coastal-restoration",
+            "sourceRevision": "sha256:2d99233326f7426099990571e4a3e808a3e38424f16c33cdd5e41fe656958940"
+          },
+          "assetIds": [
+            "asset:foundations-w2-reading-coastal-restoration:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-reading-coastal-restoration:production",
+          "type": "paragraph-production",
+          "prompt": "Write 70–90 words using “settles around” to evaluate the passage.",
+          "answer": {
+            "text": "A complete paragraph should state a claim, cite a passage detail and preserve one limitation."
+          },
+          "feedback": "This follow-up is coaching-only until independently evaluated.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-reading-coastal-restoration",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-reading-coastal-restoration:production",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-coastal-restoration:production",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-coastal-restoration",
+            "sourceRevision": "sha256:f985eaaf150080dd49e975d8158ca0e3833c644615f90c4f3ed3eb1b0205cfd6"
+          },
+          "assetIds": [
+            "asset:foundations-w2-reading-coastal-restoration:content"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "Restoring Dunes with Flexible Barriers",
+        "language": "en",
+        "transcriptAssetId": null,
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "reading-comprehension",
+          "paraphrase-recognition",
+          "distractor-recognition",
+          "micro-reading",
+          "paragraph-production"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:foundations-w2-reading-coastal-restoration",
+      "provenanceRecordId": "provenance:lesson:foundations-w2-reading-coastal-restoration",
+      "humanReviewRecordId": "review:lesson:foundations-w2-reading-coastal-restoration",
+      "rights": {
+        "id": "rights:lesson:foundations-w2-reading-coastal-restoration",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:foundations-w2-reading-coastal-restoration",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:foundations-w2-reading-coastal-restoration",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:0507bbb78a01eed93ba02232369c1d4af268be6c998c1817fef85933268fdef5",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null,
+      "sha256": "0507bbb78a01eed93ba02232369c1d4af268be6c998c1817fef85933268fdef5",
+      "byteLength": 7263
+    },
+    {
+      "id": "lesson:foundations-w2-reading-food-waste",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:99c9fe46f7e58703be0cb9e37f61076ece5b00506268eac5f3744ec98df034eb",
+      "title": "A Campus Food-Waste Trial",
+      "learningObjective": "Identify the trial result and why the researchers avoid a broad causal claim.",
+      "estimatedMinutes": 12,
+      "difficulty": "B2",
+      "skill": "reading",
+      "topic": "Sustainable consumption",
+      "lexicalTargets": [
+        {
+          "id": "lex:foundations-w2-reading-food-waste:1",
+          "term": "default portions",
+          "meaning": "the amount served unless another is requested",
+          "register": "neutral-academic",
+          "usageNote": "Use “default portions” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-reading-food-waste:2",
+          "term": "remained modest",
+          "meaning": "stayed relatively low",
+          "register": "neutral-academic",
+          "usageNote": "Use “remained modest” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-reading-food-waste:3",
+          "term": "alone caused",
+          "meaning": "was the only cause of",
+          "register": "neutral-academic",
+          "usageNote": "Use “alone caused” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-reading-food-waste:4",
+          "term": "combined approach",
+          "meaning": "a method using several measures",
+          "register": "neutral-academic",
+          "usageNote": "Use “combined approach” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:foundations-w2-reading-food-waste:content"
+      ],
+      "activities": [
+        {
+          "id": "activity:foundations-w2-reading-food-waste:main-claim",
+          "type": "reading-comprehension",
+          "prompt": "State the passage’s central claim in one sentence.",
+          "answer": {
+            "text": "Identify the trial result and why the researchers avoid a broad causal claim."
+          },
+          "feedback": "A strong answer preserves the scope of the passage.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-reading-food-waste",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-reading-food-waste:main-claim",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-food-waste:main-claim",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-food-waste",
+            "sourceRevision": "sha256:4e8f78d67dec5e64ee56bb5611e52386e6238b79d6be1e09d994df37cc7359c2"
+          },
+          "assetIds": [
+            "asset:foundations-w2-reading-food-waste:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-reading-food-waste:paraphrase",
+          "type": "paraphrase-recognition",
+          "prompt": "Which expression best preserves “default portions”?",
+          "options": [
+            {
+              "label": "the amount served unless another is requested"
+            },
+            {
+              "label": "an unrelated general improvement"
+            }
+          ],
+          "answer": {
+            "text": "the amount served unless another is requested"
+          },
+          "feedback": "Match meaning and claim strength, not just topic.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-reading-food-waste",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-reading-food-waste:paraphrase",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-food-waste:paraphrase",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-food-waste",
+            "sourceRevision": "sha256:1c368e7222a61c8b15940f2e463bae2f8dc106c09966e8ad2d42c4ba50d0580c"
+          },
+          "assetIds": [
+            "asset:foundations-w2-reading-food-waste:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-reading-food-waste:distractor",
+          "type": "distractor-recognition",
+          "prompt": "Identify a plausible statement that the passage does not establish.",
+          "answer": {
+            "text": "A broad universal claim that removes the passage’s stated limitation."
+          },
+          "feedback": "Distractors often repeat vocabulary while changing scope or causality.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-reading-food-waste",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-reading-food-waste:distractor",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-food-waste:distractor",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-food-waste",
+            "sourceRevision": "sha256:52bae812095c2ec683a18dfc03e39a41676fdd6a2de341438d38cf4e8d12dead"
+          },
+          "assetIds": [
+            "asset:foundations-w2-reading-food-waste:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-reading-food-waste:micro-reading",
+          "type": "micro-reading",
+          "prompt": "Find the sentence that limits the main claim and explain its function.",
+          "answer": {
+            "text": "The limiting sentence prevents the evidence from supporting a broader conclusion."
+          },
+          "feedback": "Look for contrast markers and cautious reporting verbs.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-reading-food-waste",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-reading-food-waste:micro-reading",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-food-waste:micro-reading",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-food-waste",
+            "sourceRevision": "sha256:8332f5a05c5be3894f785547eec693dabe72d72f306720e8d6cc6add952be1f6"
+          },
+          "assetIds": [
+            "asset:foundations-w2-reading-food-waste:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-reading-food-waste:production",
+          "type": "paragraph-production",
+          "prompt": "Write 70–90 words using “remained modest” to evaluate the passage.",
+          "answer": {
+            "text": "A complete paragraph should state a claim, cite a passage detail and preserve one limitation."
+          },
+          "feedback": "This follow-up is coaching-only until independently evaluated.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-reading-food-waste",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-reading-food-waste:production",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-food-waste:production",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-food-waste",
+            "sourceRevision": "sha256:80958365935019b1762a813ff09fcbb892536620054bda64f9e081221bcfc2d1"
+          },
+          "assetIds": [
+            "asset:foundations-w2-reading-food-waste:content"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "A Campus Food-Waste Trial",
+        "language": "en",
+        "transcriptAssetId": null,
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "reading-comprehension",
+          "paraphrase-recognition",
+          "distractor-recognition",
+          "micro-reading",
+          "paragraph-production"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:foundations-w2-reading-food-waste",
+      "provenanceRecordId": "provenance:lesson:foundations-w2-reading-food-waste",
+      "humanReviewRecordId": "review:lesson:foundations-w2-reading-food-waste",
+      "rights": {
+        "id": "rights:lesson:foundations-w2-reading-food-waste",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:foundations-w2-reading-food-waste",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:foundations-w2-reading-food-waste",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:99c9fe46f7e58703be0cb9e37f61076ece5b00506268eac5f3744ec98df034eb",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null,
+      "sha256": "99c9fe46f7e58703be0cb9e37f61076ece5b00506268eac5f3744ec98df034eb",
+      "byteLength": 6934
+    },
+    {
+      "id": "lesson:foundations-w2-lexical-comparison",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:27f593354c5b7942062bea29b93688b663ddc74b7c950d7124c76ad2beaef3a9",
+      "title": "Comparison and Contrast",
+      "learningObjective": "Build precise comparisons without changing the reference group.",
+      "estimatedMinutes": 9,
+      "difficulty": "B2",
+      "skill": "lexical-paraphrase",
+      "topic": "Data comparison",
+      "lexicalTargets": [
+        {
+          "id": "lex:foundations-w2-lexical-comparison:1",
+          "term": "compared with",
+          "meaning": "examined in relation to",
+          "register": "neutral-academic",
+          "usageNote": "Use “compared with” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-lexical-comparison:2",
+          "term": "whereas",
+          "meaning": "in contrast to the preceding clause",
+          "register": "neutral-academic",
+          "usageNote": "Use “whereas” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-lexical-comparison:3",
+          "term": "a similar proportion",
+          "meaning": "roughly the same share",
+          "register": "neutral-academic",
+          "usageNote": "Use “a similar proportion” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-lexical-comparison:4",
+          "term": "considerably lower than",
+          "meaning": "substantially below",
+          "register": "neutral-academic",
+          "usageNote": "Use “considerably lower than” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:foundations-w2-lexical-comparison:content"
+      ],
+      "activities": [
+        {
+          "id": "activity:foundations-w2-lexical-comparison:recall",
+          "type": "controlled-recall",
+          "prompt": "Recall a precise meaning for “compared with”.",
+          "answer": {
+            "text": "examined in relation to"
+          },
+          "feedback": "Keep the strength and grammatical role of the expression.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-lexical-comparison",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-lexical-comparison:recall",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-comparison:recall",
+            "senseId": null,
+            "skill": "recall",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-comparison",
+            "sourceRevision": "sha256:4b40d14271b32947d31c857916b89a9e8ee61c27665a3f85413031a6356c1a90"
+          },
+          "assetIds": [
+            "asset:foundations-w2-lexical-comparison:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-lexical-comparison:choice",
+          "type": "lexical-choice",
+          "prompt": "Choose the expression matching: in contrast to the preceding clause.",
+          "options": [
+            {
+              "label": "compared with"
+            },
+            {
+              "label": "whereas"
+            },
+            {
+              "label": "a similar proportion"
+            },
+            {
+              "label": "considerably lower than"
+            }
+          ],
+          "answer": {
+            "text": "whereas"
+          },
+          "feedback": "Use the meaning note rather than surface similarity.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-lexical-comparison",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-lexical-comparison:choice",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-comparison:choice",
+            "senseId": null,
+            "skill": "collocation",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-comparison",
+            "sourceRevision": "sha256:bb8abef41177598d49d74c5f3a8f9d9359cfb56d6a118012378f57188146b22b"
+          },
+          "assetIds": [
+            "asset:foundations-w2-lexical-comparison:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-lexical-comparison:sentence",
+          "type": "sentence-production",
+          "prompt": "Write one academic sentence using “compared with”.",
+          "answer": {
+            "text": "The sentence should use the expression in its stated sense and register."
+          },
+          "feedback": "Check collocation, grammar and claim strength.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-lexical-comparison",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-lexical-comparison:sentence",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-comparison:sentence",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-comparison",
+            "sourceRevision": "sha256:0cfa938502f89f578efda6032f69c0f2f210ce569fcc10f6eba9756b6b4740c2"
+          },
+          "assetIds": [
+            "asset:foundations-w2-lexical-comparison:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-lexical-comparison:paragraph",
+          "type": "paragraph-production",
+          "prompt": "Write 70–90 words using “compared with” and “whereas”.",
+          "answer": {
+            "text": "The paragraph should connect both expressions coherently without changing their meanings."
+          },
+          "feedback": "Prefer a clear claim and one supporting example.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-lexical-comparison",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-lexical-comparison:paragraph",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-comparison:paragraph",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-comparison",
+            "sourceRevision": "sha256:92b4d2efcbf4961da6ab39db559db04f67e0f2ad8dfd96eba47fadfdc96090f6"
+          },
+          "assetIds": [
+            "asset:foundations-w2-lexical-comparison:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-lexical-comparison:paraphrase",
+          "type": "paraphrase-recognition",
+          "prompt": "Paraphrase “a similar proportion” without increasing certainty.",
+          "answer": {
+            "text": "roughly the same share"
+          },
+          "feedback": "Preserve modality and scope.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-lexical-comparison",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-lexical-comparison:paraphrase",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-comparison:paraphrase",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-comparison",
+            "sourceRevision": "sha256:622517eb5ba78a9382290e0398bff49fdbb8865dd4225387782722ddd8906bb2"
+          },
+          "assetIds": [
+            "asset:foundations-w2-lexical-comparison:content"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "Comparison and Contrast",
+        "language": "en",
+        "transcriptAssetId": null,
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "controlled-recall",
+          "lexical-choice",
+          "sentence-production",
+          "paragraph-production",
+          "paraphrase-recognition"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:foundations-w2-lexical-comparison",
+      "provenanceRecordId": "provenance:lesson:foundations-w2-lexical-comparison",
+      "humanReviewRecordId": "review:lesson:foundations-w2-lexical-comparison",
+      "rights": {
+        "id": "rights:lesson:foundations-w2-lexical-comparison",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:foundations-w2-lexical-comparison",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:foundations-w2-lexical-comparison",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:27f593354c5b7942062bea29b93688b663ddc74b7c950d7124c76ad2beaef3a9",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null,
+      "sha256": "27f593354c5b7942062bea29b93688b663ddc74b7c950d7124c76ad2beaef3a9",
+      "byteLength": 6633
+    },
+    {
+      "id": "lesson:foundations-w2-lexical-trends",
+      "schemaVersion": 2,
+      "contentRevision": 1,
+      "contentAddress": "sha256:35a0ef1536019fd98e11c30223a43b7d85f9c9ee34617a85c4c459d77bcac847",
+      "title": "Describing Trends Carefully",
+      "learningObjective": "Distinguish gradual, sharp, stable and fluctuating patterns.",
+      "estimatedMinutes": 9,
+      "difficulty": "B2",
+      "skill": "lexical-paraphrase",
+      "topic": "Trend language",
+      "lexicalTargets": [
+        {
+          "id": "lex:foundations-w2-lexical-trends:1",
+          "term": "rose gradually",
+          "meaning": "increased at a slow steady rate",
+          "register": "neutral-academic",
+          "usageNote": "Use “rose gradually” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-lexical-trends:2",
+          "term": "declined sharply",
+          "meaning": "fell quickly by a large amount",
+          "register": "neutral-academic",
+          "usageNote": "Use “declined sharply” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-lexical-trends:3",
+          "term": "remained stable",
+          "meaning": "showed little meaningful change",
+          "register": "neutral-academic",
+          "usageNote": "Use “remained stable” only with the meaning stated here."
+        },
+        {
+          "id": "lex:foundations-w2-lexical-trends:4",
+          "term": "fluctuated throughout",
+          "meaning": "moved up and down across the period",
+          "register": "neutral-academic",
+          "usageNote": "Use “fluctuated throughout” only with the meaning stated here."
+        }
+      ],
+      "assetIds": [
+        "asset:foundations-w2-lexical-trends:content"
+      ],
+      "activities": [
+        {
+          "id": "activity:foundations-w2-lexical-trends:recall",
+          "type": "controlled-recall",
+          "prompt": "Recall a precise meaning for “rose gradually”.",
+          "answer": {
+            "text": "increased at a slow steady rate"
+          },
+          "feedback": "Keep the strength and grammatical role of the expression.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-lexical-trends",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-lexical-trends:recall",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-trends:recall",
+            "senseId": null,
+            "skill": "recall",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-trends",
+            "sourceRevision": "sha256:49cd431c4d5cacd4cf94b422d3b11522e9700ad9f7976e4601651244d0bca559"
+          },
+          "assetIds": [
+            "asset:foundations-w2-lexical-trends:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-lexical-trends:choice",
+          "type": "lexical-choice",
+          "prompt": "Choose the expression matching: fell quickly by a large amount.",
+          "options": [
+            {
+              "label": "rose gradually"
+            },
+            {
+              "label": "declined sharply"
+            },
+            {
+              "label": "remained stable"
+            },
+            {
+              "label": "fluctuated throughout"
+            }
+          ],
+          "answer": {
+            "text": "declined sharply"
+          },
+          "feedback": "Use the meaning note rather than surface similarity.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-lexical-trends",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-lexical-trends:choice",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-trends:choice",
+            "senseId": null,
+            "skill": "collocation",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-trends",
+            "sourceRevision": "sha256:626243be0fe7e8de33e7f3b283a92233b3f02fd9f47208f5a14c91eca93adb06"
+          },
+          "assetIds": [
+            "asset:foundations-w2-lexical-trends:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-lexical-trends:sentence",
+          "type": "sentence-production",
+          "prompt": "Write one academic sentence using “rose gradually”.",
+          "answer": {
+            "text": "The sentence should use the expression in its stated sense and register."
+          },
+          "feedback": "Check collocation, grammar and claim strength.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-lexical-trends",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-lexical-trends:sentence",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-trends:sentence",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-trends",
+            "sourceRevision": "sha256:e47b4eff023bab05d0da85ab938ab894181e7159447f3fc499afbf39d7ea827e"
+          },
+          "assetIds": [
+            "asset:foundations-w2-lexical-trends:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-lexical-trends:paragraph",
+          "type": "paragraph-production",
+          "prompt": "Write 70–90 words using “rose gradually” and “declined sharply”.",
+          "answer": {
+            "text": "The paragraph should connect both expressions coherently without changing their meanings."
+          },
+          "feedback": "Prefer a clear claim and one supporting example.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-lexical-trends",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-lexical-trends:paragraph",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-trends:paragraph",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-trends",
+            "sourceRevision": "sha256:29a6f91a5668f29e0757e1e3c6b1bfeead9477fdc36c8c7a2823453d856f1176"
+          },
+          "assetIds": [
+            "asset:foundations-w2-lexical-trends:content"
+          ]
+        },
+        {
+          "id": "activity:foundations-w2-lexical-trends:paraphrase",
+          "type": "paraphrase-recognition",
+          "prompt": "Paraphrase “remained stable” without increasing certainty.",
+          "answer": {
+            "text": "showed little meaningful change"
+          },
+          "feedback": "Preserve modality and scope.",
+          "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
+            "lessonId": "lesson:foundations-w2-lexical-trends",
+            "lessonRevision": 1,
+            "activityId": "activity:foundations-w2-lexical-trends:paraphrase",
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-trends:paraphrase",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-trends",
+            "sourceRevision": "sha256:8d2d8c5834aece3d6ea9c3b372cc5d611e486e289b893051f6b6374543370663"
+          },
+          "assetIds": [
+            "asset:foundations-w2-lexical-trends:content"
+          ]
+        }
+      ],
+      "accessibility": {
+        "label": "Describing Trends Carefully",
+        "language": "en",
+        "transcriptAssetId": null,
+        "audioDescription": "All Listening audio has a complete text transcript."
+      },
+      "compatibility": {
+        "minimumAppVersion": "10.0.0",
+        "supportedActivityTypes": [
+          "controlled-recall",
+          "lexical-choice",
+          "sentence-production",
+          "paragraph-production",
+          "paraphrase-recognition"
+        ]
+      },
+      "originalityDeclaration": "AI-assisted draft written for VocabMaster; not copied from official IELTS questions, commercial books, YouTube transcripts, or copyrighted practice tests.",
+      "internalLinks": [],
+      "rightsRecordId": "rights:lesson:foundations-w2-lexical-trends",
+      "provenanceRecordId": "provenance:lesson:foundations-w2-lexical-trends",
+      "humanReviewRecordId": "review:lesson:foundations-w2-lexical-trends",
+      "rights": {
+        "id": "rights:lesson:foundations-w2-lexical-trends",
+        "schemaVersion": 2,
+        "status": "pending",
+        "licenseId": "pending-human-rights-review",
+        "rightsHolder": null,
+        "basis": "No publication claim. Human rights verification is required.",
+        "assertedAt": null,
+        "expiresAt": null,
+        "aiAsserted": false
+      },
+      "provenance": {
+        "id": "provenance:lesson:foundations-w2-lexical-trends",
+        "schemaVersion": 2,
+        "sourceType": "generated-draft",
+        "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+        "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+        "createdAt": "2026-07-30T12:00:00.000Z",
+        "aiDraft": true,
+        "kind": "lesson"
+      },
+      "humanReview": {
+        "id": "review:lesson:foundations-w2-lexical-trends",
+        "schemaVersion": 2,
+        "status": "pending",
+        "reviewerType": "human",
+        "reviewerId": null,
+        "reviewedAt": null,
+        "scopeDigest": "sha256:35a0ef1536019fd98e11c30223a43b7d85f9c9ee34617a85c4c459d77bcac847",
+        "checks": [],
+        "selfApprovedByAi": false,
+        "kind": "lesson"
+      },
+      "publishedAt": null,
+      "sha256": "35a0ef1536019fd98e11c30223a43b7d85f9c9ee34617a85c4c459d77bcac847",
+      "byteLength": 6546
+    }
+  ],
+  "compatibility": {
+    "minimumAppVersion": "10.0.0",
+    "supportedActivityTypes": [
+      "listening-comprehension",
+      "dictation",
+      "strict-practice",
+      "shadowing",
+      "retell-coaching",
+      "reading-comprehension",
+      "paraphrase-recognition",
+      "distractor-recognition",
+      "micro-reading",
+      "paragraph-production",
+      "controlled-recall",
+      "lexical-choice",
+      "sentence-production"
+    ]
+  },
+  "rightsRecordId": "rights:pack:ielts-foundations-week-2",
+  "provenanceRecordId": "provenance:pack:ielts-foundations-week-2",
+  "humanReviewRecordId": "review:pack:ielts-foundations-week-2",
+  "rights": {
+    "id": "rights:pack:ielts-foundations-week-2",
+    "schemaVersion": 2,
+    "status": "pending",
+    "licenseId": "pending-human-rights-review",
+    "rightsHolder": null,
+    "basis": "No publication claim. Human rights verification is required.",
+    "assertedAt": null,
+    "expiresAt": null,
+    "aiAsserted": false
+  },
+  "provenance": {
+    "id": "provenance:pack:ielts-foundations-week-2",
+    "schemaVersion": 2,
+    "sourceType": "generated-draft",
+    "sourceDescription": "OpenAI-assisted original draft prepared specifically for the VocabMaster Phase 4 review queue.",
+    "authorOrOrigin": "OpenAI-assisted draft; human authorship review pending",
+    "createdAt": "2026-07-30T12:00:00.000Z",
+    "aiDraft": true,
+    "kind": "pack"
+  },
+  "humanReview": {
+    "id": "review:pack:ielts-foundations-week-2",
+    "schemaVersion": 2,
+    "status": "pending",
+    "reviewerType": "human",
+    "reviewerId": null,
+    "reviewedAt": null,
+    "scopeDigest": "sha256:34143cb914b775a596015ac596bb3465495b3cefb63b09b05256a61a8aaafcce",
+    "checks": [],
+    "selfApprovedByAi": false,
+    "kind": "pack"
+  },
+  "publishedAt": null,
+  "weeklyDefectReviewRecordId": "review:defect:foundations-week-2"
+}

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w1-listening-library-tour",
+  "skill": "listening",
+  "transcript": {
+    "segments": [
+      {
+        "id": "segment:foundations-w1-listening-library-tour:1",
+        "startMs": 0,
+        "endMs": 5250,
+        "text": "Welcome to the west library entrance."
+      },
+      {
+        "id": "segment:foundations-w1-listening-library-tour:2",
+        "startMs": 5500,
+        "endMs": 10750,
+        "text": "The help desk is now opposite the lifts rather than beside the main doors."
+      },
+      {
+        "id": "segment:foundations-w1-listening-library-tour:3",
+        "startMs": 11000,
+        "endMs": 16250,
+        "text": "Group study rooms are on the second floor and must be booked online."
+      },
+      {
+        "id": "segment:foundations-w1-listening-library-tour:4",
+        "startMs": 16500,
+        "endMs": 21750,
+        "text": "On Fridays, the building closes at seven instead of nine."
+      },
+      {
+        "id": "segment:foundations-w1-listening-library-tour:5",
+        "startMs": 22000,
+        "endMs": 27250,
+        "text": "Return laptops to the desk at least fifteen minutes before closing."
+      }
+    ]
+  },
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w1-listening-library-tour:1",
+      "term": "opposite the lifts",
+      "meaning": "facing the elevators",
+      "register": "neutral-academic",
+      "usageNote": "Use “opposite the lifts” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-listening-library-tour:2",
+      "term": "rather than",
+      "meaning": "instead of",
+      "register": "neutral-academic",
+      "usageNote": "Use “rather than” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-listening-library-tour:3",
+      "term": "booked online",
+      "meaning": "reserved through a website",
+      "register": "neutral-academic",
+      "usageNote": "Use “booked online” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w1-listening-library-tour:4",
+      "term": "at least fifteen minutes",
+      "meaning": "no fewer than fifteen minutes",
+      "register": "neutral-academic",
+      "usageNote": "Use “at least fifteen minutes” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

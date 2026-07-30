@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w4-reading-biodiversity-corridors",
+  "skill": "reading",
+  "passage": "Urban plans often label connected strips of vegetation as green corridors, yet visual continuity on a map does not guarantee ecological connectivity. Species differ in the distance they can cross, the shelter they require and their sensitivity to light or traffic. A narrow line of ornamental trees may assist one bird species while remaining a barrier to ground-dwelling insects. Functional corridors are therefore assessed through species movement, habitat quality and interruptions at roads. The term becomes meaningful when it describes tested ecological relationships rather than a decorative planning category.",
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w4-reading-biodiversity-corridors:1",
+      "term": "visual continuity",
+      "meaning": "an unbroken appearance",
+      "register": "neutral-academic",
+      "usageNote": "Use “visual continuity” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-reading-biodiversity-corridors:2",
+      "term": "ecological connectivity",
+      "meaning": "the ability of organisms to move through habitats",
+      "register": "neutral-academic",
+      "usageNote": "Use “ecological connectivity” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-reading-biodiversity-corridors:3",
+      "term": "ground-dwelling",
+      "meaning": "living mainly at ground level",
+      "register": "neutral-academic",
+      "usageNote": "Use “ground-dwelling” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w4-reading-biodiversity-corridors:4",
+      "term": "functional corridors",
+      "meaning": "routes shown to support ecological movement",
+      "register": "neutral-academic",
+      "usageNote": "Use “functional corridors” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

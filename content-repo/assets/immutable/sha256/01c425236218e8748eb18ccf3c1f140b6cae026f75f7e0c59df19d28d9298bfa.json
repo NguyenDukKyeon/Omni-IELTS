@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "sampler-lexical-cause-effect",
+  "skill": "lexical-paraphrase",
+  "lexicalTargets": [
+    {
+      "id": "lex:sampler-lexical-cause-effect:1",
+      "term": "lead to",
+      "meaning": "produce a result directly",
+      "register": "neutral-academic",
+      "usageNote": "Use “lead to” only with the meaning stated here."
+    },
+    {
+      "id": "lex:sampler-lexical-cause-effect:2",
+      "term": "contribute to",
+      "meaning": "be one of several causes",
+      "register": "neutral-academic",
+      "usageNote": "Use “contribute to” only with the meaning stated here."
+    },
+    {
+      "id": "lex:sampler-lexical-cause-effect:3",
+      "term": "be associated with",
+      "meaning": "show a relationship without proving causation",
+      "register": "neutral-academic",
+      "usageNote": "Use “be associated with” only with the meaning stated here."
+    },
+    {
+      "id": "lex:sampler-lexical-cause-effect:4",
+      "term": "stem from",
+      "meaning": "originate in a stated cause",
+      "register": "neutral-academic",
+      "usageNote": "Use “stem from” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

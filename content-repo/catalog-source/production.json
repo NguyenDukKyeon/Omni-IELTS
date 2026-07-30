@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "catalogId": "catalog:vocab-master-production",
+  "sequence": 1,
+  "catalogRevision": 1,
+  "issuedAt": null,
+  "expiresAt": null,
+  "keyId": null,
+  "supportedKeyIds": [],
+  "packManifestPaths": [],
+  "revocations": []
+}

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "sampler-reading-public-benches",
+  "skill": "reading",
+  "passage": "A public bench may appear to be a minor piece of street furniture, yet its position can shape who is able to use a neighbourhood. Older residents and people with limited mobility often plan journeys around reliable places to rest. Benches near shade, crossings and public toilets therefore extend the practical distance that some residents can travel independently. Designers sometimes remove seating to discourage long stays, but that response can also exclude people who need short, legitimate pauses. A more balanced approach considers visibility, maintenance and several seating heights rather than treating every user as a problem.",
+  "lexicalTargets": [
+    {
+      "id": "lex:sampler-reading-public-benches:1",
+      "term": "street furniture",
+      "meaning": "objects installed in public streets for shared use",
+      "register": "neutral-academic",
+      "usageNote": "Use “street furniture” only with the meaning stated here."
+    },
+    {
+      "id": "lex:sampler-reading-public-benches:2",
+      "term": "limited mobility",
+      "meaning": "reduced ability to move easily",
+      "register": "neutral-academic",
+      "usageNote": "Use “limited mobility” only with the meaning stated here."
+    },
+    {
+      "id": "lex:sampler-reading-public-benches:3",
+      "term": "travel independently",
+      "meaning": "make a journey without assistance",
+      "register": "neutral-academic",
+      "usageNote": "Use “travel independently” only with the meaning stated here."
+    },
+    {
+      "id": "lex:sampler-reading-public-benches:4",
+      "term": "balanced approach",
+      "meaning": "a response that considers competing needs",
+      "register": "neutral-academic",
+      "usageNote": "Use “balanced approach” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

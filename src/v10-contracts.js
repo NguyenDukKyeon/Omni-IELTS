@@ -3,7 +3,7 @@ import { createActivitySpec,createAttempt,createReceipt,createRun } from './lear
 
 export const V10_SCHEMA_VERSION=1;
 export const V10_DB_NAME='vocab-master-v10';
-export const V10_DB_VERSION=6;
+export const V10_DB_VERSION=7;
 
 export const V10_STORES=Object.freeze({
   sourceOccurrences:'sourceOccurrences',
@@ -27,6 +27,12 @@ export const V10_STORES=Object.freeze({
   contentManifests:'contentManifests',
   contentAssets:'contentAssets',
   contentProgress:'contentProgress',
+  remoteCatalogs:'remoteCatalogs',
+  packInstallJournals:'packInstallJournals',
+  installedPacks:'installedPacks',
+  packActivationReceipts:'packActivationReceipts',
+  packRevocations:'packRevocations',
+  packTombstones:'packTombstones',
   aiJobs:'aiJobs',
   coachingStats:'coachingStats',
   meta:'meta'

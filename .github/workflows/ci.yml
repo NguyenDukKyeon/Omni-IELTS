@@ -86,6 +86,10 @@ jobs:
         if: steps.tests.outcome == 'failure' || steps.crosscheck.outcome == 'failure' || steps.roadmap.outcome == 'failure' || steps.ieltsaudit.outcome == 'failure' || steps.v10tests.outcome == 'failure' || steps.v10audit.outcome == 'failure'
         run: cat test-output.txt check-output.txt roadmap-output.txt ielts-audit-output.txt v10-test-output.txt v10-audit-output.txt 2>/dev/null || true; exit 1
       - run: npm run build
+      - name: Run Phase 4 exact-head verification
+        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/codex/phase-4-remote-content-platform'
+        timeout-minutes: 8
+        run: npm run phase4:verify
       - run: npm run test:serve
       - run: npm run test:preview
       - name: Run browser interaction smoke

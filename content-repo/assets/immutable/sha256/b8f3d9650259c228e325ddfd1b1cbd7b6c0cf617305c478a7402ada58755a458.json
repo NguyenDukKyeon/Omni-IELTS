@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w3-reading-sleep-memory",
+  "skill": "reading",
+  "passage": "Students in a small memory study learned paired words either in the morning or in the evening. Both groups were tested after twelve hours, but only the evening group slept during that interval. That group remembered more pairs on average. The result is consistent with a role for sleep in consolidation, yet the design also included differences in time of day and daily activity. The researchers therefore avoided claiming that sleep was the sole explanation and proposed a controlled follow-up.",
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w3-reading-sleep-memory:1",
+      "term": "paired words",
+      "meaning": "words learned as linked items",
+      "register": "neutral-academic",
+      "usageNote": "Use “paired words” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w3-reading-sleep-memory:2",
+      "term": "during that interval",
+      "meaning": "within that period",
+      "register": "neutral-academic",
+      "usageNote": "Use “during that interval” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w3-reading-sleep-memory:3",
+      "term": "is consistent with",
+      "meaning": "fits the possibility of",
+      "register": "neutral-academic",
+      "usageNote": "Use “is consistent with” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w3-reading-sleep-memory:4",
+      "term": "sole explanation",
+      "meaning": "the only account of a result",
+      "register": "neutral-academic",
+      "usageNote": "Use “sole explanation” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}

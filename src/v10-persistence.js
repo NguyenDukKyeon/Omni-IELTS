@@ -50,6 +50,13 @@ const V10_MIGRATIONS=Object.freeze([
     targetVersion:6,
     mode:'upgrade',
     description:'Add durable resolver job and replayable event projections.'
+  }),
+  defineMigration({
+    id:'p4-00-v10-content-platform-v7',
+    digest:'v10-v7-signed-catalog-pack-journal-activation-revocation:2026-07-30',
+    targetVersion:7,
+    mode:'upgrade',
+    description:'Add durable signed-catalog, install journal, installed-pack, activation receipt, revocation and tombstone stores.'
   })
 ]);
 
@@ -82,6 +89,12 @@ function createIndexes(name,store){
   if(name===V10_STORES.contentManifests){store.createIndex('qualityStatus','qualityStatus',{unique:false});store.createIndex('topic','topic',{unique:false});store.createIndex('level','level',{unique:false});}
   if(name===V10_STORES.contentAssets){store.createIndex('lessonId','lessonId',{unique:false});store.createIndex('assetType','assetType',{unique:false});store.createIndex('lastAccessedAt','lastAccessedAt',{unique:false});}
   if(name===V10_STORES.contentProgress){store.createIndex('lessonId','lessonId',{unique:true});store.createIndex('updatedAt','updatedAt',{unique:false});}
+  if(name===V10_STORES.remoteCatalogs){store.createIndex('catalogId','catalogId',{unique:false});store.createIndex('sequence','sequence',{unique:false});store.createIndex('state','state',{unique:false});}
+  if(name===V10_STORES.packInstallJournals){store.createIndex('packId','packId',{unique:false});store.createIndex('stage','stage',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
+  if(name===V10_STORES.installedPacks){store.createIndex('packId','packId',{unique:true});store.createIndex('state','state',{unique:false});store.createIndex('activeRevision','activeRevision',{unique:false});}
+  if(name===V10_STORES.packActivationReceipts){store.createIndex('packId','packId',{unique:false});store.createIndex('activatedAt','activatedAt',{unique:false});}
+  if(name===V10_STORES.packRevocations){store.createIndex('packId','packId',{unique:false});store.createIndex('packRevision','packRevision',{unique:false});store.createIndex('revokedAt','revokedAt',{unique:false});}
+  if(name===V10_STORES.packTombstones){store.createIndex('packId','packId',{unique:false});store.createIndex('deletedAt','deletedAt',{unique:false});}
   if(name===V10_STORES.aiJobs){store.createIndex('status','status',{unique:false});store.createIndex('jobType','jobType',{unique:false});store.createIndex('dueBefore','dueBefore',{unique:false});}
   if(name===V10_STORES.coachingStats){store.createIndex('category','category',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
   if(name===V10_STORES.meta){store.createIndex('updatedAt','updatedAt',{unique:false});}

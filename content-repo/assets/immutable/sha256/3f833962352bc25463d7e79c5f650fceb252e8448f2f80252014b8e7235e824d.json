@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 2,
+  "lessonId": "foundations-w2-listening-transport-change",
+  "skill": "listening",
+  "transcript": {
+    "segments": [
+      {
+        "id": "segment:foundations-w2-listening-transport-change:1",
+        "startMs": 0,
+        "endMs": 5250,
+        "text": "Road repairs will affect Route Twenty-Seven from Monday."
+      },
+      {
+        "id": "segment:foundations-w2-listening-transport-change:2",
+        "startMs": 5500,
+        "endMs": 10750,
+        "text": "Buses will not stop outside the central market for approximately ten days."
+      },
+      {
+        "id": "segment:foundations-w2-listening-transport-change:3",
+        "startMs": 11000,
+        "endMs": 16250,
+        "text": "Use the temporary stop on King Street beside the post office."
+      },
+      {
+        "id": "segment:foundations-w2-listening-transport-change:4",
+        "startMs": 16500,
+        "endMs": 21750,
+        "text": "Passengers for the hospital may find Route Twelve more direct during the works."
+      },
+      {
+        "id": "segment:foundations-w2-listening-transport-change:5",
+        "startMs": 22000,
+        "endMs": 27250,
+        "text": "Normal service is expected to resume on the eighteenth of August."
+      }
+    ]
+  },
+  "lexicalTargets": [
+    {
+      "id": "lex:foundations-w2-listening-transport-change:1",
+      "term": "will affect",
+      "meaning": "will change or influence",
+      "register": "neutral-academic",
+      "usageNote": "Use “will affect” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w2-listening-transport-change:2",
+      "term": "temporary stop",
+      "meaning": "a short-term boarding point",
+      "register": "neutral-academic",
+      "usageNote": "Use “temporary stop” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w2-listening-transport-change:3",
+      "term": "during the works",
+      "meaning": "while construction is taking place",
+      "register": "neutral-academic",
+      "usageNote": "Use “during the works” only with the meaning stated here."
+    },
+    {
+      "id": "lex:foundations-w2-listening-transport-change:4",
+      "term": "resume service",
+      "meaning": "begin operating normally again",
+      "register": "neutral-academic",
+      "usageNote": "Use “resume service” only with the meaning stated here."
+    }
+  ],
+  "coachingNotes": "This is an AI-assisted draft. It is not publishable until exact-digest human review is complete."
+}
