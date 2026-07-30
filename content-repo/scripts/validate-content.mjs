@@ -18,6 +18,46 @@ const SECRET_PATTERNS=[
 ];
 const REQUIRED_CHECKS=['rights','pedagogy','accuracy'];
 const codeUnitCompare=(left,right)=>left<right?-1:left>right?1:0;
+const LESSON_PUBLICATION_FIELDS=new Set(['contentAddress','sha256','byteLength','rights','provenance','humanReview','publishedAt']);
+const ACTIVITY_SKILLS={
+  'listening-comprehension':'listening','dictation':'listening','strict-practice':'listening',
+  'shadowing':'listening','retell-coaching':'production','reading-comprehension':'recognition',
+  'paraphrase-recognition':'recognition','distractor-recognition':'recognition','micro-reading':'recognition',
+  'controlled-recall':'recall','sentence-production':'production','paragraph-production':'production',
+  'lexical-choice':'collocation'
+};
+
+function canonical(value){
+  if(Array.isArray(value))return value.map(canonical);
+  if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).sort(codeUnitCompare).map(key=>[key,canonical(value[key])]));
+  return Object.is(value,-0)?0:value;
+}
+
+export function canonicalLessonBytes(lesson){
+  const identity=Object.fromEntries(Object.entries(lesson||{}).filter(([key])=>!LESSON_PUBLICATION_FIELDS.has(key)));
+  return Buffer.from(JSON.stringify(canonical(identity)));
+}
+
+function exactActivityTarget(manifest,lesson,activity){
+  const identity={
+    contract:'RemoteContentActivityTarget',
+    schemaVersion:2,
+    packId:manifest.id,
+    packRevision:Number(manifest.contentRevision),
+    lessonId:lesson.id,
+    lessonRevision:Number(lesson.contentRevision),
+    activityId:activity.id
+  };
+  return{
+    ...identity,
+    contentRevision:Number(lesson.contentRevision),
+    cardId:activity.id,
+    senseId:null,
+    skill:ACTIVITY_SKILLS[activity.type]||null,
+    sourceId:`remote-content:${lesson.id}`,
+    sourceRevision:`sha256:${createHash('sha256').update(JSON.stringify(canonical(identity))).digest('hex')}`
+  };
+}
 
 async function filesUnder(directory){
   const result=[];
@@ -60,7 +100,7 @@ function checkRecord(item,path,{rights,provenance,reviews,mode,errors}){
   }
 }
 
-function validateActivities(lesson,path,assetIds,errors){
+function validateActivities(lesson,path,lessonAssetIds,manifest,errors){
   const activities=Array.isArray(lesson.activities)?lesson.activities:[];
   if(!activities.length)errors.push(`${path}: activities are missing.`);
   const ids=new Set();
@@ -71,8 +111,16 @@ function validateActivities(lesson,path,assetIds,errors){
     if(!SUPPORTED_ACTIVITIES.has(activity?.type))errors.push(`${activityPath}: unsupported activity type ${activity?.type||'missing'}.`);
     if(!activity?.prompt)errors.push(`${activityPath}: prompt is missing.`);
     if(activity?.answer==null)errors.push(`${activityPath}: answer is missing.`);
-    if(!activity?.target?.lessonId||activity.target.lessonId!==lesson.id||activity.target.activityId!==activity.id||activity.target.contentRevision!==lesson.contentRevision)errors.push(`${activityPath}: invalid exact ActivitySpec target.`);
-    for(const assetId of activity?.assetIds||[])if(!assetIds.has(assetId))errors.push(`${activityPath}: undeclared asset ${assetId}.`);
+    const target=activity?.target;
+    const expected=exactActivityTarget(manifest,lesson,activity);
+    if(
+      !target
+      ||[
+        'packId','packRevision','lessonId','lessonRevision','activityId',
+        'cardId','senseId','skill','sourceId','sourceRevision'
+      ].some(field=>target[field]!==expected[field])
+    )errors.push(`${activityPath}: invalid exact ActivitySpec target.`);
+    for(const assetId of activity?.assetIds||[])if(!lessonAssetIds.has(assetId))errors.push(`${activityPath}: asset ${assetId} is outside the lesson declaration.`);
   }
 }
 
@@ -163,7 +211,13 @@ export async function validateRepository({root=resolve(import.meta.dirname,'..')
       const lessonPath=`${path}.lessons[${index}]`;
       if(!lesson.id||globalIds.has(lesson.id))errors.push(`${lessonPath}: lesson ID is missing or duplicate.`);
       globalIds.add(lesson.id);
-      if(!ADDRESS.test(lesson.contentAddress||''))errors.push(`${lessonPath}: lesson content address is invalid.`);
+      const lessonAddress=ADDRESS.exec(lesson.contentAddress||'');
+      const lessonBytes=canonicalLessonBytes(lesson);
+      const lessonDigest=createHash('sha256').update(lessonBytes).digest('hex');
+      if(!lessonAddress)errors.push(`${lessonPath}: lesson content address is invalid.`);
+      if(lesson.sha256!==lessonDigest)errors.push(`${lessonPath}: lesson SHA-256 does not match canonical bytes.`);
+      if(lessonAddress?.[1]!==lessonDigest)errors.push(`${lessonPath}: lesson content address does not bind canonical bytes.`);
+      if(Number(lesson.byteLength)!==lessonBytes.byteLength)errors.push(`${lessonPath}: lesson byte length does not match canonical bytes.`);
       if(!['listening','reading','lexical-paraphrase'].includes(lesson.skill))errors.push(`${lessonPath}: invalid skill.`);
       if(!lesson.learningObjective||!lesson.estimatedMinutes||!lesson.difficulty)errors.push(`${lessonPath}: objective, time or difficulty is missing.`);
       if(!lesson.accessibility?.label||!lesson.accessibility?.language)errors.push(`${lessonPath}: accessibility metadata is incomplete.`);
@@ -171,8 +225,10 @@ export async function validateRepository({root=resolve(import.meta.dirname,'..')
       checkRecord(lesson,lessonPath,registries);
       const targets=(lesson.lexicalTargets||[]).map(target=>String(target.term||'').trim().toLowerCase());
       if(!targets.length||new Set(targets).size!==targets.length)errors.push(`${lessonPath}: lexical targets are missing or duplicated.`);
-      for(const assetId of lesson.assetIds||[])if(!assetIds.has(assetId))errors.push(`${lessonPath}: undeclared asset ${assetId}.`);
-      validateActivities(lesson,lessonPath,assetIds,errors);
+      const lessonAssetIds=new Set(Array.isArray(lesson.assetIds)?lesson.assetIds:[]);
+      if(!lessonAssetIds.size)errors.push(`${lessonPath}: lesson asset declaration is missing.`);
+      for(const assetId of lessonAssetIds)if(!assetIds.has(assetId))errors.push(`${lessonPath}: undeclared asset ${assetId}.`);
+      validateActivities(lesson,lessonPath,lessonAssetIds,manifest,errors);
       if(lesson.skill==='listening'&&!lesson.assetIds?.some(id=>assets.find(asset=>asset.id===id)?.mediaType.startsWith('audio/')))errors.push(`${lessonPath}: Listening audio is missing.`);
       for(const link of lesson.internalLinks||[])if(!lessons.some(candidate=>candidate.id===link))errors.push(`${lessonPath}: broken internal link ${link}.`);
     }

@@ -249,7 +249,7 @@
       "id": "lesson:sampler-listening-community-workshop",
       "schemaVersion": 2,
       "contentRevision": 1,
-      "contentAddress": "sha256:7e563fd0155ec4d5a5fa1614f311ff618afd329e2d8969bd6ca11fa96769933b",
+      "contentAddress": "sha256:d873cc4b1e86f84faeb38500c5a5df4dde54badb3077e8db4002f162f02c46c0",
       "title": "Booking a Community Workshop",
       "learningObjective": "Identify a changed time, room and booking condition in a short community-centre call.",
       "estimatedMinutes": 10,
@@ -308,9 +308,19 @@
           },
           "feedback": "Use the exact changed detail rather than a plausible topic word.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-listening-community-workshop",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-listening-community-workshop:comprehension",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-listening-community-workshop:comprehension",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:sampler-listening-community-workshop",
+            "sourceRevision": "sha256:098dd415866a93bc46d9d151865d3a1a653167f8752b355c58e3e6eafbf2fa13"
           },
           "assetIds": [
             "asset:sampler-listening-community-workshop:content",
@@ -326,9 +336,19 @@
           },
           "feedback": "Check content words, function words and the stated detail.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-listening-community-workshop",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-listening-community-workshop:dictation",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-listening-community-workshop:dictation",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:sampler-listening-community-workshop",
+            "sourceRevision": "sha256:1971c7b1db03120f05a065a447f551c5602ab58ad6649bd885edf37655e0983e"
           },
           "assetIds": [
             "asset:sampler-listening-community-workshop:content",
@@ -344,9 +364,19 @@
           },
           "feedback": "Opening the answer makes this attempt coaching-only.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-listening-community-workshop",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-listening-community-workshop:strict",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-listening-community-workshop:strict",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:sampler-listening-community-workshop",
+            "sourceRevision": "sha256:710c351a48d3cf54eebd2cbe1c4bea18e50422afc481d1ab296ebedcc2486911"
           },
           "assetIds": [
             "asset:sampler-listening-community-workshop:content",
@@ -362,9 +392,19 @@
           },
           "feedback": "Aim for rhythm and intelligibility; this is coaching, not independent evidence.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-listening-community-workshop",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-listening-community-workshop:shadowing",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-listening-community-workshop:shadowing",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:sampler-listening-community-workshop",
+            "sourceRevision": "sha256:5562484ef0f71f1052a2764b1406f653f324b8c1e59fe111839729683ecee478"
           },
           "assetIds": [
             "asset:sampler-listening-community-workshop:content",
@@ -380,9 +420,19 @@
           },
           "feedback": "Retell remains coaching-only without an independent evaluator.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-listening-community-workshop",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-listening-community-workshop:retell",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-listening-community-workshop:retell",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:sampler-listening-community-workshop",
+            "sourceRevision": "sha256:6b0a17c4c1a12f441a3d0dbbcb7022bb22eb1cfb37b8aef9dbad3bf95b22cd5a"
           },
           "assetIds": [
             "asset:sampler-listening-community-workshop:content",
@@ -439,18 +489,20 @@
         "reviewerType": "human",
         "reviewerId": null,
         "reviewedAt": null,
-        "scopeDigest": "sha256:7e563fd0155ec4d5a5fa1614f311ff618afd329e2d8969bd6ca11fa96769933b",
+        "scopeDigest": "sha256:d873cc4b1e86f84faeb38500c5a5df4dde54badb3077e8db4002f162f02c46c0",
         "checks": [],
         "selfApprovedByAi": false,
         "kind": "lesson"
       },
-      "publishedAt": null
+      "publishedAt": null,
+      "sha256": "d873cc4b1e86f84faeb38500c5a5df4dde54badb3077e8db4002f162f02c46c0",
+      "byteLength": 7340
     },
     {
       "id": "lesson:sampler-reading-public-benches",
       "schemaVersion": 2,
       "contentRevision": 1,
-      "contentAddress": "sha256:1ffe687e8285fd9db5f99bb2adc797ff3cab17f8182450a1f56ac2647c496d12",
+      "contentAddress": "sha256:07bdfbd9dfd33c16ed37cd64302915f139263f1eeaad0be415d931a32df08527",
       "title": "Why Public Benches Matter",
       "learningObjective": "Recognise a main claim, supporting detail and plausible distractor in a short urban-design passage.",
       "estimatedMinutes": 12,
@@ -500,9 +552,19 @@
           },
           "feedback": "A strong answer preserves the scope of the passage.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-reading-public-benches",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-reading-public-benches:main-claim",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-reading-public-benches:main-claim",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:sampler-reading-public-benches",
+            "sourceRevision": "sha256:8f54ee0942f7ed8614725a64a156d4a0c10a83ccd2fc63cac9f198c2db91ad7b"
           },
           "assetIds": [
             "asset:sampler-reading-public-benches:content"
@@ -525,9 +587,19 @@
           },
           "feedback": "Match meaning and claim strength, not just topic.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-reading-public-benches",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-reading-public-benches:paraphrase",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-reading-public-benches:paraphrase",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:sampler-reading-public-benches",
+            "sourceRevision": "sha256:e9a15d7f51e731594b2ba2f61762345d865beb96df3ade3575c12df066d7b8fc"
           },
           "assetIds": [
             "asset:sampler-reading-public-benches:content"
@@ -542,9 +614,19 @@
           },
           "feedback": "Distractors often repeat vocabulary while changing scope or causality.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-reading-public-benches",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-reading-public-benches:distractor",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-reading-public-benches:distractor",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:sampler-reading-public-benches",
+            "sourceRevision": "sha256:be40b4bc17922be12f19afa5bb503c60a1ab7e3fb9e8eed27c9574308c6937a8"
           },
           "assetIds": [
             "asset:sampler-reading-public-benches:content"
@@ -559,9 +641,19 @@
           },
           "feedback": "Look for contrast markers and cautious reporting verbs.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-reading-public-benches",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-reading-public-benches:micro-reading",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-reading-public-benches:micro-reading",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:sampler-reading-public-benches",
+            "sourceRevision": "sha256:a15e3c8cfb00185707ef00759a4fc61fa732490a082a79befa12d4ef655af18c"
           },
           "assetIds": [
             "asset:sampler-reading-public-benches:content"
@@ -576,9 +668,19 @@
           },
           "feedback": "This follow-up is coaching-only until independently evaluated.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-reading-public-benches",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-reading-public-benches:production",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-reading-public-benches:production",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:sampler-reading-public-benches",
+            "sourceRevision": "sha256:ee9a2035969b79e08f37cdba3b88f47a05a293a9bfe4f9785bc454ea50aa95c9"
           },
           "assetIds": [
             "asset:sampler-reading-public-benches:content"
@@ -634,18 +736,20 @@
         "reviewerType": "human",
         "reviewerId": null,
         "reviewedAt": null,
-        "scopeDigest": "sha256:1ffe687e8285fd9db5f99bb2adc797ff3cab17f8182450a1f56ac2647c496d12",
+        "scopeDigest": "sha256:07bdfbd9dfd33c16ed37cd64302915f139263f1eeaad0be415d931a32df08527",
         "checks": [],
         "selfApprovedByAi": false,
         "kind": "lesson"
       },
-      "publishedAt": null
+      "publishedAt": null,
+      "sha256": "07bdfbd9dfd33c16ed37cd64302915f139263f1eeaad0be415d931a32df08527",
+      "byteLength": 6899
     },
     {
       "id": "lesson:sampler-lexical-cause-effect",
       "schemaVersion": 2,
       "contentRevision": 1,
-      "contentAddress": "sha256:9f970ad28e2fa4577c02ca5ec96cd343f184160bdee78d8203752b9f0da9f7b7",
+      "contentAddress": "sha256:c94b7692ef8ea7991fc440eab4fc783527bb8a67723e4b89ae871345f1804be5",
       "title": "Clear Cause-and-Effect Paraphrases",
       "learningObjective": "Distinguish cause, contribution and correlation when paraphrasing an academic claim.",
       "estimatedMinutes": 9,
@@ -695,9 +799,19 @@
           },
           "feedback": "Keep the strength and grammatical role of the expression.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-lexical-cause-effect",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-lexical-cause-effect:recall",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-lexical-cause-effect:recall",
+            "senseId": null,
+            "skill": "recall",
+            "sourceId": "remote-content:lesson:sampler-lexical-cause-effect",
+            "sourceRevision": "sha256:8cb9bd69fc055f2852a5beee691997bb5150197ae6db5ee96a78c44b7159d7a7"
           },
           "assetIds": [
             "asset:sampler-lexical-cause-effect:content"
@@ -726,9 +840,19 @@
           },
           "feedback": "Use the meaning note rather than surface similarity.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-lexical-cause-effect",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-lexical-cause-effect:choice",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-lexical-cause-effect:choice",
+            "senseId": null,
+            "skill": "collocation",
+            "sourceId": "remote-content:lesson:sampler-lexical-cause-effect",
+            "sourceRevision": "sha256:4758e34701429ee7ee73eddcfc921bbe3af9b117b97fa02001fd632e5d6de8d9"
           },
           "assetIds": [
             "asset:sampler-lexical-cause-effect:content"
@@ -743,9 +867,19 @@
           },
           "feedback": "Check collocation, grammar and claim strength.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-lexical-cause-effect",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-lexical-cause-effect:sentence",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-lexical-cause-effect:sentence",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:sampler-lexical-cause-effect",
+            "sourceRevision": "sha256:2f3a84fce427747b199944039b12ef23efa89b7c687c47a9bffdd875d700e4bd"
           },
           "assetIds": [
             "asset:sampler-lexical-cause-effect:content"
@@ -760,9 +894,19 @@
           },
           "feedback": "Prefer a clear claim and one supporting example.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-lexical-cause-effect",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-lexical-cause-effect:paragraph",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-lexical-cause-effect:paragraph",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:sampler-lexical-cause-effect",
+            "sourceRevision": "sha256:2ca088244913e37615e8221a17764718f23bcf1e3a2b0c13881f88e06e44c092"
           },
           "assetIds": [
             "asset:sampler-lexical-cause-effect:content"
@@ -777,9 +921,19 @@
           },
           "feedback": "Preserve modality and scope.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:vocab-master-sampler",
+            "packRevision": 1,
             "lessonId": "lesson:sampler-lexical-cause-effect",
+            "lessonRevision": 1,
             "activityId": "activity:sampler-lexical-cause-effect:paraphrase",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:sampler-lexical-cause-effect:paraphrase",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:sampler-lexical-cause-effect",
+            "sourceRevision": "sha256:0a66a06d87417fef58b531469ce5d3c7d8739ae34503e7e1820d0723cffedc38"
           },
           "assetIds": [
             "asset:sampler-lexical-cause-effect:content"
@@ -835,12 +989,14 @@
         "reviewerType": "human",
         "reviewerId": null,
         "reviewedAt": null,
-        "scopeDigest": "sha256:9f970ad28e2fa4577c02ca5ec96cd343f184160bdee78d8203752b9f0da9f7b7",
+        "scopeDigest": "sha256:c94b7692ef8ea7991fc440eab4fc783527bb8a67723e4b89ae871345f1804be5",
         "checks": [],
         "selfApprovedByAi": false,
         "kind": "lesson"
       },
-      "publishedAt": null
+      "publishedAt": null,
+      "sha256": "c94b7692ef8ea7991fc440eab4fc783527bb8a67723e4b89ae871345f1804be5",
+      "byteLength": 6443
     }
   ],
   "compatibility": {

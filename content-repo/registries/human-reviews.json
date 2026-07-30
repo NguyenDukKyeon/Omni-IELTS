@@ -32,7 +32,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:7e563fd0155ec4d5a5fa1614f311ff618afd329e2d8969bd6ca11fa96769933b",
+      "scopeDigest": "sha256:d873cc4b1e86f84faeb38500c5a5df4dde54badb3077e8db4002f162f02c46c0",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -56,7 +56,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:1ffe687e8285fd9db5f99bb2adc797ff3cab17f8182450a1f56ac2647c496d12",
+      "scopeDigest": "sha256:07bdfbd9dfd33c16ed37cd64302915f139263f1eeaad0be415d931a32df08527",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -80,7 +80,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:9f970ad28e2fa4577c02ca5ec96cd343f184160bdee78d8203752b9f0da9f7b7",
+      "scopeDigest": "sha256:c94b7692ef8ea7991fc440eab4fc783527bb8a67723e4b89ae871345f1804be5",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -128,7 +128,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:77c8deae5db63671daef86f7f06ffc4c39a7b443803d1f2bbbbec3479bd617a7",
+      "scopeDigest": "sha256:1e4d3ca320f1a4b2977396f9c395febf67db8405b78b64413b7e6ecda1ec7ee1",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -164,7 +164,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:ee3b2b264231dba0491a879418fe6e49de9201d4c24363be74f3d319ad66e49a",
+      "scopeDigest": "sha256:83f3787aad104945bed5c2e209d320eaaffbf0fa039533f00e5833a55459d224",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -188,7 +188,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:68e48c57db9d266f45735c4b81389866a09ddc94958ea05cac859bcb2ac14fc8",
+      "scopeDigest": "sha256:aa162ae41b76e99de605d95dc1ff3b2cbf09e06137abfebb281da00eee143a43",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -212,7 +212,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:2f28e0f778afeeaddcc5809570e0b776fa0859fcc9f711875228d22a07c959ad",
+      "scopeDigest": "sha256:58bd43dff6bd8f5a6f1fa2d23ed78b30d68840204f228bb9222cb115a9043b80",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -236,7 +236,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:67211afad27164f6ab735204d3e1fdd49edd03b79125791193e7bf088035706b",
+      "scopeDigest": "sha256:a8b771d759dd62001980243f5a6a0e14f0f3230aebdd637334d797c00af62619",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -260,7 +260,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:88d0f431d0e849dd192be67bd10458397fd222c895506b37f9ebd7caf293312c",
+      "scopeDigest": "sha256:68c6804b9deeccf2a2ee70666530f01317560690e5e0b74b06779fac68f26d5b",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -323,7 +323,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:3177096523bfa5a06e0056a539ab1b9a257a0dfa2aadf36285b024a6ef71581a",
+      "scopeDigest": "sha256:ed7a2433f92779451e2958a58b962cf5daf8e27ffd5b5e169fce0f444627e618",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -359,7 +359,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:4c0c4e2217a375e5cd89afb727413554980304b7d7ebd376032139b95f97692d",
+      "scopeDigest": "sha256:1694e21a3e9705e3d4da6b97f414b563e5134ec980ecb8f96cc8182e2df319f2",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -383,7 +383,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:44b924c099408148efde64f2ca056a2b2713c4a46192aee72a8520bc73f21ed6",
+      "scopeDigest": "sha256:0507bbb78a01eed93ba02232369c1d4af268be6c998c1817fef85933268fdef5",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -407,7 +407,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:64868a83b61b81e9e7525219eebd72082e09d0cf2c80f5868cd0780806d8cb9f",
+      "scopeDigest": "sha256:99c9fe46f7e58703be0cb9e37f61076ece5b00506268eac5f3744ec98df034eb",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -431,7 +431,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:7e43256d206623e0ee3102af392d2432068e074950a13b24fd7075b57bfc14b8",
+      "scopeDigest": "sha256:27f593354c5b7942062bea29b93688b663ddc74b7c950d7124c76ad2beaef3a9",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -455,7 +455,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:fbf94b48810bb8a865b428f34cf2fd16f6587083ae1d5c753d202d8f71340fdb",
+      "scopeDigest": "sha256:35a0ef1536019fd98e11c30223a43b7d85f9c9ee34617a85c4c459d77bcac847",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -518,7 +518,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:7a36353e3f08baf4abaae7a65890bc47568bf65b1645623ede6d459817b4ae56",
+      "scopeDigest": "sha256:5985f4b0fff81ffd57166ea0a43a73f344781710e2ce1940522fce705bd7f9b9",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -554,7 +554,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:f12fb534b3206b2653f605e28c041a60e6da0186e53b67447cc8af4530222561",
+      "scopeDigest": "sha256:e8409f54d944c0df6097d33ad49730f376bbdcffec4a8c37d8297756c91bc8ed",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -578,7 +578,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:84ce725f238a77f0d7ddab1359da7af554ce23dedf357877f8a951555d1d283b",
+      "scopeDigest": "sha256:b4fe2c974a3291c5279891676c6ae59183a2b21c222ba775d9887f6972f6c706",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -602,7 +602,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:42354e2c4751b020fe816fe51e428d1dc1839c572cf500d6e5c6c838e67dcc1b",
+      "scopeDigest": "sha256:41d72ed900f86dedc97ab2a1190e1a21e12464505bc98d1357babe410ca883af",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -626,7 +626,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:0a1d1357eac2d5619e5a8569c19cdb3a1b56411982de77ac36d98e0aa3dbbfb0",
+      "scopeDigest": "sha256:01738b41ab92bbb7ed47733982a9d08d5e2497d9e4287c3bc40bcc62fedd2464",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -650,7 +650,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:5d3901a4026bdc17aba51a79ccd5c51672e89f0416e2dee769389cd94c7ecb9d",
+      "scopeDigest": "sha256:9923d5dd1085c5594d7b759fe27c20480e0334676483a1cdde59c34545d35b50",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -713,7 +713,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:0dde261792e7489afcd11519badfb3f4f602ddd731fa36897606e9e133e83dbf",
+      "scopeDigest": "sha256:46562de8512685f7b9aeef5a26d966277413a4eb9a39f061e615a14c83406bbb",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -749,7 +749,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:704a97cbd0ed3e3e3a677423f553830567b6ea0b0a8a277518e4d6a11d4c77d1",
+      "scopeDigest": "sha256:373d25c637203096707e188fc3fa105a18d47a3d6031e4600393339ed2269e22",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -773,7 +773,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:edb1d1fdd42c20557f4d548b52602ae91609e8bee351e3356580fe0e294f1245",
+      "scopeDigest": "sha256:15afd8b99430e1a9f6582912246c292931bc1f95d219a291f9a595f03ac32305",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -797,7 +797,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:6cf793a07874b4a41da5475ce839d127df4eccfe218bfbff0ca68e9da750ecc8",
+      "scopeDigest": "sha256:aad5c1c5acf870942d9437fe94ac0069ff9ae6f793caf986080715e48729bcdb",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -821,7 +821,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:fb8d3d4feaaf0a5150af94eb215d400a70cfd6fe935b30d5931f8bb8ce9e71f6",
+      "scopeDigest": "sha256:7f761d307c27aa6077bc5f24329dc03f2259a917182fad361cf08673680c3aa9",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"
@@ -845,7 +845,7 @@
       "reviewerType": "human",
       "reviewerId": null,
       "reviewedAt": null,
-      "scopeDigest": "sha256:8ebeaaf7af6713b28095a9d3e0109035851ae3802807b2ffef0985a9670fb724",
+      "scopeDigest": "sha256:5a49e15311ea6075d2ff7d6cebce537f460fd2c9ea32d9bbcec72ba6ee224aac",
       "checks": [],
       "selfApprovedByAi": false,
       "kind": "lesson"

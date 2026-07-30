@@ -486,7 +486,7 @@
       "id": "lesson:foundations-w2-listening-museum-briefing",
       "schemaVersion": 2,
       "contentRevision": 1,
-      "contentAddress": "sha256:3177096523bfa5a06e0056a539ab1b9a257a0dfa2aadf36285b024a6ef71581a",
+      "contentAddress": "sha256:ed7a2433f92779451e2958a58b962cf5daf8e27ffd5b5e169fce0f444627e618",
       "title": "Museum Volunteer Briefing",
       "learningObjective": "Follow task assignments and a changed meeting point in a volunteer briefing.",
       "estimatedMinutes": 10,
@@ -545,9 +545,19 @@
           },
           "feedback": "Use the exact changed detail rather than a plausible topic word.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-listening-museum-briefing",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-listening-museum-briefing:comprehension",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-museum-briefing:comprehension",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-museum-briefing",
+            "sourceRevision": "sha256:afdcb58ddc139d42de8e67cce400ee9814c362d88b2054748cb7d3444203838f"
           },
           "assetIds": [
             "asset:foundations-w2-listening-museum-briefing:content",
@@ -563,9 +573,19 @@
           },
           "feedback": "Check content words, function words and the stated detail.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-listening-museum-briefing",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-listening-museum-briefing:dictation",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-museum-briefing:dictation",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-museum-briefing",
+            "sourceRevision": "sha256:9e93f8ac88f58014c60558effef13a03c3fb4375a8b8c69f813ad995a4f91fc7"
           },
           "assetIds": [
             "asset:foundations-w2-listening-museum-briefing:content",
@@ -581,9 +601,19 @@
           },
           "feedback": "Opening the answer makes this attempt coaching-only.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-listening-museum-briefing",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-listening-museum-briefing:strict",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-museum-briefing:strict",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-museum-briefing",
+            "sourceRevision": "sha256:d0c14c6f2bebbb8695896681ee51b916db1e63ed34f4a31caccf44502bce68fd"
           },
           "assetIds": [
             "asset:foundations-w2-listening-museum-briefing:content",
@@ -599,9 +629,19 @@
           },
           "feedback": "Aim for rhythm and intelligibility; this is coaching, not independent evidence.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-listening-museum-briefing",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-listening-museum-briefing:shadowing",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-museum-briefing:shadowing",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-museum-briefing",
+            "sourceRevision": "sha256:167b159a6db85b327e9c6ce7e119f982925f3536579c7bdd86a6f5862ea6ff4f"
           },
           "assetIds": [
             "asset:foundations-w2-listening-museum-briefing:content",
@@ -617,9 +657,19 @@
           },
           "feedback": "Retell remains coaching-only without an independent evaluator.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-listening-museum-briefing",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-listening-museum-briefing:retell",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-museum-briefing:retell",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-museum-briefing",
+            "sourceRevision": "sha256:a8e781e2813b120c3fff9cf24d426a2311001be95572f54314d1e39741bdfeb4"
           },
           "assetIds": [
             "asset:foundations-w2-listening-museum-briefing:content",
@@ -676,18 +726,20 @@
         "reviewerType": "human",
         "reviewerId": null,
         "reviewedAt": null,
-        "scopeDigest": "sha256:3177096523bfa5a06e0056a539ab1b9a257a0dfa2aadf36285b024a6ef71581a",
+        "scopeDigest": "sha256:ed7a2433f92779451e2958a58b962cf5daf8e27ffd5b5e169fce0f444627e618",
         "checks": [],
         "selfApprovedByAi": false,
         "kind": "lesson"
       },
-      "publishedAt": null
+      "publishedAt": null,
+      "sha256": "ed7a2433f92779451e2958a58b962cf5daf8e27ffd5b5e169fce0f444627e618",
+      "byteLength": 7499
     },
     {
       "id": "lesson:foundations-w2-listening-transport-change",
       "schemaVersion": 2,
       "contentRevision": 1,
-      "contentAddress": "sha256:4c0c4e2217a375e5cd89afb727413554980304b7d7ebd376032139b95f97692d",
+      "contentAddress": "sha256:1694e21a3e9705e3d4da6b97f414b563e5134ec980ecb8f96cc8182e2df319f2",
       "title": "Temporary Bus Route Change",
       "learningObjective": "Identify an altered stop, duration and alternative route from a transport announcement.",
       "estimatedMinutes": 10,
@@ -746,9 +798,19 @@
           },
           "feedback": "Use the exact changed detail rather than a plausible topic word.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-listening-transport-change",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-listening-transport-change:comprehension",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-transport-change:comprehension",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-transport-change",
+            "sourceRevision": "sha256:a90d52837d7fee990d4d27d8fde703b5033161dc77a2f047651358daef84e559"
           },
           "assetIds": [
             "asset:foundations-w2-listening-transport-change:content",
@@ -764,9 +826,19 @@
           },
           "feedback": "Check content words, function words and the stated detail.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-listening-transport-change",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-listening-transport-change:dictation",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-transport-change:dictation",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-transport-change",
+            "sourceRevision": "sha256:902c540af567c8ee24bfdab1715d911621544172c5e250a5fd0c626e370888ae"
           },
           "assetIds": [
             "asset:foundations-w2-listening-transport-change:content",
@@ -782,9 +854,19 @@
           },
           "feedback": "Opening the answer makes this attempt coaching-only.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-listening-transport-change",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-listening-transport-change:strict",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-transport-change:strict",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-transport-change",
+            "sourceRevision": "sha256:384187ac49a0321895eab4aafa36a952b3387df8709ac13cbd9a9e01ce4ab2cf"
           },
           "assetIds": [
             "asset:foundations-w2-listening-transport-change:content",
@@ -800,9 +882,19 @@
           },
           "feedback": "Aim for rhythm and intelligibility; this is coaching, not independent evidence.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-listening-transport-change",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-listening-transport-change:shadowing",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-transport-change:shadowing",
+            "senseId": null,
+            "skill": "listening",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-transport-change",
+            "sourceRevision": "sha256:1a3d3b61cd3e351961cb124e205e5315cbbfe5fe961b121f09677ce11b3aec2e"
           },
           "assetIds": [
             "asset:foundations-w2-listening-transport-change:content",
@@ -818,9 +910,19 @@
           },
           "feedback": "Retell remains coaching-only without an independent evaluator.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-listening-transport-change",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-listening-transport-change:retell",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-listening-transport-change:retell",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-listening-transport-change",
+            "sourceRevision": "sha256:e54d45eb48f51e3d32699bdd647d3f0a586e68acda9569892876f85d81cbacf1"
           },
           "assetIds": [
             "asset:foundations-w2-listening-transport-change:content",
@@ -877,18 +979,20 @@
         "reviewerType": "human",
         "reviewerId": null,
         "reviewedAt": null,
-        "scopeDigest": "sha256:4c0c4e2217a375e5cd89afb727413554980304b7d7ebd376032139b95f97692d",
+        "scopeDigest": "sha256:1694e21a3e9705e3d4da6b97f414b563e5134ec980ecb8f96cc8182e2df319f2",
         "checks": [],
         "selfApprovedByAi": false,
         "kind": "lesson"
       },
-      "publishedAt": null
+      "publishedAt": null,
+      "sha256": "1694e21a3e9705e3d4da6b97f414b563e5134ec980ecb8f96cc8182e2df319f2",
+      "byteLength": 7570
     },
     {
       "id": "lesson:foundations-w2-reading-coastal-restoration",
       "schemaVersion": 2,
       "contentRevision": 1,
-      "contentAddress": "sha256:44b924c099408148efde64f2ca056a2b2713c4a46192aee72a8520bc73f21ed6",
+      "contentAddress": "sha256:0507bbb78a01eed93ba02232369c1d4af268be6c998c1817fef85933268fdef5",
       "title": "Restoring Dunes with Flexible Barriers",
       "learningObjective": "Recognise how a restoration method changes wind and sand movement.",
       "estimatedMinutes": 12,
@@ -938,9 +1042,19 @@
           },
           "feedback": "A strong answer preserves the scope of the passage.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-reading-coastal-restoration",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-reading-coastal-restoration:main-claim",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-coastal-restoration:main-claim",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-coastal-restoration",
+            "sourceRevision": "sha256:decc470ea7f47abb53381f73f18c322b8d7da4a549fb813ac5a4934beffb522d"
           },
           "assetIds": [
             "asset:foundations-w2-reading-coastal-restoration:content"
@@ -963,9 +1077,19 @@
           },
           "feedback": "Match meaning and claim strength, not just topic.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-reading-coastal-restoration",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-reading-coastal-restoration:paraphrase",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-coastal-restoration:paraphrase",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-coastal-restoration",
+            "sourceRevision": "sha256:a560df4fd69faffb7833ca86e89f8a7693fced681302c76ba08dda57c48e3b7f"
           },
           "assetIds": [
             "asset:foundations-w2-reading-coastal-restoration:content"
@@ -980,9 +1104,19 @@
           },
           "feedback": "Distractors often repeat vocabulary while changing scope or causality.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-reading-coastal-restoration",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-reading-coastal-restoration:distractor",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-coastal-restoration:distractor",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-coastal-restoration",
+            "sourceRevision": "sha256:5fbe137d5f680604f357ecd9d021ab2f3678bfbffe60c7b019cf3368bf8ba9a6"
           },
           "assetIds": [
             "asset:foundations-w2-reading-coastal-restoration:content"
@@ -997,9 +1131,19 @@
           },
           "feedback": "Look for contrast markers and cautious reporting verbs.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-reading-coastal-restoration",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-reading-coastal-restoration:micro-reading",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-coastal-restoration:micro-reading",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-coastal-restoration",
+            "sourceRevision": "sha256:2d99233326f7426099990571e4a3e808a3e38424f16c33cdd5e41fe656958940"
           },
           "assetIds": [
             "asset:foundations-w2-reading-coastal-restoration:content"
@@ -1014,9 +1158,19 @@
           },
           "feedback": "This follow-up is coaching-only until independently evaluated.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-reading-coastal-restoration",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-reading-coastal-restoration:production",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-coastal-restoration:production",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-coastal-restoration",
+            "sourceRevision": "sha256:f985eaaf150080dd49e975d8158ca0e3833c644615f90c4f3ed3eb1b0205cfd6"
           },
           "assetIds": [
             "asset:foundations-w2-reading-coastal-restoration:content"
@@ -1072,18 +1226,20 @@
         "reviewerType": "human",
         "reviewerId": null,
         "reviewedAt": null,
-        "scopeDigest": "sha256:44b924c099408148efde64f2ca056a2b2713c4a46192aee72a8520bc73f21ed6",
+        "scopeDigest": "sha256:0507bbb78a01eed93ba02232369c1d4af268be6c998c1817fef85933268fdef5",
         "checks": [],
         "selfApprovedByAi": false,
         "kind": "lesson"
       },
-      "publishedAt": null
+      "publishedAt": null,
+      "sha256": "0507bbb78a01eed93ba02232369c1d4af268be6c998c1817fef85933268fdef5",
+      "byteLength": 7263
     },
     {
       "id": "lesson:foundations-w2-reading-food-waste",
       "schemaVersion": 2,
       "contentRevision": 1,
-      "contentAddress": "sha256:64868a83b61b81e9e7525219eebd72082e09d0cf2c80f5868cd0780806d8cb9f",
+      "contentAddress": "sha256:99c9fe46f7e58703be0cb9e37f61076ece5b00506268eac5f3744ec98df034eb",
       "title": "A Campus Food-Waste Trial",
       "learningObjective": "Identify the trial result and why the researchers avoid a broad causal claim.",
       "estimatedMinutes": 12,
@@ -1133,9 +1289,19 @@
           },
           "feedback": "A strong answer preserves the scope of the passage.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-reading-food-waste",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-reading-food-waste:main-claim",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-food-waste:main-claim",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-food-waste",
+            "sourceRevision": "sha256:4e8f78d67dec5e64ee56bb5611e52386e6238b79d6be1e09d994df37cc7359c2"
           },
           "assetIds": [
             "asset:foundations-w2-reading-food-waste:content"
@@ -1158,9 +1324,19 @@
           },
           "feedback": "Match meaning and claim strength, not just topic.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-reading-food-waste",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-reading-food-waste:paraphrase",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-food-waste:paraphrase",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-food-waste",
+            "sourceRevision": "sha256:1c368e7222a61c8b15940f2e463bae2f8dc106c09966e8ad2d42c4ba50d0580c"
           },
           "assetIds": [
             "asset:foundations-w2-reading-food-waste:content"
@@ -1175,9 +1351,19 @@
           },
           "feedback": "Distractors often repeat vocabulary while changing scope or causality.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-reading-food-waste",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-reading-food-waste:distractor",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-food-waste:distractor",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-food-waste",
+            "sourceRevision": "sha256:52bae812095c2ec683a18dfc03e39a41676fdd6a2de341438d38cf4e8d12dead"
           },
           "assetIds": [
             "asset:foundations-w2-reading-food-waste:content"
@@ -1192,9 +1378,19 @@
           },
           "feedback": "Look for contrast markers and cautious reporting verbs.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-reading-food-waste",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-reading-food-waste:micro-reading",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-food-waste:micro-reading",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-food-waste",
+            "sourceRevision": "sha256:8332f5a05c5be3894f785547eec693dabe72d72f306720e8d6cc6add952be1f6"
           },
           "assetIds": [
             "asset:foundations-w2-reading-food-waste:content"
@@ -1209,9 +1405,19 @@
           },
           "feedback": "This follow-up is coaching-only until independently evaluated.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-reading-food-waste",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-reading-food-waste:production",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-reading-food-waste:production",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-reading-food-waste",
+            "sourceRevision": "sha256:80958365935019b1762a813ff09fcbb892536620054bda64f9e081221bcfc2d1"
           },
           "assetIds": [
             "asset:foundations-w2-reading-food-waste:content"
@@ -1267,18 +1473,20 @@
         "reviewerType": "human",
         "reviewerId": null,
         "reviewedAt": null,
-        "scopeDigest": "sha256:64868a83b61b81e9e7525219eebd72082e09d0cf2c80f5868cd0780806d8cb9f",
+        "scopeDigest": "sha256:99c9fe46f7e58703be0cb9e37f61076ece5b00506268eac5f3744ec98df034eb",
         "checks": [],
         "selfApprovedByAi": false,
         "kind": "lesson"
       },
-      "publishedAt": null
+      "publishedAt": null,
+      "sha256": "99c9fe46f7e58703be0cb9e37f61076ece5b00506268eac5f3744ec98df034eb",
+      "byteLength": 6934
     },
     {
       "id": "lesson:foundations-w2-lexical-comparison",
       "schemaVersion": 2,
       "contentRevision": 1,
-      "contentAddress": "sha256:7e43256d206623e0ee3102af392d2432068e074950a13b24fd7075b57bfc14b8",
+      "contentAddress": "sha256:27f593354c5b7942062bea29b93688b663ddc74b7c950d7124c76ad2beaef3a9",
       "title": "Comparison and Contrast",
       "learningObjective": "Build precise comparisons without changing the reference group.",
       "estimatedMinutes": 9,
@@ -1328,9 +1536,19 @@
           },
           "feedback": "Keep the strength and grammatical role of the expression.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-lexical-comparison",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-lexical-comparison:recall",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-comparison:recall",
+            "senseId": null,
+            "skill": "recall",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-comparison",
+            "sourceRevision": "sha256:4b40d14271b32947d31c857916b89a9e8ee61c27665a3f85413031a6356c1a90"
           },
           "assetIds": [
             "asset:foundations-w2-lexical-comparison:content"
@@ -1359,9 +1577,19 @@
           },
           "feedback": "Use the meaning note rather than surface similarity.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-lexical-comparison",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-lexical-comparison:choice",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-comparison:choice",
+            "senseId": null,
+            "skill": "collocation",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-comparison",
+            "sourceRevision": "sha256:bb8abef41177598d49d74c5f3a8f9d9359cfb56d6a118012378f57188146b22b"
           },
           "assetIds": [
             "asset:foundations-w2-lexical-comparison:content"
@@ -1376,9 +1604,19 @@
           },
           "feedback": "Check collocation, grammar and claim strength.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-lexical-comparison",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-lexical-comparison:sentence",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-comparison:sentence",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-comparison",
+            "sourceRevision": "sha256:0cfa938502f89f578efda6032f69c0f2f210ce569fcc10f6eba9756b6b4740c2"
           },
           "assetIds": [
             "asset:foundations-w2-lexical-comparison:content"
@@ -1393,9 +1631,19 @@
           },
           "feedback": "Prefer a clear claim and one supporting example.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-lexical-comparison",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-lexical-comparison:paragraph",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-comparison:paragraph",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-comparison",
+            "sourceRevision": "sha256:92b4d2efcbf4961da6ab39db559db04f67e0f2ad8dfd96eba47fadfdc96090f6"
           },
           "assetIds": [
             "asset:foundations-w2-lexical-comparison:content"
@@ -1410,9 +1658,19 @@
           },
           "feedback": "Preserve modality and scope.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-lexical-comparison",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-lexical-comparison:paraphrase",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-comparison:paraphrase",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-comparison",
+            "sourceRevision": "sha256:622517eb5ba78a9382290e0398bff49fdbb8865dd4225387782722ddd8906bb2"
           },
           "assetIds": [
             "asset:foundations-w2-lexical-comparison:content"
@@ -1468,18 +1726,20 @@
         "reviewerType": "human",
         "reviewerId": null,
         "reviewedAt": null,
-        "scopeDigest": "sha256:7e43256d206623e0ee3102af392d2432068e074950a13b24fd7075b57bfc14b8",
+        "scopeDigest": "sha256:27f593354c5b7942062bea29b93688b663ddc74b7c950d7124c76ad2beaef3a9",
         "checks": [],
         "selfApprovedByAi": false,
         "kind": "lesson"
       },
-      "publishedAt": null
+      "publishedAt": null,
+      "sha256": "27f593354c5b7942062bea29b93688b663ddc74b7c950d7124c76ad2beaef3a9",
+      "byteLength": 6633
     },
     {
       "id": "lesson:foundations-w2-lexical-trends",
       "schemaVersion": 2,
       "contentRevision": 1,
-      "contentAddress": "sha256:fbf94b48810bb8a865b428f34cf2fd16f6587083ae1d5c753d202d8f71340fdb",
+      "contentAddress": "sha256:35a0ef1536019fd98e11c30223a43b7d85f9c9ee34617a85c4c459d77bcac847",
       "title": "Describing Trends Carefully",
       "learningObjective": "Distinguish gradual, sharp, stable and fluctuating patterns.",
       "estimatedMinutes": 9,
@@ -1529,9 +1789,19 @@
           },
           "feedback": "Keep the strength and grammatical role of the expression.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-lexical-trends",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-lexical-trends:recall",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-trends:recall",
+            "senseId": null,
+            "skill": "recall",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-trends",
+            "sourceRevision": "sha256:49cd431c4d5cacd4cf94b422d3b11522e9700ad9f7976e4601651244d0bca559"
           },
           "assetIds": [
             "asset:foundations-w2-lexical-trends:content"
@@ -1560,9 +1830,19 @@
           },
           "feedback": "Use the meaning note rather than surface similarity.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-lexical-trends",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-lexical-trends:choice",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-trends:choice",
+            "senseId": null,
+            "skill": "collocation",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-trends",
+            "sourceRevision": "sha256:626243be0fe7e8de33e7f3b283a92233b3f02fd9f47208f5a14c91eca93adb06"
           },
           "assetIds": [
             "asset:foundations-w2-lexical-trends:content"
@@ -1577,9 +1857,19 @@
           },
           "feedback": "Check collocation, grammar and claim strength.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-lexical-trends",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-lexical-trends:sentence",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-trends:sentence",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-trends",
+            "sourceRevision": "sha256:e47b4eff023bab05d0da85ab938ab894181e7159447f3fc499afbf39d7ea827e"
           },
           "assetIds": [
             "asset:foundations-w2-lexical-trends:content"
@@ -1594,9 +1884,19 @@
           },
           "feedback": "Prefer a clear claim and one supporting example.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-lexical-trends",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-lexical-trends:paragraph",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-trends:paragraph",
+            "senseId": null,
+            "skill": "production",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-trends",
+            "sourceRevision": "sha256:29a6f91a5668f29e0757e1e3c6b1bfeead9477fdc36c8c7a2823453d856f1176"
           },
           "assetIds": [
             "asset:foundations-w2-lexical-trends:content"
@@ -1611,9 +1911,19 @@
           },
           "feedback": "Preserve modality and scope.",
           "target": {
+            "contract": "RemoteContentActivityTarget",
+            "schemaVersion": 2,
+            "packId": "pack:ielts-foundations-week-2",
+            "packRevision": 1,
             "lessonId": "lesson:foundations-w2-lexical-trends",
+            "lessonRevision": 1,
             "activityId": "activity:foundations-w2-lexical-trends:paraphrase",
-            "contentRevision": 1
+            "contentRevision": 1,
+            "cardId": "activity:foundations-w2-lexical-trends:paraphrase",
+            "senseId": null,
+            "skill": "recognition",
+            "sourceId": "remote-content:lesson:foundations-w2-lexical-trends",
+            "sourceRevision": "sha256:8d2d8c5834aece3d6ea9c3b372cc5d611e486e289b893051f6b6374543370663"
           },
           "assetIds": [
             "asset:foundations-w2-lexical-trends:content"
@@ -1669,12 +1979,14 @@
         "reviewerType": "human",
         "reviewerId": null,
         "reviewedAt": null,
-        "scopeDigest": "sha256:fbf94b48810bb8a865b428f34cf2fd16f6587083ae1d5c753d202d8f71340fdb",
+        "scopeDigest": "sha256:35a0ef1536019fd98e11c30223a43b7d85f9c9ee34617a85c4c459d77bcac847",
         "checks": [],
         "selfApprovedByAi": false,
         "kind": "lesson"
       },
-      "publishedAt": null
+      "publishedAt": null,
+      "sha256": "35a0ef1536019fd98e11c30223a43b7d85f9c9ee34617a85c4c459d77bcac847",
+      "byteLength": 6546
     }
   ],
   "compatibility": {

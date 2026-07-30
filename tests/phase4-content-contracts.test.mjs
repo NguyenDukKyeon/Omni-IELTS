@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {
   PHASE4_CONTRACTS,
   canonicalContentJson,
+  contentActivityTargetFor,
   contentAddressFor,
+  lessonIdentityFor,
   normalizeContentAddress,
   validateAssetDescriptor,
   validateLessonManifest,
@@ -44,10 +46,9 @@ function asset(){
   };
 }
 
-function lesson(declaredAsset=asset()){
-  const contentAddress=address('b');
-  return{
-    id:'lesson:listening-01',schemaVersion:2,contentRevision:1,contentAddress,
+async function lesson(declaredAsset=asset()){
+  const value={
+    id:'lesson:listening-01',schemaVersion:2,contentRevision:1,
     title:'Test listening lesson',learningObjective:'Identify a scheduling change.',
     estimatedMinutes:8,difficulty:'B1',skill:'listening',
     lexicalTargets:[{id:'lex:move-forward',term:'move forward'}],
@@ -55,20 +56,28 @@ function lesson(declaredAsset=asset()){
     activities:[{
       id:'activity:listening-01:dictation',type:'dictation',
       prompt:'Write the sentence you hear.',answer:{text:'The meeting moved forward.'},
-      assetIds:[declaredAsset.id]
+      assetIds:[declaredAsset.id],
+      target:await contentActivityTargetFor({
+        packId:'pack:test-week',packRevision:1,lessonId:'lesson:listening-01',
+        lessonRevision:1,activityId:'activity:listening-01:dictation',activityType:'dictation'
+      })
     }],
     accessibility:{label:'Test listening lesson',language:'en',transcriptAssetId:declaredAsset.id},
     compatibility:{minimumAppVersion:'10.0.0',supportedActivityTypes:['dictation']},
-    ...publication('lesson-listening-01',contentAddress)
+    ...publication('lesson-listening-01',address('b'))
   };
+  const identity=await lessonIdentityFor(value);
+  Object.assign(value,{contentAddress:identity.contentAddress,sha256:identity.sha256,byteLength:identity.byteLength});
+  value.humanReview.scopeDigest=identity.contentAddress;
+  return value;
 }
 
-function pack(){
+async function pack(){
   const packAddress=address('c');
   const declaredAsset=asset();
   return{
     id:'pack:test-week',schemaVersion:2,contentRevision:1,contentAddress:packAddress,
-    title:'Test week',assets:[declaredAsset],lessons:[lesson(declaredAsset)],
+    title:'Test week',assets:[declaredAsset],lessons:[await lesson(declaredAsset)],
     compatibility:{minimumAppVersion:'10.0.0',supportedActivityTypes:['dictation','shadowing']},
     ...publication('pack-test-week',packAddress)
   };
@@ -84,11 +93,11 @@ test('Phase 4 exports every required versioned contract and canonical JSON is de
   assert.equal(await contentAddressFor('abc'),'sha256:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
 });
 
-test('published asset, lesson, pack and catalog contracts accept complete rights and human review evidence',()=>{
-  const manifest=pack();
+test('published asset, lesson, pack and catalog contracts accept complete rights and human review evidence',async()=>{
+  const manifest=await pack();
   assert.equal(validateAssetDescriptor(manifest.assets[0],{at:Date.parse(now)}).valid,true);
-  assert.equal(validateLessonManifest(manifest.lessons[0],{declaredAssets:manifest.assets,at:Date.parse(now)}).valid,true);
-  assert.equal(validatePackManifest(manifest,{at:Date.parse(now)}).valid,true);
+  assert.equal((await validateLessonManifest(manifest.lessons[0],{declaredAssets:manifest.assets,packId:manifest.id,packRevision:manifest.contentRevision,at:Date.parse(now)})).valid,true);
+  assert.equal((await validatePackManifest(manifest,{at:Date.parse(now)})).valid,true);
   const entryAddress=address('d');
   const entry={
     id:manifest.id,packId:manifest.id,schemaVersion:2,contentRevision:1,contentAddress:entryAddress,
@@ -106,7 +115,7 @@ test('published asset, lesson, pack and catalog contracts accept complete rights
   assert.equal(result.valid,true,result.errors.join('\n'));
 });
 
-test('publication fails closed for absent approval, mutable identity, undeclared assets and digest inconsistency',()=>{
+test('publication fails closed for absent approval, mutable identity, undeclared assets and digest inconsistency',async()=>{
   const descriptor=asset();
   descriptor.humanReview.status='pending';
   descriptor.id='https://mutable.example.test/latest.wav';
@@ -115,12 +124,34 @@ test('publication fails closed for absent approval, mutable identity, undeclared
   assert.equal(assetResult.valid,false);
   assert.match(assetResult.errors.join(' '),/unstable|approval|inconsistent/i);
 
-  const lessonFixture=lesson();
+  const lessonFixture=await lesson();
   lessonFixture.assetIds=['asset:undeclared'];
   lessonFixture.activities[0].assetIds=['asset:undeclared'];
-  const lessonResult=validateLessonManifest(lessonFixture,{declaredAssets:[asset()],at:Date.parse(now)});
+  const lessonResult=await validateLessonManifest(lessonFixture,{declaredAssets:[asset()],packId:'pack:test-week',packRevision:1,at:Date.parse(now)});
   assert.equal(lessonResult.valid,false);
   assert.match(lessonResult.errors.join(' '),/undeclared asset/);
+});
+
+test('lesson identity digest, length, address, exact target, asset scope and review binding fail closed',async()=>{
+  const declared=asset();
+  const valid=await lesson(declared);
+  const cases=[
+    ['missing digest',row=>{delete row.sha256;},/sha256/i],
+    ['wrong digest',row=>{row.sha256='0'.repeat(64);},/sha256|inconsistent/i],
+    ['wrong byte length',row=>{row.byteLength+=1;},/byteLength/i],
+    ['address mismatch',row=>{row.contentAddress=address('f');},/contentAddress/i],
+    ['cross-lesson asset',row=>{row.activities[0].assetIds=['asset:other-lesson'];},/outside the lesson/i],
+    ['missing target',row=>{delete row.activities[0].target;},/target is missing/i],
+    ['review bound elsewhere',row=>{row.humanReview.scopeDigest=address('e');},/does not match reviewed content/i]
+  ];
+  for(const [label,mutate,pattern] of cases){
+    const row=structuredClone(valid);
+    mutate(row);
+    const declaredAssets=label==='cross-lesson asset'?[declared,{...declared,id:'asset:other-lesson'}]:[declared];
+    const result=await validateLessonManifest(row,{declaredAssets,packId:'pack:test-week',packRevision:1,at:Date.parse(now)});
+    assert.equal(result.valid,false,label);
+    assert.match(result.errors.join(' '),pattern,label);
+  }
 });
 
 test('pending, rejected, expired and AI-asserted publication evidence is rejected',()=>{

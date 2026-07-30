@@ -1,3 +1,5 @@
+import { validateActivitySpec } from './learning-contracts.js';
+
 export const CONTENT_SCHEMA_VERSION=2;
 export const SUPPORTED_CONTENT_SCHEMAS=Object.freeze([CONTENT_SCHEMA_VERSION]);
 export const CONTENT_ADDRESS_ALGORITHM='sha256';
@@ -113,6 +115,82 @@ export async function contentAddressFor(value){
   return`sha256:${await sha256HexBytes(value)}`;
 }
 
+const CONTENT_ACTIVITY_SKILLS=Object.freeze({
+  'listening-comprehension':'listening',
+  'dictation':'listening',
+  'strict-practice':'listening',
+  'shadowing':'listening',
+  'retell-coaching':'production',
+  'reading-comprehension':'recognition',
+  'paraphrase-recognition':'recognition',
+  'distractor-recognition':'recognition',
+  'micro-reading':'recognition',
+  'controlled-recall':'recall',
+  'sentence-production':'production',
+  'paragraph-production':'production',
+  'lexical-choice':'collocation'
+});
+
+export async function contentActivityTargetFor({
+  packId,
+  packRevision,
+  lessonId,
+  lessonRevision,
+  activityId,
+  activityType
+}={}){
+  const exactIdentity={
+    contract:'RemoteContentActivityTarget',
+    schemaVersion:CONTENT_SCHEMA_VERSION,
+    packId,
+    packRevision:Number(packRevision),
+    lessonId,
+    lessonRevision:Number(lessonRevision),
+    activityId
+  };
+  return Object.freeze({
+    ...exactIdentity,
+    contentRevision:Number(lessonRevision),
+    cardId:activityId,
+    senseId:null,
+    skill:CONTENT_ACTIVITY_SKILLS[activityType]||null,
+    sourceId:`remote-content:${lessonId}`,
+    sourceRevision:await contentAddressFor(canonicalContentJson(exactIdentity))
+  });
+}
+
+const LESSON_PUBLICATION_FIELDS=new Set([
+  'contentAddress',
+  'sha256',
+  'byteLength',
+  'rights',
+  'provenance',
+  'humanReview',
+  'publishedAt'
+]);
+
+export function canonicalLessonIdentity(value){
+  if(!isObject(value))throw contentContractError('LESSON_IDENTITY_INVALID','Lesson identity requires an object.');
+  return canonicalContentValue(Object.fromEntries(
+    Object.entries(value).filter(([key])=>!LESSON_PUBLICATION_FIELDS.has(key))
+  ));
+}
+
+export function canonicalLessonBytes(value){
+  return encoder.encode(JSON.stringify(canonicalLessonIdentity(value)));
+}
+
+export async function lessonIdentityFor(value){
+  const bytes=canonicalLessonBytes(value);
+  const sha256=await sha256HexBytes(bytes);
+  return Object.freeze({
+    bytes,
+    byteLength:bytes.byteLength,
+    sha256,
+    contentAddress:`sha256:${sha256}`
+  });
+}
+
 export function normalizeContentAddress(value){
   const text=clean(isObject(value)?`${value.algorithm}:${value.digest}`:value,80).toLowerCase();
   const match=CONTENT_ADDRESS_PATTERN.exec(text);
@@ -215,22 +293,50 @@ export function validateAssetDescriptor(value,{publication=true,at=Date.now()}={
   return{valid:errors.length===0,errors,value:errors.length?null:Object.freeze({...clone(value),contentAddress:address?.value})};
 }
 
-function activityErrors(activity,path,assetIds){
+async function activityErrors(activity,path,{lessonAssetIds,packId,packRevision,lessonId,lessonRevision}){
   const errors=[];
   if(!isObject(activity)){errors.push(`${path} must be an object.`);return errors;}
   if(!CONTENT_ID_PATTERN.test(clean(activity.id,200)))errors.push(`${path}.id is invalid.`);
   if(!SUPPORTED_ACTIVITY_TYPES.includes(activity.type))errors.push(`${path}.type ${activity.type||'missing'} is unsupported.`);
   if(!clean(activity.prompt,5000))errors.push(`${path}.prompt is missing.`);
   if(!isObject(activity.answer)&&!Array.isArray(activity.answer)&&!clean(activity.answer,5000))errors.push(`${path}.answer is missing.`);
-  for(const assetId of activity.assetIds||[])if(!assetIds.has(assetId))errors.push(`${path} references undeclared asset ${assetId}.`);
+  for(const assetId of activity.assetIds||[])if(!lessonAssetIds.has(assetId))errors.push(`${path} references asset ${assetId} outside the lesson declaration.`);
+  const target=activity.target;
+  if(!isObject(target))errors.push(`${path}.target is missing.`);
+  else{
+    const expected=await contentActivityTargetFor({
+      packId,
+      packRevision,
+      lessonId,
+      lessonRevision,
+      activityId:activity.id,
+      activityType:activity.type
+    });
+    for(const field of [
+      'packId','packRevision','lessonId','lessonRevision','activityId',
+      'cardId','senseId','skill','sourceId','sourceRevision'
+    ])if(target[field]!==expected[field])errors.push(`${path}.target.${field} does not match the exact immutable activity target.`);
+    const activitySpec=validateActivitySpec({id:activity.id,type:activity.type,target});
+    if(!activitySpec.valid)errors.push(`${path}.target is not a valid exact ActivitySpec target.`);
+  }
   return errors;
 }
 
-export function validateLessonManifest(value,{publication=true,at=Date.now(),declaredAssets=[]}={}){
+export async function validateLessonManifest(value,{publication=true,at=Date.now(),declaredAssets=[],packId=null,packRevision=null}={}){
   const errors=baseErrors(value,{contract:'LessonManifest'});
   if(!isObject(value))return{valid:false,errors,value:null};
   let address=null;
   try{address=normalizeContentAddress(value.contentAddress);}catch(error){errors.push(error.message);}
+  const expectedSha=clean(value.sha256,64).toLowerCase();
+  if(!/^[a-f0-9]{64}$/.test(expectedSha))errors.push('LessonManifest.sha256 is missing or invalid.');
+  if(address&&expectedSha&&address.digest!==expectedSha)errors.push('LessonManifest.contentAddress and sha256 are inconsistent.');
+  if(!Number.isInteger(Number(value.byteLength))||Number(value.byteLength)<1)errors.push('LessonManifest.byteLength is invalid.');
+  try{
+    const identity=await lessonIdentityFor(value);
+    if(expectedSha&&identity.sha256!==expectedSha)errors.push('LessonManifest.sha256 does not match canonical lesson bytes.');
+    if(Number(value.byteLength)!==identity.byteLength)errors.push('LessonManifest.byteLength does not match canonical lesson bytes.');
+    if(address&&identity.contentAddress!==address.value)errors.push('LessonManifest.contentAddress does not match canonical lesson bytes.');
+  }catch(error){errors.push(`LessonManifest canonical identity is invalid: ${error.message}`);}
   if(!clean(value.title,300))errors.push('LessonManifest.title is missing.');
   if(!clean(value.learningObjective,1000))errors.push('LessonManifest.learningObjective is missing.');
   if(!Number.isInteger(Number(value.estimatedMinutes))||Number(value.estimatedMinutes)<1)errors.push('LessonManifest.estimatedMinutes is invalid.');
@@ -240,12 +346,27 @@ export function validateLessonManifest(value,{publication=true,at=Date.now(),dec
   const lexicalIds=(value.lexicalTargets||[]).map(target=>clean(target.id||target.term,200).toLowerCase()).filter(Boolean);
   if(unique(lexicalIds).length!==lexicalIds.length)errors.push('LessonManifest contains duplicate lexical targets.');
   const assetIds=new Set((declaredAssets||[]).map(asset=>asset.id));
-  for(const assetId of value.assetIds||[])if(!assetIds.has(assetId))errors.push(`LessonManifest references undeclared asset ${assetId}.`);
+  const lessonAssetIds=new Set(Array.isArray(value.assetIds)?value.assetIds:[]);
+  if(!Array.isArray(value.assetIds)||!value.assetIds.length)errors.push('LessonManifest.assetIds is missing.');
+  for(const assetId of lessonAssetIds)if(!assetIds.has(assetId))errors.push(`LessonManifest references undeclared asset ${assetId}.`);
   const activities=Array.isArray(value.activities)?value.activities:[];
   if(!activities.length)errors.push('LessonManifest.activities is missing.');
   const activityIds=activities.map(activity=>activity?.id).filter(Boolean);
   if(unique(activityIds).length!==activityIds.length)errors.push('LessonManifest contains duplicate activity IDs.');
-  activities.forEach((activity,index)=>errors.push(...activityErrors(activity,`LessonManifest.activities[${index}]`,assetIds)));
+  const owningPackId=packId||value.packId;
+  const owningPackRevision=packRevision??value.packRevision;
+  if(!owningPackId||!Number.isInteger(Number(owningPackRevision))||Number(owningPackRevision)<1)errors.push('LessonManifest pack identity context is missing.');
+  for(const [index,activity] of activities.entries())errors.push(...await activityErrors(
+    activity,
+    `LessonManifest.activities[${index}]`,
+    {
+      lessonAssetIds,
+      packId:owningPackId,
+      packRevision:Number(owningPackRevision),
+      lessonId:value.id,
+      lessonRevision:Number(value.contentRevision)
+    }
+  ));
   if(!isObject(value.accessibility)||!clean(value.accessibility.label,300)||!clean(value.accessibility.language,20))errors.push('LessonManifest.accessibility metadata is incomplete.');
   errors.push(...compatibilityErrors(value.compatibility,'LessonManifest.compatibility'));
   if(publication)errors.push(...publicationRecordErrors(value,{path:'LessonManifest',at,scopeDigest:value.contentAddress}));
@@ -269,7 +390,7 @@ export function validateCatalogEntry(value,{publication=true,at=Date.now()}={}){
   return{valid:errors.length===0,errors,value:errors.length?null:Object.freeze(clone(value))};
 }
 
-export function validatePackManifest(value,{publication=true,at=Date.now(),maxBytes=8*1024*1024}={}){
+export async function validatePackManifest(value,{publication=true,at=Date.now(),maxBytes=8*1024*1024}={}){
   const errors=baseErrors(value,{contract:'PackManifest'});
   if(!isObject(value))return{valid:false,errors,value:null};
   let address=null;try{address=normalizeContentAddress(value.contentAddress);}catch(error){errors.push(error.message);}
@@ -287,7 +408,7 @@ export function validatePackManifest(value,{publication=true,at=Date.now(),maxBy
     errors.push(...result.errors.map(error=>`PackManifest.assets[${assetIndex}]: ${error}`));
   }
   for(const[lessonIndex,lesson]of lessons.entries()){
-    const result=validateLessonManifest(lesson,{publication,at,declaredAssets:assets});
+    const result=await validateLessonManifest(lesson,{publication,at,declaredAssets:assets,packId:value.id,packRevision:value.contentRevision});
     errors.push(...result.errors.map(error=>`PackManifest.lessons[${lessonIndex}]: ${error}`));
   }
   const declaredBytes=assets.reduce((sum,asset)=>sum+Number(asset?.byteLength||0),0);
@@ -310,6 +431,17 @@ export function validateRemoteCatalog(value,{publication=true,at=Date.now()}={})
   if(publication&&expires&&Date.parse(expires)<=Number(at))errors.push('RemoteCatalog is expired.');
   if(!clean(value.keyId,160))errors.push('RemoteCatalog.keyId is missing.');
   if(!Array.isArray(value.supportedKeyIds)||!value.supportedKeyIds.includes(value.keyId))errors.push('RemoteCatalog key rotation metadata does not include the signing key.');
+  else{
+    const keyIds=value.supportedKeyIds.map(keyId=>clean(keyId,160));
+    if(keyIds.some(keyId=>!CONTENT_ID_PATTERN.test(keyId))||unique(keyIds).length!==keyIds.length)errors.push('RemoteCatalog.supportedKeyIds contains invalid or duplicate key IDs.');
+  }
+  if(value.authorizedSuccessorKeyIds!=null){
+    if(!Array.isArray(value.authorizedSuccessorKeyIds))errors.push('RemoteCatalog.authorizedSuccessorKeyIds must be an array.');
+    else{
+      const successors=value.authorizedSuccessorKeyIds.map(keyId=>clean(keyId,160));
+      if(successors.some(keyId=>!CONTENT_ID_PATTERN.test(keyId))||unique(successors).length!==successors.length)errors.push('RemoteCatalog.authorizedSuccessorKeyIds contains invalid or duplicate key IDs.');
+    }
+  }
   const entries=Array.isArray(value.entries)?value.entries:[];
   const ids=entries.map(entry=>entry?.id).filter(Boolean);
   if(unique(ids).length!==ids.length)errors.push('RemoteCatalog contains duplicate entry IDs.');
