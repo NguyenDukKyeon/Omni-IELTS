@@ -9,6 +9,7 @@ import { createCaptionResolverV2 } from './caption-resolver-v2.mjs';
 import { createAsrFallbackResolver } from './asr-fallback-resolver.mjs';
 import { createLocalCompanionClient } from './local-asr-provider.mjs';
 import { ResolverJobRepository } from './resolver-job-repository.mjs';
+import { createGeminiAsrProvider } from './gemini-asr-provider.mjs';
 
 const port=Number(process.env.PORT||3000);
 const root=resolve(fileURLToPath(new URL('../dist/',import.meta.url)));
@@ -65,7 +66,7 @@ const DEFAULT_AI_MODEL=AI_MODELS.has(process.env.GEMINI_MODEL)?process.env.GEMIN
 const handleIeltsApi=createIeltsApiHandler({securityHeaders,aiModels:AI_MODELS,defaultAiModel:DEFAULT_AI_MODEL});
 const resolverRepository=new ResolverJobRepository();
 const transcriptResolver=createCaptionResolverV2({securityHeaders,repository:resolverRepository});
-const asrFallbackResolver=createAsrFallbackResolver({securityHeaders,repository:resolverRepository,localClient:createLocalCompanionClient()});
+const asrFallbackResolver=createAsrFallbackResolver({securityHeaders,repository:resolverRepository,localClient:createLocalCompanionClient(),cloudClient:createGeminiAsrProvider()});
 const handleTranscriptResolver=async(req,res,path,url)=>{
   if(await asrFallbackResolver.handle(req,res,path))return;
   if(path.endsWith('/cancel')){const jobId=decodeURIComponent(path.split('/').at(-2)||'');if(asrFallbackResolver.isActive(jobId))return json(res,200,{job:await asrFallbackResolver.cancel(jobId)});}

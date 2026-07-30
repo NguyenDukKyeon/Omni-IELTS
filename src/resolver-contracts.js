@@ -29,7 +29,8 @@ export function normalizeResolverRequest(input={}){
   if(input.namespace==='shared'&&namespace!=='shared')throw resolverError('RIGHTS_INELIGIBLE','Shared-public cache requires a public, no-auth, no-cookie, rights-eligible source and explicit opt-in.');
   if(namespace==='shared'&&input.privateArtifact===true)throw resolverError('INVALID_SOURCE','Private artifact không thể vào shared resolver cache.');
   const fallback=sanitizeFallbackRequest(input.fallback);
-  return Object.freeze({version:RESOLVER_CONTRACT_VERSION,source,language,namespace,fallback,requestKey:`resolver:${learningContractDigest({sourceId:source.sourceId,language,namespace,fallback,contract:RESOLVER_CONTRACT_VERSION})}`,requestedAt:Number(input.requestedAt||Date.now())});
+  const sourcePolicy={visibility:clean(sharing.visibility||'unknown',40),requiresAuth:sharing.requiresAuth===false?false:true,cookiesUsed:sharing.cookiesUsed===false?false:true,rights:clean(sharing.rights||'unknown',40)};
+  return Object.freeze({version:RESOLVER_CONTRACT_VERSION,source,sourcePolicy,language,namespace,fallback,requestKey:`resolver:${learningContractDigest({sourceId:source.sourceId,sourcePolicy,language,namespace,fallback,contract:RESOLVER_CONTRACT_VERSION})}`,requestedAt:Number(input.requestedAt||Date.now())});
 }
 
 export function createResolverJob(input={}){

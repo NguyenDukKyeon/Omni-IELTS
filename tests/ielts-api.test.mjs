@@ -15,13 +15,12 @@ function geminiResponse(value){return new Response(JSON.stringify({candidates:[{
 const securityHeaders=contentType=>({'content-type':contentType,'x-content-type-options':'nosniff'});
 const handler=createIeltsApiHandler({securityHeaders,aiModels:new Set(['gemini-test']),defaultAiModel:'gemini-test'});
 
-test('auto transcript sends a public YouTube URL directly with a twenty-minute clip contract',async()=>{
+test('legacy auto transcript fails closed before any cloud request',async()=>{
   const originalFetch=globalThis.fetch;let outbound;
   globalThis.fetch=async(url,options)=>{outbound={url:String(url),body:JSON.parse(options.body)};return geminiResponse({title:'Contract video',language:'en',durationSeconds:1200,segments:[{startMs:0,endMs:4200,text:'A verified transcript sentence.',confidence:.91},{startMs:4200,endMs:8500,text:'A second sentence for dictation.',confidence:.84}]});};
   try{
     const call=request({url:'https://youtu.be/dQw4w9WgXcQ',mediaSourceId:'media-contract',startSeconds:0,minutes:20,language:'en'},'/api/ielts/transcript');await handler(call.req,call.res,call.path);const result=call.result();
-    assert.equal(result.status,200,result.text);assert.equal(result.json.videoId,'dQw4w9WgXcQ');assert.equal(result.json.clip.endSeconds,1200);assert.equal(result.json.durationSeconds,1200);assert.equal(result.json.segments.length,2);assert.equal(result.json.segments[0].status,'needs-review');assert.equal(result.json.segments[0].confidenceSource,'model-estimate');
-    const parts=outbound.body.contents[0].parts;assert.equal(parts[0].fileData.fileUri,'https://www.youtube.com/watch?v=dQw4w9WgXcQ');assert.equal(parts[0].videoMetadata.startOffset,'0s');assert.equal(parts[0].videoMetadata.endOffset,'1200s');assert.match(parts[1].text,/absolute milliseconds/);assert.match(outbound.url,/gemini-test:generateContent/);
+    assert.equal(result.status,409,result.text);assert.match(result.json.error,/explicit versioned consent/);assert.equal(outbound,undefined);
   }finally{globalThis.fetch=originalFetch;}
 });
 

@@ -51,7 +51,8 @@
     "test:p5-policy": "node --test tests/phase5-policy.test.mjs",
     "test:p5-companion": "node --test tests/phase5-local-companion.test.mjs",
     "test:p5-local-asr": "node --test tests/phase5-local-asr.test.mjs",
-    "test:p5-resume": "node --test tests/phase5-local-asr.test.mjs tests/phase5-resolver-fallback.test.mjs"
+    "test:p5-resume": "node --test tests/phase5-local-asr.test.mjs tests/phase5-resolver-fallback.test.mjs",
+    "test:p5-gemini": "node --test tests/phase5-gemini.test.mjs tests/ielts-api.test.mjs"
   },
   "dependencies": {
     "ts-fsrs": "5.4.1",
