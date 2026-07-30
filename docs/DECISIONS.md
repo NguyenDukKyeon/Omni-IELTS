@@ -421,3 +421,17 @@ Consequences: restore success means durable commit plus reopened canonical verif
 Evidence: P0-05 independently accepted exact source commit `426feb2c20f36d2eed9a66eca1b1c9fe9e9c4bbf`; restore suite 27/27, full suite 174/174, static checks, IELTS/V10 audits, production build and Core/IELTS/V10/Hardening browser suites pass. Browser evidence includes actual crash-journal reload recovery before mount and Core-only degraded startup/reload with a durable Quick Capture draft. Final reviewer patch ID: `f96a70fd92c0e210ef3526e0bfdc1299a1ea11c9`; no P0/P1 remained.
 
 Revisit when: a fourth database/store owner joins the restore unit, payload size requires chunked staging, or cross-origin/multi-process writers replace the current Web Locks boundary. Preserve full validation before mutation and durable reopened verification.
+
+## ADR-033 — Capture containment uses one durable adapter and forward-only verified cleanup
+
+Status: CONFIRMED
+
+Decision: production mounts one canonical Quick Capture form and one Inbox. The form delegates to the V10 candidate store when IndexedDB is available; only the explicitly labeled Core-only degraded boot may use verified localStorage drafts. A submit owns one stable record ID across retry, is single-flight, resets only after durable commit plus read-back, and retains current form input on any failure. Existing corrupt or unreadable degraded source data fails typed before mutation and remains byte-for-byte unchanged.
+
+Legacy Core draft migration is forward-only under the exclusive cross-database storage lock. Each draft maps to a deterministic SHA-256 candidate ID. The migration commits every target, reopens V10 and verifies canonical projections before deleting any Core source; it then reopens Core and verifies cleanup. An interruption is retryable. An unrelated collision or a same-provenance target changed after an earlier copy fails closed and preserves both records. A target awaiting source cleanup cannot be finalized or rejected from the Inbox.
+
+Consequences: the old V10 Capture panel/listener is removed rather than hidden, while Core-only degraded mode still has a truthful durable path. Partial migration can temporarily show a verified target and its retained source as one protected Inbox item, but cannot overwrite a newer user decision or report cleanup that did not durably occur. Rollback keeps all Core drafts and V10 candidates, does not downgrade either database and performs no automatic reverse migration.
+
+Evidence: P0-06 independently accepted exact source commit `35cdc0b350a77797f6992feed1625067edc5674c`; focused Capture suite 8/8, full suite 182/182, restore 27/27, static/audits/build, V10 and Hardening browser suites pass. Browser evidence includes double submit, reload, offline keyboard, mobile layout, quota failure and corrupt degraded-source preservation. Final reviewer patch ID: `303f61d479ba527d83cb8bbf12cb5e08e7759f6b`; no P0/P1 remained.
+
+Revisit when: Phase 1 introduces a canonical Capture repository/saga. Preserve stable retry IDs, typed degraded failures, forward-only data retention and commit/reopen/verify-before-delete semantics.

@@ -1,13 +1,13 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, P0-05 independently accepted
+Last audited: 2026-07-30, P0-06 independently accepted
 
-Audited source commit: 426feb2c20f36d2eed9a66eca1b1c9fe9e9c4bbf
+Audited source commit: 35cdc0b350a77797f6992feed1625067edc5674c
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
 Active implementation branch: codex/phase-0-release-safety
-Scope of this update: governance/kickoff baseline và P0-00 đến P0-05 đã independently accepted. P0-06 bắt đầu; Phase 0 product gate vẫn đỏ.
+Scope of this update: governance/kickoff baseline và P0-00 đến P0-06 đã independently accepted. P0-07 bắt đầu; Phase 0 product gate vẫn đỏ.
 
 ## 1. Provenance status
 
@@ -154,11 +154,31 @@ Accepted source commit: `426feb2c20f36d2eed9a66eca1b1c9fe9e9c4bbf`.
 
 P0-05 activates canonical v2 restore only through the safe coordinator. Restore follows stage → validate → journal → commit/reconcile → reopen/read-back/canonical verify, and never clears an included target before complete validation. Cross-database writes and exports share one storage lock. Active restore journals are not portable; completed receipts are durable portable metadata. Rollback keeps database version 4 readable and never deletes the newer metadata or excluded stores.
 
+### P0-06 acceptance evidence
+
+Accepted source commit: `35cdc0b350a77797f6992feed1625067edc5674c`.
+
+| Evidence | Actual result |
+|---|---|
+| `npm run test:capture` | PASS 8/8; copy/reopen/verify/delete ordering, interruption/retry, partial cleanup, target mismatch, collision/divergence, invalid degraded JSON and non-array preservation |
+| `npm run test:restore` | PASS 27/27; Capture locking and restore compatibility remain intact |
+| `npm test` | PASS 182/182; 0 failed, 0 skipped/todo |
+| `npm run check` | PASS; exactly one canonical Inbox marker and no legacy V10 Capture mount |
+| `npm run audit:roadmap` | PASS 12/12 |
+| `npm run audit:ielts` | PASS 11/11 |
+| `npm run audit:v10` | PASS 55/55 |
+| `npm run build` | PASS; production bundle built successfully |
+| `npm run test:v10-browser` | PASS with Chrome `150.0.7871.188`; one Inbox, one double-submit record, reload, offline keyboard flow and mobile viewport; runtime errors 0 |
+| `npm run test:hardening` | PASS with Chrome `150.0.7871.188`; corrupt degraded source remains byte-for-byte unchanged, quota failure retains form, verified retry/double-submit persists once and survives reload |
+| Migration/rollback | PASS: exclusive lock; deterministic target IDs; all targets commit, V10 reopens and read-back verifies before any Core delete; Core reopens and confirms deletion; interruption, collision and changed targets preserve durable source/target and retry is idempotent. No DB version bump or reverse/destructive rollback |
+| Independent review | Two P1 findings (retry overwrite of a changed target and corrupt localStorage overwrite) were fixed. Exact-commit audit ACCEPTED with patch ID `303f61d479ba527d83cb8bbf12cb5e08e7759f6b`; no P0/P1 remained |
+
+P0-06 removes the second production Capture mount rather than hiding it with CSS. One canonical form/Inbox delegates to V10 when durable IndexedDB is available and to verified Core localStorage only in explicitly degraded Core-only mode. Submit resets only after durable commit/read-back, keeps a stable ID across retry and retains edited input on failure. Rollback must preserve both deterministic V10 candidates and any Core sources still awaiting verified cleanup; it must not reverse-migrate or delete either representation automatically.
+
 ## 3. Confirmed blockers
 
 | ID | Severity | Blocker | Required owner package |
 |---|---|---|---|
-| B-007 | P0/High | Legacy and V10 Capture/Inbox both mount; async Quick Capture is unsafe | P0-06 |
 | B-008 | P0/High | Multiple Today surfaces; exact plan target can be discarded by launcher | P0-07 |
 | B-010 | P1/High | Three DBs and several cross-DB writes lack a shared migration/saga/reconciler model | P1-00, P1-03 |
 | B-011 | P2/High | Transcript resolver is range/cache-RAM based, reparses weakly and lacks durable jobs | P2-00–P2-06 |
@@ -167,7 +187,7 @@ P0-05 activates canonical v2 restore only through the safe coordinator. Restore 
 | B-014 | P5/Critical | Cloud fallback consent/shared-cache policy and local process safety are not production-ready | P5-00–P5-05 |
 | B-015 | P7/High | Metrics/calibration are too weak for safe personalization or FSRS tuning | P7-00–P7-05 |
 
-Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006 and B-009. Core schedule writes are policy-gated and receipt-bound; skill unlock is based on successful qualified evidence; IELTS/V10 exposed, unverified and Retell coaching paths cannot schedule; Retell learner output is durable across evaluator failure; the browser harness remains independently accepted; portable export covers every durable Core/IELTS/V10 store policy including drafts and outbox; and restore is journaled, crash-recoverable, verified after reopen and explicit about degraded durability.
+Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006, B-007 and B-009. Core schedule writes are policy-gated and receipt-bound; skill unlock is based on successful qualified evidence; IELTS/V10 exposed, unverified and Retell coaching paths cannot schedule; Retell learner output is durable across evaluator failure; the browser harness remains independently accepted; portable export covers every durable Core/IELTS/V10 store policy including drafts and outbox; restore is journaled, crash-recoverable, verified after reopen and explicit about degraded durability; and Capture has one durable Inbox with safe retry/migration behavior.
 
 ## 4. Phase status
 
@@ -206,8 +226,8 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 | P0-03 IELTS/V10 containment | P0-03 | P0-01 | ACCEPTED @ `12b1cf8` |
 | P0-04 Backup envelope | P0-04 | P0-00 | ACCEPTED @ `ffca938` |
 | P0-05 Restore safety | P0-05 | P0-04 | ACCEPTED @ `426feb2` |
-| P0-06 Capture containment | P0-06 | P0-00, P0-05 | IN_PROGRESS |
-| P0-07 Today containment | P0-07 | P0-00, P0-01 | PLANNED |
+| P0-06 Capture containment | P0-06 | P0-00, P0-05 | ACCEPTED @ `35cdc0b` |
+| P0-07 Today containment | P0-07 | P0-00, P0-01 | IN_PROGRESS |
 | P0-08 Phase 0 exit gate | P0-08 | P0-02, P0-03, P0-05, P0-06, P0-07 | PLANNED |
 
 ### Phase 1
@@ -306,7 +326,7 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [x] Export→reset→restore→restart sentinel count/digest matches every durable store.
 - [x] Failure injection cannot leave mixed restore state presented as success.
 - [x] Durable write failure never silently falls back to RAM success.
-- [ ] Quick Capture survives submit failure/reload and only one Inbox is visible.
+- [x] Quick Capture survives submit failure/reload and only one Inbox is visible.
 - [ ] Only one Today is visible and every launch preserves exact card/skill/source.
 - [x] Browser discovery/cleanup is deterministic and critical assertions cannot skip.
 - [ ] Full phase0:gate passes three consecutive clean runs at one exact commit.
@@ -318,8 +338,8 @@ P1-00 remains PHASE_BLOCKED until every checkbox above is checked and P0-08 is i
 
 ## 7. Next package
 
-Current package: P0-06 Capture/Inbox containment and Quick Capture durability.
+Current package: P0-07 single-Today containment and exact-launch guard.
 
 Phase branch: `codex/phase-0-release-safety`.
 
-P0-00 through P0-05 are independently accepted at their exact source commits. P0-06 is active. No Phase 1 work is authorized.
+P0-00 through P0-06 are independently accepted at their exact source commits. P0-07 is active. No Phase 1 work is authorized.
