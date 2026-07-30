@@ -39,9 +39,10 @@ export function buildCoreEvidenceEnvelope({card,rating,step={},session={},exposu
     coaching:step.assisted===true||exposure.coaching===true,answerExposed:exposure.answerExposed===true,
     events:Array.isArray(exposure.events)?exposure.events:[]
   };
-  const target={cardId:String(card.id),skill,sourceId,sourceRevision};
+  const target={cardId:String(card.id),senseId:clean(card.senseId,180)||null,skill,sourceId,sourceRevision};
   const planned=step.plannedTarget&&typeof step.plannedTarget==='object'?{
     cardId:clean(step.plannedTarget.cardId,180)||null,
+    senseId:clean(step.plannedTarget.senseId,180)||null,
     skill:clean(step.plannedTarget.skill,80)||null,
     sourceId:clean(step.plannedTarget.sourceId,180)||null,
     sourceRevision:clean(step.plannedTarget.sourceRevision,180)||null
@@ -53,7 +54,8 @@ export function buildCoreEvidenceEnvelope({card,rating,step={},session={},exposu
   if(evaluation){
     verification.evaluation={
       id:clean(evaluation.id,180)||`evaluation:${receiptId}`,authority:clean(evaluation.authority,80),status:clean(evaluation.status,40),
-      attemptId,activityId,cardId:String(card.id),skill,outputDigest:evidenceDigest(learnerOutput),targetUsed:evaluation.targetUsed===true
+      attemptId,activityId,cardId:String(card.id),senseId:clean(card.senseId,180)||null,skill,
+      outputDigest:evidenceDigest(learnerOutput),targetUsed:evaluation.targetUsed===true
     };
   }
   return{activitySpec,attempt,verification,now:Number(now)};

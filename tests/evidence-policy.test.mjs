@@ -33,6 +33,7 @@ test('exact activity, card, skill, source and revision are immutable bindings',(
   const cases=[
     [fixture({attempt:{activityId:'other'}}),EVIDENCE_REASONS.activityMismatch],
     [fixture({attempt:{target:{cardId:'other',skill:'listening',sourceId:'media-1',sourceRevision:'sha256:abc'}}}),EVIDENCE_REASONS.targetMismatch],
+    [fixture({attempt:{target:{cardId:'card-1',senseId:'other-sense',skill:'listening',sourceId:'media-1',sourceRevision:'sha256:abc'}}}),EVIDENCE_REASONS.targetMismatch],
     [fixture({attempt:{target:{cardId:'card-1',skill:'recall',sourceId:'media-1',sourceRevision:'sha256:abc'}}}),EVIDENCE_REASONS.skillMismatch],
     [fixture({attempt:{target:{cardId:'card-1',skill:'listening',sourceId:'other',sourceRevision:'sha256:abc'}}}),EVIDENCE_REASONS.sourceMismatch],
     [fixture({attempt:{target:{cardId:'card-1',skill:'listening',sourceId:'media-1',sourceRevision:'sha256:old'}}}),EVIDENCE_REASONS.revisionMismatch]

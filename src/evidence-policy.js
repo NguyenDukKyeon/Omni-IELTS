@@ -70,6 +70,7 @@ export function evidenceDigest(value=''){
 export function normalizeEvidenceTarget(input={}){
   return Object.freeze({
     cardId:cleanOrNull(input?.cardId,180),
+    senseId:cleanOrNull(input?.senseId,180),
     skill:ALLOWED_SKILLS.has(input?.skill)?input.skill:null,
     sourceId:cleanOrNull(input?.sourceId,180),
     sourceRevision:cleanOrNull(input?.sourceRevision,180)
@@ -100,7 +101,8 @@ export function normalizeVerificationReceipts(input={}){
     evaluation:Object.freeze({
       id:cleanOrNull(evaluation.id,180),authority:cleanOrNull(evaluation.authority,80),status:clean(evaluation.status,40),
       attemptId:cleanOrNull(evaluation.attemptId,180),activityId:cleanOrNull(evaluation.activityId,180),cardId:cleanOrNull(evaluation.cardId,180),
-      skill:ALLOWED_SKILLS.has(evaluation.skill)?evaluation.skill:null,outputDigest:cleanOrNull(evaluation.outputDigest,180),targetUsed:evaluation.targetUsed===true
+      senseId:cleanOrNull(evaluation.senseId,180),skill:ALLOWED_SKILLS.has(evaluation.skill)?evaluation.skill:null,
+      outputDigest:cleanOrNull(evaluation.outputDigest,180),targetUsed:evaluation.targetUsed===true
     })
   });
 }
@@ -169,6 +171,7 @@ export function decideEvidence(input={}){
   if(attempt.activityId!==activity.id)return deny(EVIDENCE_REASONS.activityMismatch);
   if(!activity.target.cardId||!activity.target.skill||!activity.target.sourceId||!activity.target.sourceRevision||!attempt.target.cardId||!attempt.target.skill||!attempt.target.sourceId||!attempt.target.sourceRevision)return deny(EVIDENCE_REASONS.missingTarget);
   if(attempt.target.cardId!==activity.target.cardId)return deny(EVIDENCE_REASONS.targetMismatch);
+  if(!sameNullable(attempt.target.senseId,activity.target.senseId))return deny(EVIDENCE_REASONS.targetMismatch);
   if(attempt.target.skill!==activity.target.skill)return deny(EVIDENCE_REASONS.skillMismatch);
   if(ACTIVITY_SKILLS[activity.type]&&!ACTIVITY_SKILLS[activity.type].has(activity.target.skill))return deny(EVIDENCE_REASONS.skillMismatch);
   if(!sameNullable(attempt.target.sourceId,activity.target.sourceId))return deny(EVIDENCE_REASONS.sourceMismatch);
@@ -190,7 +193,7 @@ export function decideEvidence(input={}){
   if(['production','retell'].includes(activity.type)){
     if(!attempt.learnerOutput)return deny(EVIDENCE_REASONS.missingLearnerOutput);
     const evaluation=verification.evaluation;
-    if(!evaluation.id||!EVALUATION_AUTHORITIES.has(evaluation.authority)||evaluation.status!=='verified'||evaluation.attemptId!==attempt.id||evaluation.activityId!==activity.id||evaluation.cardId!==activity.target.cardId||evaluation.skill!==activity.target.skill||evaluation.outputDigest!==evidenceDigest(attempt.learnerOutput))return deny(EVIDENCE_REASONS.unverifiedEvaluation);
+    if(!evaluation.id||!EVALUATION_AUTHORITIES.has(evaluation.authority)||evaluation.status!=='verified'||evaluation.attemptId!==attempt.id||evaluation.activityId!==activity.id||evaluation.cardId!==activity.target.cardId||!sameNullable(evaluation.senseId,activity.target.senseId)||evaluation.skill!==activity.target.skill||evaluation.outputDigest!==evidenceDigest(attempt.learnerOutput))return deny(EVIDENCE_REASONS.unverifiedEvaluation);
     if(!evaluation.targetUsed&&rating!=='again')return deny(EVIDENCE_REASONS.targetNotUsed);
   }
   if(activity.type==='error-correction'&&!ALLOWED_SKILLS.has(activity.target.skill))return deny(EVIDENCE_REASONS.skillMismatch);

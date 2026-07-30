@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { commitCoreEvidence } from '../src/schedule-gateway.js';
+import { commitCoreEvidence,coreSourceRevision } from '../src/schedule-gateway.js';
 import { applyFsrsRating,unlockedSkillsForCard } from '../src/fsrs-scheduler.js';
 
 const card=()=>({id:'card-1',front:'durable',back:'bền',type:'word',learningGoal:'active',status:'learning',createdAt:100,fsrsBySkill:{},qualifiedEvidenceBySkill:{}});
@@ -23,6 +23,35 @@ test('qualified Again persists failure but cannot unlock downstream skills',asyn
   assert.equal(result.inserted,true);assert.equal(result.decision.successful,false);assert.equal(result.event.qualifiedFailure,true);assert.ok(write);
   assert.equal(result.card.qualifiedEvidenceBySkill.recall.failures,1);assert.equal(result.card.qualifiedEvidenceBySkill.recall.successes,0);
   assert.deepEqual(unlockedSkillsForCard(result.card),['recognition','recall']);
+});
+
+test('planned Core sense remains bound through decision and persisted review event',async()=>{
+  const targetCard={...card(),senseId:'sense-2'};
+  const plannedTarget={cardId:targetCard.id,senseId:targetCard.senseId,skill:'recall',sourceId:`core-card:${targetCard.id}`,sourceRevision:coreSourceRevision(targetCard)};
+  let write;
+  const result=await commitCoreEvidence({
+    card:targetCard,rating:'good',step:step({plannedActivityType:'typing',plannedTarget}),session,now:2000,
+    persist:async value=>{write=value;return{inserted:true,event:value.event};}
+  });
+  assert.equal(result.inserted,true);
+  assert.equal(result.decision.target.senseId,'sense-2');
+  assert.equal(result.event.target.senseId,'sense-2');
+  assert.equal(result.event.evidence.activity.target.senseId,'sense-2');
+  assert.equal(result.event.evidence.attempt.target.senseId,'sense-2');
+  assert.equal(write.event.evidenceDecision.target.senseId,'sense-2');
+});
+
+test('planned Core sense mismatch fails closed before persistence',async()=>{
+  const targetCard={...card(),senseId:'sense-2'};
+  const plannedTarget={cardId:targetCard.id,senseId:'sense-other',skill:'recall',sourceId:`core-card:${targetCard.id}`,sourceRevision:coreSourceRevision(targetCard)};
+  let writes=0;
+  const result=await commitCoreEvidence({
+    card:targetCard,rating:'good',step:step({plannedActivityType:'typing',plannedTarget}),session,now:2000,
+    persist:async()=>{writes+=1;return{inserted:true};}
+  });
+  assert.equal(result.inserted,false);
+  assert.equal(result.decision.reason,'planned-target-mismatch');
+  assert.equal(writes,0);
 });
 
 test('reveal and semantic skill mismatch fail closed before persistence',async()=>{
