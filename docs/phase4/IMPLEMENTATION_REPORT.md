@@ -26,6 +26,11 @@ Phase 4 only and did not rewrite roadmap dependencies.
   LessonManifest, AssetDescriptor, ContentAddress, RightsRecord,
   ProvenanceRecord, HumanReviewRecord, PackInstallJournal, InstalledPack,
   PackActivationReceipt, ContentProgress and PackRevocation.
+- Every lesson owns canonical serialized identity bytes, SHA-256, byte length
+  and an immutable content address. Its named review record must bind that same
+  address. Every activity asset is lesson-scoped, and every launchable
+  activity carries a canonical ActivitySpec target bound to exact pack,
+  lesson and activity revisions.
 - The production catalog is serialized deterministically and verified with
   Ed25519 against a bundled public root. Key IDs, key validity, permitted
   usages, rotation successors, `issuedAt`, `expiresAt`, schema version,
@@ -33,15 +38,24 @@ Phase 4 only and did not rewrite roadmap dependencies.
 - A valid newer catalog can become the durable last-known-good record. Invalid,
   expired, malformed, unknown-key, replayed or downgraded catalogs cannot
   replace it. Network failure leaves it intact and offline startup reads it.
+- Equal catalog sequences are idempotent only for the same digest. A different
+  digest is rejected inside the durable transaction. A successor signing key
+  must be bundled, active, time-valid and explicitly authorized by the trusted
+  predecessor; only the designated bundled bootstrap root may establish first
+  trust.
 - CacheStorage contains only immutable, verified, redownloadable manifests and
   assets. IndexedDB owns every durable install/lifecycle/progress record.
 - The installer writes a durable stage journal, verifies manifest and every
   asset digest/length/media type/reference/compatibility rule, uses a Web Lock
-  or durable lease, and switches one installed revision atomically. Retry and
-  crash reconciliation are idempotent.
+  or renewable durable lease with an immutable fencing generation, and
+  switches one installed revision atomically. Retry and crash reconciliation
+  are idempotent; a stale lease owner cannot renew, release or activate.
 - Updates are side-by-side. Delete removes only unreferenced cache bytes,
   writes a tombstone and preserves progress/evidence. Revocation blocks new
   launches without deleting historical data.
+- Durable revocations are unioned with valid current-catalog revocations by one
+  effective lookup. Catalog omission, catalog rollback and backup restore
+  cannot re-enable a revoked revision.
 - Today receives only exact ActivitySpec targets for the currently active,
   installed and compatible lesson revision.
 
@@ -58,7 +72,10 @@ Backup schema version 3 and registry version 2 include Phase 4 journals,
 installed metadata, activation receipts, progress, revocations and tombstones.
 Published asset bodies remain outside portable backup; remote content metadata
 is reduced to a digest-bearing reinstall stub. Private learner data remains
-durable. Restore with missing cache bytes cannot claim the pack is verified.
+durable. Restore validates Phase 4 schemas, pointer/receipt identity,
+compatibility, revocation and progress references. Unsupported or inconsistent
+records remain durable but quarantined and non-active. Restore with missing
+cache bytes cannot claim the pack is verified.
 
 Rollback may turn off remote activation or atomically select a retained,
 verified immutable revision. It must preserve journals, receipts, progress,
@@ -118,10 +135,27 @@ catalog has zero entries. P4-05…P4-09 are therefore structurally delivered
 drafts but not production-published content. A named human must independently
 review rights, accuracy, pedagogy and weekly defects before any signing step.
 
+## Independent technical finding remediation
+
+The independently rejected technical audit source was
+`3046d7269ff19191081a0f8c20e30c78b3e9dbc0`. The remediation keeps PR #12
+draft and addresses only the seven reproduced platform findings:
+
+1. effective durable revocation enforcement;
+2. cryptographic lesson identity and lesson-scoped references;
+3. equal-sequence catalog collision exclusion;
+4. explicit expired-last-known-good policy;
+5. restore validation and quarantine;
+6. renewable fenced fallback installer leases; and
+7. predecessor-authorized signing-key continuity.
+
+This implementer remediation does not replace the required independent
+technical re-audit and does not close any external or editorial gate.
+
 ## Focused verification completed before the final-head gate
 
 - Phase 4 contracts/trust/installer/lifecycle/content/backup/migration:
-  38/38 tests passed.
+  53/53 tests passed.
 - Production browser shell: representative Listening, Reading and
   Lexical/Paraphrase lessons opened in Chrome with desktop and mobile viewport
   checks, keyboard focus and reduced-motion emulation.
@@ -129,10 +163,10 @@ review rights, accuracy, pedagogy and weekly defects before any signing step.
   lessons and exact 8/8/8 distribution passed.
 - `npm run check` and `npm run build` passed during implementation.
 
-The required final committed-head workflow remains a release evidence action:
+The required final committed-head workflow is run after this evidence commit:
 `phase4:verify`, `check`, `build`, `test:backup`, `test:restore`,
-`test:v10-browser` and `npm test`. Its results belong in the PR/handoff and do
-not convert implementer evidence into acceptance.
+`test:v10-browser` and `npm test`. Its exact-head results belong in the
+PR/handoff and do not convert implementer evidence into acceptance.
 
 ## Known limitations and deferred scope
 

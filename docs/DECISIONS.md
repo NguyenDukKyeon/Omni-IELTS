@@ -579,6 +579,25 @@ or select a retained verified revision, but it does not lower an IndexedDB
 version, remove unfamiliar stores or reinterpret a newer schema as empty.
 Revoked packs cannot start new lessons while historical evidence remains.
 
+Technical remediation clarification: lesson identity is the SHA-256 and byte
+length of deterministic canonical lesson bytes, and human review binds that
+exact content address. Activity asset references are lesson-scoped, and remote
+activities expose the canonical learning target plus exact pack, lesson and
+activity revision fields. Durable revocations are monotonic device evidence:
+they are unioned with valid current-catalog revocations and cannot be cleared
+by omission, rollback or restore. An expired last-known-good catalog may
+support policy-approved offline launch of already-installed compatible,
+non-revoked content, but it cannot drive discovery, install, update or Today.
+
+Catalog sequence equality is digest-bound inside the IndexedDB write
+transaction. Key rotation requires explicit predecessor authorization in
+addition to bundled key validity; only a designated bootstrap key may
+establish first trust. Fallback installer leases renew with immutable fencing
+generations and are checked again inside atomic activation. Restored Phase 4
+records remain non-active until schema, pointer/receipt, compatibility,
+revocation, content contract and redownloadable cache state are reconciled;
+unsupported records are retained in quarantine rather than reinterpreted.
+
 Revisit when: an external content repository is provisioned and its named
 rights/review records are approved. Preserve the public-key/private-key
 boundary, immutable address semantics, weekly defect-review ordering and

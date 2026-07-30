@@ -447,17 +447,17 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 | Package | Branch/repository | Dependency | Status |
 |---|---|---|---|
-| P4-00 Content contracts | codex/p4-00-content-contracts | P1-01, P1-05 | PHASE_BLOCKED |
-| P4-01 Remote catalog | codex/p4-01-remote-catalog | P4-00, staging/key runbook | PHASE_BLOCKED |
-| P4-02 Pack Installer | codex/p4-02-pack-installer | P4-01, P1-00 | PHASE_BLOCKED |
-| P4-03 Pack lifecycle | codex/p4-03-pack-lifecycle | P4-02 | PHASE_BLOCKED |
-| P4-04 Content repo scaffold | VocabMaster-content/codex/p4-04-content-repo-scaffold | P4-00, external provisioning | PHASE_BLOCKED |
-| P4-05 Sampler | VocabMaster-content/codex/p4-05-sampler | P4-04, P4-01 staging | PHASE_BLOCKED |
-| P4-06 Foundations Week 1 | VocabMaster-content/codex/p4-06-foundations-week-1 | P4-05 | PHASE_BLOCKED |
-| P4-07 Foundations Week 2 | VocabMaster-content/codex/p4-07-foundations-week-2 | P4-06 | PHASE_BLOCKED |
-| P4-08 Foundations Week 3 | VocabMaster-content/codex/p4-08-foundations-week-3 | P4-07 | PHASE_BLOCKED |
-| P4-09 Foundations Week 4 | VocabMaster-content/codex/p4-09-foundations-week-4 | P4-08 | PHASE_BLOCKED |
-| P4-10 Content exit gate | codex/p4-10-content-platform-exit | P4-03, P4-09 | PHASE_BLOCKED |
+| P4-00 Content contracts | codex/phase-4-remote-content-platform | P1-01, P1-05 | IMPLEMENTED / REVIEW_REQUIRED |
+| P4-01 Remote catalog | codex/phase-4-remote-content-platform | P4-00, staging/key runbook | IMPLEMENTED / REVIEW_REQUIRED |
+| P4-02 Pack Installer | codex/phase-4-remote-content-platform | P4-01, P1-00 | IMPLEMENTED / REVIEW_REQUIRED |
+| P4-03 Pack lifecycle | codex/phase-4-remote-content-platform | P4-02 | IMPLEMENTED / REVIEW_REQUIRED |
+| P4-04 Content repo scaffold | content-repo/ scaffold | P4-00, external provisioning | SCAFFOLD_IMPLEMENTED / EXTERNAL_PROVISIONING_PENDING |
+| P4-05 Sampler | content-repo/ scaffold | P4-04, P4-01 staging | DRAFT_IMPLEMENTED / EDITORIAL_GATES_PENDING |
+| P4-06 Foundations Week 1 | content-repo/ scaffold | P4-05 | DRAFT_IMPLEMENTED / EDITORIAL_GATES_PENDING |
+| P4-07 Foundations Week 2 | content-repo/ scaffold | P4-06 | DRAFT_IMPLEMENTED / EDITORIAL_GATES_PENDING |
+| P4-08 Foundations Week 3 | content-repo/ scaffold | P4-07 | DRAFT_IMPLEMENTED / EDITORIAL_GATES_PENDING |
+| P4-09 Foundations Week 4 | content-repo/ scaffold | P4-08 | DRAFT_IMPLEMENTED / EDITORIAL_GATES_PENDING |
+| P4-10 Content exit gate | codex/phase-4-remote-content-platform | P4-03, P4-09 | BLOCKED / REVIEW_AND_EXTERNAL_GATES |
 
 ### Phase 5
 
@@ -535,6 +535,9 @@ Phase 3 was independently accepted at exact source HEAD `96aa0172add84186fbe2970
 
 ## 9. Next acceptance action
 
-Current handoff: implement P4-00…P4-10 on `codex/phase-4-remote-content-platform`, preserving the package dependencies and Phase 4 exit-gate rules.
+Current handoff: independently re-audit the remediated technical platform on
+PR #12. External repository/CDN provisioning, production signing-key custody,
+named rights approval, human lesson review, sequential weekly defect review
+and production publication remain open.
 
 Phase 4 must remain `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED` until exact-head CI is green, an independent focused audit returns ACCEPT, and the Phase 4 pull request is merged. Phase 5 remains locked.
