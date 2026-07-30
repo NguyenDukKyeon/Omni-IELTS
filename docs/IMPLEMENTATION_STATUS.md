@@ -231,6 +231,8 @@ Accepted remediation source commit: `67c5a275a450a8b88d2daf54e299538358bf8f00`.
 
 Exact documentation head `a07be19bbeb4be8be1f5211b4074c037ff895c91` passed gates 1–20, then `npm run phase0:gate` stopped at gate 21 with a `PRODUCT_FAILURE`: the stale Today target status reached `data-kind="error"` but its text was replaced with an empty string before the assertion could read `TODAY_TARGET_STALE`. The gate was not retried. Source inspection shows that `vocab:external-change` starts an unawaited asynchronous `renderPlan()` while the old activity remains clickable; a launch can correctly set the stale-target error on one status node and the concurrent render can then replace that node. The fix must serialize Today renders and make the controlled browser fixture await the completed refresh before launch without weakening the stale-target, no-session or zero-review assertions.
 
+The first full gate on cumulative source commit `4b24a4f675d870614d0749263f0f29ad67512c74` was also discarded: after gates 1–17 passed, Core browser smoke changed the route to Today and immediately clicked `#v10MorePractice` while the new serialized `hashchange` refresh had explicitly set `aria-busy="true"` and disabled the old controls. A disabled button performs no click action, so the unchanged practice-dialog assertion timed out. This is a controlled-fixture readiness defect introduced by the safe busy contract, not evidence that `openPractice()` failed. The fixture must wait for the Today host to report not busy and for the button to be enabled; the dialog assertion and timeout remain unchanged.
+
 | Evidence | Actual result |
 |---|---|
 | `npm run phase0:gate` clean run 1 | PASS 21/21 in 79.3 s |
