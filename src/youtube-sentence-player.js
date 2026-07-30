@@ -10,10 +10,10 @@ function ensureHost(){
   return{dialog,host};
 }
 
-export function createYoutubeSentencePlayer(videoId,initialSentence=null){
+export function createYoutubeSentencePlayer(videoId,initialSentence=null,{onTimeUpdate=null,onStateChange=null}={}){
   if(!/^[A-Za-z0-9_-]{11}$/.test(String(videoId||'')))throw new Error('YouTube video ID không hợp lệ.');
   activeAdapter?.destroy?.();const{dialog,host}=ensureHost();host.hidden=false;host.dataset.status='loading';
-  const player=new YouTubeSegmentPlayer({host,onError:error=>{host.dataset.status='error';host.setAttribute('aria-label',error.message);},onStateChange:state=>{host.dataset.status=String(state);}});
+  const player=new YouTubeSegmentPlayer({host,onError:error=>{host.dataset.status='error';host.setAttribute('aria-label',error.message);},onTimeUpdate:seconds=>onTimeUpdate?.(seconds),onStateChange:state=>{host.dataset.status=String(state);onStateChange?.(state);}});
   const startSeconds=Math.max(0,Number(initialSentence?.startMs||0)/1000),endSeconds=Math.max(startSeconds+.1,Number(initialSentence?.endMs||0)/1000||startSeconds+10);
   const ready=player.mount(String(videoId),{startSeconds,endSeconds,autoplay:false}).then(value=>{const iframe=host.querySelector('iframe');if(iframe)Object.assign(iframe.style,{width:'100%',height:'100%',border:'0',display:'block'});return value;});
   void ready.catch(()=>{});
@@ -22,6 +22,9 @@ export function createYoutubeSentencePlayer(videoId,initialSentence=null){
     videoId:String(videoId),
     async playSegment(sentence,{rate=1,loop=false}={}){if(destroyed)throw new Error('YouTube player đã đóng.');await ready;player.setPlaybackRate(rate);player.setSegment(Number(sentence?.startMs||0)/1000,Number(sentence?.endMs||0)/1000);player.playSegment({loop});},
     pause(){if(!destroyed)player.pause();},
+    seek(seconds){if(!destroyed)player.seek(seconds);},
+    getCurrentTime(){return destroyed?0:player.getCurrentTime();},
+    setSegment(sentence,{seek=true}={}){if(destroyed)return null;return player.setSegment(Number(sentence?.startMs||0)/1000,Number(sentence?.endMs||0)/1000,{seek});},
     setPlaybackRate(rate){return destroyed?1:player.setPlaybackRate(rate);},
     destroy(){if(destroyed)return;destroyed=true;try{player.destroy();}catch{}host.hidden=true;host.removeAttribute('data-status');host.removeAttribute('aria-label');if(activeAdapter===adapter)activeAdapter=null;}
   };
