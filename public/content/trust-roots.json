@@ -5,6 +5,7 @@
       "keyId": "vocab-master-production-2026-01",
       "algorithm": "Ed25519",
       "status": "active",
+      "bootstrap": true,
       "usages": [
         "catalog-signing"
       ],

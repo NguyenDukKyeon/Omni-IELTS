@@ -85,12 +85,16 @@ function previousPayload(lastKnownGood){
 }
 
 export async function verifySignedCatalogEnvelope(envelope,{trustRoots=[],lastKnownGood=null,now=Date.now()}={}){
-  await verifyCatalogSignature(envelope,{trustRoots,now});
+  const signature=await verifyCatalogSignature(envelope,{trustRoots,now});
   const payload=assertValidContent(
     validateRemoteCatalog(envelope.payload,{publication:true,at:now}),
     'CATALOG_CONTRACT_INVALID'
   );
   const prior=previousPayload(lastKnownGood);
+  if(!prior&&signature.root.bootstrap!==true)throw catalogError(
+    'CATALOG_BOOTSTRAP_KEY_UNAUTHORIZED',
+    `Catalog signing key ${signature.root.keyId} is not an explicitly bundled bootstrap trust root.`
+  );
   const payloadAddress=await contentAddressFor(canonicalCatalogPayload(payload));
   if(prior){
     if(prior.catalogId!==payload.catalogId)throw catalogError('CATALOG_ID_MISMATCH','Catalog identity changed without a new bundled trust domain.');
@@ -100,6 +104,15 @@ export async function verifySignedCatalogEnvelope(envelope,{trustRoots=[],lastKn
       const priorAddress=lastKnownGood?.payloadAddress||await contentAddressFor(canonicalCatalogPayload(prior));
       if(priorAddress!==payloadAddress)throw catalogError('CATALOG_SEQUENCE_COLLISION','Catalog sequence was reused for different content.');
       return Object.freeze({status:'unchanged',payload,payloadAddress,envelope:clone(envelope)});
+    }
+    if(payload.keyId!==prior.keyId){
+      const authorized=Array.isArray(prior.authorizedSuccessorKeyIds)
+        ?prior.authorizedSuccessorKeyIds
+        :Array.isArray(prior.supportedKeyIds)?prior.supportedKeyIds:[];
+      if(!authorized.includes(payload.keyId))throw catalogError(
+        'CATALOG_KEY_ROTATION_UNAUTHORIZED',
+        `Catalog signing key ${payload.keyId} was not authorized by predecessor ${prior.keyId}.`
+      );
     }
     if(Number(payload.catalogRevision)<Number(prior.catalogRevision)){
       const rollback=payload.rollback;
@@ -139,24 +152,32 @@ export function createV10CatalogRepository(){
         updatedAt:Date.parse(observedAt)
       };
       const history={...record,id:`phase4:catalog:${record.catalogId}:${record.sequence}`,state:'verified-history'};
-      await transactV10(
+      const committed=await transactV10(
         [V10_STORES.remoteCatalogs,V10_STORES.packRevocations],
         async({stores,memory})=>{
           if(memory)throw catalogError('CATALOG_DURABILITY_REQUIRED','Catalog trust state cannot fall back to memory.');
           const current=await requestResult(stores[V10_STORES.remoteCatalogs].get(LAST_KNOWN_GOOD_CATALOG_ID));
           if(current&&Number(current.sequence)>record.sequence)throw catalogError('CATALOG_REPLAY','A newer durable catalog already exists.');
+          if(current&&Number(current.sequence)===record.sequence){
+            if(current.payloadAddress!==record.payloadAddress)throw catalogError(
+              'CATALOG_SEQUENCE_COLLISION',
+              'The durable catalog sequence is already bound to different content.'
+            );
+            return clone(current);
+          }
           stores[V10_STORES.remoteCatalogs].put(clone(history));
           stores[V10_STORES.remoteCatalogs].put(clone(record));
           for(const revocation of verified.payload.revocations||[])stores[V10_STORES.packRevocations].put({
             ...clone(revocation),
             id:`revocation:${revocation.packId}:${revocation.packRevision}`,
             catalogSequence:record.sequence,
-            updatedAt:record.updatedAt
-          });
+              updatedAt:record.updatedAt
+            });
+          return clone(record);
         },
         'phase4-catalog-verified'
       );
-      return record;
+      return committed;
     }
   });
 }
@@ -175,8 +196,14 @@ export function createCatalogTrustService({
   fetcher=fetch,
   now=()=>Date.now()
 }={}){
+  function assess(record){
+    if(!record)return null;
+    const expiresAt=Date.parse(previousPayload(record)?.expiresAt||'');
+    const expired=!Number.isFinite(expiresAt)||expiresAt<=Number(now());
+    return Object.freeze({...clone(record),expired,trustState:expired?'expired-last-known-good':'verified-last-known-good'});
+  }
   async function current(){
-    return repository.getLastKnownGood();
+    return assess(await repository.getLastKnownGood());
   }
   async function accept(envelope){
     const existing=await current();
@@ -194,7 +221,7 @@ export function createCatalogTrustService({
       return await accept(envelope);
     }catch(error){
       if(existing)return{
-        state:error?.code?.startsWith?.('CATALOG_')&&error.code!=='CATALOG_HTTP_ERROR'?'rejected-last-known-good':'offline-last-known-good',
+        state:existing.expired?'expired-last-known-good':error?.code?.startsWith?.('CATALOG_')&&error.code!=='CATALOG_HTTP_ERROR'?'rejected-last-known-good':'offline-last-known-good',
         catalog:existing,
         error
       };
@@ -204,7 +231,7 @@ export function createCatalogTrustService({
   async function startup(){
     const existing=await current();
     return existing
-      ?{state:'offline-last-known-good',catalog:existing}
+      ?{state:existing.expired?'expired-last-known-good':'offline-last-known-good',catalog:existing}
       :{state:'no-valid-catalog',catalog:null,recovery:'connect-and-retry'};
   }
   return Object.freeze({accept,current,refresh,startup});
