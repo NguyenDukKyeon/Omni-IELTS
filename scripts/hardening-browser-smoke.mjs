@@ -83,10 +83,18 @@ async function main(){
     assert.equal(await evaluate(`window.VocabMasterApp.getState().cards.some(card=>card.front===${JSON.stringify(interruptedTerm)})`),false,'Startup recovery did not restore the exact pre-mutation target.');
     assert.equal(await evaluate("(async()=>{const core=await import('/src/persistence.js');return (await core.readCoreRestoreJournal())===undefined;})()"),true,'Startup recovery left an active restore journal.');
 
-    await evaluate("document.querySelector('[data-route=\"today\"]').click();document.getElementById('weakPractice').click()");
-    await waitFor("document.getElementById('studyOverlay').classList.contains('open')",'weak fallback study');
-    assert.match(await evaluate("document.getElementById('studyLabel').textContent"),/^Ôn nhanh(?:\s|$)/,'Weak mode did not fall back to quick review.');
-    assert.match(await evaluate("document.getElementById('toast').textContent"),/(?:Chưa có từ yếu|đã chuyển sang phiên tổng hợp)/i);
+    const staleProbe=await evaluate(`(async()=>{document.querySelector('[data-route="today"]').click();const rows=await (await import('/src/v10-persistence.js')).listV10Records('activities',{sortBy:null});const activity=rows.find(row=>row.planDate&&['core-card','core-intro'].includes(row.execution?.kind)&&row.target?.cardId&&window.VocabMasterApp.getState().cards.some(card=>card.id===row.target.cardId));if(!activity)return{available:false};const before=(await (await import('/src/persistence.js')).listReviewEvents()).length;const next=window.VocabMasterApp.getState();window.__P0_STALE_ORIGINAL_STATE__=structuredClone(next);next.cards=next.cards.filter(card=>card.id!==activity.target.cardId);window.dispatchEvent(new CustomEvent('vocab:external-change',{detail:{state:next,reason:'stale-today-browser-fixture'}}));return{available:true,activityId:activity.id,cardId:activity.target.cardId,before};})()`);
+    assert.equal(staleProbe.available,true,'Hardening fixture did not find a planned Core activity.');
+    await waitFor(`document.querySelector('[data-v10-activity=${JSON.stringify(staleProbe.activityId)}]')`,'stale Today activity remains bound after external change');
+    await evaluate(`document.querySelector('[data-v10-activity=${JSON.stringify(staleProbe.activityId)}]').click()`);
+    await waitFor("document.getElementById('v10TodayStatus')?.dataset.kind==='error'",'stale Today target failure');
+    assert.match(await evaluate("document.getElementById('v10TodayStatus').textContent"),/TODAY_TARGET_STALE/,'Stale Today target did not fail closed.');
+    assert.equal(await evaluate("document.getElementById('studyOverlay').classList.contains('open')"),false,'Stale Today target opened a generic study session.');
+    assert.equal(await evaluate("(async()=>{const core=await import('/src/persistence.js');return (await core.listReviewEvents()).length;})()"),staleProbe.before,'Stale Today target created a review event.');
+    await evaluate("window.dispatchEvent(new CustomEvent('vocab:external-change',{detail:{state:window.__P0_STALE_ORIGINAL_STATE__,reason:'restore-after-stale-today-browser-fixture'}}))");
+    await waitFor(`window.VocabMasterApp.getState().cards.some(card=>card.id===${JSON.stringify(staleProbe.cardId)})`,'restore state after stale Today fixture');
+    await evaluate("window.VocabMasterApp.startStudy('quick')");
+    await waitFor("document.getElementById('studyOverlay').classList.contains('open')",'direct quick study fixture');
     await waitFor("document.getElementById('introContinue')",'new-card introduction');
     await evaluate("document.getElementById('introContinue').click()");
     await waitFor(`window.VocabMasterApp.getState().cards.some(card=>card.front===${JSON.stringify(term)}&&card.status!=='new')`,'card acquisition state');

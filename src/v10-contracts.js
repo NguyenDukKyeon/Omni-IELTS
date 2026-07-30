@@ -83,6 +83,22 @@ export function normalizeCaptureCandidate(input={}){
 
 export function normalizeActivity(input={}){
   const type=ACTIVITY_TYPES.includes(input.type)?input.type:'unknown';
+  const target=input.target&&typeof input.target==='object'?{
+    cardId:clean(input.target.cardId,180)||null,
+    senseId:clean(input.target.senseId,180)||null,
+    skill:clean(input.target.skill,80)||null,
+    sourceId:clean(input.target.sourceId,180)||null,
+    sourceRevision:clean(input.target.sourceRevision,180)||null
+  }:null;
+  const execution=input.execution&&typeof input.execution==='object'?{
+    kind:clean(input.execution.kind,80)||'blocked',
+    status:['ready','blocked'].includes(input.execution.status)?input.execution.status:'blocked',
+    reason:clean(input.execution.reason,180)||null
+  }:{kind:'blocked',status:'blocked',reason:'missing-exact-executor'};
+  const normalizedEvidence=normalizeEvidenceRequirement(type,input.evidencePolicy);
+  const evidencePolicy=target&&execution.status==='ready'
+    ?normalizedEvidence
+    :{...normalizedEvidence,affectsSchedule:false,reason:execution.reason||'missing-planned-target'};
   return{
     id:clean(input.id,180)||createV10Id('activity'),
     type,
@@ -92,9 +108,15 @@ export function normalizeActivity(input={}){
     estimatedSeconds:Math.max(10,Math.min(900,Number(input.estimatedSeconds||60))),
     priority:Number(input.priority||0),
     dueAt:Number(input.dueAt||0)||null,
-    evidencePolicy:normalizeEvidenceRequirement(type,input.evidencePolicy),
+    evidencePolicy,
     originalType:type==='unknown'?clean(input.type,80)||null:null,
     payload:input.payload&&typeof input.payload==='object'?structuredClone(input.payload):{},
+    target,
+    execution,
+    planId:clean(input.planId,180)||null,
+    planDate:clean(input.planDate,20)||null,
+    plannedAt:Number(input.plannedAt||0)||null,
+    launchBinding:clean(input.launchBinding,180)||null,
     status:['queued','active','completed','skipped','failed'].includes(input.status)?input.status:'queued',
     createdAt:Number(input.createdAt||Date.now()),
     completedAt:Number(input.completedAt||0)||null

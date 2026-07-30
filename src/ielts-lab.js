@@ -109,6 +109,18 @@ function ensureDialog(){
 }
 
 async function openLab(tab=state.tab){state.tab=tab;const dialog=$('#ieltsLabDialog');if(!dialog)return;if(!dialog.open)dialog.showModal();await renderLab();$(`[data-ielts-tab="${state.tab}"]`,dialog)?.focus();}
+async function openErrorTarget({errorId,sourceId,sourceRevision}={}){
+  const id=String(errorId||'');
+  if(!id||sourceId!==`ielts-error:${id}`)return{opened:false,code:'TODAY_TARGET_MISMATCH',message:'Error target không khớp activity đã lập kế hoạch.'};
+  const error=await getIeltsRecord(IELTS_STORE_NAMES.errors,id);
+  if(!error||['resolved','ignored'].includes(error.status))return{opened:false,code:'TODAY_TARGET_STALE',message:'Error target không còn khả dụng.'};
+  const currentRevision=ieltsSourceRevision('ielts-error-v1',{id:error.id,correction:error.correction||error.expectedResponse||'',linkedCardIds:error.linkedCardIds||[],lastSeenAt:error.lastSeenAt});
+  if(currentRevision!==sourceRevision)return{opened:false,code:'TODAY_REVISION_STALE',message:'Error target đã thay đổi sau khi lập kế hoạch.'};
+  state.selectedErrorId=id;
+  await openLab('errors');
+  if(state.selectedErrorId!==id)return{opened:false,code:'TODAY_EXECUTOR_TARGET_MISMATCH',message:'Error Notebook không giữ đúng target đã lập kế hoạch.'};
+  return{opened:true,errorId:id,sourceId,sourceRevision};
+}
 function closeLab(){const dialog=$('#ieltsLabDialog');if(dialog?.open)dialog.close();}
 
 async function renderLab(){
@@ -213,7 +225,7 @@ async function saveCardFromEntry(entry,set){
   await persistCard(card,'ielts-lexical-card-added');dispatchCards([card,...current.cards]);return card;
 }
 
-async function captureError(input){const saved=await upsertErrorRecord(input);await renderTodayErrors();return saved;}
+async function captureError(input){return upsertErrorRecord(input);}
 
 async function handleDialogClick(event){
   const button=event.target.closest('button');if(!button)return;
@@ -223,7 +235,7 @@ async function handleDialogClick(event){
   if(button.dataset.ieltsTab){state.tab=button.dataset.ieltsTab;return renderLab();}
   if(button.dataset.ieltsGo){state.tab=button.dataset.ieltsGo;return renderLab();}
   if(button.dataset.errorId){state.selectedErrorId=button.dataset.errorId;return renderErrors($('#ieltsLabPanel'));}
-  if(button.dataset.errorStatusSet){await setErrorStatus(button.dataset.errorTarget,button.dataset.errorStatusSet);showStatus('Đã cập nhật trạng thái lỗi.','success');await renderErrors($('#ieltsLabPanel'));await renderTodayErrors();return;}
+  if(button.dataset.errorStatusSet){await setErrorStatus(button.dataset.errorTarget,button.dataset.errorStatusSet);showStatus('Đã cập nhật trạng thái lỗi.','success');await renderErrors($('#ieltsLabPanel'));return;}
   if(button.dataset.setId){state.selectedSetId=button.dataset.setId;return renderLexical($('#ieltsLabPanel'));}
   if(button.dataset.addSetEntry!=null){return addLexicalEntry(button.dataset.setTarget,Number(button.dataset.addSetEntry));}
   if(button.dataset.setProduction)return openSetProduction(button.dataset.setProduction);
@@ -260,7 +272,7 @@ async function handleDialogSubmit(event){
   }catch(error){showStatus(error.message,'error');setBusy(false);}
 }
 async function handleDialogChange(event){
-  if(event.target.matches('[data-ielts-restore]')){const file=event.target.files?.[0];if(!file)return;try{const input=JSON.parse(await file.text());const validation=validateIeltsBackup(input);if(!validation.valid)throw new Error(validation.errors.join('\n'));await restoreIeltsBackupSafely(input);showStatus(`Đã khôi phục IELTS backup${validation.warnings.length?` với ${validation.warnings.length} cảnh báo`:''}.`,'success');await renderLab();await renderTodayErrors();}catch(error){showStatus(error.message,'error');}finally{event.target.value='';}}
+  if(event.target.matches('[data-ielts-restore]')){const file=event.target.files?.[0];if(!file)return;try{const input=JSON.parse(await file.text());const validation=validateIeltsBackup(input);if(!validation.valid)throw new Error(validation.errors.join('\n'));await restoreIeltsBackupSafely(input);showStatus(`Đã khôi phục IELTS backup${validation.warnings.length?` với ${validation.warnings.length} cảnh báo`:''}.`,'success');await renderLab();}catch(error){showStatus(error.message,'error');}finally{event.target.value='';}}
   if(event.target.id==='errorStatusFilter'){const value=event.target.value;$$('[data-error-status]').forEach(row=>{row.hidden=value!=='all'&&row.dataset.errorStatus!==value;});}
   if(event.target.id==='mediaLoopToggle')state.player?.setLoop(event.target.checked);
   if(event.target.id==='mediaPlaybackRate'){const selected=state.player?.setPlaybackRate(Number(event.target.value));const source=await getIeltsRecord(IELTS_STORE_NAMES.mediaSources,state.mediaSourceId);if(source)await saveMediaProgress({mediaSourceId:source.id,lastSegmentId:state.currentSegmentId,lastPositionMs:state.player?.getCurrentTime()*1000||0,playbackRate:selected||1,sessionMinutes:Number($('#mediaSessionMinutes')?.value||20)});}
@@ -322,13 +334,6 @@ async function submitMediaRetell(form){
   }finally{setBusy(false);}
 }
 
-async function renderTodayErrors(){
-  const today=$('[data-view="today"]');if(!today)return;let widget=$('#ieltsTodayErrors');if(!widget){widget=document.createElement('section');widget.id='ieltsTodayErrors';widget.className='section-block ielts-today-errors';const anchor=$('.quick-modes-section',today);anchor?.insertAdjacentElement('beforebegin',widget);}
-  const errors=(await listIeltsRecords(IELTS_STORE_NAMES.errors,{sortBy:'lastSeenAt'})).filter(row=>!['resolved','ignored'].includes(row.status)).sort((a,b)=>(b.severity==='high'?2:b.severity==='medium'?1:0)-(a.severity==='high'?2:a.severity==='medium'?1:0)||Number(b.occurrenceCount||1)-Number(a.occurrenceCount||1)).slice(0,3);
-  widget.innerHTML=errors.length?`<div class="section-heading"><div><p class="eyebrow">PERSONAL ERROR NOTEBOOK</p><h3>Lỗi cần xử lý</h3></div><button class="text-button" id="openIeltsErrorsToday">Xem tất cả</button></div><div class="ielts-today-error-grid">${errors.map(row=>`<button data-today-error="${escapeAttr(row.id)}"><strong>${escapeHtml(row.correction||row.expectedResponse)}</strong><span>${escapeHtml(row.learnerResponse)} → ${escapeHtml(row.expectedResponse)}</span><small>${row.occurrenceCount} lần · ${escapeHtml(row.category)}</small></button>`).join('')}</div>`:'';
-  $('#openIeltsErrorsToday')?.addEventListener('click',()=>openLab('errors'));$$('[data-today-error]',widget).forEach(button=>button.addEventListener('click',()=>{state.selectedErrorId=button.dataset.todayError;openLab('errors');}));
-}
-
 function inferLinkedCard(expected,prompt){const expectedNorm=normalizeComparableText(expected),promptNorm=normalizeComparableText(prompt);const cards=activeCards();return cards.find(card=>normalizeComparableText(card.front)===expectedNorm)||cards.find(card=>promptNorm.includes(normalizeComparableText(card.front))||promptNorm.includes(normalizeComparableText(card.back)))||cards.find(card=>normalizeComparableText(card.front).split(' ').includes(expectedNorm))||null;}
 function installCoreErrorCapture(){
   document.addEventListener('submit',event=>{const form=event.target;if(form.id==='answerForm'){state.pendingCoreError={kind:'input',learnerResponse:$('#answerInput')?.value||'',prompt:$('.exercise-card h2')?.textContent||'',label:$('.exercise-type')?.textContent||'',createdAt:Date.now()};}if(form.id==='outputForm'){state.pendingCoreError={kind:'output',learnerResponse:$('#outputInput')?.value||'',prompt:$('.exercise-card h2')?.textContent||'',createdAt:Date.now()};}},true);
@@ -344,7 +349,7 @@ function extractQuotedTarget(prompt){return String(prompt||'').match(/[“"]([^�
 async function captureCoreProductionGap(){const pending=state.pendingCoreError;if(!pending||pending.kind!=='production')return;const target=extractQuotedTarget(pending.prompt),card=inferLinkedCard(target,pending.prompt);const signature=`manual-production|${pending.prompt}|${pending.learnerResponse}|${target}`;if(state.processedErrorSignatures.has(signature))return;state.processedErrorSignatures.add(signature);state.pendingCoreError=null;await captureError({category:'lexical-gap',prompt:pending.prompt,learnerResponse:pending.learnerResponse,expectedResponse:`Dùng được ${target}`,correction:'',explanation:'Người học tự báo chưa dùng được target.',linkedCardIds:card?[card.id]:[],sourceRef:{type:'exercise',sourceId:'core-production',title:'Production practice'}});}
 
 async function mount(){
-  if(state.mounted)return;state.mounted=true;ensureStyles();ensureLauncher();ensureDialog();await initializeIeltsPersistence();await seedCuratedContent();installCoreErrorCapture();await renderTodayErrors();globalThis.addEventListener('vocab:ielts-external-change',()=>{void renderTodayErrors();if($('#ieltsLabDialog')?.open)void renderLab();});globalThis.addEventListener('vocab:card-added',()=>{if($('#ieltsLabDialog')?.open)void renderLab();});
+  if(state.mounted)return;state.mounted=true;ensureStyles();ensureLauncher();ensureDialog();await initializeIeltsPersistence();await seedCuratedContent();installCoreErrorCapture();globalThis.addEventListener('vocab:ielts-external-change',()=>{if($('#ieltsLabDialog')?.open)void renderLab();});globalThis.addEventListener('vocab:card-added',()=>{if($('#ieltsLabDialog')?.open)void renderLab();});globalThis.VocabMasterIeltsLab={openErrorTarget,openTab:openLab};
 }
 
 export async function mountIeltsLab(){return mount();}

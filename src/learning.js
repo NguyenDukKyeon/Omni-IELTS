@@ -498,7 +498,28 @@ export function createSessionSteps(cards, mode='today', limit=12, options={}) {
   const practicePool=active;
   const budget=budgetFor(limit,options);const used={value:0};const steps=[];
 
-  if(mode==='today'||mode==='deck'){
+  if(mode==='planned-exact'){
+    const targetCardId=String(options.targetCardId||'');
+    const targetSkill=String(options.targetSkill||'');
+    const card=pool.find(item=>item.id===targetCardId);
+    if(card&&options.activityType==='new-card'&&card.status==='new'){
+      addIfFits(steps,step(card,'intro',pool,{
+        id:String(options.activityId||`${card.id}-intro`),
+        skill:null,affectsSchedule:false,
+        plannedActivityType:'new-card',
+        plannedTarget:options.plannedTarget&&typeof options.plannedTarget==='object'?structuredClone(options.plannedTarget):null
+      }),budget,used);
+    }else if(card&&requiredSkillsForCard(card).includes(targetSkill)){
+      const kind=exerciseForSkill(card,targetSkill,0);
+      addIfFits(steps,step(card,kind,pool,{
+        id:String(options.activityId||`${card.id}-${kind}`),
+        skill:targetSkill,
+        affectsSchedule:options.affectsSchedule===true,
+        plannedActivityType:String(options.activityType||'card-review'),
+        plannedTarget:options.plannedTarget&&typeof options.plannedTarget==='object'?structuredClone(options.plannedTarget):null
+      }),budget,used);
+    }
+  }else if(mode==='today'||mode==='deck'){
     const warmupCandidates=[...new Map([...dueItems.map(item=>pool.find(card=>card.id===item.cardId)),...fresh].filter(Boolean).map(card=>[card.id,card])).values()];
     if(budget.seconds>=360){const warmup=buildMatchingStep(warmupCandidates,Math.min(6,warmupCandidates.length));if(warmup)addIfFits(steps,warmup,budget,used);}
     dueItems.forEach((item,index)=>{

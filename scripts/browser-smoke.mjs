@@ -115,16 +115,17 @@ async function main(){
 
     await waitFor('window.VocabMasterApp','VocabMasterApp');
     await waitFor("document.querySelector('[data-view=\"today\"]')?.classList.contains('active')",'today route');
+    await waitFor("document.getElementById('v10StartPlan')",'canonical Today launcher');
 
     await evaluate(`new Promise(resolve=>{
       document.documentElement.style.scrollBehavior='auto';
-      const start=document.getElementById('startToday');
+      const start=document.getElementById('v10StartPlan');
       start.scrollIntoView({block:'center',behavior:'instant'});
       requestAnimationFrame(()=>requestAnimationFrame(resolve));
     })`);
     const startup=await evaluate(`(()=>{
       const shell=document.getElementById('appShell');
-      const start=document.getElementById('startToday');
+      const start=document.getElementById('v10StartPlan');
       const rect=start.getBoundingClientRect();
       const top=document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2);
       return {
@@ -188,7 +189,7 @@ async function main(){
 
     await evaluate("document.querySelector('[data-route=\"today\"]').click()");
     await waitFor("document.querySelector('[data-view=\"today\"]')?.classList.contains('active')",'return to today');
-    await evaluate("document.getElementById('openMorePractice').click()");
+    await evaluate("document.getElementById('v10MorePractice').click()");
     await waitFor("document.getElementById('practiceSheet').open",'practice dialog');
     await evaluate("document.querySelector('#practiceSheet [data-close-dialog]').click()");
     await waitFor("!document.getElementById('practiceSheet').open",'practice dialog close');

@@ -12,7 +12,7 @@ const clean=(value,max=240)=>String(value??'').trim().slice(0,max);
 
 export function coreSourceRevision(card={}){
   const sourceContent={
-    id:clean(card.id,180),front:clean(card.front,500),back:clean(card.back,2000),type:clean(card.type,80),
+    id:clean(card.id,180),senseId:clean(card.senseId,180)||null,front:clean(card.front,500),back:clean(card.back,2000),type:clean(card.type,80),
     example:clean(card.example,2000),translation:clean(card.translation,2000),sourceContext:clean(card.sourceContext,2000),
     accepted:Array.isArray(card.accepted)?card.accepted.map(value=>clean(value,500)):[],
     acceptedBySkill:card.acceptedBySkill&&typeof card.acceptedBySkill==='object'?card.acceptedBySkill:{},
@@ -40,8 +40,15 @@ export function buildCoreEvidenceEnvelope({card,rating,step={},session={},exposu
     events:Array.isArray(exposure.events)?exposure.events:[]
   };
   const target={cardId:String(card.id),skill,sourceId,sourceRevision};
-  const activitySpec={id:activityId,type:activityType,target};
-  const attempt={id:attemptId,activityId,receiptId,activityType,result:rating,target,assistance:normalizeAssistanceTrace(assistance),learnerOutput,errorType:clean(step.errorType,80)||null};
+  const planned=step.plannedTarget&&typeof step.plannedTarget==='object'?{
+    cardId:clean(step.plannedTarget.cardId,180)||null,
+    skill:clean(step.plannedTarget.skill,80)||null,
+    sourceId:clean(step.plannedTarget.sourceId,180)||null,
+    sourceRevision:clean(step.plannedTarget.sourceRevision,180)||null
+  }:target;
+  const boundActivityType=clean(step.plannedActivityType,80)||activityType;
+  const activitySpec={id:activityId,type:boundActivityType,target:planned};
+  const attempt={id:attemptId,activityId,receiptId,activityType:boundActivityType,result:rating,target,assistance:normalizeAssistanceTrace(assistance),learnerOutput,errorType:clean(step.errorType,80)||null};
   const verification={source:{id:`source:${sourceRevision}`,authority:'core-card-registry',status:'verified',sourceId,sourceRevision}};
   if(evaluation){
     verification.evaluation={

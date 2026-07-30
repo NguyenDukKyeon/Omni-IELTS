@@ -24,11 +24,15 @@ const [html,css,experience,settingsCss,app,audio,main,learning,progress,fsrsAdap
   readFile(new URL('./browser-smoke.mjs',import.meta.url),'utf8'),
   readFile(new URL('./browser-smoke-entry.mjs',import.meta.url),'utf8')
 ]);
-const[restoreCoordinator,storageLock,captureInbox,unifiedCapture]=await Promise.all([
+const[restoreCoordinator,storageLock,captureInbox,unifiedCapture,todayPlanner,ieltsHub,ieltsLab,primaryIa]=await Promise.all([
   readFile(new URL('../src/ielts-backup.js',import.meta.url),'utf8'),
   readFile(new URL('../src/storage-lock.js',import.meta.url),'utf8'),
   readFile(new URL('../src/capture-inbox.js',import.meta.url),'utf8'),
-  readFile(new URL('../src/unified-capture-v2.js',import.meta.url),'utf8')
+  readFile(new URL('../src/unified-capture-v2.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/today-planner-v2.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/ielts-hub-v2.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/ielts-lab.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/primary-ia-v10.js',import.meta.url),'utf8')
 ]);
 
 const requiredIds=[
@@ -130,6 +134,17 @@ assert.ok(captureInbox.includes("panel.dataset.captureEntry='canonical'")&&captu
 assert.doesNotMatch(unifiedCapture,/v10CapturePanel|insertAdjacentElement\(['"]afterend/,'Legacy V10 must not mount a second Capture Inbox implementation');
 assert.ok(unifiedCapture.includes('configureCaptureInbox')&&unifiedCapture.includes('withExclusiveStorageLock'),'V10 Capture must reuse the canonical Inbox and migrate under the storage lock');
 assert.ok(unifiedCapture.indexOf('await reopenV10Database')<unifiedCapture.indexOf('await deleteCaptureDraft'),'Capture migration must reopen the target before deleting the durable source');
+assert.ok(todayPlanner.includes("today.dataset.todayEntry='canonical'")&&todayPlanner.includes('today.replaceChildren(section)'),'Canonical Today must replace, not CSS-hide, the legacy implementation');
+assert.ok(todayPlanner.includes('activityLaunchBinding')&&todayPlanner.includes('getV10Record(V10_STORES.activities'),'Today launch must re-read and verify the durable plan binding');
+assert.ok(todayPlanner.includes("execution.kind==='core-card'")&&app.includes('startPlannedActivity'),'Core Today launch must use the exact planned executor');
+assert.ok(app.includes('coreSourceRevision(card)!==target.sourceRevision')&&app.includes('TODAY_TARGET_STALE'),'Core Today must fail closed for stale/missing targets');
+assert.doesNotMatch(ieltsHub,/buildTodayActivityPlan|data-v10-hub-activity|Học hôm nay/,'IELTS Hub must not mount a second Today planner');
+assert.doesNotMatch(ieltsLab,/ieltsTodayErrors|data-today-error|renderTodayErrors/,'IELTS Lab must not mount a second Today widget');
+assert.ok(ieltsLab.includes('openErrorTarget')&&ieltsLab.includes('state.selectedErrorId=id'),'Error repair must open the exact planned error ID');
+assert.ok(primaryIa.includes("embedHub(tab='discover')")&&!primaryIa.includes("embedHub(tab='today')"),'IELTS primary route must not default to a second Today surface');
+assert.equal((html.match(/data-today-entry=/g)||[]).length,0,'Canonical Today marker must be owned by the runtime replacement');
+assert.equal((html.match(/data-today-nav="canonical"/g)||[]).length,2,'Desktop/mobile responsive Today controls must share one canonical route marker');
+assert.doesNotMatch(html,/class="brand"[^>]*href="#today"/,'Brand must not be an additional Today launcher');
 assert.ok(persistence.includes('persistReviewResult'),'Card and review event atomic persistence path missing');
 assert.ok(persistence.includes('writeQueue'),'Serialized write queue missing');
 assert.doesNotMatch(persistence,/Storage\.prototype\.(setItem|removeItem)/,'Storage prototype monkey-patching must be removed');

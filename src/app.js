@@ -47,7 +47,7 @@ import {
 } from './progress.js';
 import { audioManager, AUDIO_RATES } from './audio-manager.js';
 import { activateSettingsTab } from './settings-ui.js';
-import { commitCoreEvidence } from './schedule-gateway.js';
+import { commitCoreEvidence,coreSourceRevision } from './schedule-gateway.js';
 
 const SESSION_KEY='vocab-master-gemini-key';
 const MAX_AUDIO_BYTES=2*1024*1024;
@@ -154,6 +154,7 @@ function weakestSkillInsight(){
   const mode=hasModeContent('quick')?'quick':'matching';return{icon:'⚡',title:'Ôn ngắn để giữ nhịp',text:'Hệ thống sẽ tự chọn kỹ năng đang đến hạn, thay vì yêu cầu bạn chọn minigame.',mode};
 }
 function renderToday(){
+  if(document.querySelector('[data-today-entry="canonical"]'))return;
   resetDailyProgressWhenNeeded();
   const dueItems=getDueSkillItems(state.cards,Date.now(),state.fsrsConfig);
   const fresh=activeCards().filter(card=>card.status==='new').length;
@@ -245,14 +246,49 @@ async function speak(card,mode='normal',target='front',button=null,{includeExamp
 audioManager.subscribe(event=>{if(event.type==='voices')renderVoiceOptions();if(event.type==='status')updateAudioStatus(event.status);});
 
 function modeLabel(mode){return({today:'Phiên thông minh',quick:'Ôn nhanh 3 phút',matching:'Nối cặp',typing:'Tự nhớ & chính tả',cloze:'Điền ngữ cảnh',listening:'Luyện nghe',pronunciation:'Coaching phát âm',collocation:'Collocation',production:'Viết câu',output:'Phản xạ AI',weak:'Từ yếu',mistakes:'Từ yếu',test:'Kiểm tra',deck:'Học theo deck',transfer:'Transfer check'})[mode]||'Phiên học';}
+function beginStudySession(mode,steps,{plannedActivity=null}={}){
+  state.previousStudyFocus=document.activeElement;
+  state.session={id:createId('session'),mode,steps,index:0,completed:0,correct:0,startedAt:Date.now(),retryIds:new Set(),minutesRecorded:false,plannedActivity};
+  const overlay=$('#studyOverlay');overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';overlay.focus();renderStudyStep();return true;
+}
 function startStudy(mode='today',options={},fallbackMode=null){
   if(mode==='capture'){setRoute('capture');return true;}
   if(!state.cards.length){showToast('Thư viện đang trống. Hãy thêm từ hoặc bộ mẫu.');setRoute('capture');return false;}
   const minutes=mode==='quick'?3:Number(state.settings.minutes||10);const limit=mode==='quick'?8:40;
   const steps=createSessionSteps(state.cards,mode,limit,{newLimit:state.settings.newLimit,minutes,timeBudgetSeconds:minutes*60,fsrsConfig:state.fsrsConfig,...options});
   if(!steps.length){if(fallbackMode&&fallbackMode!==mode){showToast('Chưa có bài đúng chế độ này; đã chuyển sang phiên tổng hợp.');return startStudy(fallbackMode,{},null);}showToast(mode==='weak'?'Chưa có từ nào đủ điều kiện “từ yếu”.':'Không có kỹ năng đến hạn cho phiên này.');return false;}
-  state.previousStudyFocus=document.activeElement;state.session={id:createId('session'),mode,steps,index:0,completed:0,correct:0,startedAt:Date.now(),retryIds:new Set(),minutesRecorded:false};
-  const overlay=$('#studyOverlay');overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';overlay.focus();renderStudyStep();return true;
+  return beginStudySession(mode,steps);
+}
+
+function openPractice(){
+  openDialog('#practiceSheet');
+}
+function plannedLaunchFailure(code,message){
+  showToast(message);
+  return{started:false,code,message};
+}
+function startPlannedActivity(activity={}){
+  const target=activity.target||{};
+  if(!activity.id||activity.planDate!==localDayKey())return plannedLaunchFailure('TODAY_PLAN_STALE','Kế hoạch Today đã cũ. Hãy tải lại kế hoạch trước khi học.');
+  if(activity.execution?.status!=='ready'||!['core-card','core-intro'].includes(activity.execution?.kind))return plannedLaunchFailure('TODAY_EXECUTOR_UNSUPPORTED','Hoạt động này chưa có executor exact an toàn trong Phase 0.');
+  const isIntro=activity.execution.kind==='core-intro';
+  if(!target.cardId||(!isIntro&&!target.skill)||!target.sourceId||!target.sourceRevision)return plannedLaunchFailure('TODAY_TARGET_MISSING','Hoạt động thiếu target đã lập kế hoạch; không mở phiên tổng hợp thay thế.');
+  if(activity.cardIds?.length!==1||activity.cardIds[0]!==target.cardId)return plannedLaunchFailure('TODAY_TARGET_MISMATCH','Card binding của hoạt động không khớp target đã lập kế hoạch.');
+  const card=findCard(target.cardId);
+  if(!card||card.suspendedAt||card.archivedAt)return plannedLaunchFailure('TODAY_TARGET_STALE','Card đã bị xóa, tạm dừng hoặc lưu trữ; không đổi sang card khác.');
+  if(String(card.senseId||'')!==String(target.senseId||''))return plannedLaunchFailure('TODAY_SENSE_STALE','Sense của card đã thay đổi; không mở target khác.');
+  if(target.sourceId!==`core-card:${card.id}`||coreSourceRevision(card)!==target.sourceRevision)return plannedLaunchFailure('TODAY_REVISION_STALE','Card đã thay đổi sau khi lập kế hoạch. Hãy làm mới Today.');
+  if(isIntro&&card.status!=='new')return plannedLaunchFailure('TODAY_TARGET_STALE','Card giới thiệu không còn ở trạng thái new.');
+  if(!isIntro&&!requiredSkillsForCard(card).includes(target.skill))return plannedLaunchFailure('TODAY_SKILL_STALE','Kỹ năng đã lập kế hoạch không còn hợp lệ cho card này.');
+  const steps=createSessionSteps(state.cards,'planned-exact',1,{
+    targetCardId:target.cardId,targetSkill:target.skill,activityId:activity.id,activityType:activity.type,
+    plannedTarget:target,affectsSchedule:activity.evidencePolicy?.affectsSchedule===true,
+    minutes:Math.max(1,Number(activity.estimatedSeconds||60)/60),timeBudgetSeconds:Math.max(60,Number(activity.estimatedSeconds||60)),fsrsConfig:state.fsrsConfig
+  });
+  const step=steps[0];
+  if(steps.length!==1||step.cardId!==target.cardId||String(step.skill||'')!==String(target.skill||'')||step.id!==activity.id)return plannedLaunchFailure('TODAY_EXECUTOR_TARGET_MISMATCH','Executor không thể tạo đúng target; lịch học không thay đổi.');
+  beginStudySession('today-planned',steps,{plannedActivity:{id:activity.id,target:structuredClone(target),launchBinding:activity.launchBinding}});
+  return{started:true,activityId:activity.id,target:structuredClone(target),step:{id:step.id,cardId:step.cardId,skill:step.skill,kind:step.kind}};
 }
 function stopActiveRecorder(){const active=state.activeRecorder;if(!active)return;clearTimeout(active.timer);try{if(active.recorder?.state==='recording')active.recorder.stop();}catch{}try{active.recognition?.abort?.();}catch{}for(const track of active.stream?.getTracks?.()||[])track.stop();state.activeRecorder=null;}
 function recordSessionMinutes(){const session=state.session;if(!session||session.minutesRecorded||session.completed<=0)return;const elapsed=Math.max(1,Math.round((Date.now()-session.startedAt)/60000));state.metrics.studyMinutes=Number(state.metrics.studyMinutes||0)+elapsed;session.minutesRecorded=true;persistMetricsInBackground();}
@@ -552,4 +588,4 @@ globalThis.addEventListener('vocab:external-change-error',()=>showToast('Không 
 globalThis.addEventListener('vocab:write-conflict',event=>{showToast(event.detail?.message||'Dữ liệu đã thay đổi ở tab khác. Ứng dụng sẽ tải lại để tránh ghi đè.');if(state.session)closeStudy();setTimeout(()=>location.reload(),250);});
 globalThis.addEventListener('vocab:metrics-reconciled',event=>{state.metrics={...state.metrics,...(event.detail||{})};renderToday();});
 resetDailyProgressWhenNeeded();renderAll();populateSettings();setRoute(state.route);
-globalThis.VocabMasterApp={startStudy,renderAll,openWordDetail,setRoute,getState:()=>structuredClone({cards:state.cards,settings:state.settings,fsrsConfig:state.fsrsConfig,metrics:state.metrics}),loadSampleDeck};
+globalThis.VocabMasterApp={startStudy,startPlannedActivity,openPractice,renderAll,openWordDetail,setRoute,getState:()=>structuredClone({cards:state.cards,settings:state.settings,fsrsConfig:state.fsrsConfig,metrics:state.metrics}),loadSampleDeck};

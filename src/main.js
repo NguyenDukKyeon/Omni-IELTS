@@ -156,7 +156,11 @@ try{
     const { mountRoadmapRuntime } = await import('./roadmap-runtime.js');
     await mountCaptureInbox();
     await mountRoadmapRuntime();
-    if(coreOnlyDegraded)markCoreOnlyDegradedMode();
+    if(coreOnlyDegraded){
+      const { mountTodayPlannerV2 } = await import('./today-planner-v2.js');
+      await mountTodayPlannerV2({degraded:true});
+      markCoreOnlyDegradedMode();
+    }
     else{
       const { mountIeltsLab } = await import('./ielts-lab.js');
       const { mountIeltsBackupBridge } = await import('./ielts-backup-bridge.js');

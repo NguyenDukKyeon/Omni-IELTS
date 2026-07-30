@@ -32,7 +32,7 @@ test('IELTS remains one shared hub while legacy tools stay available as advanced
     read('src/ielts-launcher-override.js')
   ]);
   assert.match(ia,/VocabMasterIeltsHub/);
-  assert.match(hub,/Học hôm nay/);
+  assert.doesNotMatch(hub,/Học hôm nay|buildTodayActivityPlan|data-v10-hub-activity/);
   assert.match(hub,/Khám phá bài học/);
   assert.match(hub,/Video của tôi/);
   assert.match(hub,/Lỗi & kỹ năng/);
