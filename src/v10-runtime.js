@@ -1,5 +1,5 @@
 import { initializeV10Persistence,requestV10PersistentStorage } from './v10-persistence.js';
-import { migrateExistingCardsToOccurrences } from './lexical-core-v2.js';
+import { migrateExistingCardsToOccurrences,reconcileLexicalIntents } from './lexical-core-v2.js';
 import { mountUnifiedCaptureV2 } from './unified-capture-v2.js';
 import { mountLibraryV2 } from './library-v2-runtime.js';
 import { mountTodayPlannerV2 } from './today-planner-v2.js';
@@ -21,6 +21,7 @@ async function guarded(name,task,diagnostics){try{const result=await task();diag
 export async function mountV10Runtime(){
   if(globalThis.__VOCAB_V10_READY__)return globalThis.__VOCAB_V10_READY__;ensureStyles();const diagnostics=[];emitStatus('loading');
   const persistence=await guarded('persistence',()=>initializeV10Persistence(),diagnostics);if(!persistence)throw new Error('Không thể khởi tạo Vocab Master v10 persistence.');
+  await guarded('cross-db-reconciliation',()=>reconcileLexicalIntents(),diagnostics);
   await guarded('lexical-migration',()=>migrateExistingCardsToOccurrences(),diagnostics);
   mountSentenceLearningLoop();diagnostics.push({name:'sentence-loop',status:'ready'});
   mountTranscriptResolverV2();diagnostics.push({name:'transcript-resolver',status:'ready'});

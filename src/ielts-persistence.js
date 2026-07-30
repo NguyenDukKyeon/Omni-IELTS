@@ -15,8 +15,9 @@ import {
   validateReadingPassage,
   validateTranscriptSegments
 } from './ielts-domain.js';
-import { databaseBlocked,durableStorageUnavailable,normalizeDatabaseOpenError } from './storage-safety.js';
+import { durableStorageUnavailable } from './storage-safety.js';
 import { assertActiveRestoreToken,withDurableWriteLock } from './storage-lock.js';
+import { MIGRATION_LEDGER_PREFIX,defineMigration,openForwardCompatibleDatabase } from './migration-ledger.js';
 
 export const IELTS_DB_NAME='vocab-master-ielts';
 export const IELTS_DB_VERSION=1;
@@ -28,6 +29,14 @@ let databasePromise=null;
 let writeQueue=Promise.resolve();
 let channel=null;
 const memory=new Map(STORE_LIST.map(name=>[name,new Map()]));
+const IELTS_MIGRATIONS=Object.freeze([
+  defineMigration({
+    id:'p1-00-ielts-opener-v1',
+    digest:'ielts-v1-stores-and-indexes:2026-07-30',
+    targetVersion:IELTS_DB_VERSION,
+    description:'Adopt the Phase 0 IELTS v1 layout under the forward-compatible opener and durable migration ledger.'
+  })
+]);
 
 function clone(value){return value==null?value:structuredClone(value);}
 function nowRevision(){return Date.now()*1000+Math.floor(Math.random()*1000);}
@@ -55,21 +64,21 @@ function createIndexes(storeName,store){
 export function openIeltsDatabase(){
   if(databasePromise)return databasePromise;
   if(indexedDbUnavailable())return Promise.reject(durableStorageUnavailable(IELTS_DB_NAME));
-  databasePromise=new Promise((resolve,reject)=>{
-    let blocked=false;
-    const request=indexedDB.open(IELTS_DB_NAME,IELTS_DB_VERSION);
-    request.onupgradeneeded=()=>{
-      const database=request.result;
+  databasePromise=openForwardCompatibleDatabase({
+    name:IELTS_DB_NAME,
+    version:IELTS_DB_VERSION,
+    requiredStores:STORE_LIST,
+    ledgerStore:IELTS_STORE_NAMES.settings,
+    migrations:IELTS_MIGRATIONS,
+    onVersionChange:()=>{databasePromise=null;},
+    upgrade:({database})=>{
       for(const storeName of STORE_LIST){
         if(database.objectStoreNames.contains(storeName))continue;
         const store=database.createObjectStore(storeName,{keyPath:storeName===IELTS_STORE_NAMES.settings?'key':'id'});
         createIndexes(storeName,store);
       }
-    };
-    request.onsuccess=()=>{const database=request.result;if(blocked){database.close();return;}database.onversionchange=()=>{database.close();databasePromise=null;};resolve(database);};
-    request.onerror=()=>{const error=normalizeDatabaseOpenError(request.error,{database:IELTS_DB_NAME,supportedVersion:IELTS_DB_VERSION});databasePromise=null;reject(error);};
-    request.onblocked=()=>{blocked=true;databasePromise=null;reject(databaseBlocked(IELTS_DB_NAME));};
-  });
+    }
+  }).catch(error=>{databasePromise=null;throw error;});
   return databasePromise;
 }
 
@@ -118,6 +127,8 @@ export async function upsertErrorRecord(input,reason='ielts-error-upserted'){
     if(!database){const map=memory.get(IELTS_STORE_NAMES.errors);const existing=[...map.values()].find(row=>row.normalizedKey===incoming.normalizedKey);const value=existing?mergeErrorRecords(existing,incoming):incoming;if(existing)map.delete(existing.id);map.set(value.id,value);return value;}
     const transaction=database.transaction(IELTS_STORE_NAMES.errors,'readwrite');const store=transaction.objectStore(IELTS_STORE_NAMES.errors);const existing=await requestResult(store.index('normalizedKey').get(incoming.normalizedKey));const value=existing?mergeErrorRecords(existing,incoming):incoming;store.put(value);await transactionDone(transaction);return value;
   });
+  const { recordErrorOccurrence }=await import('./error-repository.js');
+  await recordErrorOccurrence({...saved,occurrenceId:`ielts:${incoming.id}`,weight:incoming.occurrenceCount,provenance:{...saved.provenance,legacyId:saved.id,source:'ielts'}});
   broadcast(reason,[IELTS_STORE_NAMES.errors]);emit('saved',{storeName:IELTS_STORE_NAMES.errors});return saved;
 }
 
@@ -125,7 +136,13 @@ export async function setErrorStatus(id,status,evidenceAttempt=null){
   const current=await getOne(IELTS_STORE_NAMES.errors,id);if(!current)throw new Error('Không tìm thấy lỗi.');
   const evidenceAttempts=evidenceAttempt?[...(current.evidenceAttempts||[]),structuredClone(evidenceAttempt)].slice(-30):(current.evidenceAttempts||[]);
   const value=createErrorRecord({...current,status,evidenceAttempts,lastResolvedAt:status==='resolved'?Date.now():current.lastResolvedAt,resolutionAttempts:Number(current.resolutionAttempts||0)+(status==='practicing'?1:0),now:current.firstSeenAt});
-  await putOne(IELTS_STORE_NAMES.errors,value);broadcast('ielts-error-status',[IELTS_STORE_NAMES.errors]);return value;
+  await putOne(IELTS_STORE_NAMES.errors,value);
+  if(evidenceAttempt){
+    const { normalizeErrorOccurrence,recordCorrectionEvidence }=await import('./error-repository.js');
+    const normalized=normalizeErrorOccurrence({...value,provenance:{...value.provenance,legacyId:value.id,source:'ielts'}});
+    await recordCorrectionEvidence(normalized.errorRecordId,evidenceAttempt);
+  }
+  broadcast('ielts-error-status',[IELTS_STORE_NAMES.errors]);return value;
 }
 
 export async function saveLexicalSet(input){const result=validateLexicalSet(input);if(!result.valid&&result.value.status==='active')throw new Error(result.errors.join(' '));return saveIeltsRecord(IELTS_STORE_NAMES.lexicalSets,result.value,'ielts-lexical-set-saved');}
@@ -189,14 +206,29 @@ export async function replaceTranscriptSegments(mediaSourceId,input,{durationMs=
     if(!database){const map=memory.get(IELTS_STORE_NAMES.transcriptSegments);for(const[key,value]of map)if(value.mediaSourceId===mediaSourceId)map.delete(key);for(const row of segments)map.set(row.id,clone(row));return;}
     const transaction=database.transaction(IELTS_STORE_NAMES.transcriptSegments,'readwrite');const store=transaction.objectStore(IELTS_STORE_NAMES.transcriptSegments);const existing=await requestResult(store.index('mediaSourceId').getAll(mediaSourceId));for(const row of existing)store.delete(row.id);for(const row of segments)store.put(clone(row));await transactionDone(transaction);
   });
-  broadcast('ielts-transcript-replaced',[IELTS_STORE_NAMES.transcriptSegments]);return{...result,segments};
+  const { persistTranscriptAggregate }=await import('./transcript-aggregate.js');
+  const canonical=await persistTranscriptAggregate({
+    source:{id:`transcript-source:ielts:${mediaSourceId}`,namespace:'private',externalId:mediaSourceId,sourceType:'ielts-media',language:segments[0]?.language||'en',status:'unverified',complete:result.complete===true},
+    segments,
+    provenance:{kind:'ielts-transcript-import',mediaSourceId}
+  });
+  broadcast('ielts-transcript-replaced',[IELTS_STORE_NAMES.transcriptSegments]);
+  return{...result,segments,transcriptSourceId:canonical.source.id,transcriptRevisionId:canonical.revision.id};
 }
 
 export async function listTranscriptSegments(mediaSourceId){
   const database=await openIeltsDatabase();let rows;if(!database)rows=[...memory.get(IELTS_STORE_NAMES.transcriptSegments).values()].filter(row=>row.mediaSourceId===mediaSourceId).map(clone);else{const transaction=database.transaction(IELTS_STORE_NAMES.transcriptSegments,'readonly');rows=await requestResult(transaction.objectStore(IELTS_STORE_NAMES.transcriptSegments).index('mediaSourceId').getAll(mediaSourceId));await transactionDone(transaction);}return rows.sort((a,b)=>Number(a.order||0)-Number(b.order||0)||Number(a.startMs||0)-Number(b.startMs||0));
 }
 
-export async function saveMediaAttempt(input){return saveIeltsRecord(IELTS_STORE_NAMES.mediaAttempts,sanitizeMediaAttempt(input),'ielts-media-attempt');}
+export async function saveMediaAttempt(input){
+  const saved=await saveIeltsRecord(IELTS_STORE_NAMES.mediaAttempts,sanitizeMediaAttempt(input),'ielts-media-attempt');
+  const attempts=Array.isArray(input?.evidenceAttempts)?input.evidenceAttempts:[];
+  if(attempts.length){
+    const { persistLearningEnvelope }=await import('./persistence.js');
+    for(const envelope of attempts)await persistLearningEnvelope(envelope);
+  }
+  return saved;
+}
 
 export async function saveMediaProgress(input){
   const value={id:String(input.id||input.mediaSourceId||''),mediaSourceId:String(input.mediaSourceId||input.id||''),lastSegmentId:String(input.lastSegmentId||''),lastPositionMs:Math.max(0,Number(input.lastPositionMs||0)),completedSegmentIds:[...new Set((Array.isArray(input.completedSegmentIds)?input.completedSegmentIds:[]).map(String))],weakSegmentIds:[...new Set((Array.isArray(input.weakSegmentIds)?input.weakSegmentIds:[]).map(String))],playbackRate:Math.max(.25,Math.min(2,Number(input.playbackRate||1))),sessionMinutes:[10,20,30].includes(Number(input.sessionMinutes))?Number(input.sessionMinutes):20,updatedAt:Date.now()};
@@ -244,7 +276,23 @@ export async function downloadIeltsBackup(){
 }
 
 export async function clearIeltsData(){
-  await enqueueWrite(async()=>{const database=await openIeltsDatabase();if(!database){for(const map of memory.values())map.clear();return;}const transaction=database.transaction(STORE_LIST,'readwrite');for(const store of STORE_LIST)transaction.objectStore(store).clear();await transactionDone(transaction);});broadcast('ielts-data-cleared',STORE_LIST);
+  await enqueueWrite(async()=>{
+    const database=await openIeltsDatabase();
+    if(!database){
+      for(const[name,map]of memory){
+        if(name!==IELTS_STORE_NAMES.settings){map.clear();continue;}
+        for(const key of [...map.keys()])if(!String(key).startsWith(MIGRATION_LEDGER_PREFIX))map.delete(key);
+      }
+      return;
+    }
+    const transaction=database.transaction(STORE_LIST,'readwrite');
+    const settings=transaction.objectStore(IELTS_STORE_NAMES.settings);
+    const migrationRows=(await requestResult(settings.getAll())).filter(row=>String(row?.key||'').startsWith(MIGRATION_LEDGER_PREFIX));
+    for(const store of STORE_LIST)transaction.objectStore(store).clear();
+    for(const row of migrationRows)settings.put(row);
+    await transactionDone(transaction);
+  });
+  broadcast('ielts-data-cleared',STORE_LIST);
 }
 
 export const __testing=Object.freeze({requestResult,transactionDone,getAll,getOne,putOne,deleteOne,memory,normalizeTranscriptionJob});

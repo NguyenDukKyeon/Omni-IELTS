@@ -30,6 +30,9 @@ export const BACKUP_STORE_REGISTRY=Object.freeze([
   core(STORE_NAMES.fileHandles,'ephemeral','exclude','Device-bound permission handles are not portable or JSON-safe.'),
   core(STORE_NAMES.outbox,'durable','include','Pending and quarantined writes must survive backup.'),
   core(STORE_NAMES.captureDrafts,'durable','include','Quick Capture drafts must survive reload and migration.'),
+  core(STORE_NAMES.learningEvents,'durable','include','Canonical append-only Run, Attempt, Receipt and EvidenceDecision events.'),
+  core(STORE_NAMES.learningProjections,'durable','include','Idempotent event projection checkpoints and review mutation bindings.'),
+  core(STORE_NAMES.learningDeadLetters,'durable','include','Poison canonical learning records retained for repair.'),
   ...Object.values(IELTS_STORE_NAMES).map(ielts),
   ...Object.values(V10_STORES).map(store=>{
     if(store===V10_STORES.coachingStats)return v10(store,'reconstructable-cache','exclude','Derived from durable IELTS attempts and Error Records.');

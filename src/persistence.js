@@ -11,11 +11,14 @@ import {
   stripEmbeddedReviewHistory,
   validateBackupDocument
 } from './persistence-core.js';
-import { databaseBlocked,durableStorageUnavailable,normalizeDatabaseOpenError } from './storage-safety.js';
+import { durableStorageUnavailable } from './storage-safety.js';
 import { assertActiveRestoreToken,withDurableWriteLock } from './storage-lock.js';
+import { defineMigration,openForwardCompatibleDatabase } from './migration-ledger.js';
+import { learningContractDigest } from './learning-contracts.js';
+import { buildLearningEventRecords,deadLetterRecord,rebuildProjectionRows,stageLearningEnvelope } from './event-repository.js';
 
 export const DB_NAME='vocab-master-personal';
-export const DB_VERSION=4;
+export const DB_VERSION=5;
 const REVISION_META_KEY='revision';
 export const STORE_NAMES=Object.freeze({
   cards:'cards',
@@ -25,7 +28,10 @@ export const STORE_NAMES=Object.freeze({
   meta:'meta',
   fileHandles:'fileHandles',
   outbox:'outbox',
-  captureDrafts:'captureDrafts'
+  captureDrafts:'captureDrafts',
+  learningEvents:'learningEvents',
+  learningProjections:'learningProjections',
+  learningDeadLetters:'learningDeadLetters'
 });
 export const CORE_RESTORE_JOURNAL_KEY='phase0RestoreJournal';
 export const CORE_RESTORE_RECEIPT_KEY='lastRestoreReceipt';
@@ -43,6 +49,21 @@ let initialized=false;
 let currentState=null;
 let writeQueue=Promise.resolve();
 let channel=null;
+const CORE_MIGRATIONS=Object.freeze([
+  defineMigration({
+    id:'p1-00-core-opener-v1',
+    digest:'core-v4-stores-and-indexes:2026-07-30',
+    targetVersion:4,
+    description:'Adopt the Phase 0 Core v4 layout under the forward-compatible opener and durable migration ledger.'
+  }),
+  defineMigration({
+    id:'p1-02-core-learning-events-v5',
+    digest:'core-v5-canonical-learning-events:2026-07-30',
+    targetVersion:5,
+    mode:'upgrade',
+    description:'Add append-only canonical learning events, projections and dead-letter stores.'
+  })
+]);
 
 function getNativeStorage(){
   try{
@@ -202,11 +223,14 @@ export function transactionDone(transaction){
 export function openDatabase(){
   if(databasePromise)return databasePromise;
   if(indexedDbUnavailable())return Promise.reject(durableStorageUnavailable(DB_NAME));
-  databasePromise=new Promise((resolve,reject)=>{
-    let blocked=false;
-    const request=indexedDB.open(DB_NAME,DB_VERSION);
-    request.onupgradeneeded=()=>{
-      const database=request.result;
+  databasePromise=openForwardCompatibleDatabase({
+    name:DB_NAME,
+    version:DB_VERSION,
+    requiredStores:Object.values(STORE_NAMES),
+    ledgerStore:STORE_NAMES.meta,
+    migrations:CORE_MIGRATIONS,
+    onVersionChange:()=>{databasePromise=null;},
+    upgrade:({database})=>{
       if(!database.objectStoreNames.contains(STORE_NAMES.cards)){
         const store=database.createObjectStore(STORE_NAMES.cards,{keyPath:'id'});
         store.createIndex('deck','deck',{unique:false});
@@ -235,16 +259,25 @@ export function openDatabase(){
         store.createIndex('updatedAt','updatedAt',{unique:false});
         store.createIndex('status','status',{unique:false});
       }
-    };
-    request.onsuccess=()=>{
-      const database=request.result;
-      if(blocked){database.close();return;}
-      database.onversionchange=()=>{database.close();databasePromise=null;};
-      resolve(database);
-    };
-    request.onerror=()=>{const error=normalizeDatabaseOpenError(request.error,{database:DB_NAME,supportedVersion:DB_VERSION});databasePromise=null;reject(error);};
-    request.onblocked=()=>{blocked=true;databasePromise=null;reject(databaseBlocked(DB_NAME));};
-  });
+      if(!database.objectStoreNames.contains(STORE_NAMES.learningEvents)){
+        const store=database.createObjectStore(STORE_NAMES.learningEvents,{keyPath:'id'});
+        store.createIndex('receiptId','receiptId',{unique:false});
+        store.createIndex('eventType','eventType',{unique:false});
+        store.createIndex('createdAt','createdAt',{unique:false});
+      }
+      if(!database.objectStoreNames.contains(STORE_NAMES.learningProjections)){
+        const store=database.createObjectStore(STORE_NAMES.learningProjections,{keyPath:'id'});
+        store.createIndex('receiptId','receiptId',{unique:true});
+        store.createIndex('status','status',{unique:false});
+      }
+      if(!database.objectStoreNames.contains(STORE_NAMES.learningDeadLetters)){
+        const store=database.createObjectStore(STORE_NAMES.learningDeadLetters,{keyPath:'id'});
+        store.createIndex('receiptId','receiptId',{unique:false});
+        store.createIndex('status','status',{unique:false});
+        store.createIndex('createdAt','createdAt',{unique:false});
+      }
+    }
+  }).catch(error=>{databasePromise=null;throw error;});
   return databasePromise;
 }
 
@@ -453,6 +486,7 @@ async function applyReviewOperation(operation){
   assertEvidenceReviewWrite({card:operation?.card,event:operation?.event});
   const database=await openDatabase();
   const stores=[STORE_NAMES.cards,STORE_NAMES.reviewEvents,STORE_NAMES.meta];
+  if(operation.canonicalEnvelope)stores.push(STORE_NAMES.learningEvents,STORE_NAMES.learningProjections,STORE_NAMES.learningDeadLetters);
   if(operation.metrics)stores.push(STORE_NAMES.settings);
   const transaction=database.transaction(stores,'readwrite');
   const eventsStore=transaction.objectStore(STORE_NAMES.reviewEvents);
@@ -462,6 +496,20 @@ async function applyReviewOperation(operation){
     const revisionRow=await requestResult(transaction.objectStore(STORE_NAMES.meta).get(REVISION_META_KEY));
     await transactionDone(transaction);
     return{revision:Number(revisionRow?.value||currentState?.revision||0),inserted:false,event:existing};
+  }
+  if(operation.canonicalEnvelope){
+    try{
+      await stageLearningEnvelope({
+        transaction,
+        eventStore:transaction.objectStore(STORE_NAMES.learningEvents),
+        projectionStore:transaction.objectStore(STORE_NAMES.learningProjections),
+        envelope:operation.canonicalEnvelope,
+        reviewEventId:operation.event.id
+      });
+    }catch(error){
+      transaction.abort();
+      throw error;
+    }
   }
   const cardStore=transaction.objectStore(STORE_NAMES.cards);
   const existingCard=await requestResult(cardStore.get(operation.card.id));
@@ -503,7 +551,7 @@ async function replayOutbox(){
       await deleteOne(STORE_NAMES.outbox,row.id);
       replayed+=1;
     }catch(error){
-      const terminal=String(error?.code||'').startsWith('EVIDENCE_')||['STALE_REVIEW_WRITE','OUTBOX_OPERATION_UNKNOWN'].includes(error?.code);
+      const terminal=['EVIDENCE_','LEARNING_'].some(prefix=>String(error?.code||'').startsWith(prefix))||['STALE_REVIEW_WRITE','OUTBOX_OPERATION_UNKNOWN'].includes(error?.code);
       console.warn('[persistence] Không thể phát lại outbox',row.id,error);
       if(!terminal)break;
       await putOne(STORE_NAMES.outbox,{...clone(row),status:'quarantined',quarantinedAt:Date.now(),quarantineCode:error.code||'OUTBOX_TERMINAL_FAILURE',quarantineMessage:String(error.message||error),attempts:Number(row.attempts||0)+1});
@@ -698,12 +746,82 @@ export async function persistMetrics(metrics){
   });
 }
 
-export async function persistReviewResult({card,event,metrics=null,reason='review-completed'}){
+export async function persistLearningEnvelope(envelope,{hooks={}}={}){
+  return enqueueWrite(async()=>{
+    if(indexedDbUnavailable())throw Object.assign(new Error('Canonical learning events cần IndexedDB; không ghi event log vào RAM.'),{code:'CANONICAL_EVENT_STORAGE_UNAVAILABLE',durable:false});
+    const database=await openDatabase();
+    let records;
+    try{records=buildLearningEventRecords(envelope);}
+    catch(error){
+      const transaction=database.transaction(STORE_NAMES.learningDeadLetters,'readwrite');
+      const store=transaction.objectStore(STORE_NAMES.learningDeadLetters);
+      const deadLetter=deadLetterRecord(envelope,error);
+      const existing=await requestResult(store.get(deadLetter.id));
+      if(!existing)store.add(clone(deadLetter));
+      await transactionDone(transaction);
+      return{inserted:false,quarantined:true,deadLetter:existing||deadLetter,errorCode:error.code||'LEARNING_EVENT_INVALID'};
+    }
+    const transaction=database.transaction([STORE_NAMES.learningEvents,STORE_NAMES.learningProjections],'readwrite');
+    try{
+      const result=await stageLearningEnvelope({
+        transaction,
+        eventStore:transaction.objectStore(STORE_NAMES.learningEvents),
+        projectionStore:transaction.objectStore(STORE_NAMES.learningProjections),
+        envelope,
+        hooks
+      });
+      await transactionDone(transaction);
+      return{...result,records};
+    }catch(error){
+      try{transaction.abort();}catch{}
+      throw error;
+    }
+  });
+}
+
+export async function listLearningEvents(){
+  return(await getAll(STORE_NAMES.learningEvents)).sort((left,right)=>Number(left.createdAt)-Number(right.createdAt)||String(left.id).localeCompare(String(right.id)));
+}
+
+export async function listLearningProjections(){
+  return(await getAll(STORE_NAMES.learningProjections)).sort((left,right)=>String(left.receiptId).localeCompare(String(right.receiptId)));
+}
+
+export async function listLearningDeadLetters(){
+  return(await getAll(STORE_NAMES.learningDeadLetters)).sort((left,right)=>Number(left.createdAt)-Number(right.createdAt)||String(left.id).localeCompare(String(right.id)));
+}
+
+export async function rebuildLearningProjections(){
+  return enqueueWrite(async()=>{
+    if(indexedDbUnavailable())throw Object.assign(new Error('Canonical learning projection rebuild cần IndexedDB.'),{code:'CANONICAL_EVENT_STORAGE_UNAVAILABLE',durable:false});
+    const database=await openDatabase();
+    const readTransaction=database.transaction([STORE_NAMES.learningEvents,STORE_NAMES.learningProjections],'readonly');
+    const[events,existing]=await Promise.all([
+      requestResult(readTransaction.objectStore(STORE_NAMES.learningEvents).getAll()),
+      requestResult(readTransaction.objectStore(STORE_NAMES.learningProjections).getAll())
+    ]);
+    await transactionDone(readTransaction);
+    const rebuilt=rebuildProjectionRows(events,existing);
+    const writeTransaction=database.transaction([STORE_NAMES.learningProjections,STORE_NAMES.learningDeadLetters],'readwrite');
+    const projectionStore=writeTransaction.objectStore(STORE_NAMES.learningProjections);
+    const deadLetterStore=writeTransaction.objectStore(STORE_NAMES.learningDeadLetters);
+    projectionStore.clear();
+    for(const row of rebuilt.projections)projectionStore.add(clone(row));
+    for(const row of rebuilt.deadLetters){
+      const existingDead=await requestResult(deadLetterStore.get(row.id));
+      if(!existingDead)deadLetterStore.add(clone(row));
+    }
+    await transactionDone(writeTransaction);
+    return{events:events.length,projections:rebuilt.projections.length,deadLetters:rebuilt.deadLetters.length,digest:learningContractDigest(rebuilt.projections)};
+  });
+}
+
+export async function persistReviewResult({card,event,metrics=null,reason='review-completed',canonicalEnvelope=null}){
   if(!card?.id)throw new TypeError('persistReviewResult cần một card đã cập nhật.');
   const review=event?.cardId&&event?.id?clone(event):createReviewEvent(event||{});
   assertEvidenceReviewWrite({card,event:review});
   const createdAt=Date.now();
-  const operation={id:`review:${review.id}`,type:'review',card:{...clone(card),storageBaseUpdatedAt:Number(card.storageUpdatedAt||0),storageUpdatedAt:createdAt},event:review,metrics:metrics?normalizeMetrics(metrics):null,reason,createdAt};
+  const operation={id:`review:${review.id}`,type:'review',card:{...clone(card),storageBaseUpdatedAt:Number(card.storageUpdatedAt||0),storageUpdatedAt:createdAt},event:review,canonicalEnvelope:canonicalEnvelope?clone(canonicalEnvelope):null,metrics:metrics?normalizeMetrics(metrics):null,reason,createdAt};
   return enqueueWrite(async()=>{
     emitStatus('saving');
     if(indexedDbUnavailable()){
@@ -733,8 +851,9 @@ export async function persistReviewResult({card,event,metrics=null,reason='revie
       if(card&&typeof card==='object'){card.storageBaseUpdatedAt=Number(persistedCard.storageUpdatedAt||0);card.storageUpdatedAt=Number(persistedCard.storageUpdatedAt||0);}
       emitStatus('saved');return result;
     }catch(error){
-      if(['STALE_REVIEW_WRITE','EVIDENCE_RECEIPT_COLLISION'].includes(error.code)&&outbox)await deleteOne(STORE_NAMES.outbox,outbox.id).catch(()=>{});
-      error.outboxQueued=Boolean(outbox&&!['STALE_REVIEW_WRITE','EVIDENCE_RECEIPT_COLLISION'].includes(error.code));
+      const terminal=['STALE_REVIEW_WRITE','EVIDENCE_RECEIPT_COLLISION'].includes(error.code)||String(error?.code||'').startsWith('LEARNING_');
+      if(terminal&&outbox)await deleteOne(STORE_NAMES.outbox,outbox.id).catch(()=>{});
+      error.outboxQueued=Boolean(outbox&&!terminal);
       emitStatus(error.outboxQueued?'pending':'error',{pendingId:error.outboxQueued?outbox.id:null,message:error.message});
       if(error.code==='STALE_REVIEW_WRITE')globalThis.dispatchEvent?.(new CustomEvent('vocab:write-conflict',{detail:{code:error.code,message:error.message}}));
       throw error;
@@ -806,7 +925,10 @@ export async function buildCoreBackupStores({restoreToken=null}={}){
       [STORE_NAMES.snapshots]:[],
       [STORE_NAMES.meta]:[],
       [STORE_NAMES.outbox]:[],
-      [STORE_NAMES.captureDrafts]:clone(await listCaptureDrafts())
+      [STORE_NAMES.captureDrafts]:clone(await listCaptureDrafts()),
+      [STORE_NAMES.learningEvents]:[],
+      [STORE_NAMES.learningProjections]:[],
+      [STORE_NAMES.learningDeadLetters]:[]
     };
   }
   if(!restoreToken)await writeQueue;else assertActiveRestoreToken(restoreToken);
@@ -816,7 +938,7 @@ export async function buildCoreBackupStores({restoreToken=null}={}){
   const unknown=physicalStores.filter(name=>!expectedStores.includes(name));
   const missing=expectedStores.filter(name=>!physicalStores.includes(name));
   if(unknown.length||missing.length)throw Object.assign(new Error(`Core store registry mismatch (missing: ${missing.join(',')||'none'}; unknown: ${unknown.join(',')||'none'}).`),{code:'BACKUP_STORE_REGISTRY_MISMATCH'});
-  const names=[STORE_NAMES.cards,STORE_NAMES.settings,STORE_NAMES.reviewEvents,STORE_NAMES.snapshots,STORE_NAMES.meta,STORE_NAMES.outbox,STORE_NAMES.captureDrafts];
+  const names=[STORE_NAMES.cards,STORE_NAMES.settings,STORE_NAMES.reviewEvents,STORE_NAMES.snapshots,STORE_NAMES.meta,STORE_NAMES.outbox,STORE_NAMES.captureDrafts,STORE_NAMES.learningEvents,STORE_NAMES.learningProjections,STORE_NAMES.learningDeadLetters];
   const transaction=database.transaction(names,'readonly');
   const entries=await Promise.all(names.map(async name=>[name,clone(await requestResult(transaction.objectStore(name).getAll()))]));
   await transactionDone(transaction);
@@ -925,7 +1047,7 @@ export async function mountPersistenceUI(){
 export const __testing=Object.freeze({requestResult,transactionDone,getAll,getOne,putOne,readStateFromDatabase,migrateLegacyState,adoptExistingDatabase,normalizeMetrics,normalizeState,replayOutbox,databaseHasContent});
 
 if(typeof window!=='undefined')window.VocabMasterPersistence={
-  initializePersistence,getCurrentState,downloadBackupFile,listReviewEvents,listSnapshots,restoreSnapshot,getPersistenceStatus,persistCard,persistCards,persistCardsBatch,deleteCard,persistSettings,persistFsrsConfig,persistMetrics,persistReviewResult,resetLearningProgressNow
+  initializePersistence,getCurrentState,downloadBackupFile,listReviewEvents,listLearningEvents,listLearningProjections,listLearningDeadLetters,listSnapshots,restoreSnapshot,getPersistenceStatus,persistCard,persistCards,persistCardsBatch,deleteCard,persistSettings,persistFsrsConfig,persistMetrics,persistLearningEnvelope,persistReviewResult,resetLearningProgressNow
 };
 
 async function applyImportBatchOperation(operation){

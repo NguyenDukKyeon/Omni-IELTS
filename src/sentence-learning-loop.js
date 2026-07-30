@@ -20,7 +20,16 @@ function progressId(sourceId,sentenceId){return`${sourceId||'source'}::${sentenc
 function saveProgress(patch={},run=session){
   const sentence=currentSentence(run);if(!run||!sentence)return Promise.resolve(null);
   const id=progressId(run.sourceId,sentence.id);const snapshot={id,sentenceId:sentence.id,sourceId:run.sourceId,step:run.step,repeatCount:run.repeatCount,playbackRate:run.playbackRate,dictationResponse:run.dictationResponse,errorClassification:run.errorClassification,wordDiff:structuredClone(run.wordDiff||[]),retellResponse:run.retellResponse,retellStatus:run.retellStatus,evidenceAttempts:structuredClone(run.evidenceAttempts||[]),linkedCardIds:[...(sentence.linkedCardIds||[])],weak:run.weak,runToken:run.runToken,...structuredClone(patch),updatedAt:Date.now()};
-  const task=async()=>{const previous=await getV10Record(V10_STORES.sentenceProgress,id)||{};const value=normalizeSentenceProgress({...previous,...snapshot});await putV10Record(V10_STORES.sentenceProgress,value,'sentence-progress-saved');return value;};
+  const task=async()=>{
+    const previous=await getV10Record(V10_STORES.sentenceProgress,id)||{};
+    const value=normalizeSentenceProgress({...previous,...snapshot});
+    await putV10Record(V10_STORES.sentenceProgress,value,'sentence-progress-saved');
+    if(value.evidenceAttempts.length){
+      const { persistLearningEnvelope }=await import('./persistence.js');
+      for(const envelope of value.evidenceAttempts)await persistLearningEnvelope(envelope);
+    }
+    return value;
+  };
   const pending=progressWriteQueue.then(task,task);progressWriteQueue=pending.catch(()=>{});run.writeQueue=pending;return pending;
 }
 

@@ -5,19 +5,22 @@ import { evidenceDigest } from './evidence-policy.js';
 import { coreSourceRevision } from './schedule-gateway.js';
 import { V10_STORES,normalizeActivity } from './v10-contracts.js';
 import { getV10Record,listV10Records,putV10Records } from './v10-persistence.js';
+import { composeTodayPlan,dateKeyInTimezone } from './today-composer.js';
+import { composeRepairQueue,importLegacyErrorRecord } from './error-repository.js';
+import { cancelTodayRun,launchTodayActivity,listTodayRuns,registerTodayExecutor,skipTodayRun } from './today-runner.js';
 
-const PLAN_VERSION='phase0-today-v1';
-const READY_EXECUTORS=new Set(['core-card','core-intro','ielts-error','content','sentences']);
+const PLAN_VERSION='phase1-today-v2';
+const READY_EXECUTORS=new Set(['core-card','core-intro','ielts-error','repair','content','sentences']);
 const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const core=()=>globalThis.VocabMasterApp?.getState?.()||{cards:[],settings:{minutes:10,newLimit:5},fsrsConfig:{}};
 const activeCards=()=>core().cards.filter(card=>!card.suspendedAt&&!card.archivedAt);
 let todayActionTail=Promise.resolve();
 let pendingTodayRenders=0;
 let todayStatus={message:'',kind:'neutral'};
+let executorsRegistered=false;
 
 export function localDateKey(now=Date.now()){
-  const date=new Date(now);
-  return`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  return dateKeyInTimezone(now,core().settings?.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC');
 }
 
 function stableRevision(prefix,value){
@@ -86,7 +89,8 @@ function launchProjection(activity={}){
     id:activity.id,type:activity.type,sourceType:activity.sourceType,sourceId:activity.sourceId,
     cardIds:activity.cardIds||[],target:activity.target||null,execution:activity.execution||null,
     payload:activity.payload||{},evidencePolicy:activity.evidencePolicy||{},planId:activity.planId||null,
-    planDate:activity.planDate||null,plannedAt:Number(activity.plannedAt||0)
+    planDate:activity.planDate||null,plannedAt:Number(activity.plannedAt||0),timezone:activity.timezone||'UTC',
+    reasonCode:activity.reasonCode||null,activitySpec:activity.activitySpec||null
   };
 }
 
@@ -156,13 +160,15 @@ export async function buildTodayActivityPlan({minutes=null,maxActivities=18,forc
   for(const card of cards.filter(item=>item.status==='new').slice(0,newLimit)){
     activities.push(exactActivity({
       id:activityId(date,'new-card',card.id,[card.id]),type:'new-card',cardIds:[card.id],
-      target:cardTarget(card,null),estimatedSeconds:55,priority:55,payload:{label:`Làm quen ${card.front}`},
+      target:cardTarget(card,'recognition'),estimatedSeconds:55,priority:55,payload:{label:`Làm quen ${card.front}`},
       evidencePolicy:{affectsSchedule:false,reason:'new-card-introduction-is-coaching'}
     },'core-intro'));
   }
 
-  const[errors,mediaProgress,readings,labs,sentenceProgress,content,personalAssets]=await Promise.all([
-    listIeltsRecords(IELTS_STORE_NAMES.errors,{sortBy:'lastSeenAt'}).catch(()=>[]),
+  const legacyErrors=await listIeltsRecords(IELTS_STORE_NAMES.errors,{sortBy:'lastSeenAt'}).catch(()=>[]);
+  for(const legacyError of legacyErrors)await importLegacyErrorRecord(legacyError).catch(()=>null);
+  const[repairs,mediaProgress,readings,labs,sentenceProgress,content,personalAssets]=await Promise.all([
+    composeRepairQueue({now,limit:3,perTargetCap:1}).catch(()=>[]),
     listIeltsRecords(IELTS_STORE_NAMES.mediaProgress,{sortBy:'updatedAt'}).catch(()=>[]),
     listIeltsRecords(IELTS_STORE_NAMES.readingPassages,{sortBy:'updatedAt'}).catch(()=>[]),
     listIeltsRecords(IELTS_STORE_NAMES.labItems,{sortBy:'updatedAt'}).catch(()=>[]),
@@ -171,17 +177,24 @@ export async function buildTodayActivityPlan({minutes=null,maxActivities=18,forc
     listV10Records(V10_STORES.contentAssets,{sortBy:'updatedAt'}).then(rows=>rows.filter(row=>row.lessonId==='personal-next-session')).catch(()=>[])
   ]);
 
-  for(const error of errors.filter(row=>!['resolved','ignored'].includes(row.status)).slice(0,3)){
-    const cardId=error.linkedCardIds?.length===1?error.linkedCardIds[0]:null;
+  for(const repair of repairs){
+    const error=await getV10Record(V10_STORES.globalErrorRecords,repair.errorRecordId);
+    if(!error)continue;
+    const legacyId=error.legacyAliases?.[0]||null;
+    const legacyError=legacyId?legacyErrors.find(row=>row.id===legacyId)||await getIeltsRecord(IELTS_STORE_NAMES.errors,legacyId):null;
+    const cardId=repair.target?.cardId||`error-record:${error.id}`;
     const card=cards.find(row=>row.id===cardId);
+    const plannedTarget=legacyError
+      ?sourceTarget({cardId,senseId:card?.senseId||null,skill:repair.target?.skill||'production',sourceId:`ielts-error:${legacyError.id}`,sourceRevision:errorRevision(legacyError)})
+      :sourceTarget({...repair.target,cardId,senseId:repair.target?.senseId||card?.senseId||null});
     activities.push(exactActivity({
-      id:activityId(date,'error-correction',error.id,error.linkedCardIds),type:'error-correction',
-      sourceType:'error',sourceId:error.id,cardIds:error.linkedCardIds||[],
-      target:sourceTarget({cardId,senseId:card?.senseId||null,skill:cardId?'production':null,sourceId:`ielts-error:${error.id}`,sourceRevision:errorRevision(error)}),
-      estimatedSeconds:55,priority:90+Math.min(20,Number(error.occurrenceCount||1)*3)+(error.severity==='high'?15:0),
-      payload:{errorId:error.id,label:`Sửa lỗi: ${error.correction||error.expectedResponse||error.category}`},
-      evidencePolicy:{affectsSchedule:false,reason:'error-repair-is-coaching-after-correction-exposure'}
-    },'ielts-error'));
+      id:activityId(date,'error-correction',error.id,[cardId].filter(Boolean)),type:'error-correction',
+      sourceType:'error',sourceId:error.id,cardIds:[cardId].filter(Boolean),
+      target:plannedTarget,
+      estimatedSeconds:55,priority:90+Math.min(20,Number(error.totalOccurrences||1)*3),
+      payload:{errorRecordId:error.id,errorId:legacyId,label:`Sửa lỗi: ${error.category}`},
+      evidencePolicy:{affectsSchedule:false,reason:'repair-requires-independent-correction-evidence'}
+    },legacyId?'ielts-error':'repair'));
   }
 
   const weakSentenceIds=new Set(sentenceProgress.filter(row=>row.weak).map(row=>row.sentenceId));
@@ -265,21 +278,28 @@ export async function buildTodayActivityPlan({minutes=null,maxActivities=18,forc
     },'core-card'));
   }
 
-  activities.sort((a,b)=>b.priority-a.priority||Number(a.dueAt||Infinity)-Number(b.dueAt||Infinity));
-  const selected=[];let used=0;
-  for(const activity of activities){
-    if(selected.length>=maxActivities)break;
-    if(used+activity.estimatedSeconds>budgetSeconds&&selected.length>=3)continue;
-    selected.push(activity);used+=activity.estimatedSeconds;
-    if(used>=budgetSeconds)break;
-  }
-
-  const plannedAt=Number(now);
-  const planId=`today-plan:${date}:${plannedAt}`;
-  const finalized=selected.map((row,index)=>{
+  const toComposerRow=row=>({
+    id:row.id,type:row.type,target:row.target,executor:row.execution?.kind,
+    estimatedSeconds:row.estimatedSeconds,priority:row.priority,dueAt:row.dueAt,sourceId:row.sourceId,payload:row.payload
+  });
+  const composed=composeTodayPlan({
+    dueReviews:activities.filter(row=>row.type==='card-review').map(toComposerRow),
+    repairs:activities.filter(row=>row.type==='error-correction').map(toComposerRow),
+    content:activities.filter(row=>!['card-review','error-correction','new-card'].includes(row.type)).map(toComposerRow),
+    newCards:activities.filter(row=>row.type==='new-card').map(toComposerRow),
+    minutes:Number(minutes??state.settings?.minutes??10),
+    maxActivities,
+    repairCap:3,
+    timezone:state.settings?.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC',
+    now
+  });
+  const byId=new Map(activities.map(row=>[row.id,row]));
+  const finalized=composed.activities.map((plannedActivity,index)=>{
+    const row=byId.get(plannedActivity.id);
     const planned=normalizeActivity({
-      ...row,planId,planDate:date,plannedAt,
-      payload:{...row.payload,planVersion:PLAN_VERSION,planOrder:index,planCount:selected.length}
+      ...row,planId:composed.planId,planDate:composed.planDate,plannedAt:Number(now),timezone:composed.timezone,
+      reasonCode:plannedActivity.reasonCode,activitySpec:plannedActivity.activitySpec,
+      payload:{...row.payload,planVersion:PLAN_VERSION,planOrder:index,planCount:composed.activities.length,reasonCode:plannedActivity.reasonCode}
     });
     return normalizeActivity({...planned,launchBinding:activityLaunchBinding(planned)});
   });
@@ -303,8 +323,7 @@ async function durableActivity(displayed){
   return stored;
 }
 
-async function launchActivity(displayed){
-  const activity=await durableActivity(displayed);
+async function executeActivityTarget(activity){
   if(activity.execution?.status!=='ready'||!READY_EXECUTORS.has(activity.execution.kind))throw launchError('TODAY_EXECUTOR_UNSUPPORTED','Hoạt động này đang coaching-only hoặc chưa có exact executor an toàn.');
   if(activity.execution.kind==='core-card'||activity.execution.kind==='core-intro'){
     const result=globalThis.VocabMasterApp?.startPlannedActivity?.(activity);
@@ -317,6 +336,10 @@ async function launchActivity(displayed){
     });
     if(!result?.opened)throw launchError(result?.code||'TODAY_ERROR_LAUNCH_FAILED',result?.message||'Không thể mở exact error target.');
     return result;
+  }
+  if(activity.execution.kind==='repair'){
+    globalThis.dispatchEvent(new CustomEvent('vocab:v10-open-error-repair',{detail:{errorRecordId:activity.payload.errorRecordId,activityId:activity.id,plannedTarget:activity.target}}));
+    return{started:true,activityId:activity.id,target:activity.target};
   }
   if(activity.execution.kind==='content'){
     const row=await getV10Record(V10_STORES.contentManifests,activity.payload.contentId);
@@ -332,6 +355,28 @@ async function launchActivity(displayed){
     title:activity.payload.label,sentences:activity.payload.sentences
   }}));
   return{started:true,activityId:activity.id,target:activity.target};
+}
+
+function ensureTodayExecutors(){
+  if(executorsRegistered)return;
+  executorsRegistered=true;
+  for(const kind of READY_EXECUTORS)registerTodayExecutor(kind,({activity})=>executeActivityTarget(activity));
+}
+
+function todayTabId(){
+  const storage=globalThis.sessionStorage;
+  if(!storage)return'default-tab';
+  const key='vocab-master-today-tab-id';
+  let id=storage.getItem(key);
+  if(!id){id=globalThis.crypto?.randomUUID?.()||`today-tab-${Date.now()}`;storage.setItem(key,id);}
+  return id;
+}
+
+async function launchActivity(displayed){
+  const activity=await durableActivity(displayed);
+  ensureTodayExecutors();
+  const launched=await launchTodayActivity(activity,{tabId:todayTabId()});
+  return launched.result||launched;
 }
 
 function applyTodayStatus(){
@@ -419,6 +464,7 @@ function mountSection(){
 }
 
 export async function mountTodayPlannerV2({degraded=false}={}){
+  ensureTodayExecutors();
   if(!document.querySelector('#v10TodaySection'))mountSection();
   await enqueueRender({degraded});
   if(!degraded){
@@ -428,7 +474,15 @@ export async function mountTodayPlannerV2({degraded=false}={}){
     globalThis.addEventListener('vocab:v10-personal-content-ready',refresh);
     globalThis.addEventListener('hashchange',()=>{if(location.hash==='#today')refresh();});
   }
-  globalThis.VocabMasterTodayV2={build:options=>enqueueTodayAction(()=>buildTodayActivityPlan(options)),refresh:options=>enqueueRender(options),launch:activity=>enqueueLaunch(activity),binding:activityLaunchBinding};
+  globalThis.VocabMasterTodayV2={
+    build:options=>enqueueTodayAction(()=>buildTodayActivityPlan(options)),
+    refresh:options=>enqueueRender(options),
+    launch:activity=>enqueueLaunch(activity),
+    skip:(runId,options)=>skipTodayRun(runId,options),
+    cancel:(runId,options)=>cancelTodayRun(runId,options),
+    runs:options=>listTodayRuns(options),
+    binding:activityLaunchBinding
+  };
   return globalThis.VocabMasterTodayV2;
 }
 

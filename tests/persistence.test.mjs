@@ -52,6 +52,11 @@ test('empty initialized database remains empty and review write is atomic/idempo
   const duplicate=await commitCoreEvidence({card,rating:'good',step:{id:'activity-1',kind:'typing',skill:'recall',affectsSchedule:true},session:{id:'session-1',mode:'today'},metrics:{dailyDone:1,completedReviews:1},now:2001});
   assert.equal(first.inserted,true);
   assert.equal(duplicate.inserted,false);
+  assert.equal((await persistence.listReviewEvents({cardId:'atomic-card'})).length,1);
+  assert.equal((await persistence.listLearningEvents()).length,4);
+  const canonicalProjection=(await persistence.listLearningProjections())[0];
+  assert.equal(canonicalProjection.reviewEventId,first.event.id);
+  assert.equal(canonicalProjection.attemptId,first.event.attemptId);
   assert.ok(Number(first.card.storageUpdatedAt)>0);
   const second=await commitCoreEvidence({card:first.card,rating:'hard',step:{id:'activity-2',kind:'meaning-choice',skill:'recognition',affectsSchedule:true},session:{id:'session-2',mode:'today'},metrics:{dailyDone:1,completedReviews:1},now:3000});
   assert.equal(second.inserted,true);

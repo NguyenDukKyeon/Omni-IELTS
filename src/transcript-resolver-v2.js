@@ -1,5 +1,6 @@
 import { V10_STORES,TRANSCRIPT_PROVIDERS,validateSentenceSegments,normalizeKey,createV10Id } from './v10-contracts.js';
 import { listV10Records,putV10Record,getV10Record } from './v10-persistence.js';
+import { persistTranscriptAggregate } from './transcript-aggregate.js';
 
 const LOCAL_COMPANION_URL='http://127.0.0.1:17321/transcript';
 const SESSION_KEY='vocab-master-gemini-key';
@@ -46,7 +47,20 @@ async function geminiProvider(context){const headers={'content-type':'applicatio
 
 const PROVIDERS={indexeddb:localCacheProvider,'shared-cache':sharedCacheProvider,'local-companion':localCompanionProvider,'backend-provider':backendProvider,'gemini-progressive':geminiProvider};
 
-async function saveTranscript(context,result){const segments=normalizeSegmentRows(result.segments,`youtube:${context.videoId}`);if(!segments.length)throw new Error('Transcript không có câu hợp lệ.');const durationSeconds=Math.max(0,finiteNumber(result.durationSeconds,0)),lastEnd=Math.max(0,...segments.map(row=>Number(row.endMs||0)/1000));const row={id:context.cacheKey,cacheKey:context.cacheKey,videoId:context.videoId,url:context.url,language:result.language||context.language,provider:result.provider,title:result.title||'YouTube video',segments,clip:{startSeconds:context.startSeconds,endSeconds:context.endSeconds},durationSeconds,complete:Boolean(result.complete||(durationSeconds&&lastEnd>=durationSeconds-2)),qualityStatus:result.provider==='gemini-progressive'?'needs-review':'available',cachedAt:Date.now(),lastAccessedAt:Date.now(),updatedAt:Date.now(),metadata:{model:result.model||null,previewFeature:Boolean(result.previewFeature),warnings:result.warnings||[],durationSeconds}};await putV10Record(V10_STORES.transcriptCache,row,'transcript-cache-saved');globalThis.dispatchEvent(new CustomEvent('vocab:v10-transcript-ready',{detail:{...row,partial:!row.complete}}));return row;}
+async function saveTranscript(context,result){
+  const segments=normalizeSegmentRows(result.segments,`youtube:${context.videoId}`);if(!segments.length)throw new Error('Transcript không có câu hợp lệ.');
+  const durationSeconds=Math.max(0,finiteNumber(result.durationSeconds,0)),lastEnd=Math.max(0,...segments.map(row=>Number(row.endMs||0)/1000));
+  const complete=Boolean(result.complete||(durationSeconds&&lastEnd>=durationSeconds-2));
+  const canonical=await persistTranscriptAggregate({
+    source:{id:`transcript-source:youtube:${context.videoId}`,namespace:result.provider==='imported'?'private':'shared',externalId:context.videoId,sourceType:'youtube',title:result.title||'YouTube video',url:context.url,language:result.language||context.language,status:result.provider==='imported'?'verified':'unverified',complete},
+    segments,
+    provenance:{kind:'resolver',provider:result.provider,model:result.model||null,cacheKey:context.cacheKey}
+  });
+  const segmentBindings=new Map(canonical.segments.map(segment=>[`${segment.startMs}:${segment.endMs}:${normalizeKey(segment.text)}`,segment.id]));
+  const boundSegments=segments.map(segment=>({...segment,transcriptRevisionId:canonical.revision.id,canonicalSegmentId:segmentBindings.get(`${segment.startMs}:${segment.endMs}:${normalizeKey(segment.text)}`)||null}));
+  const row={id:context.cacheKey,cacheKey:context.cacheKey,videoId:context.videoId,url:context.url,language:result.language||context.language,provider:result.provider,title:result.title||'YouTube video',segments:boundSegments,transcriptSourceId:canonical.source.id,transcriptRevisionId:canonical.revision.id,clip:{startSeconds:context.startSeconds,endSeconds:context.endSeconds},durationSeconds,complete:Boolean(complete),qualityStatus:result.provider==='gemini-progressive'?'needs-review':'available',cachedAt:Date.now(),lastAccessedAt:Date.now(),updatedAt:Date.now(),metadata:{model:result.model||null,previewFeature:Boolean(result.previewFeature),warnings:result.warnings||[],durationSeconds}};
+  await putV10Record(V10_STORES.transcriptCache,row,'transcript-cache-saved');globalThis.dispatchEvent(new CustomEvent('vocab:v10-transcript-ready',{detail:{...row,partial:!row.complete}}));return row;
+}
 
 async function firstSuccessful(tasks=[]){return new Promise((resolve,reject)=>{let pending=tasks.length,settled=false;const errors=[];if(!pending)return reject(new Error('Không có transcript provider.'));for(const task of tasks)task().then(value=>{if(settled)return;settled=true;resolve(value);}).catch(error=>{errors.push(error);pending-=1;if(!pending&&!settled)reject(new AggregateError(errors,'Không provider nào trả transcript.'));});});}
 

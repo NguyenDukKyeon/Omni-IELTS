@@ -1,6 +1,7 @@
 import { decideEvidence,evidenceDigest,normalizeAssistanceTrace } from './evidence-policy.js';
 import { applyFsrsRating,getCardRetrievability,normalizeFsrsSkill } from './fsrs-scheduler.js';
 import { persistReviewResult } from './persistence.js';
+import { createActivitySpec,createAttempt,createReceipt,createRun } from './learning-contracts.js';
 
 const ACTIVITY_BY_KIND=Object.freeze({
   flashcard:'card-review',choice:'matching','meaning-choice':'matching',typing:'typing','sentence-cloze':'typing',
@@ -48,8 +49,12 @@ export function buildCoreEvidenceEnvelope({card,rating,step={},session={},exposu
     sourceRevision:clean(step.plannedTarget.sourceRevision,180)||null
   }:target;
   const boundActivityType=clean(step.plannedActivityType,80)||activityType;
-  const activitySpec={id:activityId,type:boundActivityType,target:planned};
-  const attempt={id:attemptId,activityId,receiptId,activityType:boundActivityType,result:rating,target,assistance:normalizeAssistanceTrace(assistance),learnerOutput,errorType:clean(step.errorType,80)||null};
+  const contractTime=Number(now);
+  const timezone=clean(session.timezone,120)||'UTC';
+  const activitySpec=createActivitySpec({id:activityId,type:boundActivityType,target:planned,planId:session.planId||sessionId,plannedAt:Number(step.plannedAt||contractTime),timezone,policyVersion:'phase0-evidence-v1',executor:'core-session'});
+  const run=createRun({id:`run:${sessionId}:${activityId}`,activitySpec,status:'active',startedAt:Number(session.startedAt||contractTime),timezone});
+  const attempt=createAttempt({id:attemptId,run,activitySpec,receiptId,activityType:boundActivityType,result:rating,target,assistance:normalizeAssistanceTrace(assistance),learnerOutput,errorType:clean(step.errorType,80)||null,occurredAt:contractTime,timezone});
+  const receipt=createReceipt({id:receiptId,run,activitySpec,attempt,status:rating==='skipped'?'skipped':'completed',issuedAt:contractTime,timezone});
   const verification={source:{id:`source:${sourceRevision}`,authority:'core-card-registry',status:'verified',sourceId,sourceRevision}};
   if(evaluation){
     verification.evaluation={
@@ -58,7 +63,7 @@ export function buildCoreEvidenceEnvelope({card,rating,step={},session={},exposu
       outputDigest:evidenceDigest(learnerOutput),targetUsed:evaluation.targetUsed===true
     };
   }
-  return{activitySpec,attempt,verification,now:Number(now)};
+  return{activitySpec,run,attempt,receipt,verification,now:Number(now)};
 }
 
 function addQualifiedMarker(card,decision,now){
@@ -91,10 +96,10 @@ export async function commitCoreEvidence({card,rating,step,session,fsrsConfig,me
     resultLog:result.log,reviewedAt:Number(now),review:Number(now),createdAt:Number(now),assisted:false,evidenceType,
     attemptId:decision.attemptId,activityId:decision.activityId,receiptId:decision.receiptId,target:decision.target,
     assistanceTrace:envelope.attempt.assistance,evidenceDecision:decision,qualifiedFailure:!decision.successful,
-    evidence:{attempt:envelope.attempt,activity:envelope.activitySpec,verification:envelope.verification},
+    evidence:{run:envelope.run,attempt:envelope.attempt,receipt:envelope.receipt,activity:envelope.activitySpec,verification:envelope.verification},
     metadata:{evidenceReason:decision.reason,policyVersion:decision.policyVersion,receiptBinding:decision.receiptBinding,evidenceType,predictedRetrievability}
   };
-  const persisted=await persist({card:result.card,event,metrics,reason:'core-evidence-committed'});
+  const persisted=await persist({card:result.card,event,metrics,reason:'core-evidence-committed',canonicalEnvelope:{...envelope,decision}});
   return persisted.inserted===false
     ?{inserted:false,decision,event:persisted.event,card,interval:null}
     :{inserted:true,decision,event,card:result.card,interval:result.interval};

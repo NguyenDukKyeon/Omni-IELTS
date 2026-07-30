@@ -229,7 +229,7 @@ test('crash after canonical verification but before receipt remains recoverable'
   assert.equal(await currentLogicalDigest(),logicalDigest(targetEnvelope));
 });
 
-test('journal is additive at Core DB v4 so an old-version opener remains read-safe',async()=>{
+test('journal is additive at the current Core DB version so an old-version opener remains read-safe',async()=>{
   await backup.restoreCombinedBackup(baselineEnvelope);
   await assert.rejects(()=>backup.restoreCombinedBackup(targetEnvelope,{hooks:backup.__testing.createCrashHook('core')}),error=>error.code==='SIMULATED_PROCESS_CRASH');
   const opened=await new Promise((resolve,reject)=>{const request=indexedDB.open(core.DB_NAME,core.DB_VERSION);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});assert.equal(opened.version,core.DB_VERSION);opened.close();
@@ -246,7 +246,7 @@ test('storage errors are typed and IELTS/V10 never report RAM fallback as durabl
   globalThis.indexedDB=originalIndexedDb;
 });
 
-test('blocked and versionchange openers fail with actionable typed errors',async()=>{
+test('blocked openers fail and a later future schema reopens read-safe',async()=>{
   const originalIndexedDb=globalThis.indexedDB;
   let lateConnectionClosed=false;
   globalThis.indexedDB={open(){const request={result:{close(){lateConnectionClosed=true;}}};queueMicrotask(()=>{request.onblocked?.();queueMicrotask(()=>request.onsuccess?.());});return request;}};
@@ -258,7 +258,10 @@ test('blocked and versionchange openers fail with actionable typed errors',async
   const versionedCore=await import(`../src/persistence.js?versionchange=${Date.now()}`);await versionedCore.openDatabase();
   const future=await new Promise((resolve,reject)=>{const request=factory.open(core.DB_NAME,core.DB_VERSION+1);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
   future.close();
-  await assert.rejects(()=>versionedCore.openDatabase(),error=>error.code==='DATABASE_SCHEMA_TOO_NEW'&&error.durable===false);
+  const compatible=await versionedCore.openDatabase();
+  assert.equal(compatible.version,core.DB_VERSION+1);
+  assert.throws(()=>compatible.transaction(core.STORE_NAMES.meta,'readwrite'),error=>error.code==='DATABASE_READ_ONLY_FUTURE_SCHEMA'&&error.durable===false);
+  compatible.close();
   globalThis.indexedDB=originalIndexedDb;
 });
 
@@ -296,9 +299,26 @@ test('additive legacy-card reconciliation is idempotent and keeps DB version rol
   assert.equal(oldVersion.version,core.DB_VERSION);oldVersion.close();globalThis.indexedDB=originalIndexedDb;
 });
 
-test('future IndexedDB versions fail explicitly instead of falling back to RAM',async()=>{
-  const createFuture=async(name,version)=>{const factory=new IDBFactory();globalThis.indexedDB=factory;const database=await new Promise((resolve,reject)=>{const request=factory.open(name,version);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});database.close();};
-  await createFuture(core.DB_NAME,core.DB_VERSION+1);const futureCore=await import(`../src/persistence.js?future=${Date.now()}`);await assert.rejects(()=>futureCore.openDatabase(),error=>error.code==='DATABASE_SCHEMA_TOO_NEW'&&error.supportedVersion===core.DB_VERSION);
-  await createFuture(ielts.IELTS_DB_NAME,ielts.IELTS_DB_VERSION+1);const futureIelts=await import(`../src/ielts-persistence.js?future=${Date.now()}`);await assert.rejects(()=>futureIelts.openIeltsDatabase(),error=>error.code==='DATABASE_SCHEMA_TOO_NEW'&&error.supportedVersion===ielts.IELTS_DB_VERSION);
-  await createFuture(V10_DB_NAME,V10_DB_VERSION+1);const futureV10=await import(`../src/v10-persistence.js?future=${Date.now()}`);await assert.rejects(()=>futureV10.openV10Database(),error=>error.code==='DATABASE_SCHEMA_TOO_NEW'&&error.supportedVersion===V10_DB_VERSION);
+test('future IndexedDB versions preserve readable stores but fail writes instead of falling back to RAM',async()=>{
+  const createFuture=async({moduleUrl,openName,closeName,databaseName,version,stores})=>{
+    const factory=new IDBFactory();globalThis.indexedDB=factory;
+    const writer=await import(`${moduleUrl}?future-writer=${Date.now()}-${Math.random()}`);
+    const current=await writer[openName]();current.close();await writer[closeName]?.().then(database=>database.close());
+    const future=await new Promise((resolve,reject)=>{
+      const request=factory.open(databaseName,version+1);
+      request.onupgradeneeded=()=>request.result.createObjectStore('futureOnly',{keyPath:'id'});
+      request.onsuccess=()=>resolve(request.result);
+      request.onerror=()=>reject(request.error);
+    });
+    future.close();
+    const reader=await import(`${moduleUrl}?future-reader=${Date.now()}-${Math.random()}`);
+    const compatible=await reader[openName]();
+    assert.equal(compatible.version,version+1);
+    assert.doesNotThrow(()=>compatible.transaction(stores[0],'readonly'));
+    assert.throws(()=>compatible.transaction(stores[0],'readwrite'),error=>error.code==='DATABASE_READ_ONLY_FUTURE_SCHEMA'&&error.supportedVersion===version);
+    compatible.close();
+  };
+  await createFuture({moduleUrl:'../src/persistence.js',openName:'openDatabase',closeName:'reopenCoreDatabase',databaseName:core.DB_NAME,version:core.DB_VERSION,stores:Object.values(core.STORE_NAMES)});
+  await createFuture({moduleUrl:'../src/ielts-persistence.js',openName:'openIeltsDatabase',closeName:'reopenIeltsDatabase',databaseName:ielts.IELTS_DB_NAME,version:ielts.IELTS_DB_VERSION,stores:Object.values(IELTS_STORE_NAMES)});
+  await createFuture({moduleUrl:'../src/v10-persistence.js',openName:'openV10Database',closeName:'reopenV10Database',databaseName:V10_DB_NAME,version:V10_DB_VERSION,stores:Object.values(V10_STORES)});
 });

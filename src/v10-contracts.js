@@ -1,8 +1,9 @@
 import { decideEvidence,evidenceDigest,normalizeAssistanceTrace,normalizeEvidenceRequirement } from './evidence-policy.js';
+import { createActivitySpec,createAttempt,createReceipt,createRun } from './learning-contracts.js';
 
 export const V10_SCHEMA_VERSION=1;
 export const V10_DB_NAME='vocab-master-v10';
-export const V10_DB_VERSION=1;
+export const V10_DB_VERSION=5;
 
 export const V10_STORES=Object.freeze({
   sourceOccurrences:'sourceOccurrences',
@@ -10,6 +11,14 @@ export const V10_STORES=Object.freeze({
   collections:'collections',
   collectionMemberships:'collectionMemberships',
   lexicalTombstones:'lexicalTombstones',
+  workflowIntents:'workflowIntents',
+  transcriptSources:'transcriptSources',
+  transcriptRevisions:'transcriptRevisions',
+  canonicalTranscriptSegments:'canonicalTranscriptSegments',
+  globalErrorRecords:'globalErrorRecords',
+  globalErrorOccurrences:'globalErrorOccurrences',
+  repairQueue:'repairQueue',
+  todayRuns:'todayRuns',
   activities:'activities',
   sentenceProgress:'sentenceProgress',
   transcriptCache:'transcriptCache',
@@ -21,7 +30,7 @@ export const V10_STORES=Object.freeze({
   meta:'meta'
 });
 
-export const CAPTURE_STATUSES=Object.freeze(['captured','needs-review','ready','linked','rejected']);
+export const CAPTURE_STATUSES=Object.freeze(['captured','needs-review','ready','finalizing','linked','rejected','quarantined']);
 export const ACTIVITY_TYPES=Object.freeze(['card-review','new-card','dictation','shadowing','error-correction','reading','paraphrase','production','retell']);
 export const SENTENCE_STEPS=Object.freeze(['queued','listening','dictation','correction','noticing','shadowing','vocabulary','retell','completed']);
 export const CONTENT_QUALITY_STATUSES=Object.freeze(['draft','validated','verified','rejected','quarantined']);
@@ -116,6 +125,9 @@ export function normalizeActivity(input={}){
     planId:clean(input.planId,180)||null,
     planDate:clean(input.planDate,20)||null,
     plannedAt:Number(input.plannedAt||0)||null,
+    timezone:clean(input.timezone,120)||'UTC',
+    reasonCode:clean(input.reasonCode,120)||null,
+    activitySpec:input.activitySpec&&typeof input.activitySpec==='object'?structuredClone(input.activitySpec):null,
     launchBinding:clean(input.launchBinding,180)||null,
     status:['queued','active','completed','skipped','failed'].includes(input.status)?input.status:'queued',
     createdAt:Number(input.createdAt||Date.now()),
@@ -127,11 +139,14 @@ export function buildV10CoachingEnvelope({activityId,receiptId,activityType,sent
   const id=clean(activityId,180);const receipt=clean(receiptId,180);const source=clean(sourceId,180)||null;
   const sourceRevision=`v10-sentence-v1:${evidenceDigest(JSON.stringify({id:sentence.id||null,text:String(sentence.text||''),startMs:Number(sentence.startMs||0),endMs:Number(sentence.endMs||0),verified:sentence.verified===true}))}`;
   const target={cardId:clean(cardId,180)||null,skill:clean(skill,80)||null,sourceId:source,sourceRevision};
-  const attempt={id:`attempt:${receipt}`,activityId:id,receiptId:receipt,activityType:clean(activityType,80),result:clean(result,40),target,learnerOutput:String(learnerOutput||'').trim().slice(0,10_000),assistance:normalizeAssistanceTrace({...assistance,id:`trace:${receipt}`,schemaVersion:1,collector:'v10-sentence-loop',complete:true,coaching:true})};
-  const activitySpec={id,type:attempt.activityType,target};
+  const occurredAt=Date.now();
+  const activitySpec=createActivitySpec({id,type:clean(activityType,80),target,plannedAt:occurredAt,timezone:'UTC',policyVersion:'phase0-evidence-v1',executor:'v10-sentence-loop'});
+  const run=createRun({id:`run:${id}`,activitySpec,status:'active',startedAt:occurredAt,timezone:'UTC'});
+  const attempt=createAttempt({id:`attempt:${receipt}`,run,activitySpec,receiptId:receipt,activityType:activitySpec.type,result:clean(result,40),target,learnerOutput:String(learnerOutput||'').trim().slice(0,10_000),assistance:normalizeAssistanceTrace({...assistance,id:`trace:${receipt}`,schemaVersion:1,collector:'v10-sentence-loop',complete:true,coaching:true}),occurredAt,timezone:'UTC'});
+  const canonicalReceipt=createReceipt({id:receipt,run,activitySpec,attempt,status:result==='skipped'?'skipped':'completed',issuedAt:occurredAt,timezone:'UTC'});
   const verification={source:{id:`source:${sourceRevision}`,authority:'v10-source-registry',status:sentence.verified===true?'verified':'unverified',sourceId:source,sourceRevision}};
   const decision=decideEvidence({attempt,activity:activitySpec,verification});
-  return Object.freeze({attempt,activitySpec,verification,decision});
+  return Object.freeze({run,attempt,receipt:canonicalReceipt,activitySpec,verification,decision});
 }
 
 export function normalizeRetellStatus(input={}){

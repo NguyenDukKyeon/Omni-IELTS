@@ -1,13 +1,50 @@
 import { V10_DB_NAME,V10_DB_VERSION,V10_STORES } from './v10-contracts.js';
 import { sha256Hex } from './backup-registry.js';
-import { databaseBlocked,durableStorageUnavailable,normalizeDatabaseOpenError } from './storage-safety.js';
+import { durableStorageUnavailable } from './storage-safety.js';
 import { assertActiveRestoreToken,withDurableWriteLock } from './storage-lock.js';
+import { MIGRATION_LEDGER_PREFIX,defineMigration,openForwardCompatibleDatabase } from './migration-ledger.js';
 
 const STORE_LIST=Object.freeze(Object.values(V10_STORES));
 let databasePromise=null;
 let writeQueue=Promise.resolve();
 let channel=null;
 const memory=new Map(STORE_LIST.map(name=>[name,new Map()]));
+const V10_MIGRATIONS=Object.freeze([
+  defineMigration({
+    id:'p1-00-v10-opener-v1',
+    digest:'v10-v1-stores-and-indexes:2026-07-30',
+    targetVersion:1,
+    description:'Adopt the Phase 0 V10 v1 layout under the forward-compatible opener and durable migration ledger.'
+  }),
+  defineMigration({
+    id:'p1-03-v10-workflow-intents-v2',
+    digest:'v10-v2-cross-db-intents:2026-07-30',
+    targetVersion:2,
+    mode:'upgrade',
+    description:'Add durable cross-database workflow intents for idempotent reconciliation.'
+  }),
+  defineMigration({
+    id:'p1-05-v10-transcript-aggregate-v3',
+    digest:'v10-v3-transcript-source-revision-segments:2026-07-30',
+    targetVersion:3,
+    mode:'upgrade',
+    description:'Add canonical transcript sources, immutable revisions and stable segments.'
+  }),
+  defineMigration({
+    id:'p1-06-v10-global-errors-v4',
+    digest:'v10-v4-global-errors-occurrences-repairs:2026-07-30',
+    targetVersion:4,
+    mode:'upgrade',
+    description:'Add the event-derived global error repository and deterministic repair queue.'
+  }),
+  defineMigration({
+    id:'p1-08-v10-today-runs-v5',
+    digest:'v10-v5-exact-today-run-resume:2026-07-30',
+    targetVersion:5,
+    mode:'upgrade',
+    description:'Add durable exact-target Today run state for reload and multi-tab resume.'
+  })
+]);
 
 const clone=value=>value==null?value:structuredClone(value);
 const indexedDbUnavailable=()=>typeof indexedDB==='undefined';
@@ -22,6 +59,14 @@ function createIndexes(name,store){
   if(name===V10_STORES.collections){store.createIndex('kind','kind',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
   if(name===V10_STORES.collectionMemberships){store.createIndex('collectionId','collectionId',{unique:false});store.createIndex('lexicalItemId','lexicalItemId',{unique:false});store.createIndex('uniqueKey','uniqueKey',{unique:true});}
   if(name===V10_STORES.lexicalTombstones){store.createIndex('lexicalItemId','lexicalItemId',{unique:true});store.createIndex('deletedAt','deletedAt',{unique:false});}
+  if(name===V10_STORES.workflowIntents){store.createIndex('status','status',{unique:false});store.createIndex('kind','kind',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
+  if(name===V10_STORES.transcriptSources){store.createIndex('namespace','namespace',{unique:false});store.createIndex('externalId','externalId',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
+  if(name===V10_STORES.transcriptRevisions){store.createIndex('sourceId','sourceId',{unique:false});store.createIndex('parentRevisionId','parentRevisionId',{unique:false});store.createIndex('createdAt','createdAt',{unique:false});}
+  if(name===V10_STORES.canonicalTranscriptSegments){store.createIndex('revisionId','revisionId',{unique:false});store.createIndex('lineageId','lineageId',{unique:false});store.createIndex('sourceId','sourceId',{unique:false});}
+  if(name===V10_STORES.globalErrorRecords){store.createIndex('normalizedKey','normalizedKey',{unique:true});store.createIndex('status','status',{unique:false});store.createIndex('lastSeenAt','lastSeenAt',{unique:false});}
+  if(name===V10_STORES.globalErrorOccurrences){store.createIndex('errorRecordId','errorRecordId',{unique:false});store.createIndex('attemptId','attemptId',{unique:false});store.createIndex('occurredAt','occurredAt',{unique:false});}
+  if(name===V10_STORES.repairQueue){store.createIndex('errorRecordId','errorRecordId',{unique:false});store.createIndex('status','status',{unique:false});store.createIndex('dueAt','dueAt',{unique:false});}
+  if(name===V10_STORES.todayRuns){store.createIndex('activityId','activityId',{unique:true});store.createIndex('status','status',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
   if(name===V10_STORES.activities){store.createIndex('status','status',{unique:false});store.createIndex('dueAt','dueAt',{unique:false});store.createIndex('type','type',{unique:false});}
   if(name===V10_STORES.sentenceProgress){store.createIndex('sourceId','sourceId',{unique:false});store.createIndex('step','step',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
   if(name===V10_STORES.transcriptCache){store.createIndex('videoId','videoId',{unique:false});store.createIndex('cacheKey','cacheKey',{unique:true});store.createIndex('updatedAt','updatedAt',{unique:false});}
@@ -36,21 +81,21 @@ function createIndexes(name,store){
 export function openV10Database(){
   if(databasePromise)return databasePromise;
   if(indexedDbUnavailable())return Promise.reject(durableStorageUnavailable(V10_DB_NAME));
-  databasePromise=new Promise((resolve,reject)=>{
-    let blocked=false;
-    const request=indexedDB.open(V10_DB_NAME,V10_DB_VERSION);
-    request.onupgradeneeded=()=>{
-      const database=request.result;
+  databasePromise=openForwardCompatibleDatabase({
+    name:V10_DB_NAME,
+    version:V10_DB_VERSION,
+    requiredStores:STORE_LIST,
+    ledgerStore:V10_STORES.meta,
+    migrations:V10_MIGRATIONS,
+    onVersionChange:()=>{databasePromise=null;},
+    upgrade:({database})=>{
       for(const name of STORE_LIST){
         if(database.objectStoreNames.contains(name))continue;
         const store=database.createObjectStore(name,{keyPath:name===V10_STORES.meta?'key':'id'});
         createIndexes(name,store);
       }
-    };
-    request.onsuccess=()=>{const database=request.result;if(blocked){database.close();return;}database.onversionchange=()=>{database.close();databasePromise=null;};resolve(database);};
-    request.onerror=()=>{const error=normalizeDatabaseOpenError(request.error,{database:V10_DB_NAME,supportedVersion:V10_DB_VERSION});databasePromise=null;reject(error);};
-    request.onblocked=()=>{blocked=true;databasePromise=null;reject(databaseBlocked(V10_DB_NAME));};
-  });
+    }
+  }).catch(error=>{databasePromise=null;throw error;});
   return databasePromise;
 }
 
@@ -101,7 +146,14 @@ export async function deleteV10Record(storeName,key,reason='v10-record-deleted')
 }
 
 export async function clearV10Store(storeName,reason='v10-store-cleared'){
-  const name=assertStore(storeName);return enqueue(async()=>{await withStore(name,'readwrite',async(store,map)=>{if(map)map.clear();else store.clear();});broadcast(reason,[name]);return true;});
+  const name=assertStore(storeName);return enqueue(async()=>{await withStore(name,'readwrite',async(store,map)=>{
+    if(name!==V10_STORES.meta){if(map)map.clear();else store.clear();return;}
+    const migrationRows=map
+      ?[...map.values()].filter(row=>String(row?.key||'').startsWith(MIGRATION_LEDGER_PREFIX))
+      :(await requestResult(store.getAll())).filter(row=>String(row?.key||'').startsWith(MIGRATION_LEDGER_PREFIX));
+    if(map)map.clear();else store.clear();
+    for(const row of migrationRows){if(map)map.set(row.key,clone(row));else store.put(clone(row));}
+  });broadcast(reason,[name]);return true;});
 }
 
 export async function transactV10(storeNames,callback,reason='v10-transaction'){
