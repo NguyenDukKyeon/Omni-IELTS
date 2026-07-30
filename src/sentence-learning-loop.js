@@ -17,7 +17,7 @@ export function diffSentence(expected='',actual=''){
 
 function currentSentence(run=session){return run?.sentences?.[run.index]||null;}
 function progressScope(run){const workspace=globalThis.VocabMasterWorkspacePlayback;return workspace?.revisionId===run?.transcriptRevisionId&&workspace.mode?workspace.mode:(run?.dictationMode==='practice'?'dictation-practice':run?.transcriptRevisionId?'dictation-strict':'legacy');}
-function progressId(sourceId,sentenceId,transcriptRevisionId=null,learningMode='legacy'){return`${sourceId||'source'}::${transcriptRevisionId||'legacy'}::${learningMode}::${sentenceId}`;}
+function progressId(sourceId,sentenceId,transcriptRevisionId=null,learningMode='legacy'){if(!transcriptRevisionId&&learningMode==='legacy')return`${sourceId||'source'}::${sentenceId}`;return`${sourceId||'source'}::${transcriptRevisionId||'legacy'}::${learningMode}::${sentenceId}`;}
 function saveProgress(patch={},run=session){
   const sentence=currentSentence(run);if(!run||!sentence)return Promise.resolve(null);
   const learningMode=progressScope(run),id=progressId(run.sourceId,sentence.id,run.transcriptRevisionId,learningMode);const snapshot={id,sentenceId:sentence.id,sourceId:run.sourceId,transcriptRevisionId:run.transcriptRevisionId||null,learningMode,step:run.step,dictationMode:run.dictationMode,repeatCount:run.repeatCount,playbackRate:run.playbackRate,dictationResponse:run.dictationResponse,errorClassification:run.errorClassification,wordDiff:structuredClone(run.wordDiff||[]),retellResponse:run.retellResponse,retellStatus:run.retellStatus,evidenceAttempts:structuredClone(run.evidenceAttempts||[]),linkedCardIds:[...(sentence.linkedCardIds||[])],weak:run.weak,runToken:run.runToken,...structuredClone(patch),updatedAt:Date.now()};
