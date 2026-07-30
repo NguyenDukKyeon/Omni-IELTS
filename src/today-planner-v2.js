@@ -8,6 +8,7 @@ import { getV10Record,listV10Records,putV10Records } from './v10-persistence.js'
 import { composeTodayPlan,dateKeyInTimezone } from './today-composer.js';
 import { composeRepairQueue,importLegacyErrorRecord } from './error-repository.js';
 import { cancelTodayRun,launchTodayActivity,listTodayRuns,registerTodayExecutor,skipTodayRun } from './today-runner.js';
+import { contentTodayInventory } from './content-platform.js';
 
 const PLAN_VERSION='phase1-today-v2';
 const READY_EXECUTORS=new Set(['core-card','core-intro','ielts-error','repair','content','sentences']);
@@ -34,6 +35,7 @@ function errorRevision(error={}){
 }
 
 function contentRevision(row={}){
+  if(/^sha256:[a-f0-9]{64}$/.test(String(row.contentAddress||'')))return row.contentAddress;
   return stableRevision('v10-content-v1',{
     id:row.id,contentVersion:row.contentVersion,qualityStatus:row.qualityStatus,updatedAt:row.updatedAt,
     assets:row.assets||{},provenance:row.provenance||{}
@@ -167,13 +169,13 @@ export async function buildTodayActivityPlan({minutes=null,maxActivities=18,forc
 
   const legacyErrors=await listIeltsRecords(IELTS_STORE_NAMES.errors,{sortBy:'lastSeenAt'}).catch(()=>[]);
   for(const legacyError of legacyErrors)await importLegacyErrorRecord(legacyError).catch(()=>null);
-  const[repairs,mediaProgress,readings,labs,sentenceProgress,content,personalAssets]=await Promise.all([
+  const[repairs,mediaProgress,readings,labs,sentenceProgress,remoteContent,personalAssets]=await Promise.all([
     composeRepairQueue({now,limit:3,perTargetCap:1}).catch(()=>[]),
     listIeltsRecords(IELTS_STORE_NAMES.mediaProgress,{sortBy:'updatedAt'}).catch(()=>[]),
     listIeltsRecords(IELTS_STORE_NAMES.readingPassages,{sortBy:'updatedAt'}).catch(()=>[]),
     listIeltsRecords(IELTS_STORE_NAMES.labItems,{sortBy:'updatedAt'}).catch(()=>[]),
     listV10Records(V10_STORES.sentenceProgress,{sortBy:'updatedAt'}).catch(()=>[]),
-    listV10Records(V10_STORES.contentManifests,{sortBy:'updatedAt'}).catch(()=>[]),
+    contentTodayInventory().catch(()=>[]),
     listV10Records(V10_STORES.contentAssets,{sortBy:'updatedAt'}).then(rows=>rows.filter(row=>row.lessonId==='personal-next-session')).catch(()=>[])
   ]);
 
@@ -229,11 +231,10 @@ export async function buildTodayActivityPlan({minutes=null,maxActivities=18,forc
     estimatedSeconds:75,priority:52,payload:{label:'Paraphrase & distractor'}
   },'paraphrase-exact-executor-not-supported'));
 
-  const verifiedContent=content.find(row=>row.qualityStatus==='verified');
-  if(verifiedContent)activities.push(exactActivity({
-    id:activityId(date,'reading',verifiedContent.id),type:'reading',sourceType:'content',sourceId:verifiedContent.id,
-    target:sourceTarget({sourceId:`v10-content:${verifiedContent.id}`,sourceRevision:contentRevision(verifiedContent)}),
-    estimatedSeconds:150,priority:42,payload:{label:`Bài đã tải: ${verifiedContent.title}`,contentId:verifiedContent.id},
+  for(const inventory of remoteContent)activities.push(exactActivity({
+    id:activityId(date,inventory.type,inventory.lessonId),type:inventory.type,sourceType:'content',sourceId:inventory.lessonId,
+    target:sourceTarget(inventory.target),
+    estimatedSeconds:inventory.estimatedSeconds,priority:42,payload:inventory.payload,
     evidencePolicy:{affectsSchedule:false,reason:'content-open-is-coaching'}
   },'content'));
 
@@ -343,8 +344,8 @@ async function executeActivityTarget(activity){
   }
   if(activity.execution.kind==='content'){
     const row=await getV10Record(V10_STORES.contentManifests,activity.payload.contentId);
-    if(!row||row.qualityStatus!=='verified')throw launchError('TODAY_SOURCE_STALE','Content target không còn verified.');
-    if(activity.target?.sourceId!==`v10-content:${row.id}`||activity.target?.sourceRevision!==contentRevision(row))throw launchError('TODAY_REVISION_STALE','Content target đã thay đổi sau khi lập kế hoạch.');
+    if(!row||row.qualityStatus!=='verified'||row.installState!=='installed')throw launchError('TODAY_SOURCE_STALE','Content target không còn installed và verified.');
+    if(activity.target?.sourceId!==`remote-content:${row.id}`||activity.target?.sourceRevision!==contentRevision(row))throw launchError('TODAY_REVISION_STALE','Content target đã thay đổi sau khi lập kế hoạch.');
     globalThis.dispatchEvent(new CustomEvent('vocab:v10-open-content',{detail:{contentId:row.id,activityId:activity.id,plannedTarget:activity.target}}));
     return{started:true,activityId:activity.id,target:activity.target};
   }

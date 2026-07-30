@@ -1,7 +1,9 @@
 const CACHE_VERSION='vocab-master-pwa-v10';
 const STATIC_CACHE=`${CACHE_VERSION}-static`;
 const RUNTIME_CACHE=`${CACHE_VERSION}-runtime`;
-const CONTENT_CACHE='vocab-master-content-v1';
+const CONTENT_CACHE='vocab-master-content-v2';
+const LEGACY_CONTENT_CACHE='vocab-master-content-v1';
+const CONTENT_STAGE_PREFIX='vocab-master-content-stage-v2:';
 const PRECACHE=[
   '/',
   '/index.html',
@@ -10,6 +12,8 @@ const PRECACHE=[
   '/settings-tabs.css',
   '/ielts-lab.css',
   '/v10.css',
+  '/phase4-content.css',
+  '/content/trust-roots.json',
   '/assets/app.js',
   '/manifest.webmanifest',
   '/offline.html',
@@ -25,7 +29,7 @@ self.addEventListener('install',event=>{
 
 self.addEventListener('activate',event=>{
   event.waitUntil(Promise.all([
-    caches.keys().then(keys=>Promise.all(keys.filter(key=>!key.startsWith(CACHE_VERSION)&&key!==CONTENT_CACHE).map(key=>caches.delete(key)))),
+    caches.keys().then(keys=>Promise.all(keys.filter(key=>!key.startsWith(CACHE_VERSION)&&key!==CONTENT_CACHE&&key!==LEGACY_CONTENT_CACHE&&!key.startsWith(CONTENT_STAGE_PREFIX)).map(key=>caches.delete(key)))),
     self.clients.claim()
   ]));
 });
@@ -66,7 +70,9 @@ self.addEventListener('fetch',event=>{
   const url=new URL(request.url);
   if(url.origin!==self.location.origin)return;
   if(url.pathname.startsWith('/api/'))return;
-  if(url.pathname.startsWith('/content/'))event.respondWith(contentCacheFirst(request));
+  if(url.pathname==='/content/catalog.json')event.respondWith(networkFirst(request));
+  else if(url.pathname.startsWith('/content/immutable/sha256/'))event.respondWith(contentCacheFirst(request));
+  else if(url.pathname.startsWith('/content/'))event.respondWith(staleWhileRevalidate(request));
   else if(request.mode==='navigate')event.respondWith(networkFirst(request));
   else if(['script','style','worker'].includes(request.destination))event.respondWith(networkFirst(request));
   else event.respondWith(staleWhileRevalidate(request));
@@ -117,7 +123,7 @@ async function readReminderConfig(){
 self.addEventListener('message',event=>{
   if(event.data?.type==='SKIP_WAITING')self.skipWaiting();
   if(event.data?.type==='REMINDER_CONFIG')event.waitUntil(saveReminderConfig(event.data.config));
-  if(event.data?.type==='CONTENT_CACHE_CLEAR')event.waitUntil(caches.delete(CONTENT_CACHE));
+  if(event.data?.type==='CONTENT_CACHE_CLEAR')event.waitUntil(Promise.all([caches.delete(CONTENT_CACHE),caches.delete(LEGACY_CONTENT_CACHE)]));
   if(event.data?.type==='SHOW_NOTIFICATION'){
     event.waitUntil(self.registration.showNotification(event.data.title||'Vocab Master',{
       body:event.data.body||'Thông báo đang hoạt động.',icon:'/icons/icon-192.svg',badge:'/icons/badge.svg',tag:'vocab-master-local-test',data:{url:'/#today'}

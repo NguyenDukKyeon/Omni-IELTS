@@ -149,6 +149,7 @@ function lessonProjection(lesson,manifest,entry,installedAt){
     lexicalTargets:clone(lesson.lexicalTargets||[]),
     activities:clone(lesson.activities||[]),
     assetIds:clone(lesson.assetIds||[]),
+    assetDescriptors:manifest.assets.filter(asset=>(lesson.assetIds||[]).includes(asset.id)).map(clone),
     accessibility:clone(lesson.accessibility),
     compatibility:clone(lesson.compatibility),
     rights:clone(lesson.rights),
@@ -211,9 +212,12 @@ export function createV10PackRepository(){
         const existingRows=await requestResult(installedStore.index('packId').getAll(manifest.id));
         const existing=existingRows[0]||null;
         if(existing&&Number(existing.activeRevision)===Number(manifest.contentRevision)&&existing.manifestAddress===entry.contentAddress){
+          const reactivated={...existing,state:'installed',activatedAt,updatedAt:Date.parse(activatedAt)};
+          installedStore.put(clone(reactivated));
+          for(const lesson of manifest.lessons)stores[V10_STORES.contentManifests].put(lessonProjection(lesson,manifest,entry,activatedAt));
           const completed={...journal,stage:'activated',activatedAt,updatedAt:Date.parse(activatedAt)};
           stores[V10_STORES.packInstallJournals].put(completed);
-          return{installed:existing,receipt:null,duplicate:true};
+          return{installed:reactivated,receipt:null,duplicate:true};
         }
         const history=[
           ...(existing?.revisionHistory||[]),
@@ -222,6 +226,7 @@ export function createV10PackRepository(){
             manifestAddress:existing.manifestAddress,
             assetAddresses:existing.assetAddresses||[],
             lessonIds:existing.lessonIds||[],
+            manifestSnapshot:clone(existing.manifestSnapshot||null),
             deactivatedAt:activatedAt
           }]:[])
         ].filter((row,index,rows)=>rows.findIndex(candidate=>Number(candidate.revision)===Number(row.revision)&&candidate.manifestAddress===row.manifestAddress)===index);
@@ -234,6 +239,7 @@ export function createV10PackRepository(){
           state:'installed',
           lessonIds:manifest.lessons.map(lesson=>lesson.id),
           assetAddresses:manifest.assets.map(asset=>asset.contentAddress),
+          manifestSnapshot:clone(manifest),
           revisionHistory:history,
           installedAt:existing?.installedAt||activatedAt,
           activatedAt,

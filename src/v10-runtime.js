@@ -7,14 +7,14 @@ import { mountSentenceLearningLoop } from './sentence-learning-loop.js';
 import { mountTranscriptResolverV2 } from './transcript-resolver-v2.js';
 import { mountVideoWorkspaceV2 } from './video-workspace-v2.js';
 import { mountContentPlatform,refreshContentCatalog,evictContentCache } from './content-platform.js';
+import { mountContentExperience } from './content-experience.js';
 import { mountIeltsHubV2 } from './ielts-hub-v2.js';
 import { mountIeltsLauncherOverride } from './ielts-launcher-override.js';
 import { mountPrimaryIAV10 } from './primary-ia-v10.js';
-import { mountAiContentFactory } from './ai-content-factory.js';
 import { mountCoachingEngineV2 } from './coaching-engine-v2.js';
 import { mountV10Audit,runV10CrossAudit } from './v10-audit.js';
 
-function ensureStyles(){if(document.querySelector('link[href="/v10.css"]'))return;const link=document.createElement('link');link.rel='stylesheet';link.href='/v10.css';document.head.append(link);}
+function ensureStyles(){for(const href of ['/v10.css','/phase4-content.css']){if(document.querySelector(`link[href="${href}"]`))continue;const link=document.createElement('link');link.rel='stylesheet';link.href=href;document.head.append(link);}}
 function emitStatus(status,detail={}){globalThis.dispatchEvent(new CustomEvent('vocab:v10-status',{detail:{status,...detail}}));}
 async function guarded(name,task,diagnostics){try{const result=await task();diagnostics.push({name,status:'ready'});return result;}catch(error){diagnostics.push({name,status:'failed',error:error.message});console.error(`[v10:${name}]`,error);emitStatus('module-failed',{module:name,error:error.message});return null;}}
 
@@ -27,13 +27,13 @@ export async function mountV10Runtime(){
   mountTranscriptResolverV2();diagnostics.push({name:'transcript-resolver',status:'ready'});
   mountVideoWorkspaceV2();diagnostics.push({name:'full-video-workspace',status:'ready'});
   mountContentPlatform();diagnostics.push({name:'content-platform',status:'ready'});
+  mountContentExperience();diagnostics.push({name:'content-experience',status:'ready'});
   await guarded('unified-capture',()=>mountUnifiedCaptureV2(),diagnostics);
   await guarded('library-v2',()=>mountLibraryV2(),diagnostics);
   await guarded('today-v2',()=>mountTodayPlannerV2(),diagnostics);
   mountIeltsHubV2();diagnostics.push({name:'ielts-hub',status:'ready'});
   mountIeltsLauncherOverride();diagnostics.push({name:'ielts-launcher-override',status:'ready'});
   mountPrimaryIAV10();diagnostics.push({name:'primary-information-architecture',status:'ready'});
-  mountAiContentFactory();diagnostics.push({name:'ai-factory',status:'ready'});
   await guarded('coaching',()=>mountCoachingEngineV2(),diagnostics);
   mountV10Audit();diagnostics.push({name:'audit',status:'ready'});
   void guarded('content-catalog',()=>refreshContentCatalog(),diagnostics).then(()=>globalThis.VocabMasterIeltsHub?.refresh?.());
