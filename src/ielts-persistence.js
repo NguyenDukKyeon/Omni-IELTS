@@ -15,8 +15,9 @@ import {
   validateReadingPassage,
   validateTranscriptSegments
 } from './ielts-domain.js';
-import { databaseBlocked,durableStorageUnavailable,normalizeDatabaseOpenError } from './storage-safety.js';
+import { durableStorageUnavailable } from './storage-safety.js';
 import { assertActiveRestoreToken,withDurableWriteLock } from './storage-lock.js';
+import { MIGRATION_LEDGER_PREFIX,defineMigration,openForwardCompatibleDatabase } from './migration-ledger.js';
 
 export const IELTS_DB_NAME='vocab-master-ielts';
 export const IELTS_DB_VERSION=1;
@@ -28,6 +29,14 @@ let databasePromise=null;
 let writeQueue=Promise.resolve();
 let channel=null;
 const memory=new Map(STORE_LIST.map(name=>[name,new Map()]));
+const IELTS_MIGRATIONS=Object.freeze([
+  defineMigration({
+    id:'p1-00-ielts-opener-v1',
+    digest:'ielts-v1-stores-and-indexes:2026-07-30',
+    targetVersion:IELTS_DB_VERSION,
+    description:'Adopt the Phase 0 IELTS v1 layout under the forward-compatible opener and durable migration ledger.'
+  })
+]);
 
 function clone(value){return value==null?value:structuredClone(value);}
 function nowRevision(){return Date.now()*1000+Math.floor(Math.random()*1000);}
@@ -55,21 +64,21 @@ function createIndexes(storeName,store){
 export function openIeltsDatabase(){
   if(databasePromise)return databasePromise;
   if(indexedDbUnavailable())return Promise.reject(durableStorageUnavailable(IELTS_DB_NAME));
-  databasePromise=new Promise((resolve,reject)=>{
-    let blocked=false;
-    const request=indexedDB.open(IELTS_DB_NAME,IELTS_DB_VERSION);
-    request.onupgradeneeded=()=>{
-      const database=request.result;
+  databasePromise=openForwardCompatibleDatabase({
+    name:IELTS_DB_NAME,
+    version:IELTS_DB_VERSION,
+    requiredStores:STORE_LIST,
+    ledgerStore:IELTS_STORE_NAMES.settings,
+    migrations:IELTS_MIGRATIONS,
+    onVersionChange:()=>{databasePromise=null;},
+    upgrade:({database})=>{
       for(const storeName of STORE_LIST){
         if(database.objectStoreNames.contains(storeName))continue;
         const store=database.createObjectStore(storeName,{keyPath:storeName===IELTS_STORE_NAMES.settings?'key':'id'});
         createIndexes(storeName,store);
       }
-    };
-    request.onsuccess=()=>{const database=request.result;if(blocked){database.close();return;}database.onversionchange=()=>{database.close();databasePromise=null;};resolve(database);};
-    request.onerror=()=>{const error=normalizeDatabaseOpenError(request.error,{database:IELTS_DB_NAME,supportedVersion:IELTS_DB_VERSION});databasePromise=null;reject(error);};
-    request.onblocked=()=>{blocked=true;databasePromise=null;reject(databaseBlocked(IELTS_DB_NAME));};
-  });
+    }
+  }).catch(error=>{databasePromise=null;throw error;});
   return databasePromise;
 }
 
@@ -244,7 +253,23 @@ export async function downloadIeltsBackup(){
 }
 
 export async function clearIeltsData(){
-  await enqueueWrite(async()=>{const database=await openIeltsDatabase();if(!database){for(const map of memory.values())map.clear();return;}const transaction=database.transaction(STORE_LIST,'readwrite');for(const store of STORE_LIST)transaction.objectStore(store).clear();await transactionDone(transaction);});broadcast('ielts-data-cleared',STORE_LIST);
+  await enqueueWrite(async()=>{
+    const database=await openIeltsDatabase();
+    if(!database){
+      for(const[name,map]of memory){
+        if(name!==IELTS_STORE_NAMES.settings){map.clear();continue;}
+        for(const key of [...map.keys()])if(!String(key).startsWith(MIGRATION_LEDGER_PREFIX))map.delete(key);
+      }
+      return;
+    }
+    const transaction=database.transaction(STORE_LIST,'readwrite');
+    const settings=transaction.objectStore(IELTS_STORE_NAMES.settings);
+    const migrationRows=(await requestResult(settings.getAll())).filter(row=>String(row?.key||'').startsWith(MIGRATION_LEDGER_PREFIX));
+    for(const store of STORE_LIST)transaction.objectStore(store).clear();
+    for(const row of migrationRows)settings.put(row);
+    await transactionDone(transaction);
+  });
+  broadcast('ielts-data-cleared',STORE_LIST);
 }
 
 export const __testing=Object.freeze({requestResult,transactionDone,getAll,getOne,putOne,deleteOne,memory,normalizeTranscriptionJob});

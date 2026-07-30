@@ -34,6 +34,7 @@ import {
   buildFullBackupEnvelope,
   validateFullBackupEnvelope
 } from './backup-registry.js';
+import { MIGRATION_LEDGER_PREFIX } from './migration-ledger.js';
 import { withExclusiveStorageLock } from './storage-lock.js';
 
 export const COMBINED_BACKUP_VERSION=FULL_BACKUP_VERSION;
@@ -109,10 +110,27 @@ function coreStoresFromLegacy(currentStores,legacy){
   ],reviewEvents:structuredClone(legacy.reviewEvents||[])};
 }
 
+function preserveLedgerRows(currentRows=[],targetRows=[]){
+  const output=structuredClone(targetRows);
+  const keys=new Set(output.map(row=>String(row?.key||'')));
+  for(const row of currentRows){
+    const key=String(row?.key||'');
+    if(!key.startsWith(MIGRATION_LEDGER_PREFIX)||keys.has(key))continue;
+    output.push(structuredClone(row));
+    keys.add(key);
+  }
+  return output;
+}
+
 function targetFromCurrent(current,{core=null,ielts=null}={}){
+  const ieltsStores=ielts?.stores?structuredClone(ielts.stores):structuredClone(current.domains.ielts.stores);
+  ieltsStores[IELTS_STORE_NAMES.settings]=preserveLedgerRows(
+    current.domains.ielts.stores[IELTS_STORE_NAMES.settings],
+    ieltsStores[IELTS_STORE_NAMES.settings]
+  );
   return buildFullBackupEnvelope({
     core:core?coreStoresFromLegacy(current.domains.core.stores,core):current.domains.core.stores,
-    ielts:ielts?.stores||current.domains.ielts.stores,
+    ielts:ieltsStores,
     v10:current.domains.v10.stores
   });
 }

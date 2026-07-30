@@ -1,13 +1,22 @@
 import { V10_DB_NAME,V10_DB_VERSION,V10_STORES } from './v10-contracts.js';
 import { sha256Hex } from './backup-registry.js';
-import { databaseBlocked,durableStorageUnavailable,normalizeDatabaseOpenError } from './storage-safety.js';
+import { durableStorageUnavailable } from './storage-safety.js';
 import { assertActiveRestoreToken,withDurableWriteLock } from './storage-lock.js';
+import { MIGRATION_LEDGER_PREFIX,defineMigration,openForwardCompatibleDatabase } from './migration-ledger.js';
 
 const STORE_LIST=Object.freeze(Object.values(V10_STORES));
 let databasePromise=null;
 let writeQueue=Promise.resolve();
 let channel=null;
 const memory=new Map(STORE_LIST.map(name=>[name,new Map()]));
+const V10_MIGRATIONS=Object.freeze([
+  defineMigration({
+    id:'p1-00-v10-opener-v1',
+    digest:'v10-v1-stores-and-indexes:2026-07-30',
+    targetVersion:V10_DB_VERSION,
+    description:'Adopt the Phase 0 V10 v1 layout under the forward-compatible opener and durable migration ledger.'
+  })
+]);
 
 const clone=value=>value==null?value:structuredClone(value);
 const indexedDbUnavailable=()=>typeof indexedDB==='undefined';
@@ -36,21 +45,21 @@ function createIndexes(name,store){
 export function openV10Database(){
   if(databasePromise)return databasePromise;
   if(indexedDbUnavailable())return Promise.reject(durableStorageUnavailable(V10_DB_NAME));
-  databasePromise=new Promise((resolve,reject)=>{
-    let blocked=false;
-    const request=indexedDB.open(V10_DB_NAME,V10_DB_VERSION);
-    request.onupgradeneeded=()=>{
-      const database=request.result;
+  databasePromise=openForwardCompatibleDatabase({
+    name:V10_DB_NAME,
+    version:V10_DB_VERSION,
+    requiredStores:STORE_LIST,
+    ledgerStore:V10_STORES.meta,
+    migrations:V10_MIGRATIONS,
+    onVersionChange:()=>{databasePromise=null;},
+    upgrade:({database})=>{
       for(const name of STORE_LIST){
         if(database.objectStoreNames.contains(name))continue;
         const store=database.createObjectStore(name,{keyPath:name===V10_STORES.meta?'key':'id'});
         createIndexes(name,store);
       }
-    };
-    request.onsuccess=()=>{const database=request.result;if(blocked){database.close();return;}database.onversionchange=()=>{database.close();databasePromise=null;};resolve(database);};
-    request.onerror=()=>{const error=normalizeDatabaseOpenError(request.error,{database:V10_DB_NAME,supportedVersion:V10_DB_VERSION});databasePromise=null;reject(error);};
-    request.onblocked=()=>{blocked=true;databasePromise=null;reject(databaseBlocked(V10_DB_NAME));};
-  });
+    }
+  }).catch(error=>{databasePromise=null;throw error;});
   return databasePromise;
 }
 
@@ -101,7 +110,14 @@ export async function deleteV10Record(storeName,key,reason='v10-record-deleted')
 }
 
 export async function clearV10Store(storeName,reason='v10-store-cleared'){
-  const name=assertStore(storeName);return enqueue(async()=>{await withStore(name,'readwrite',async(store,map)=>{if(map)map.clear();else store.clear();});broadcast(reason,[name]);return true;});
+  const name=assertStore(storeName);return enqueue(async()=>{await withStore(name,'readwrite',async(store,map)=>{
+    if(name!==V10_STORES.meta){if(map)map.clear();else store.clear();return;}
+    const migrationRows=map
+      ?[...map.values()].filter(row=>String(row?.key||'').startsWith(MIGRATION_LEDGER_PREFIX))
+      :(await requestResult(store.getAll())).filter(row=>String(row?.key||'').startsWith(MIGRATION_LEDGER_PREFIX));
+    if(map)map.clear();else store.clear();
+    for(const row of migrationRows){if(map)map.set(row.key,clone(row));else store.put(clone(row));}
+  });broadcast(reason,[name]);return true;});
 }
 
 export async function transactV10(storeNames,callback,reason='v10-transaction'){

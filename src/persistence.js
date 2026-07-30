@@ -11,8 +11,9 @@ import {
   stripEmbeddedReviewHistory,
   validateBackupDocument
 } from './persistence-core.js';
-import { databaseBlocked,durableStorageUnavailable,normalizeDatabaseOpenError } from './storage-safety.js';
+import { durableStorageUnavailable } from './storage-safety.js';
 import { assertActiveRestoreToken,withDurableWriteLock } from './storage-lock.js';
+import { defineMigration,openForwardCompatibleDatabase } from './migration-ledger.js';
 
 export const DB_NAME='vocab-master-personal';
 export const DB_VERSION=4;
@@ -43,6 +44,14 @@ let initialized=false;
 let currentState=null;
 let writeQueue=Promise.resolve();
 let channel=null;
+const CORE_MIGRATIONS=Object.freeze([
+  defineMigration({
+    id:'p1-00-core-opener-v1',
+    digest:'core-v4-stores-and-indexes:2026-07-30',
+    targetVersion:DB_VERSION,
+    description:'Adopt the Phase 0 Core v4 layout under the forward-compatible opener and durable migration ledger.'
+  })
+]);
 
 function getNativeStorage(){
   try{
@@ -202,11 +211,14 @@ export function transactionDone(transaction){
 export function openDatabase(){
   if(databasePromise)return databasePromise;
   if(indexedDbUnavailable())return Promise.reject(durableStorageUnavailable(DB_NAME));
-  databasePromise=new Promise((resolve,reject)=>{
-    let blocked=false;
-    const request=indexedDB.open(DB_NAME,DB_VERSION);
-    request.onupgradeneeded=()=>{
-      const database=request.result;
+  databasePromise=openForwardCompatibleDatabase({
+    name:DB_NAME,
+    version:DB_VERSION,
+    requiredStores:Object.values(STORE_NAMES),
+    ledgerStore:STORE_NAMES.meta,
+    migrations:CORE_MIGRATIONS,
+    onVersionChange:()=>{databasePromise=null;},
+    upgrade:({database})=>{
       if(!database.objectStoreNames.contains(STORE_NAMES.cards)){
         const store=database.createObjectStore(STORE_NAMES.cards,{keyPath:'id'});
         store.createIndex('deck','deck',{unique:false});
@@ -235,16 +247,8 @@ export function openDatabase(){
         store.createIndex('updatedAt','updatedAt',{unique:false});
         store.createIndex('status','status',{unique:false});
       }
-    };
-    request.onsuccess=()=>{
-      const database=request.result;
-      if(blocked){database.close();return;}
-      database.onversionchange=()=>{database.close();databasePromise=null;};
-      resolve(database);
-    };
-    request.onerror=()=>{const error=normalizeDatabaseOpenError(request.error,{database:DB_NAME,supportedVersion:DB_VERSION});databasePromise=null;reject(error);};
-    request.onblocked=()=>{blocked=true;databasePromise=null;reject(databaseBlocked(DB_NAME));};
-  });
+    }
+  }).catch(error=>{databasePromise=null;throw error;});
   return databasePromise;
 }
 

@@ -67,7 +67,7 @@ test('every durable store sentinel reaches canonical vNext payload while caches 
   assert.equal(Object.hasOwn(first.domains.core.stores,core.STORE_NAMES.fileHandles),false);
   for(const store of Object.values(IELTS_STORE_NAMES))assert.ok(first.domains.ielts.stores[store].some(row=>(row.key??row.id)===`ielts-${store}-sentinel`),store);
   assert.equal(Object.hasOwn(first.domains.v10.stores,V10_STORES.coachingStats),false);
-  assert.deepEqual(first.domains.v10.stores.meta.map(row=>row.key),['lexical-migration-v1']);
+  assert.deepEqual(first.domains.v10.stores.meta.map(row=>row.key),['lexical-migration-v1','phase1:migration:p1-00-v10-opener-v1']);
   const provider=first.domains.v10.stores.transcriptCache.find(row=>row.id==='provider-transcript');assert.equal(provider.backupRepresentation,'reconstructable-cache-stub-v1');assert.equal(provider.segmentCount,1);assert.match(provider.segmentsDigest,/^sha256:/);assert.equal(Object.hasOwn(provider,'segments'),false);
   const imported=first.domains.v10.stores.transcriptCache.find(row=>row.id==='imported-transcript');assert.equal(imported.segments[0].text,'Learner imported transcript');
   const cachedImported=first.domains.v10.stores.transcriptCache.find(row=>row.cacheKey===cachedImport.cacheKey);assert.equal(cachedImported.provider,'imported');assert.equal(cachedImported.segments[0].text,'Imported transcript after cache read');

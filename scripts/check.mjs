@@ -24,9 +24,10 @@ const [html,css,experience,settingsCss,app,audio,main,learning,progress,fsrsAdap
   readFile(new URL('./browser-smoke.mjs',import.meta.url),'utf8'),
   readFile(new URL('./browser-smoke-entry.mjs',import.meta.url),'utf8')
 ]);
-const[restoreCoordinator,storageLock,captureInbox,unifiedCapture,todayPlanner,ieltsHub,ieltsLab,primaryIa]=await Promise.all([
+const[restoreCoordinator,storageLock,migrationLedger,captureInbox,unifiedCapture,todayPlanner,ieltsHub,ieltsLab,primaryIa]=await Promise.all([
   readFile(new URL('../src/ielts-backup.js',import.meta.url),'utf8'),
   readFile(new URL('../src/storage-lock.js',import.meta.url),'utf8'),
+  readFile(new URL('../src/migration-ledger.js',import.meta.url),'utf8'),
   readFile(new URL('../src/capture-inbox.js',import.meta.url),'utf8'),
   readFile(new URL('../src/unified-capture-v2.js',import.meta.url),'utf8'),
   readFile(new URL('../src/today-planner-v2.js',import.meta.url),'utf8'),
@@ -122,7 +123,7 @@ assert.equal((app.match(/#settingsForm'\)\.addEventListener\('submit'/g)||[]).le
 assert.doesNotMatch(pwa,/form\.addEventListener\(['"]submit/,'PWA must not attach a second Settings submit handler');
 assert.doesNotMatch(pwa,/injectSettings/,'PWA must not inject Settings DOM');
 
-assert.ok(persistence.includes('indexedDB.open(DB_NAME'),'IndexedDB database is not opened');
+assert.ok(persistence.includes('openForwardCompatibleDatabase')&&migrationLedger.includes('indexedDB.open(databaseName,supportedVersion)'),'IndexedDB database is not opened through the forward-compatible migration ledger');
 assert.ok(persistence.includes("reviewEvents:'reviewEvents'")||persistence.includes("reviewEvents: 'reviewEvents'"),'Append-only review-event store missing');
 assert.ok(persistence.includes('.add(event)')||persistence.includes('.add(operation.event)')||persistence.includes('.add(clone(operation.event))')||persistence.includes('.add(review)'),'Review events must use add(), not overwrite with put()');
 assert.ok(persistence.includes('createAutomaticSnapshot'),'Automatic snapshots missing');
