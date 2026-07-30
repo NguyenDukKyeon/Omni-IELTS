@@ -5,6 +5,7 @@ import {
   DB_NAME,
   STORE_NAMES,
   buildCoreBackupStores,
+  invalidateCoreScheduledMaintenance,
   openDatabase,
   readCoreRestoreJournal,
   reopenCoreDatabase,
@@ -312,7 +313,10 @@ async function recoverInterruptedRestoreLocked(restoreToken,{hooks={}}={}){
 export async function recoverInterruptedRestore(options={}){
   if(typeof indexedDB==='undefined')return{recovered:false,reason:'indexeddb-unavailable-no-journal'};
   const hooks=testingHooks(options);
-  return withExclusiveStorageLock(restoreToken=>recoverInterruptedRestoreLocked(restoreToken,{hooks}));
+  return withExclusiveStorageLock(restoreToken=>{
+    invalidateCoreScheduledMaintenance({restoreToken});
+    return recoverInterruptedRestoreLocked(restoreToken,{hooks});
+  });
 }
 
 async function restorePreparedTargetLocked(target,restoreToken,{warnings=[],hooks={}}={}){
@@ -342,6 +346,7 @@ export async function restoreCombinedBackup(input,options={}){
   const validation=validateCombinedBackup(input);if(!validation.valid)throw invalidBackupError(validation.errors);
   const hooks=testingHooks(options);
   return withExclusiveStorageLock(async restoreToken=>{
+    invalidateCoreScheduledMaintenance({restoreToken});
     await recoverInterruptedRestoreLocked(restoreToken);
     if(validation.format==='vnext')return restorePreparedTargetLocked(validation.value,restoreToken,{warnings:validation.warnings,hooks});
     if(validation.format==='degraded-core-v1'){
@@ -356,7 +361,7 @@ export async function restoreCombinedBackup(input,options={}){
 export async function restoreCoreBackupSafely(input,options={}){
   const validation=validateBackupDocument(input);if(!validation.valid)throw invalidBackupError(validation.errors);
   const hooks=testingHooks(options);
-  return withExclusiveStorageLock(async restoreToken=>{await recoverInterruptedRestoreLocked(restoreToken);const current=await buildCombinedBackup({restoreToken});
+  return withExclusiveStorageLock(async restoreToken=>{invalidateCoreScheduledMaintenance({restoreToken});await recoverInterruptedRestoreLocked(restoreToken);const current=await buildCombinedBackup({restoreToken});
     return restorePreparedTargetLocked(targetFromCurrent(current,{core:validation.value}),restoreToken,{warnings:validation.warnings,hooks});
   });
 }
@@ -364,7 +369,7 @@ export async function restoreCoreBackupSafely(input,options={}){
 export async function restoreIeltsBackupSafely(input,options={}){
   const validation=validateIeltsBackup(input);if(!validation.valid)throw invalidBackupError(validation.errors);
   const hooks=testingHooks(options);
-  return withExclusiveStorageLock(async restoreToken=>{await recoverInterruptedRestoreLocked(restoreToken);const current=await buildCombinedBackup({restoreToken});
+  return withExclusiveStorageLock(async restoreToken=>{invalidateCoreScheduledMaintenance({restoreToken});await recoverInterruptedRestoreLocked(restoreToken);const current=await buildCombinedBackup({restoreToken});
     return restorePreparedTargetLocked(targetFromCurrent(current,{ielts:validation.value}),restoreToken,{warnings:validation.warnings,hooks});
   });
 }

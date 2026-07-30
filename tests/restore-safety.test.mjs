@@ -189,6 +189,19 @@ test('exclusive restore lock serializes a concurrent normal write after verified
   await v10.deleteV10Record(V10_STORES.activities,'after-exclusive-restore','restore-lock-cleanup');
 });
 
+test('exclusive restore invalidates delayed Core maintenance before it can mutate restored state',async()=>{
+  await backup.restoreCombinedBackup(baselineEnvelope);
+  await core.persistCard({id:'stale-maintenance-card',front:'pending',back:'snapshot'},'stale-maintenance-fixture');
+  assert.equal((await currentEnvelope()).domains.core.stores.cards.some(row=>row.id==='stale-maintenance-card'),true);
+  const restored=await backup.restoreCombinedBackup(targetEnvelope,{hooks:{beforeOwner:async owner=>{
+    if(owner==='core')await new Promise(resolve=>setTimeout(resolve,1700));
+  }}});
+  assert.equal(restored.verified,true);
+  await new Promise(resolve=>setTimeout(resolve,25));
+  assert.equal(await currentLogicalDigest(),logicalDigest(targetEnvelope));
+  assert.equal((await currentEnvelope()).domains.core.stores.cards.some(row=>row.id==='stale-maintenance-card'),false);
+});
+
 test('canonical export holds a cross-database lock and cannot race a normal write',async()=>{
   let releaseRead;let readEntered;const entered=new Promise(resolve=>{readEntered=resolve;});const release=new Promise(resolve=>{releaseRead=resolve;});
   const exportPromise=backup.buildCombinedBackup({hooks:{beforeRead:async()=>{readEntered();await release;}}});await entered;

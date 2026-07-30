@@ -38,6 +38,7 @@ const OPERATIONAL_META_KEYS=new Set(CORE_OPERATIONAL_META_KEYS);
 let databasePromise=null;
 let snapshotTimer=null;
 let fileBackupTimer=null;
+let maintenanceGeneration=0;
 let initialized=false;
 let currentState=null;
 let writeQueue=Promise.resolve();
@@ -414,10 +415,30 @@ async function reconcileLegacyCardShapes(){
 }
 
 function scheduleSnapshot(reason='automatic'){
+  maintenanceGeneration+=1;
+  const generation=maintenanceGeneration;
   clearTimeout(snapshotTimer);
-  snapshotTimer=setTimeout(()=>{void createAutomaticSnapshot(reason).catch(error=>console.warn('[snapshot]',error));},1500);snapshotTimer.unref?.();
+  snapshotTimer=setTimeout(()=>{
+    snapshotTimer=null;
+    if(generation!==maintenanceGeneration)return;
+    void createAutomaticSnapshot(reason,{maintenanceGeneration:generation}).catch(error=>console.warn('[snapshot]',error));
+  },1500);snapshotTimer.unref?.();
   clearTimeout(fileBackupTimer);
-  fileBackupTimer=setTimeout(()=>{void writeAutomaticBackupFile();},5000);fileBackupTimer.unref?.();
+  fileBackupTimer=setTimeout(()=>{
+    fileBackupTimer=null;
+    if(generation!==maintenanceGeneration)return;
+    void writeAutomaticBackupFile({maintenanceGeneration:generation});
+  },5000);fileBackupTimer.unref?.();
+}
+
+export function invalidateCoreScheduledMaintenance({restoreToken=null}={}){
+  assertActiveRestoreToken(restoreToken);
+  maintenanceGeneration+=1;
+  clearTimeout(snapshotTimer);
+  clearTimeout(fileBackupTimer);
+  snapshotTimer=null;
+  fileBackupTimer=null;
+  return maintenanceGeneration;
 }
 
 async function queueOutbox(operation){
@@ -738,9 +759,11 @@ export async function listReviewEvents({cardId=null,limit=0}={}){
   events.sort((a,b)=>Number(a.reviewedAt||0)-Number(b.reviewedAt||0));return limit>0?events.slice(-limit):events;
 }
 
-export async function createAutomaticSnapshot(reason='automatic'){
+export async function createAutomaticSnapshot(reason='automatic',{maintenanceGeneration:expectedGeneration=null}={}){
   if(indexedDbUnavailable())return null;
+  if(expectedGeneration!==null&&expectedGeneration!==maintenanceGeneration)return null;
   return enqueueWrite(async()=>{
+    if(expectedGeneration!==null&&expectedGeneration!==maintenanceGeneration)return null;
     const[state,reviewEvents]=await Promise.all([readStateFromDatabase(),listReviewEvents()]);
     const snapshot=compactSnapshot({...state,reviewEvents,reason,createdAt:Date.now(),revision:state.revision});
     const database=await openDatabase();const transaction=database.transaction([STORE_NAMES.snapshots,STORE_NAMES.meta],'readwrite');
@@ -824,8 +847,10 @@ export async function chooseAutomaticBackupFile(){
   await putOne(STORE_NAMES.fileHandles,{key:'automaticBackup',handle,configuredAt:Date.now()});await writeBackupToHandle(handle);return{configured:true,name:handle.name};
 }
 
-export async function writeAutomaticBackupFile(){
+export async function writeAutomaticBackupFile({maintenanceGeneration:expectedGeneration=null}={}){
+  if(expectedGeneration!==null&&expectedGeneration!==maintenanceGeneration)return{written:false,reason:'stale-maintenance'};
   if(indexedDbUnavailable())return{written:false,reason:'indexeddb-unavailable'};const row=await getOne(STORE_NAMES.fileHandles,'automaticBackup');if(!row?.handle)return{written:false,reason:'not-configured'};
+  if(expectedGeneration!==null&&expectedGeneration!==maintenanceGeneration)return{written:false,reason:'stale-maintenance'};
   try{return await writeBackupToHandle(row.handle);}catch(error){return{written:false,reason:error?.message||'write-failed'};}
 }
 
