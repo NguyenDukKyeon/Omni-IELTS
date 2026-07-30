@@ -1,0 +1,18 @@
+import { mkdir,readFile,rename,writeFile } from 'node:fs/promises';
+import { dirname,resolve } from 'node:path';
+import { createResolverJob,resolverError,transitionResolverJob } from '../src/resolver-contracts.js';
+
+const clone=value=>value==null?value:structuredClone(value);
+
+export class ResolverJobRepository {
+  constructor({file=resolve(process.env.RESOLVER_DATA_DIR||'.data','resolver-jobs-v2.json'),now=()=>Date.now()}={}){this.file=file;this.now=now;this.loaded=false;this.rows=new Map();this.events=new Map();this.queue=Promise.resolve();}
+  async load(){if(this.loaded)return;this.loaded=true;try{const parsed=JSON.parse(await readFile(this.file,'utf8'));for(const job of parsed.jobs||[])this.rows.set(job.id,job);for(const event of parsed.events||[])this.events.set(event.id,event);}catch(error){if(error.code!=='ENOENT')throw resolverError('RESTART_RECOVERY','Không thể đọc durable resolver jobs.',{cause:error});}await this.recover();}
+  async persist(){const payload={version:2,jobs:[...this.rows.values()],events:[...this.events.values()]};const temp=`${this.file}.${process.pid}.tmp`;await mkdir(dirname(this.file),{recursive:true});await writeFile(temp,JSON.stringify(payload),{mode:0o600});await rename(temp,this.file);}
+  async serial(task){const run=this.queue.then(async()=>{await this.load();const result=await task();await this.persist();return result;});this.queue=run.catch(()=>{});return run;}
+  async recover(){const now=this.now();for(const job of this.rows.values())if(['resolving','partial'].includes(job.status)){if(Number(job.lease?.until||0)<=now){const next=transitionResolverJob(job,'failed',{now,detail:{error:{code:'RESTART_RECOVERY',message:'Resolver worker đã restart trước khi hoàn tất.',retryable:true}}});this.rows.set(job.id,next.job);this.events.set(`resolver-event:${job.id}:${next.event.id}`,next.event);}}}
+  async getOrCreate(request){return this.serial(async()=>{const draft=createResolverJob({request,updatedAt:this.now()});const existing=[...this.rows.values()].find(job=>job.request.requestKey===draft.request.requestKey&&!['failed','cancelled'].includes(job.status));if(existing)return{job:clone(existing),created:false};this.rows.set(draft.id,draft);const event={id:`resolver-event:${draft.id}:0`,jobId:draft.id,sequence:0,type:'queued',at:this.now(),data:{status:'queued'}};this.events.set(event.id,event);return{job:clone(draft),created:true};});}
+  async transition(jobId,next,detail={}){return this.serial(async()=>{const current=this.rows.get(jobId);if(!current)throw resolverError('UNKNOWN','Không tìm thấy resolver job.');const result=transitionResolverJob(current,next,{now:this.now(),detail});this.rows.set(jobId,result.job);this.events.set(`resolver-event:${jobId}:${result.event.id}`,result.event);return clone(result);});}
+  async get(jobId){await this.load();return clone(this.rows.get(jobId)||null);}
+  async eventsAfter(jobId,after=0){await this.load();return[...this.events.values()].filter(event=>event.jobId===jobId&&event.sequence>Number(after||0)).sort((a,b)=>a.sequence-b.sequence).map(clone);}
+  async cancel(jobId){const job=await this.get(jobId);if(!job)throw resolverError('UNKNOWN','Không tìm thấy resolver job.');if(['complete','failed','cancelled'].includes(job.status))return job;return (await this.transition(jobId,'cancelled',{cancelRequested:true})).job;}
+}
