@@ -2,6 +2,12 @@ import { DB_NAME,DB_VERSION,STORE_NAMES } from './persistence.js';
 import { IELTS_DB_NAME,IELTS_DB_VERSION } from './ielts-persistence.js';
 import { IELTS_STORE_NAMES } from './ielts-domain.js';
 import { V10_DB_NAME,V10_DB_VERSION,V10_STORES } from './v10-contracts.js';
+import {
+  CONTENT_SCHEMA_VERSION,
+  validateInstalledPack,
+  validatePackActivationReceipt
+} from './content-contracts-v2.js';
+import { indexEffectiveRevocations } from './content-revocation-contract.js';
 
 export const FULL_BACKUP_KIND='vocab-master-full';
 export const FULL_BACKUP_VERSION=3;
@@ -240,6 +246,154 @@ function validateManifest(input,domains,errors){
   if(JSON.stringify(canonicalValue(input.manifest.external||[]))!==JSON.stringify(canonicalValue(BACKUP_EXTERNAL_REGISTRY)))errors.push('Backup external storage manifest khong khop registry.');
 }
 
+function compareVersions(left='0',right='0'){
+  const a=String(left).split('.').map(Number),b=String(right).split('.').map(Number);
+  for(let index=0;index<Math.max(a.length,b.length);index++){
+    const difference=(a[index]||0)-(b[index]||0);
+    if(difference)return difference;
+  }
+  return 0;
+}
+
+export function reconcilePhase4RestoreStores(inputStores,{appVersion='10.0.0'}={}){
+  const stores=structuredClone(inputStores||{});
+  const warnings=[];
+  const installedRows=stores[V10_STORES.installedPacks]||[];
+  const lessonRows=stores[V10_STORES.contentManifests]||[];
+  const receiptRows=stores[V10_STORES.packActivationReceipts]||[];
+  const progressRows=stores[V10_STORES.contentProgress]||[];
+  const effective=indexEffectiveRevocations({durable:stores[V10_STORES.packRevocations]||[]});
+  const installedByPack=new Map();
+
+  const quarantine=(row,reason,details={})=>{
+    row.state='error';
+    row.restoreState='quarantined';
+    row.quarantine={reason,...details,originalSchemaVersion:row.schemaVersion??null,quarantinedAt:null};
+    warnings.push(`Phase 4 ${row.packId||row.id||'record'} quarantined: ${reason}.`);
+  };
+
+  for(const installed of installedRows){
+    installedByPack.set(installed.packId,installed);
+    if(installed.state==='deleted')continue;
+    if(Number(installed.schemaVersion)!==CONTENT_SCHEMA_VERSION){
+      quarantine(installed,Number(installed.schemaVersion)>CONTENT_SCHEMA_VERSION?'unsupported-installed-pack-schema':'invalid-installed-pack-schema');
+      continue;
+    }
+    if(!validateInstalledPack(installed).valid){
+      quarantine(installed,'invalid-installed-pack-contract');
+      continue;
+    }
+    const manifest=installed.manifestSnapshot;
+    if(
+      !manifest
+      ||Number(manifest.schemaVersion)!==CONTENT_SCHEMA_VERSION
+      ||manifest.id!==installed.packId
+      ||Number(manifest.contentRevision)!==Number(installed.activeRevision)
+      ||!Array.isArray(manifest.lessons)
+      ||!Array.isArray(manifest.assets)
+      ||manifest.lessons.some(lesson=>Number(lesson.schemaVersion)!==CONTENT_SCHEMA_VERSION)
+      ||manifest.lessons.some(lesson=>compareVersions(appVersion,lesson.compatibility?.minimumAppVersion)<0)
+      ||compareVersions(appVersion,manifest.compatibility?.minimumAppVersion)<0
+    ){
+      quarantine(installed,'inconsistent-or-unsupported-active-pointer');
+      continue;
+    }
+    const revocation=effective.get(`${installed.packId}:${Number(installed.activeRevision)}`);
+    if(revocation){
+      installed.state='revoked';
+      installed.restoreState='historical-revoked';
+      installed.effectiveRevocation=structuredClone(revocation);
+      warnings.push(`Phase 4 ${installed.packId} revision ${installed.activeRevision} remains revoked after restore.`);
+      continue;
+    }
+    const receipt=receiptRows.find(row=>
+      validatePackActivationReceipt(row).valid
+      &&row.packId===installed.packId
+      &&Number(row.activatedRevision)===Number(installed.activeRevision)
+      &&row.manifestAddress===installed.manifestAddress
+    );
+    if(!receipt){
+      quarantine(installed,'activation-receipt-pointer-mismatch');
+      continue;
+    }
+    installed.state='reinstall-required';
+    installed.reasonCode='restore-assets-unverified';
+    installed.restoreState='awaiting-cache-verification';
+    installed.restoredRequiresAssetVerification=true;
+  }
+
+  const remoteLessonRows=lessonRows.filter(row=>Boolean(row?.packId));
+  const lessonsById=new Map(remoteLessonRows.map(row=>[row.id,row]));
+  for(const lesson of remoteLessonRows){
+    const installed=installedByPack.get(lesson.packId);
+    if(Number(lesson.schemaVersion)!==CONTENT_SCHEMA_VERSION){
+      lesson.installState='quarantined';
+      lesson.verified=false;
+      lesson.qualityStatus='unsupported';
+      lesson.restoreState='quarantined';
+      warnings.push(`Phase 4 lesson ${lesson.id||'unknown'} quarantined: unsupported schema.`);
+      continue;
+    }
+    if(!installed||Number(lesson.packRevision)!==Number(installed.activeRevision)){
+      lesson.installState='uninstalled';
+      lesson.verified=false;
+      lesson.restoreState='inactive-revision';
+      continue;
+    }
+    if(installed.state==='revoked'){
+      lesson.installState='revoked';
+      lesson.verified=false;
+      lesson.qualityStatus='validated';
+      lesson.restoreState='historical-revoked';
+    }else if(installed.state==='reinstall-required'){
+      lesson.installState='reinstall-required';
+      lesson.verified=false;
+      lesson.qualityStatus='validated';
+      lesson.restoreState='awaiting-cache-verification';
+    }else if(installed.state==='error'){
+      lesson.installState='quarantined';
+      lesson.verified=false;
+      lesson.qualityStatus='unsupported';
+      lesson.restoreState='quarantined';
+    }
+  }
+
+  for(const progress of progressRows){
+    const lesson=lessonsById.get(progress.lessonId);
+    const activityIds=new Set((lesson?.activities||[]).map(activity=>activity.id));
+    const progressActivityIds=Object.keys(progress.activityProgress||{});
+    const validContract=Number(progress.schemaVersion)===CONTENT_SCHEMA_VERSION
+      &&progress.id===progress.lessonId
+      &&progress.activityProgress&&typeof progress.activityProgress==='object'&&!Array.isArray(progress.activityProgress)
+      &&Array.isArray(progress.completedActivityIds)
+      &&['not-started','in-progress','completed'].includes(progress.status)
+      &&Number.isFinite(Number(progress.updatedAt));
+    if(!validContract){
+      progress.referenceState='quarantined';
+      progress.quarantineReason=Number(progress.schemaVersion)>CONTENT_SCHEMA_VERSION
+        ?'unsupported-progress-schema'
+        :'invalid-progress-contract';
+      warnings.push(`Phase 4 progress ${progress.id||progress.lessonId||'unknown'} retained in quarantine.`);
+    }else if(!lesson){
+      progress.referenceState='orphaned';
+      progress.quarantineReason='missing-lesson-reference';
+      warnings.push(`Phase 4 progress ${progress.id||progress.lessonId||'unknown'} retained with an unresolved lesson reference.`);
+    }else if(lesson.restoreState==='quarantined'){
+      progress.referenceState='quarantined';
+      progress.quarantineReason='unsupported-lesson-reference';
+    }else if(
+      Number(progress.lessonRevision)!==Number(lesson.contentRevision)
+      ||progressActivityIds.some(activityId=>!activityIds.has(activityId))
+      ||progress.completedActivityIds.some(activityId=>!activityIds.has(activityId))
+    ){
+      progress.referenceState='quarantined';
+      progress.quarantineReason='inconsistent-progress-target';
+    }else progress.referenceState='retained';
+  }
+
+  return{stores,warnings};
+}
+
 export function validateFullBackupEnvelope(input){
   const errors=[];const warnings=[];
   if(!input||typeof input!=='object'||Array.isArray(input))return{valid:false,errors:['Backup vNext phai la object.'],warnings,value:null};
@@ -271,7 +425,12 @@ export function validateFullBackupEnvelope(input){
   if((v10Stores[V10_STORES.meta]||[]).some(row=>['schema','content-catalog'].includes(String(row?.key||''))))errors.push('v10.meta con chua reconstructable metadata.');
   validateManifest(input,domains,errors);
   const digest=canonicalBackupDigest(domains);if(String(input.payloadDigest||'')!==digest)errors.push('Backup payload SHA-256 digest khong khop noi dung canonical.');
-  let value=null;if(!errors.length)try{value=buildFullBackupEnvelope({core:domains.core.stores,ielts:domains.ielts.stores,v10:domains.v10.stores,exportedAt:input.exportedAt});}catch(error){errors.push(error.message);}
+  let value=null;
+  if(!errors.length)try{
+    const phase4=reconcilePhase4RestoreStores(domains.v10.stores);
+    warnings.push(...phase4.warnings);
+    value=buildFullBackupEnvelope({core:domains.core.stores,ielts:domains.ielts.stores,v10:phase4.stores,exportedAt:input.exportedAt});
+  }catch(error){errors.push(error.message);}
   return{valid:errors.length===0,errors,warnings,value};
 }
 
