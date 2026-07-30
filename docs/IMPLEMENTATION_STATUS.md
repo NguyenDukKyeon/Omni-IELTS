@@ -1,13 +1,13 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, remediation source independently accepted; PR #8 CI confirmation pending
+Last audited: 2026-07-30, PR #8 remediation recheck exposed a Today render race
 
 Audited source commit: 67c5a275a450a8b88d2daf54e299538358bf8f00
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
 Active implementation branch: codex/implementation-roadmap (PR #8 integration head)
-Scope of this update: Phase 0 was independently accepted on Windows, but PR #8 CI run 248 exposed a host-dependent Windows browser-path construction defect in P0-00. The remediated exact source commit has passed the hard gate and independent review; Phase 0 remains release-blocked until the PR #8 Ubuntu CI run confirms the pushed integration head. Phase 1 has not started.
+Scope of this update: Phase 0 was independently accepted on Windows, but PR #8 CI run 248 exposed a host-dependent Windows browser-path construction defect in P0-00. That fix passed the hard gate and independent review. A required pre-push gate on the documentation head then exposed a concurrent Today render/status race in P0-07; Phase 0 is reopened until that product-path race is fixed and the cumulative exact source commit is reaccepted. Phase 1 has not started.
 
 ## 1. Provenance status
 
@@ -227,6 +227,10 @@ Accepted remediation source commit: `67c5a275a450a8b88d2daf54e299538358bf8f00`.
 | Migration/rollback | No product data, schema, migration, cleanup or rollback behavior changed; rollback is the single browser-path source commit and does not touch durable stores |
 | Remaining release check | Push the documentation head to PR #8 and require GitHub Ubuntu CI to pass before restoring Phase 0 release authorization |
 
+#### Pre-push hardening failure baseline
+
+Exact documentation head `a07be19bbeb4be8be1f5211b4074c037ff895c91` passed gates 1–20, then `npm run phase0:gate` stopped at gate 21 with a `PRODUCT_FAILURE`: the stale Today target status reached `data-kind="error"` but its text was replaced with an empty string before the assertion could read `TODAY_TARGET_STALE`. The gate was not retried. Source inspection shows that `vocab:external-change` starts an unawaited asynchronous `renderPlan()` while the old activity remains clickable; a launch can correctly set the stale-target error on one status node and the concurrent render can then replace that node. The fix must serialize Today renders and make the controlled browser fixture await the completed refresh before launch without weakening the stale-target, no-session or zero-review assertions.
+
 | Evidence | Actual result |
 |---|---|
 | `npm run phase0:gate` clean run 1 | PASS 21/21 in 79.3 s |
@@ -263,8 +267,8 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 
 | Phase | Status | Entry gate | Exit state |
 |---|---|---|---|
-| Phase 0 — Containment and Release Safety | REACCEPTED_LOCALLY / CI_PENDING | Baseline audit complete | Exact source accepted; PR #8 Ubuntu CI confirmation required |
-| Phase 1 — Core Product Unification | NOT_STARTED / BLOCKED_BY_PHASE_0_CI | P0-08 ACCEPTED | Not started |
+| Phase 0 — Containment and Release Safety | REOPENED / PRODUCT_GATE_RED | Baseline audit complete | P0-07 render race fix and cumulative P0-08 reacceptance required |
+| Phase 1 — Core Product Unification | NOT_STARTED / BLOCKED_BY_PHASE_0 | P0-08 ACCEPTED | Not started |
 | Phase 2 — Caption-first Resolver | BLOCKED_BY_PHASE_1 | P1-08 ACCEPTED | Not started |
 | Phase 3 — Full-video Workspace | BLOCKED_BY_PHASE_2 | P2-06 ACCEPTED | Not started |
 | Phase 4 — Remote Content Platform | BLOCKED_BY_PHASE_1 | P1 contracts accepted; production activation also needs platform packages | Not started |
@@ -399,18 +403,19 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [x] Quick Capture survives submit failure/reload and only one Inbox is visible.
 - [x] Only one Today is visible and every launch preserves exact card/sense/skill/source revision.
 - [x] Browser discovery is host-independent and deterministic; cleanup remains verified and critical assertions cannot skip.
-- [x] Full phase0:gate passes three consecutive clean runs at one remediated exact commit.
-- [x] Independent reviewer records P0-08 reacceptance at the remediated exact commit.
+- [ ] Concurrent Today refresh cannot erase or race a stale-target launch result.
+- [ ] Full phase0:gate passes three consecutive clean runs at one cumulative remediated exact source commit.
+- [ ] Independent reviewer records P0-08 reacceptance at the cumulative remediated exact source commit.
 - [ ] PR #8 GitHub Actions passes on the pushed integration head under Ubuntu.
 
 Phase 1 authorization condition:
 
-The Phase 1 entry condition remains closed until PR #8 GitHub Actions confirms the remediation on Ubuntu. No Phase 1 branch, source change or migration has started.
+The Phase 1 entry condition remains closed until the Today race is fixed, the cumulative source is independently reaccepted and PR #8 GitHub Actions confirms the remediation on Ubuntu. No Phase 1 branch, source change or migration has started.
 
 ## 7. Next package
 
-Current package: P0-08 PR #8 Ubuntu CI confirmation.
+Current package: P0-07 Today render-race remediation, followed by P0-08 cumulative reacceptance and PR #8 Ubuntu CI confirmation.
 
 Integration branch: `codex/implementation-roadmap` (head of PR #8).
 
-The remediated P0-00 source and cumulative P0-08 gate are independently accepted at exact commit `67c5a27`; release authorization remains blocked only on the pushed PR #8 Ubuntu CI result. P1-00 remains blocked and has not started.
+The P0-00 portability remediation remains independently accepted at exact commit `67c5a27`, but cumulative release authorization is reopened by the later hardening product-path failure. P1-00 remains blocked and has not started.
