@@ -1,13 +1,13 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, PR #8 CI portability remediation in progress
+Last audited: 2026-07-30, remediation source independently accepted; PR #8 CI confirmation pending
 
-Audited source commit: b2ed6c09acd97747c46556395e47ab68b9e2021b
+Audited source commit: 67c5a275a450a8b88d2daf54e299538358bf8f00
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
 Active implementation branch: codex/implementation-roadmap (PR #8 integration head)
-Scope of this update: Phase 0 was independently accepted on Windows, but PR #8 CI run 248 exposed a host-dependent Windows browser-path construction defect in P0-00. P0-00/P0-08 are reopened until the portability fix passes the exact-commit hard gate and independent review. Phase 1 has not started.
+Scope of this update: Phase 0 was independently accepted on Windows, but PR #8 CI run 248 exposed a host-dependent Windows browser-path construction defect in P0-00. The remediated exact source commit has passed the hard gate and independent review; Phase 0 remains release-blocked until the PR #8 Ubuntu CI run confirms the pushed integration head. Phase 1 has not started.
 
 ## 1. Provenance status
 
@@ -207,6 +207,26 @@ GitHub Actions run `30512230123` (CI run 248, PR #8 merge commit `b0e679a0ba3d9f
 
 The uploaded `verification-output` artifact is ID `8747540809`, digest `sha256:28f72481586547e7776f7ead0114ee7c4b105203a30f59e561727058a2ee4466`. This is an infrastructure/harness defect, not a product or Retell failure. No assertion, skip, retry or fallback has been changed. The prior Windows acceptance evidence below remains historical but no longer authorizes Phase 1 until the remediated exact source commit is reaccepted.
 
+#### Remediation source evidence
+
+Accepted remediation source commit: `67c5a275a450a8b88d2daf54e299538358bf8f00`.
+
+| Evidence | Actual result |
+|---|---|
+| Source fix | Windows install candidates use `node:path` `win32.join`; native `join` remains in use for host-local temporary profiles |
+| `npm run test:browser-harness` | PASS 12/12; both Ubuntu failures pass without changing their assertions |
+| `npm test` before source commit | PASS 191/191; 0 failed/skipped/todo |
+| `npm run phase0:gate` clean run 1 | PASS 21/21 in 68.2 s |
+| `npm run phase0:gate` clean run 2 | PASS 21/21 in 61.0 s |
+| `npm run phase0:gate` clean run 3 | PASS 21/21 in 58.3 s |
+| Matrix per gate | Restore/rollback 28/28, full suite 191/191, browser harness 12/12, static/audits/build/server/preview and Core/IELTS/V10/Hardening browser suites PASS; 0 failed/skipped/todo |
+| Environment | Windows `10.0.26200` x64; Node `v24.15.0`; Chrome `150.0.7871.188` |
+| Canonical artifact | 26 files, 740795 bytes, SHA-256 `7ff334972eb6114118e83e28f74bf47efe4b90b3c28fbf70a1ddc8912740d236` on all three runs |
+| Independent review | ACCEPTED exact source commit; focused 12/12 and full gate 21/21 in 60.1 s with the same artifact digest, explicit Windows/Linux absolute-path probes, clean diff/worktree/cleanup and no P0/P1 |
+| Stable remediation patch ID | `00d5670cb4a7a9fe45492d8de99bdd9c45bc6d19` from PR #8 pre-remediation head `af663f3` |
+| Migration/rollback | No product data, schema, migration, cleanup or rollback behavior changed; rollback is the single browser-path source commit and does not touch durable stores |
+| Remaining release check | Push the documentation head to PR #8 and require GitHub Ubuntu CI to pass before restoring Phase 0 release authorization |
+
 | Evidence | Actual result |
 |---|---|
 | `npm run phase0:gate` clean run 1 | PASS 21/21 in 79.3 s |
@@ -243,8 +263,8 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 
 | Phase | Status | Entry gate | Exit state |
 |---|---|---|---|
-| Phase 0 — Containment and Release Safety | REOPENED / CI RED | Baseline audit complete | P0-00 portability remediation and P0-08 reacceptance required |
-| Phase 1 — Core Product Unification | NOT_STARTED / BLOCKED_BY_PHASE_0 | P0-08 ACCEPTED | Not started |
+| Phase 0 — Containment and Release Safety | REACCEPTED_LOCALLY / CI_PENDING | Baseline audit complete | Exact source accepted; PR #8 Ubuntu CI confirmation required |
+| Phase 1 — Core Product Unification | NOT_STARTED / BLOCKED_BY_PHASE_0_CI | P0-08 ACCEPTED | Not started |
 | Phase 2 — Caption-first Resolver | BLOCKED_BY_PHASE_1 | P1-08 ACCEPTED | Not started |
 | Phase 3 — Full-video Workspace | BLOCKED_BY_PHASE_2 | P2-06 ACCEPTED | Not started |
 | Phase 4 — Remote Content Platform | BLOCKED_BY_PHASE_1 | P1 contracts accepted; production activation also needs platform packages | Not started |
@@ -378,18 +398,19 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [x] Durable write failure never silently falls back to RAM success.
 - [x] Quick Capture survives submit failure/reload and only one Inbox is visible.
 - [x] Only one Today is visible and every launch preserves exact card/sense/skill/source revision.
-- [ ] Browser discovery is host-independent and deterministic; cleanup remains verified and critical assertions cannot skip.
-- [ ] Full phase0:gate passes three consecutive clean runs at one remediated exact commit.
-- [ ] Independent reviewer records P0-08 reacceptance at the remediated exact commit.
+- [x] Browser discovery is host-independent and deterministic; cleanup remains verified and critical assertions cannot skip.
+- [x] Full phase0:gate passes three consecutive clean runs at one remediated exact commit.
+- [x] Independent reviewer records P0-08 reacceptance at the remediated exact commit.
+- [ ] PR #8 GitHub Actions passes on the pushed integration head under Ubuntu.
 
 Phase 1 authorization condition:
 
-The Phase 1 entry condition is temporarily closed by the PR #8 CI portability regression. No Phase 1 branch, source change or migration has started.
+The Phase 1 entry condition remains closed until PR #8 GitHub Actions confirms the remediation on Ubuntu. No Phase 1 branch, source change or migration has started.
 
 ## 7. Next package
 
-Current package: P0-00 CI portability remediation, followed by P0-08 exact-commit reacceptance.
+Current package: P0-08 PR #8 Ubuntu CI confirmation.
 
 Integration branch: `codex/implementation-roadmap` (head of PR #8).
 
-Historical P0-00 through P0-08 acceptance remains recorded above, but the release gate is reopened until the remediated source commit passes the required evidence and independent review. P1-00 remains blocked and has not started.
+The remediated P0-00 source and cumulative P0-08 gate are independently accepted at exact commit `67c5a27`; release authorization remains blocked only on the pushed PR #8 Ubuntu CI result. P1-00 remains blocked and has not started.
