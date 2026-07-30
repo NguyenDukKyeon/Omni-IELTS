@@ -1,13 +1,13 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, PR #8 Ubuntu run 249 exposed no-voice refresh reentrancy
+Last audited: 2026-07-30, cumulative no-voice remediation independently reaccepted; Ubuntu CI pending
 
-Audited source commit: 755bb88519161b981da9d9f954565d8201bdb341
+Audited source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
 Active implementation branch: codex/implementation-roadmap (PR #8 integration head)
-Scope of this update: Phase 0 was independently accepted on Windows, but PR #8 CI run 248 exposed a host-dependent Windows browser-path construction defect in P0-00. The cumulative remediation also closed the P0-07 Today render/status race and passed three implementer gates plus an independent reviewer gate. PR #8 Ubuntu run 249 then exposed a product reentrancy defect when a browser reports zero speech voices. Release authorization is reopened until that defect is fixed, the cumulative source is reaccepted and the pushed integration head passes Ubuntu CI. Phase 1 has not started.
+Scope of this update: Phase 0 was independently accepted on Windows, but PR #8 CI runs 248 and 249 exposed a host-dependent Windows browser-path defect and a zero-speech-voice product reentrancy defect. The cumulative remediation also closes the P0-07 Today render/status race. Exact source commit `d869eb4` has passed three implementer gates and an independent reviewer gate with no P0/P1. Release authorization remains closed until the pushed PR #8 integration head passes Ubuntu CI. Phase 1 has not started.
 
 ## 1. Provenance status
 
@@ -260,6 +260,27 @@ The immediate harness observation was `INFRASTRUCTURE_FAILURE / BROWSER_TRANSPOR
 
 Artifacts: `verification-output` ID `8748154770`, digest `sha256:20ceb92c7a1f3bfef64b1372d0a6149be9caf53756a85cf2163207ef5f261abf`; `browser-smoke-output` ID `8748158658`, digest `sha256:5fe18ba373f98fbece858474c1514793c3f6224b47285b38c3316c6017613987`.
 
+#### No-voice remediation reacceptance
+
+Independently accepted source commit pending Ubuntu confirmation: `d869eb444ea917b6e9ba3d1b7349e323d38560d5`.
+
+| Evidence | Actual result |
+|---|---|
+| Source remediation | `refreshingVoices` fences listener reentry and `voiceDiscoveryAttempted` makes an empty list stable for cached `getVoices()`/`chooseVoice()` calls; explicit refresh, `voiceschanged` and speech intent can still discover later voices |
+| Regression | `node --test tests/audio-manager.test.mjs` PASS 6/6; zero-voice listener performs one controlled platform read and cannot recurse |
+| Focused browser | Core browser smoke PASS three consecutive times with the unchanged Settings dialog/persistence assertions and timeout |
+| Focused full suite/static | `npm test` PASS 192/192 with 0 failed/skipped/todo; `npm run check` PASS |
+| `npm run phase0:gate` clean run 1 | PASS 21/21 in 50.4 s |
+| `npm run phase0:gate` clean run 2 | PASS 21/21 in 54.0 s |
+| `npm run phase0:gate` clean run 3 | PASS 21/21 in 51.8 s |
+| Matrix per implementer gate | Restore/rollback 28/28, full suite 192/192, browser harness 12/12, static/audits/build/server/preview and Core/IELTS/V10/Hardening browser suites PASS; 0 failed/skipped/todo |
+| Environment | Windows `10.0.26200` x64; Node `v24.15.0`; Chrome `150.0.7871.188` |
+| Canonical artifact | 26 files, 741702 bytes, SHA-256 `71772f3cd42dce06ca537c30fb0d3cda43298691022a27969c43071a6024db54` on all three runs |
+| Independent reviewer | ACCEPTED exact source commit; audio 6/6, late-refresh/`voiceschanged` probe, Core browser and full gate 21/21 in 55.9 s with the same artifact digest; clean diff/worktree/cleanup and no P0/P1 |
+| Stable cumulative remediation patch ID | `66a72821e3df6f89d449ce428065f522f8ee163f` from PR #8 pre-remediation head `af663f3` |
+| Migration/rollback | No DB/store version or durable-data migration. Rollback reverts only source coordination/discovery changes; durable stores and records remain untouched |
+| Remaining release check | Push the documentation head to PR #8 and require GitHub Ubuntu CI to pass before restoring Phase 0 release authorization |
+
 #### Original Phase 0 acceptance evidence (historical)
 
 | Evidence | Actual result |
@@ -298,7 +319,7 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 
 | Phase | Status | Entry gate | Exit state |
 |---|---|---|---|
-| Phase 0 — Containment and Release Safety | REOPENED / PRODUCT_GATE_RED | Baseline audit complete | No-voice reentrancy fix, cumulative reacceptance and PR #8 Ubuntu CI required |
+| Phase 0 — Containment and Release Safety | LOCALLY_REACCEPTED / CI_PENDING | Baseline audit complete | Cumulative source accepted; PR #8 Ubuntu CI required |
 | Phase 1 — Core Product Unification | NOT_STARTED / BLOCKED_BY_PHASE_0 | P0-08 ACCEPTED | Not started |
 | Phase 2 — Caption-first Resolver | BLOCKED_BY_PHASE_1 | P1-08 ACCEPTED | Not started |
 | Phase 3 — Full-video Workspace | BLOCKED_BY_PHASE_2 | P2-06 ACCEPTED | Not started |
@@ -435,19 +456,19 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [x] Only one Today is visible and every launch preserves exact card/sense/skill/source revision.
 - [x] Browser discovery is host-independent and deterministic; cleanup remains verified and critical assertions cannot skip.
 - [x] Concurrent Today refresh cannot erase or race a stale-target launch result.
-- [ ] Empty speech-voice discovery cannot recursively block Settings or the browser runtime.
-- [ ] Full phase0:gate passes three consecutive clean runs at one cumulative remediated exact source commit.
-- [ ] Independent reviewer records P0-08 reacceptance at the cumulative remediated exact source commit.
+- [x] Empty speech-voice discovery cannot recursively block Settings or the browser runtime.
+- [x] Full phase0:gate passes three consecutive clean runs at one cumulative remediated exact source commit.
+- [x] Independent reviewer records P0-08 reacceptance at the cumulative remediated exact source commit.
 - [ ] PR #8 GitHub Actions passes on the pushed integration head under Ubuntu.
 
 Phase 1 authorization condition:
 
-The Today race remains fixed, but Ubuntu exposed the separate no-voice product defect. The Phase 1 entry condition remains closed until that defect is fixed, the cumulative source is independently reaccepted and PR #8 GitHub Actions confirms the pushed integration head on Ubuntu. No Phase 1 branch, source change or migration has started.
+The Today race and no-voice product defect are fixed, and the cumulative source is independently reaccepted. The Phase 1 entry condition remains closed until PR #8 GitHub Actions confirms the pushed integration head on Ubuntu. No Phase 1 branch, source change or migration has started.
 
 ## 7. Next package
 
-Current package: P0-00 no-voice browser containment, followed by P0-08 cumulative reacceptance and PR #8 Ubuntu CI confirmation.
+Current package: P0-08 PR #8 Ubuntu CI confirmation.
 
 Integration branch: `codex/implementation-roadmap` (head of PR #8).
 
-The prior cumulative P0-00/P0-07 remediation evidence remains recorded at exact source commit `755bb88`, but run 249 invalidates its release authorization. P1-00 remains blocked and has not started.
+The cumulative P0-00/P0-07 remediation is independently accepted at exact source commit `d869eb4`. Phase 0 release authorization and P1-00 remain blocked until the pushed PR #8 integration head passes Ubuntu CI.
