@@ -19,7 +19,7 @@ production-provider claim, Phase 4 publication approval, Phase 6 work or Phase
 | P5-02 | `c831c5e439187880942113afc13d4e9b81dfcee9` | Optional faster-whisper/whisper.cpp adapter, model health and first usable private/unverified batch |
 | P5-03 | `59740ba8827d7dfa055de48dcf64afa67448d084` | Chunk overlap, canonical job checkpoints, deterministic merge, subset resume and cancellation cleanup |
 | P5-04 | `09447ffbeb91fe374f73cd173380439f52baf6b8` | Server-only Gemini opt-in, source/consent/cost gates, private output and legacy route containment |
-| P5-05 | `8de1ba25ad31948e5422acf12b82c73c0328639c` | Desktop/mobile rescue UI, strict import, backup/restore, production browser smoke, verify command and CI gate |
+| P5-05 | `8de1ba2`, `ed15e4f`, `a2be78f`, `65a31aa` | Desktop/mobile rescue UI, strict import, backup/restore, production workspace policy routing, stable production browser oracle, verify command and CI gate |
 
 ## Architecture and policy evidence
 
@@ -71,12 +71,23 @@ deterministic fakes.
 
 | Command | Result |
 |---|---|
-| `npm run test:phase5` | PASS 38/38 |
-| `npm run test:phase5-browser` | PASS; desktop defaults, disclosures, private import, reload durability and mobile no-local capability |
-| `npm run phase5:verify` | PASS 4/4 gates: Phase 5 38/38, backup 5/5, restore 28/28, Phase 5 browser |
+| `npm run test:phase5` | PASS 39/39 |
+| `npm run test:phase5-browser` | PASS; desktop defaults, disclosures, private import, reload durability and mobile no-local capability; remediation stress PASS 20/20 |
+| `npm run phase5:verify` | PASS 4/4 gates: Phase 5 39/39, backup 5/5, restore 28/28, Phase 5 browser |
 | `npm run test:phase4` | PASS 54/54 after deterministic LF checkout policy |
 | `npm run check` | PASS |
-| `npm run build` | PASS |
+| `npm run build` | PASS; production bundle built |
+| `npm run test:backup` | PASS 5/5 |
+| `npm run test:restore` | PASS 28/28 |
+| `npm run test:v10-browser` | PASS; production Chrome, durable resolver/workspace reload and zero serious runtime errors |
+| `npm test` | PASS 330/330; 0 skipped/todo |
+
+The first draft-PR Ubuntu run exposed a real timing boundary: the asynchronous
+content-catalog refresh could replace an active Video rescue form. The
+production hub now refreshes catalog content only while Discover is active.
+The Phase 5 browser oracle also scopes and samples the exact modal surface
+atomically, so the route and modal cannot be mixed during desktop/mobile
+emulation.
 
 The final draft-PR handoff additionally records the user-required exact-head
 commands and remote CI. Passing implementer tests or CI does not mark Phase 5
