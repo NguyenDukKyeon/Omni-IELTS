@@ -43,6 +43,13 @@ const V10_MIGRATIONS=Object.freeze([
     targetVersion:5,
     mode:'upgrade',
     description:'Add durable exact-target Today run state for reload and multi-tab resume.'
+  }),
+  defineMigration({
+    id:'p2-01-v10-resolver-jobs-v6',
+    digest:'v10-v6-durable-resolver-jobs-events:2026-07-30',
+    targetVersion:6,
+    mode:'upgrade',
+    description:'Add durable resolver job and replayable event projections.'
   })
 ]);
 
@@ -70,6 +77,8 @@ function createIndexes(name,store){
   if(name===V10_STORES.activities){store.createIndex('status','status',{unique:false});store.createIndex('dueAt','dueAt',{unique:false});store.createIndex('type','type',{unique:false});}
   if(name===V10_STORES.sentenceProgress){store.createIndex('sourceId','sourceId',{unique:false});store.createIndex('step','step',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
   if(name===V10_STORES.transcriptCache){store.createIndex('videoId','videoId',{unique:false});store.createIndex('cacheKey','cacheKey',{unique:true});store.createIndex('updatedAt','updatedAt',{unique:false});}
+  if(name===V10_STORES.resolverJobs){store.createIndex('requestKey','requestKey',{unique:true});store.createIndex('status','status',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
+  if(name===V10_STORES.resolverEvents){store.createIndex('jobId','jobId',{unique:false});store.createIndex('sequence','sequence',{unique:false});}
   if(name===V10_STORES.contentManifests){store.createIndex('qualityStatus','qualityStatus',{unique:false});store.createIndex('topic','topic',{unique:false});store.createIndex('level','level',{unique:false});}
   if(name===V10_STORES.contentAssets){store.createIndex('lessonId','lessonId',{unique:false});store.createIndex('assetType','assetType',{unique:false});store.createIndex('lastAccessedAt','lastAccessedAt',{unique:false});}
   if(name===V10_STORES.contentProgress){store.createIndex('lessonId','lessonId',{unique:true});store.createIndex('updatedAt','updatedAt',{unique:false});}

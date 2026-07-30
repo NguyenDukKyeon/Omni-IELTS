@@ -44,12 +44,13 @@ test('server yt-dlp resolver is subtitle-only and never requests audio extractio
   assert.doesNotMatch(source,/ffmpeg|audio-only|bestaudio/);
 });
 
-test('client resolver uses cache/provider race before Gemini fallback',async()=>{
+test('client resolver uses deterministic caption-first order without Gemini fallback',async()=>{
   const source=await readFile(resolve(root,'src/transcript-resolver-v2.js'),'utf8');
-  const fast=source.indexOf("providers=['indexeddb','shared-cache','local-companion','backend-provider']");
-  const fallback=source.indexOf('result=await geminiProvider(context)',fast);
+  const fast=source.indexOf("providers=['indexeddb','shared-cache','backend-provider']");
+  const backend=source.indexOf('result=await PROVIDERS[name](context)',fast);
   assert.ok(fast>=0);
-  assert.ok(fallback>fast);
+  assert.ok(backend>fast);
+  assert.doesNotMatch(source,/geminiProvider\(context\)/);
   assert.match(source,/firstChunkSeconds=60/);
   assert.match(source,/continueTranscriptProgressively/);
   assert.match(source,/durationSeconds/);

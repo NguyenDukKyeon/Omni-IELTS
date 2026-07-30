@@ -2,8 +2,6 @@ import { V10_STORES,TRANSCRIPT_PROVIDERS,validateSentenceSegments,normalizeKey,c
 import { listV10Records,putV10Record,getV10Record } from './v10-persistence.js';
 import { persistTranscriptAggregate } from './transcript-aggregate.js';
 
-const LOCAL_COMPANION_URL='http://127.0.0.1:17321/transcript';
-const SESSION_KEY='vocab-master-gemini-key';
 const SEGMENTER_VERSION='v10-sentence-segmenter-2';
 
 export function parseYouTubeVideoId(input=''){
@@ -41,11 +39,18 @@ function normalizeSegmentRows(rows=[],sourceId='source'){
 async function fetchJson(url,options={},timeoutMs=6500){const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),timeoutMs);try{const response=await fetch(url,{...options,signal:controller.signal});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||`HTTP ${response.status}`);return data;}finally{clearTimeout(timer);}}
 async function localCacheProvider(context){const row=await getV10Record(V10_STORES.transcriptCache,context.cacheKey);if(!row?.segments?.length)throw new Error('cache-miss');return{...row,cacheHitProvider:'indexeddb',cached:true};}
 async function sharedCacheProvider(context){const query=new URLSearchParams({videoId:context.videoId,language:context.language,startSeconds:String(context.startSeconds),endSeconds:String(context.endSeconds)});const data=await fetchJson(`/api/transcript/cache?${query}`,{},2500);if(!data.segments?.length)throw new Error('shared-cache-miss');return{...data,provider:'shared-cache',cached:true};}
-async function localCompanionProvider(context){const data=await fetchJson(LOCAL_COMPANION_URL,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:context.url,videoId:context.videoId,languages:[context.language,'en-US','en-GB','en'],startSeconds:context.startSeconds,endSeconds:context.endSeconds,subtitleOnly:true})},25_000);if(!data.segments?.length)throw new Error('local-companion-empty');return{...data,provider:'local-companion'};}
-async function backendProvider(context){const data=await fetchJson('/api/transcript/resolve',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:context.url,videoId:context.videoId,language:context.language,startSeconds:context.startSeconds,endSeconds:context.endSeconds,prefer:['caption','auto-caption'],subtitleOnly:true})},25_000);if(!data.segments?.length)throw new Error('backend-provider-empty');return{...data,provider:'backend-provider'};}
-async function geminiProvider(context){const headers={'content-type':'application/json'};const state=globalThis.VocabMasterApp?.getState?.();if(state?.settings?.model)headers['x-gemini-model']=state.settings.model;const key=globalThis.sessionStorage?.getItem(SESSION_KEY)||'';if(key)headers['x-gemini-key']=key;const minutes=Math.max(1,Math.ceil((context.endSeconds-context.startSeconds)/60));const data=await fetchJson('/api/ielts/transcript',{method:'POST',headers,body:JSON.stringify({url:context.url,mediaSourceId:`youtube:${context.videoId}`,language:context.language,startSeconds:context.startSeconds,endSeconds:context.endSeconds,minutes})},125_000);if(!data.segments?.length)throw new Error('gemini-transcript-empty');return{...data,provider:'gemini-progressive'};}
-
-const PROVIDERS={indexeddb:localCacheProvider,'shared-cache':sharedCacheProvider,'local-companion':localCompanionProvider,'backend-provider':backendProvider,'gemini-progressive':geminiProvider};
+async function backendProvider(context){
+  const created=await fetchJson('/api/transcript/jobs',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:context.url,videoId:context.videoId,language:context.language,namespace:'shared'})},25_000);
+  const jobId=created?.job?.id;if(!jobId)throw new Error('resolver-job-create-failed');
+  for(let attempt=0;attempt<300;attempt+=1){
+    const data=await fetchJson(`/api/transcript/jobs/${encodeURIComponent(jobId)}`,{},25_000);const job=data.job;
+    if(job?.status==='complete'&&Array.isArray(job.sentences)&&job.sentences.length)return{videoId:context.videoId,title:job.metadata?.title||'YouTube video',language:job.metadata?.track?.language||context.language,durationSeconds:job.metadata?.durationSeconds||0,segments:job.sentences,complete:true,provider:'caption-resolver-v2',jobId,coverage:job.coverage,artifact:job.artifact,captionSource:job.metadata?.track?.kind};
+    if(['failed','cancelled'].includes(job?.status))throw Object.assign(new Error(job.error?.message||'Caption resolver failed.'),{code:job.error?.code||job.status,jobId});
+    await new Promise(resolve=>setTimeout(resolve,100));
+  }
+  throw Object.assign(new Error('Caption resolver timed out.'),{code:'TIMEOUT',jobId});
+}
+const PROVIDERS={indexeddb:localCacheProvider,'shared-cache':sharedCacheProvider,'backend-provider':backendProvider};
 
 async function saveTranscript(context,result){
   const segments=normalizeSegmentRows(result.segments,`youtube:${context.videoId}`);if(!segments.length)throw new Error('Transcript không có câu hợp lệ.');
@@ -64,11 +69,11 @@ async function saveTranscript(context,result){
 
 async function firstSuccessful(tasks=[]){return new Promise((resolve,reject)=>{let pending=tasks.length,settled=false;const errors=[];if(!pending)return reject(new Error('Không có transcript provider.'));for(const task of tasks)task().then(value=>{if(settled)return;settled=true;resolve(value);}).catch(error=>{errors.push(error);pending-=1;if(!pending&&!settled)reject(new AggregateError(errors,'Không provider nào trả transcript.'));});});}
 
-export async function resolveTranscriptFast({url,language='en',startSeconds=0,firstChunkSeconds=60,providers=['indexeddb','shared-cache','local-companion','backend-provider'],allowGeminiFallback=true}={}){
+export async function resolveTranscriptFast({url,language='en',startSeconds=0,firstChunkSeconds=60,providers=['indexeddb','shared-cache','backend-provider']}={}){
   const videoId=parseYouTubeVideoId(url);if(!videoId)throw new Error('URL YouTube không hợp lệ.');const start=Math.max(0,finiteNumber(startSeconds,0)),endSeconds=Math.max(start+30,start+Math.min(180,finiteNumber(firstChunkSeconds,60)));const context={url,videoId,language,startSeconds:start,endSeconds,cacheKey:transcriptCacheKey({videoId,language,startSeconds:start,endSeconds})};
-  const selected=providers.filter(name=>TRANSCRIPT_PROVIDERS.includes(name)&&PROVIDERS[name]);let result;
-  try{result=await firstSuccessful(selected.map(name=>()=>PROVIDERS[name](context)));}
-  catch(error){if(!allowGeminiFallback)throw error;globalThis.dispatchEvent(new CustomEvent('vocab:v10-transcript-status',{detail:{status:'ai-fallback',videoId,message:'Không tìm thấy caption nhanh; đang chuẩn bị chunk đầu bằng AI.'}}));result=await geminiProvider(context);}
+  const selected=providers.filter(name=>TRANSCRIPT_PROVIDERS.includes(name)&&PROVIDERS[name]);let result,lastError;
+  for(const name of selected){try{result=await PROVIDERS[name](context);break;}catch(error){lastError=error;if(name==='backend-provider')throw error;}}
+  if(!result)throw lastError||new Error('Không tìm thấy caption phù hợp.');
   const saved=result.cached&&result.id?result:await saveTranscript(context,result);saved.lastAccessedAt=Date.now();await putV10Record(V10_STORES.transcriptCache,saved,'transcript-cache-accessed');return saved;
 }
 
