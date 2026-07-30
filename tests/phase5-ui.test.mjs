@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import 'fake-indexeddb/auto';
 import { phase5FallbackMarkup,phase5RecoveryMessage } from '../src/phase5-fallback-ui.js';
+import { shouldRefreshIeltsHub } from '../src/ielts-hub-v2.js';
 
 async function withCapabilityEnvironment({mobile=false,local=false,cloud=false},task){
   const originalFetch=globalThis.fetch,originalMatch=globalThis.matchMedia,originalWidth=globalThis.innerWidth;
@@ -25,4 +26,10 @@ test('desktop exposes an available local companion but does not silently enable 
 
 test('typed unsupported cases always provide an import-safe recovery',()=>{
   for(const code of ['PRIVATE_VIDEO','AGE_RESTRICTED','DELETED','NO_CAPTION','CLOUD_UNAVAILABLE','RIGHTS_INELIGIBLE'])assert.match(phase5RecoveryMessage({code}),/import|Import/);
+});
+
+test('background catalog refresh cannot replace an active video rescue form',()=>{
+  assert.equal(shouldRefreshIeltsHub('discover'),true);
+  assert.equal(shouldRefreshIeltsHub('videos'),false);
+  assert.equal(shouldRefreshIeltsHub('skills'),false);
 });
