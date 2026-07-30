@@ -286,7 +286,7 @@ function startPlannedActivity(activity={}){
     minutes:Math.max(1,Number(activity.estimatedSeconds||60)/60),timeBudgetSeconds:Math.max(60,Number(activity.estimatedSeconds||60)),fsrsConfig:state.fsrsConfig
   });
   const step=steps[0];
-  if(steps.length!==1||step.cardId!==target.cardId||String(step.skill||'')!==String(target.skill||'')||step.id!==activity.id)return plannedLaunchFailure('TODAY_EXECUTOR_TARGET_MISMATCH','Executor không thể tạo đúng target; lịch học không thay đổi.');
+  if(steps.length!==1||step.cardId!==target.cardId||(!isIntro&&String(step.skill||'')!==String(target.skill||''))||step.id!==activity.id)return plannedLaunchFailure('TODAY_EXECUTOR_TARGET_MISMATCH','Executor không thể tạo đúng target; lịch học không thay đổi.');
   beginStudySession('today-planned',steps,{plannedActivity:{id:activity.id,target:structuredClone(target),launchBinding:activity.launchBinding}});
   return{started:true,activityId:activity.id,target:structuredClone(target),step:{id:step.id,cardId:step.cardId,skill:step.skill,kind:step.kind}};
 }
