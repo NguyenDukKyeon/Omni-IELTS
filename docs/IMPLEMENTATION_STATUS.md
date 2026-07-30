@@ -1,13 +1,13 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, P0-07 independently accepted
+Last audited: 2026-07-30, Phase 0 independently accepted
 
-Audited source commit: 167c3c68abb3ec6627e2bf9d4fc5b762385e2852
+Audited source commit: c5c28200441db5ed7a3b4b4ebe71266c31d968f3
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
 Active implementation branch: codex/phase-0-release-safety
-Scope of this update: governance/kickoff baseline và P0-00 đến P0-07 đã independently accepted. P0-08 bắt đầu; Phase 0 product gate vẫn đỏ cho đến khi exit gate chạy ba lần và được review độc lập.
+Scope of this update: governance/kickoff baseline và P0-00 đến P0-08 đã independently accepted. Phase 0 exit gate xanh; Phase 1 chưa bắt đầu.
 
 ## 1. Provenance status
 
@@ -194,6 +194,27 @@ Accepted source commit: `167c3c68abb3ec6627e2bf9d4fc5b762385e2852`.
 
 P0-07 removes the IELTS Hub Today tab and IELTS Lab Today widget, and replaces the legacy Core Today subtree at runtime rather than hiding it with CSS. Every ready launcher re-reads the durable activity and binding before execution. Core launch preserves exact card/sense/skill/source revision through persisted evidence; error repair opens the bound error ID without consulting selected DOM state. Unsupported media, reading, paraphrase and prepared-error targets remain visibly blocked/coaching-only and cannot schedule. Core-only degraded startup mounts one disabled canonical Today surface instead of claiming a RAM-backed plan.
 
+### P0-08 acceptance evidence
+
+Accepted source commit: `c5c28200441db5ed7a3b4b4ebe71266c31d968f3`.
+
+| Evidence | Actual result |
+|---|---|
+| `npm run phase0:gate` clean run 1 | PASS 21/21 in 63.3 s |
+| `npm run phase0:gate` clean run 2 | PASS 21/21 in 74.7 s |
+| `npm run phase0:gate` clean run 3 | PASS 21/21 in 60.9 s |
+| Clean install and test matrix per run | `npm ci` installed 36 packages; release evidence 2/2, adversarial EvidencePolicy 33/33, backup sentinel 5/5, restore/rollback 27/27, Capture 8/8, Today 4/4 and full unit suite 190/190 with 0 failed/skipped/todo |
+| Static, audit and production gates | `check`, roadmap 12/12, IELTS 11/11, V10 31/31, V10 audit 55/55, production build, server smoke and preview smoke all PASS |
+| Runtime/browser gates | Browser harness 12/12 plus Core, IELTS, V10 and Hardening browser suites PASS on Chrome `150.0.7871.188`; no suite skipped browser discovery |
+| Environment | Windows `10.0.26200` x64; Node `v24.15.0`; Chrome executable `C:\Program Files\Google\Chrome\Application\chrome.exe` |
+| Canonical artifact | 26 files, 740197 bytes, SHA-256 `cb4932ad14e90f81540850610a5925e7a3fbb150acf8a168f374491ca95276b8` on every run |
+| Cleanup and hygiene | Worktree remained clean; gate-owned ports and temporary browser profiles were empty after every run; no new skip/todo, weakened assertion, debug artifact or temporary marker |
+| Independent review | ACCEPTED at the exact source commit; reviewer independently reproduced 21/21 in 57.1 s with 190/190 and the same artifact digest. Cumulative Phase 0 patch ID `e4012fa8e5fa644384c390652ae9fab4706ef094`; no P0/P1 remained |
+
+The first P0-08 attempt at `b5f0e4b` correctly failed because the IELTS audit still required the legacy Today widget removed by P0-07. Commit `c5c2820` replaced that obsolete assertion with a stricter audit for the canonical exact-target adapter and absence of a second Today entry point; no runtime or product failure was reclassified or ignored.
+
+P0-08 adds no product data migration and changes no database version. It makes the release gate self-auditing: each clean run binds environment, exact commit, test counts, browser gates, repository hygiene and the canonical production artifact digest. Product rollback remains the compatible forward-only behavior documented for P0-01 through P0-07; removing the audit tooling would not roll back or delete product data.
+
 ## 3. Confirmed blockers
 
 | ID | Severity | Blocker | Required owner package |
@@ -211,8 +232,8 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 
 | Phase | Status | Entry gate | Exit state |
 |---|---|---|---|
-| Phase 0 — Containment and Release Safety | IMPLEMENTING / RED | Baseline audit complete | Not met |
-| Phase 1 — Core Product Unification | BLOCKED_BY_PHASE_0 | P0-08 ACCEPTED | Not started |
+| Phase 0 — Containment and Release Safety | ACCEPTED / GREEN | Baseline audit complete | Met at `c5c2820` |
+| Phase 1 — Core Product Unification | NOT_STARTED / ENTRY_GATE_MET | P0-08 ACCEPTED | Not started |
 | Phase 2 — Caption-first Resolver | BLOCKED_BY_PHASE_1 | P1-08 ACCEPTED | Not started |
 | Phase 3 — Full-video Workspace | BLOCKED_BY_PHASE_2 | P2-06 ACCEPTED | Not started |
 | Phase 4 — Remote Content Platform | BLOCKED_BY_PHASE_1 | P1 contracts accepted; production activation also needs platform packages | Not started |
@@ -246,21 +267,21 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 | P0-05 Restore safety | P0-05 | P0-04 | ACCEPTED @ `426feb2` |
 | P0-06 Capture containment | P0-06 | P0-00, P0-05 | ACCEPTED @ `35cdc0b` |
 | P0-07 Today containment | P0-07 | P0-00, P0-01 | ACCEPTED @ `167c3c6` |
-| P0-08 Phase 0 exit gate | P0-08 | P0-02, P0-03, P0-05, P0-06, P0-07 | IN_PROGRESS |
+| P0-08 Phase 0 exit gate | P0-08 | P0-02, P0-03, P0-05, P0-06, P0-07 | ACCEPTED @ `c5c2820` |
 
 ### Phase 1
 
 | Package | Branch | Dependency | Status |
 |---|---|---|---|
-| P1-00 Migration ledger | codex/p1-00-migration-ledger | P0-08 | PHASE_BLOCKED |
-| P1-01 Learning contracts | codex/p1-01-learning-contracts | P1-00 | PHASE_BLOCKED |
-| P1-02 Event repositories | codex/p1-02-event-repositories | P1-01 | PHASE_BLOCKED |
-| P1-03 Cross-DB reconciler | codex/p1-03-cross-db-reconciler | P1-02 | PHASE_BLOCKED |
-| P1-04 Unified Capture | codex/p1-04-unified-capture | P1-03 | PHASE_BLOCKED |
-| P1-05 Transcript aggregate | codex/p1-05-transcript-aggregate | P1-02 | PHASE_BLOCKED |
-| P1-06 Error Repository | codex/p1-06-error-repository | P1-02, P1-05 | PHASE_BLOCKED |
-| P1-07 Today Composer | codex/p1-07-today-composer | P1-02, P1-04, P1-06 | PHASE_BLOCKED |
-| P1-08 Today Runner/cutover | codex/p1-08-today-runner-cutover | P1-07 | PHASE_BLOCKED |
+| P1-00 Migration ledger | codex/p1-00-migration-ledger | P0-08 | NEXT |
+| P1-01 Learning contracts | codex/p1-01-learning-contracts | P1-00 | PLANNED |
+| P1-02 Event repositories | codex/p1-02-event-repositories | P1-01 | PLANNED |
+| P1-03 Cross-DB reconciler | codex/p1-03-cross-db-reconciler | P1-02 | PLANNED |
+| P1-04 Unified Capture | codex/p1-04-unified-capture | P1-03 | PLANNED |
+| P1-05 Transcript aggregate | codex/p1-05-transcript-aggregate | P1-02 | PLANNED |
+| P1-06 Error Repository | codex/p1-06-error-repository | P1-02, P1-05 | PLANNED |
+| P1-07 Today Composer | codex/p1-07-today-composer | P1-02, P1-04, P1-06 | PLANNED |
+| P1-08 Today Runner/cutover | codex/p1-08-today-runner-cutover | P1-07 | PLANNED |
 
 ### Phase 2
 
@@ -347,17 +368,17 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [x] Quick Capture survives submit failure/reload and only one Inbox is visible.
 - [x] Only one Today is visible and every launch preserves exact card/sense/skill/source revision.
 - [x] Browser discovery/cleanup is deterministic and critical assertions cannot skip.
-- [ ] Full phase0:gate passes three consecutive clean runs at one exact commit.
-- [ ] Independent reviewer records P0-08 ACCEPTED.
+- [x] Full phase0:gate passes three consecutive clean runs at one exact commit.
+- [x] Independent reviewer records P0-08 ACCEPTED.
 
 Phase 1 authorization condition:
 
-P1-00 remains PHASE_BLOCKED until every checkbox above is checked and P0-08 is independently ACCEPTED. “Mostly green”, a manual demo, or an implementer report does not satisfy this condition.
+The Phase 1 entry condition is now met. This status change does not start Phase 1; no Phase 1 branch, source change or migration is part of the Phase 0 task or PR.
 
 ## 7. Next package
 
-Current package: P0-08 Phase 0 independent exit audit.
+Current package: none. Phase 0 is complete and this task stops after its pull request is opened.
 
 Phase branch: `codex/phase-0-release-safety`.
 
-P0-00 through P0-07 are independently accepted at their exact source commits. P0-08 is active. No Phase 1 work is authorized.
+P0-00 through P0-08 are independently accepted at their exact source commits. P1-00 is the next planned package, but Phase 1 has not started.

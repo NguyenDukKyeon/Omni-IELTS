@@ -449,3 +449,17 @@ Consequences: Phase 0 may temporarily reduce feature availability instead of lau
 Evidence: P0-07 independently accepted exact source commit `167c3c68abb3ec6627e2bf9d4fc5b762385e2852`; focused exact-target matrix 22/22, full suite 188/188 with zero skip/todo, static/build and Core/IELTS/V10/Hardening browser gates pass on Chrome `150.0.7871.188`. Initial review found and the follow-up fixed one P1 where non-null `senseId` was lost before evidence persistence. Final cumulative patch ID: `c3c3e509fa7ecadfd854d91b17edb2669e99a3f4`; no P0/P1 remained.
 
 Revisit when: Phase 1 introduces the canonical Today Composer/Runner. Preserve durable exact-target projection, stale-target fail-closed behavior and receipt-level sense provenance through migration and rollback.
+
+## ADR-035 — Phase 0 release acceptance is bound to an exact reproducible artifact
+
+Status: CONFIRMED
+
+Decision: P0-08 owns one fail-fast `phase0:gate` that starts from a clean dependency install and executes the release evidence, adversarial EvidencePolicy, every-store backup sentinel, restore/rollback, Capture, Today, full unit, static, audit, production build, server/preview and deterministic browser gates. The gate rejects a dirty worktree, wrong exact commit, skipped/todo tests, browser discovery skip paths, temporary/debug artifacts and repository hygiene violations. It records OS, Node, browser/version and a canonical SHA-256 digest of the production artifact.
+
+The Phase 0 hard gate requires three consecutive clean passes at the same exact commit and a separate read-only reviewer reproduction of the cumulative diff. A stale source-shape assertion must be updated to validate the current stronger runtime boundary when an accepted containment package deliberately removes the old entry point; it must never be deleted merely to make the audit green. Product failures remain product failures and cleanup failures remain infrastructure failures.
+
+Consequences: Phase 0 acceptance can be reproduced from the commit and compared to one canonical artifact instead of relying on an implementer report. Documentation commits after the accepted source commit do not silently redefine product evidence; the final pull request records both the accepted source commit and its documentation commit. P0-08 adds no product migration, database version or rollback mutation.
+
+Evidence: exact source commit `c5c28200441db5ed7a3b4b4ebe71266c31d968f3` passed `npm run phase0:gate` 21/21 three consecutive times (63.3 s, 74.7 s and 60.9 s), each with 190/190 unit tests and zero failure/skip/todo. The canonical 26-file, 740197-byte artifact SHA-256 was `cb4932ad14e90f81540850610a5925e7a3fbb150acf8a168f374491ca95276b8` on every run. The independent reviewer reproduced 21/21 in 57.1 s with the same digest and accepted the cumulative Phase 0 patch ID `e4012fa8e5fa644384c390652ae9fab4706ef094`; no P0/P1 remained.
+
+Revisit when: the build artifact format, required browser matrix or release topology changes. Preserve exact-commit binding, clean reproducibility, canonical digest comparison, product/infrastructure failure separation and independent review.
