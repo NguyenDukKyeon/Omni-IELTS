@@ -1,7 +1,8 @@
 import { deleteCaptureDraft,listCaptureDrafts,reopenCoreDatabase } from './persistence.js';
 import { configureCaptureInbox,refreshCaptureInbox } from './capture-inbox.js';
 import { captureLexicalCandidate,finalizeCaptureCandidate,listCaptureInbox,matchLexicalCards,rejectCaptureCandidate } from './lexical-core-v2.js';
-import { V10_STORES,normalizeCaptureCandidate } from './v10-contracts.js';
+import { V10_STORES } from './v10-contracts.js';
+import { createCaptureItem } from './capture-domain.js';
 import { getV10Record,reopenV10Database } from './v10-persistence.js';
 import { withDurableWriteLock,withExclusiveStorageLock } from './storage-lock.js';
 
@@ -69,7 +70,7 @@ async function migrateLegacyCaptureDraftsLocked(restoreToken,{hooks={}}={}){
     const draft=drafts[index];const input=await legacyCandidateInput(draft);
     const existing=await getV10Record(V10_STORES.captureCandidates,input.id);
     if(existing&&(existing.sourceOccurrence?.sourceType!=='legacy-capture'||existing.sourceOccurrence?.sourceId!==draft.id))throw Object.assign(new Error(`Migration target collision tại ${input.id}; draft nguồn được giữ nguyên.`),{code:'CAPTURE_MIGRATION_TARGET_COLLISION',durable:false,draftId:draft.id,candidateId:input.id});
-    const expected=normalizeCaptureCandidate(input);expected.sourceOccurrence={...expected.sourceOccurrence,candidateId:expected.id};
+    const expected=createCaptureItem(input);expected.sourceOccurrence={...expected.sourceOccurrence,candidateId:expected.id};
     if(existing&&!sameCapture(existing,expected))throw Object.assign(new Error(`Migration target ${input.id} đã thay đổi sau lần copy trước; giữ cả target và draft nguồn để không ghi đè quyết định mới.`),{code:'CAPTURE_MIGRATION_TARGET_DIVERGED',durable:false,draftId:draft.id,candidateId:input.id});
     const candidate=existing||await captureFromAnySource(input,{restoreToken,silent:true});
     copied.push({draft,input,candidate});
