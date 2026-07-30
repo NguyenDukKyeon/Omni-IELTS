@@ -51,6 +51,8 @@ export function createAudioManager({synthesis=globalThis.__VOCAB_AUDIO_SYNTHESIS
   const listeners=new Set();
   const browserDocument=typeof document!=='undefined'?document:null;
   let voiceAccessUnlocked=!browserDocument;
+  let voiceDiscoveryAttempted=false;
+  let refreshingVoices=false;
 
   const unlockVoiceAccess=()=>{
     voiceAccessUnlocked=true;
@@ -66,12 +68,16 @@ export function createAudioManager({synthesis=globalThis.__VOCAB_AUDIO_SYNTHESIS
   const refreshVoices=()=>{
     // Chromium/Edge may synchronously block while asking the OS for voices.
     // Never make that platform call before the user has interacted with the page.
-    if(!voiceAccessUnlocked)return[...voices];
+    if(!voiceAccessUnlocked||refreshingVoices)return[...voices];
+    refreshingVoices=true;
     try{
+      voiceDiscoveryAttempted=true;
       voices=Array.from(synthesis?.getVoices?.()||[]);
       emit({type:'voices',voices:[...voices]});
     }catch(error){
       console.warn('[audio] Cannot read browser voices',error);
+    }finally{
+      refreshingVoices=false;
     }
     return[...voices];
   };
@@ -137,10 +143,10 @@ export function createAudioManager({synthesis=globalThis.__VOCAB_AUDIO_SYNTHESIS
   return{
     refreshVoices,
     getVoices:(language='')=>{
-      const list=voices.length?voices:refreshVoices();
+      const list=voices.length||voiceDiscoveryAttempted?voices:refreshVoices();
       return language?list.filter(voice=>String(voice.lang||'').toLowerCase().startsWith(String(language).toLowerCase().split('-')[0])):[...list];
     },
-    chooseVoice:preferences=>chooseBestVoice(voices.length?voices:refreshVoices(),preferences),
+    chooseVoice:preferences=>chooseBestVoice(voices.length||voiceDiscoveryAttempted?voices:refreshVoices(),preferences),
     speakText,
     stop,
     subscribe(listener){listeners.add(listener);return()=>listeners.delete(listener);},
