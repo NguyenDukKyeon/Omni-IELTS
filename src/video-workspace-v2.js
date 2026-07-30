@@ -24,7 +24,7 @@ const normalize=value=>String(value||'').toLowerCase().replace(/[^a-z0-9\s']/g,'
 function ensureStyles(){if(document.querySelector('link[href="/video-workspace-v2.css"]'))return;const link=document.createElement('link');link.rel='stylesheet';link.href='/video-workspace-v2.css';document.head.append(link);}
 function formatDuration(seconds=0){const value=Math.max(0,Math.round(Number(seconds||0))),minutes=Math.floor(value/60),rest=value%60;return`${minutes}:${String(rest).padStart(2,'0')}`;}
 function setHubStatus(markup){const node=$('#v10VideoStatus');if(node)node.innerHTML=markup;}
-function setFormBusy(form,busy){for(const control of $$('input,button,select',form))control.disabled=busy;const button=$('button[type="submit"],button:not([type])',form);if(button)button.textContent=busy?'Đang lấy transcript…':'Dán URL và học';}
+function setFormBusy(form,busy){for(const control of $$('input,button,select',form))control.disabled=busy;const button=$('button[type="submit"],button:not([type])',form);if(button)button.textContent=busy?'Đang lấy toàn bộ transcript…':'Dán URL và học';}
 function persistRestoreState(value){try{value?sessionStorage.setItem(RESTORE_KEY,JSON.stringify(value)):sessionStorage.removeItem(RESTORE_KEY);}catch{}}
 function updateDeepLink(row=null){try{const url=new URL(location.href);if(row){url.searchParams.set('videoWorkspace',row.videoId);if(row.transcriptRevisionId)url.searchParams.set('transcriptRevision',row.transcriptRevisionId);}else{url.searchParams.delete('videoWorkspace');url.searchParams.delete('transcriptRevision');}history.replaceState(history.state,'',url);}catch{}}
 
@@ -77,7 +77,7 @@ async function loadWholeTranscript({url,startSeconds=0,onProgress=()=>{},signal=
 }
 
 function modeOptions(){return Object.entries(MODE_CONFIG).map(([value,row])=>`<option value="${value}">${escape(row.label)}</option>`).join('');}
-function railMarkup(row,index,masked){return`<button class="v10-transcript-row" data-video-sentence-index="${index}" aria-current="${index===activeWorkspace?.index}" aria-label="Câu ${index+1}, ${formatDuration(Number(row.startMs||0)/1000)}"><span>${index+1}</span><p>${masked?'Đáp án đang ẩn trong Dictation Strict':escape(row.text)}</p><small>${formatDuration(Number(row.startMs||0)/1000)}</small></button>`;}
+function railMarkup(row,index,masked){const active=index===activeWorkspace?.index;return`<button class="v10-transcript-row${active?' active':''}" data-video-sentence-index="${index}" aria-current="${active}" aria-label="Câu ${index+1}, ${formatDuration(Number(row.startMs||0)/1000)}"><span>${index+1}</span><p>${masked?'Đáp án đang ẩn trong Dictation Strict':escape(row.text)}</p><small>${formatDuration(Number(row.startMs||0)/1000)}</small></button>`;}
 function strictMaskActive(){return activeWorkspace?.mode==='dictation-strict'&&Boolean($('#v10DictationForm',activeWorkspace.layout));}
 
 function renderRail({scroll=false}={}){
