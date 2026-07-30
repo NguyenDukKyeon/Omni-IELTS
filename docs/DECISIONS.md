@@ -435,3 +435,17 @@ Consequences: the old V10 Capture panel/listener is removed rather than hidden, 
 Evidence: P0-06 independently accepted exact source commit `35cdc0b350a77797f6992feed1625067edc5674c`; focused Capture suite 8/8, full suite 182/182, restore 27/27, static/audits/build, V10 and Hardening browser suites pass. Browser evidence includes double submit, reload, offline keyboard, mobile layout, quota failure and corrupt degraded-source preservation. Final reviewer patch ID: `303f61d479ba527d83cb8bbf12cb5e08e7759f6b`; no P0/P1 remained.
 
 Revisit when: Phase 1 introduces a canonical Capture repository/saga. Preserve stable retry IDs, typed degraded failures, forward-only data retention and commit/reopen/verify-before-delete semantics.
+
+## ADR-034 — Today containment uses durable exact-target bindings
+
+Status: CONFIRMED
+
+Decision: production has one canonical Today route. Its runtime mount replaces the legacy Today subtree rather than hiding it, while desktop and mobile navigation are responsive controls for the same route. IELTS Hub no longer owns a Today tab and IELTS Lab no longer injects a Today error widget. A Today plan persists immutable activity/card/sense/skill/source revision, execution kind, plan identity and a digest of the complete launch projection. Reload resumes only a complete same-day plan whose stored launch bindings revalidate.
+
+Every launcher re-reads the durable activity immediately before execution. Core creates exactly one step for the bound card and skill; the persisted ActivitySpec, Attempt, evaluator receipt, EvidenceDecision and review event retain the same sense target. Error repair opens the bound error ID and source revision without inferring from selected DOM state. Missing, stale, changed, targetless or unsupported activity fails closed. Unsupported media/reading/paraphrase/prepared-error activities are blocked/coaching-only and cannot schedule; degraded Core-only startup shows one disabled canonical Today surface rather than a RAM-backed plan.
+
+Consequences: Phase 0 may temporarily reduce feature availability instead of launching a generic substitute. A forced refresh may replace a plan, but ordinary reload cannot silently rebuild a different target. Legacy activities remain durable and readable but default to blocked/no-schedule. The change is additive and does not raise any database version; rollback must preserve activity records and cannot promote missing target metadata into evidence.
+
+Evidence: P0-07 independently accepted exact source commit `167c3c68abb3ec6627e2bf9d4fc5b762385e2852`; focused exact-target matrix 22/22, full suite 188/188 with zero skip/todo, static/build and Core/IELTS/V10/Hardening browser gates pass on Chrome `150.0.7871.188`. Initial review found and the follow-up fixed one P1 where non-null `senseId` was lost before evidence persistence. Final cumulative patch ID: `c3c3e509fa7ecadfd854d91b17edb2669e99a3f4`; no P0/P1 remained.
+
+Revisit when: Phase 1 introduces the canonical Today Composer/Runner. Preserve durable exact-target projection, stale-target fail-closed behavior and receipt-level sense provenance through migration and rollback.

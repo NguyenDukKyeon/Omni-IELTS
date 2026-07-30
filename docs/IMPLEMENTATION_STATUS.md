@@ -1,13 +1,13 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, P0-06 independently accepted
+Last audited: 2026-07-30, P0-07 independently accepted
 
-Audited source commit: 35cdc0b350a77797f6992feed1625067edc5674c
+Audited source commit: 167c3c68abb3ec6627e2bf9d4fc5b762385e2852
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
 Active implementation branch: codex/phase-0-release-safety
-Scope of this update: governance/kickoff baseline và P0-00 đến P0-06 đã independently accepted. P0-07 bắt đầu; Phase 0 product gate vẫn đỏ.
+Scope of this update: governance/kickoff baseline và P0-00 đến P0-07 đã independently accepted. P0-08 bắt đầu; Phase 0 product gate vẫn đỏ cho đến khi exit gate chạy ba lần và được review độc lập.
 
 ## 1. Provenance status
 
@@ -175,11 +175,29 @@ Accepted source commit: `35cdc0b350a77797f6992feed1625067edc5674c`.
 
 P0-06 removes the second production Capture mount rather than hiding it with CSS. One canonical form/Inbox delegates to V10 when durable IndexedDB is available and to verified Core localStorage only in explicitly degraded Core-only mode. Submit resets only after durable commit/read-back, keeps a stable ID across retry and retains edited input on failure. Rollback must preserve both deterministic V10 candidates and any Core sources still awaiting verified cleanup; it must not reverse-migrate or delete either representation automatically.
 
+### P0-07 acceptance evidence
+
+Accepted source commit: `167c3c68abb3ec6627e2bf9d4fc5b762385e2852`.
+
+| Evidence | Actual result |
+|---|---|
+| Focused exact-target matrix | PASS 22/22; planned queue never substitutes card/skill, stale revision and sense mismatch fail closed with zero writes, legacy targetless plan is blocked and reload resumes the identical durable binding |
+| `npm test` | PASS 188/188; 0 failed, 0 skipped/todo |
+| `npm run check` | PASS; canonical Today replaces the legacy DOM, no IELTS second Today mount remains and exact executors are statically guarded |
+| `npm run build` | PASS; production bundle built successfully |
+| `npm run test:browser` | PASS with Chrome `150.0.7871.188`; canonical launcher, practice access and existing Core flows remain operational |
+| `npm run test:ielts-browser` | PASS with Chrome `150.0.7871.188` |
+| `npm run test:v10-browser` | PASS with Chrome `150.0.7871.188`; exactly one canonical Today, one visible responsive Today nav, mobile nav has five items, IELTS Hub has no Today tab, exact error repair overrides preselected DOM state and runtime errors are zero |
+| `npm run test:hardening` | PASS with Chrome `150.0.7871.188`; removing a durable planned card leaves the rendered binding stale, launch returns `TODAY_TARGET_STALE`, opens no generic session and creates zero review events |
+| Migration/rollback | No DB/store version change. New plan fields are additive. Legacy/missing target or executor normalizes to blocked/no-schedule. Rollback may ignore the new fields but must preserve durable activity rows and must not reinterpret them as eligible evidence |
+| Independent review | Initial exact-commit review rejected one P1 because `senseId` was lost before evidence persistence. Fix carries and compares sense through ActivitySpec, Attempt, evaluator receipt, EvidenceDecision and review event. Final exact-commit audit ACCEPTED with cumulative patch ID `c3c3e509fa7ecadfd854d91b17edb2669e99a3f4`; no P0/P1 remained |
+
+P0-07 removes the IELTS Hub Today tab and IELTS Lab Today widget, and replaces the legacy Core Today subtree at runtime rather than hiding it with CSS. Every ready launcher re-reads the durable activity and binding before execution. Core launch preserves exact card/sense/skill/source revision through persisted evidence; error repair opens the bound error ID without consulting selected DOM state. Unsupported media, reading, paraphrase and prepared-error targets remain visibly blocked/coaching-only and cannot schedule. Core-only degraded startup mounts one disabled canonical Today surface instead of claiming a RAM-backed plan.
+
 ## 3. Confirmed blockers
 
 | ID | Severity | Blocker | Required owner package |
 |---|---|---|---|
-| B-008 | P0/High | Multiple Today surfaces; exact plan target can be discarded by launcher | P0-07 |
 | B-010 | P1/High | Three DBs and several cross-DB writes lack a shared migration/saga/reconciler model | P1-00, P1-03 |
 | B-011 | P2/High | Transcript resolver is range/cache-RAM based, reparses weakly and lacks durable jobs | P2-00–P2-06 |
 | B-012 | P3/Critical | Dictation answer remains in transcript rail DOM/a11y surface | P3-03 |
@@ -187,7 +205,7 @@ P0-06 removes the second production Capture mount rather than hiding it with CSS
 | B-014 | P5/Critical | Cloud fallback consent/shared-cache policy and local process safety are not production-ready | P5-00–P5-05 |
 | B-015 | P7/High | Metrics/calibration are too weak for safe personalization or FSRS tuning | P7-00–P7-05 |
 
-Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006, B-007 and B-009. Core schedule writes are policy-gated and receipt-bound; skill unlock is based on successful qualified evidence; IELTS/V10 exposed, unverified and Retell coaching paths cannot schedule; Retell learner output is durable across evaluator failure; the browser harness remains independently accepted; portable export covers every durable Core/IELTS/V10 store policy including drafts and outbox; restore is journaled, crash-recoverable, verified after reopen and explicit about degraded durability; and Capture has one durable Inbox with safe retry/migration behavior.
+Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006, B-007, B-008 and B-009. Core schedule writes are policy-gated and receipt-bound; skill unlock is based on successful qualified evidence; IELTS/V10 exposed, unverified and Retell coaching paths cannot schedule; Retell learner output is durable across evaluator failure; the browser harness remains independently accepted; portable export covers every durable Core/IELTS/V10 store policy including drafts and outbox; restore is journaled, crash-recoverable, verified after reopen and explicit about degraded durability; Capture has one durable Inbox with safe retry/migration behavior; and Today has one canonical route whose launchers preserve exact durable targets or fail closed.
 
 ## 4. Phase status
 
@@ -227,8 +245,8 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 | P0-04 Backup envelope | P0-04 | P0-00 | ACCEPTED @ `ffca938` |
 | P0-05 Restore safety | P0-05 | P0-04 | ACCEPTED @ `426feb2` |
 | P0-06 Capture containment | P0-06 | P0-00, P0-05 | ACCEPTED @ `35cdc0b` |
-| P0-07 Today containment | P0-07 | P0-00, P0-01 | IN_PROGRESS |
-| P0-08 Phase 0 exit gate | P0-08 | P0-02, P0-03, P0-05, P0-06, P0-07 | PLANNED |
+| P0-07 Today containment | P0-07 | P0-00, P0-01 | ACCEPTED @ `167c3c6` |
+| P0-08 Phase 0 exit gate | P0-08 | P0-02, P0-03, P0-05, P0-06, P0-07 | IN_PROGRESS |
 
 ### Phase 1
 
@@ -327,7 +345,7 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [x] Failure injection cannot leave mixed restore state presented as success.
 - [x] Durable write failure never silently falls back to RAM success.
 - [x] Quick Capture survives submit failure/reload and only one Inbox is visible.
-- [ ] Only one Today is visible and every launch preserves exact card/skill/source.
+- [x] Only one Today is visible and every launch preserves exact card/sense/skill/source revision.
 - [x] Browser discovery/cleanup is deterministic and critical assertions cannot skip.
 - [ ] Full phase0:gate passes three consecutive clean runs at one exact commit.
 - [ ] Independent reviewer records P0-08 ACCEPTED.
@@ -338,8 +356,8 @@ P1-00 remains PHASE_BLOCKED until every checkbox above is checked and P0-08 is i
 
 ## 7. Next package
 
-Current package: P0-07 single-Today containment and exact-launch guard.
+Current package: P0-08 Phase 0 independent exit audit.
 
 Phase branch: `codex/phase-0-release-safety`.
 
-P0-00 through P0-06 are independently accepted at their exact source commits. P0-07 is active. No Phase 1 work is authorized.
+P0-00 through P0-07 are independently accepted at their exact source commits. P0-08 is active. No Phase 1 work is authorized.
