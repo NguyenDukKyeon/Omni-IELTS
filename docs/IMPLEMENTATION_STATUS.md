@@ -1,13 +1,13 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, Phase 0 independently accepted
+Last audited: 2026-07-30, PR #8 CI portability remediation in progress
 
 Audited source commit: b2ed6c09acd97747c46556395e47ab68b9e2021b
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
-Active implementation branch: codex/phase-0-release-safety
-Scope of this update: governance/kickoff baseline và P0-00 đến P0-08 đã independently accepted. Phase 0 exit gate xanh; Phase 1 chưa bắt đầu.
+Active implementation branch: codex/implementation-roadmap (PR #8 integration head)
+Scope of this update: Phase 0 was independently accepted on Windows, but PR #8 CI run 248 exposed a host-dependent Windows browser-path construction defect in P0-00. P0-00/P0-08 are reopened until the portability fix passes the exact-commit hard gate and independent review. Phase 1 has not started.
 
 ## 1. Provenance status
 
@@ -198,6 +198,15 @@ P0-07 removes the IELTS Hub Today tab and IELTS Lab Today widget, and replaces t
 
 Accepted source commit: `b2ed6c09acd97747c46556395e47ab68b9e2021b`.
 
+#### PR #8 CI portability regression baseline
+
+GitHub Actions run `30512230123` (CI run 248, PR #8 merge commit `b0e679a0ba3d9f7189a88d377b9815f7a56497c2`) ran on Ubuntu 24.04 with Node `v22.23.1`. `npm test` completed 191 tests with 189 pass, 2 fail and zero skipped/todo. Both failures are P0-00 harness portability failures:
+
+- `Windows browser candidates include Chrome and Edge machine, x86 and local installs` received mixed `\` and `/` separators because the Linux host's native `path.join` constructed simulated Windows paths.
+- `known browser candidate is selected deterministically` then failed with `BROWSER_NOT_FOUND` because its controlled Windows fixture could not match those malformed candidates.
+
+The uploaded `verification-output` artifact is ID `8747540809`, digest `sha256:28f72481586547e7776f7ead0114ee7c4b105203a30f59e561727058a2ee4466`. This is an infrastructure/harness defect, not a product or Retell failure. No assertion, skip, retry or fallback has been changed. The prior Windows acceptance evidence below remains historical but no longer authorizes Phase 1 until the remediated exact source commit is reaccepted.
+
 | Evidence | Actual result |
 |---|---|
 | `npm run phase0:gate` clean run 1 | PASS 21/21 in 79.3 s |
@@ -234,8 +243,8 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 
 | Phase | Status | Entry gate | Exit state |
 |---|---|---|---|
-| Phase 0 — Containment and Release Safety | ACCEPTED / GREEN | Baseline audit complete | Met at `b2ed6c0` |
-| Phase 1 — Core Product Unification | NOT_STARTED / ENTRY_GATE_MET | P0-08 ACCEPTED | Not started |
+| Phase 0 — Containment and Release Safety | REOPENED / CI RED | Baseline audit complete | P0-00 portability remediation and P0-08 reacceptance required |
+| Phase 1 — Core Product Unification | NOT_STARTED / BLOCKED_BY_PHASE_0 | P0-08 ACCEPTED | Not started |
 | Phase 2 — Caption-first Resolver | BLOCKED_BY_PHASE_1 | P1-08 ACCEPTED | Not started |
 | Phase 3 — Full-video Workspace | BLOCKED_BY_PHASE_2 | P2-06 ACCEPTED | Not started |
 | Phase 4 — Remote Content Platform | BLOCKED_BY_PHASE_1 | P1 contracts accepted; production activation also needs platform packages | Not started |
@@ -369,18 +378,18 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [x] Durable write failure never silently falls back to RAM success.
 - [x] Quick Capture survives submit failure/reload and only one Inbox is visible.
 - [x] Only one Today is visible and every launch preserves exact card/sense/skill/source revision.
-- [x] Browser discovery/cleanup is deterministic and critical assertions cannot skip.
-- [x] Full phase0:gate passes three consecutive clean runs at one exact commit.
-- [x] Independent reviewer records P0-08 ACCEPTED.
+- [ ] Browser discovery is host-independent and deterministic; cleanup remains verified and critical assertions cannot skip.
+- [ ] Full phase0:gate passes three consecutive clean runs at one remediated exact commit.
+- [ ] Independent reviewer records P0-08 reacceptance at the remediated exact commit.
 
 Phase 1 authorization condition:
 
-The Phase 1 entry condition is now met. This status change does not start Phase 1; no Phase 1 branch, source change or migration is part of the Phase 0 task or PR.
+The Phase 1 entry condition is temporarily closed by the PR #8 CI portability regression. No Phase 1 branch, source change or migration has started.
 
 ## 7. Next package
 
-Current package: none. Phase 0 is complete and this task stops after its pull request is opened.
+Current package: P0-00 CI portability remediation, followed by P0-08 exact-commit reacceptance.
 
-Phase branch: `codex/phase-0-release-safety`.
+Integration branch: `codex/implementation-roadmap` (head of PR #8).
 
-P0-00 through P0-08 are independently accepted at their exact source commits. P1-00 is the next planned package, but Phase 1 has not started.
+Historical P0-00 through P0-08 acceptance remains recorded above, but the release gate is reopened until the remediated source commit passes the required evidence and independent review. P1-00 remains blocked and has not started.
