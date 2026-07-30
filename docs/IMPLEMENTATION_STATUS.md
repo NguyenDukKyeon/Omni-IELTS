@@ -2,7 +2,7 @@
 
 Last audited: 2026-07-30, Phase 0 independently accepted
 
-Audited source commit: c5c28200441db5ed7a3b4b4ebe71266c31d968f3
+Audited source commit: b2ed6c09acd97747c46556395e47ab68b9e2021b
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
@@ -196,24 +196,26 @@ P0-07 removes the IELTS Hub Today tab and IELTS Lab Today widget, and replaces t
 
 ### P0-08 acceptance evidence
 
-Accepted source commit: `c5c28200441db5ed7a3b4b4ebe71266c31d968f3`.
+Accepted source commit: `b2ed6c09acd97747c46556395e47ab68b9e2021b`.
 
 | Evidence | Actual result |
 |---|---|
-| `npm run phase0:gate` clean run 1 | PASS 21/21 in 63.3 s |
-| `npm run phase0:gate` clean run 2 | PASS 21/21 in 74.7 s |
-| `npm run phase0:gate` clean run 3 | PASS 21/21 in 60.9 s |
-| Clean install and test matrix per run | `npm ci` installed 36 packages; release evidence 2/2, adversarial EvidencePolicy 33/33, backup sentinel 5/5, restore/rollback 27/27, Capture 8/8, Today 4/4 and full unit suite 190/190 with 0 failed/skipped/todo |
+| `npm run phase0:gate` clean run 1 | PASS 21/21 in 79.3 s |
+| `npm run phase0:gate` clean run 2 | PASS 21/21 in 68.3 s |
+| `npm run phase0:gate` clean run 3 | PASS 21/21 in 60.4 s |
+| Clean install and test matrix per run | `npm ci` installed 36 packages; release evidence 2/2, adversarial EvidencePolicy 33/33, backup sentinel 5/5, restore/rollback 28/28, Capture 8/8, Today 4/4 and full unit suite 191/191 with 0 failed/skipped/todo |
 | Static, audit and production gates | `check`, roadmap 12/12, IELTS 11/11, V10 31/31, V10 audit 55/55, production build, server smoke and preview smoke all PASS |
 | Runtime/browser gates | Browser harness 12/12 plus Core, IELTS, V10 and Hardening browser suites PASS on Chrome `150.0.7871.188`; no suite skipped browser discovery |
 | Environment | Windows `10.0.26200` x64; Node `v24.15.0`; Chrome executable `C:\Program Files\Google\Chrome\Application\chrome.exe` |
-| Canonical artifact | 26 files, 740197 bytes, SHA-256 `cb4932ad14e90f81540850610a5925e7a3fbb150acf8a168f374491ca95276b8` on every run |
+| Canonical artifact | 26 files, 740790 bytes, SHA-256 `1b361e26c9d20feb2bd53d4f9475185a99f0d1c75232c53e09c69aa1131619b6` on every run |
 | Cleanup and hygiene | Worktree remained clean; gate-owned ports and temporary browser profiles were empty after every run; no new skip/todo, weakened assertion, debug artifact or temporary marker |
-| Independent review | ACCEPTED at the exact source commit; reviewer independently reproduced 21/21 in 57.1 s with 190/190 and the same artifact digest. Cumulative Phase 0 patch ID `e4012fa8e5fa644384c390652ae9fab4706ef094`; no P0/P1 remained |
+| Independent review | ACCEPTED at the exact source commit; reviewer independently reproduced 21/21 in 61.9 s with restore 28/28, full suite 191/191 and the same artifact digest. Cumulative Phase 0 patch ID `9d713cb564266a7e2794a2116f7b5310870c2665`; no P0/P1 remained |
 
 The first P0-08 attempt at `b5f0e4b` correctly failed because the IELTS audit still required the legacy Today widget removed by P0-07. Commit `c5c2820` replaced that obsolete assertion with a stricter audit for the canonical exact-target adapter and absence of a second Today entry point; no runtime or product failure was reclassified or ignored.
 
-P0-08 adds no product data migration and changes no database version. It makes the release gate self-auditing: each clean run binds environment, exact commit, test counts, browser gates, repository hygiene and the canonical production artifact digest. Product rollback remains the compatible forward-only behavior documented for P0-01 through P0-07; removing the audit tooling would not roll back or delete product data.
+The final review at `bea687e` then correctly rejected Phase 0 after independently exposing a timing-dependent restore digest mismatch. A delayed Core snapshot armed before restore could enqueue behind the exclusive lock and mutate the durable snapshot store after rollback verification. Commit `b2ed6c0` invalidates snapshot/file-backup timers at every exclusive restore/recovery boundary and generation-fences stale snapshot callbacks both before enqueue and inside the write queue. The deterministic regression holds restore for 1.7 seconds across the former timer window; focused restore passed 28/28 five consecutive times before the three full gates and independent reproduction.
+
+P0-08 adds no product data migration and changes no database version. It makes the release gate self-auditing: each clean run binds environment, exact commit, test counts, browser gates, repository hygiene and the canonical production artifact digest. The restore race fix only fences scheduled maintenance; it does not delete durable learner data. Product rollback remains the compatible forward-only behavior documented for P0-01 through P0-07; removing the audit tooling would not roll back or delete product data.
 
 ## 3. Confirmed blockers
 
@@ -232,7 +234,7 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 
 | Phase | Status | Entry gate | Exit state |
 |---|---|---|---|
-| Phase 0 — Containment and Release Safety | ACCEPTED / GREEN | Baseline audit complete | Met at `c5c2820` |
+| Phase 0 — Containment and Release Safety | ACCEPTED / GREEN | Baseline audit complete | Met at `b2ed6c0` |
 | Phase 1 — Core Product Unification | NOT_STARTED / ENTRY_GATE_MET | P0-08 ACCEPTED | Not started |
 | Phase 2 — Caption-first Resolver | BLOCKED_BY_PHASE_1 | P1-08 ACCEPTED | Not started |
 | Phase 3 — Full-video Workspace | BLOCKED_BY_PHASE_2 | P2-06 ACCEPTED | Not started |
@@ -267,7 +269,7 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 | P0-05 Restore safety | P0-05 | P0-04 | ACCEPTED @ `426feb2` |
 | P0-06 Capture containment | P0-06 | P0-00, P0-05 | ACCEPTED @ `35cdc0b` |
 | P0-07 Today containment | P0-07 | P0-00, P0-01 | ACCEPTED @ `167c3c6` |
-| P0-08 Phase 0 exit gate | P0-08 | P0-02, P0-03, P0-05, P0-06, P0-07 | ACCEPTED @ `c5c2820` |
+| P0-08 Phase 0 exit gate | P0-08 | P0-02, P0-03, P0-05, P0-06, P0-07 | ACCEPTED @ `b2ed6c0` |
 
 ### Phase 1
 
