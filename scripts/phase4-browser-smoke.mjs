@@ -105,8 +105,9 @@ async function main(){
       };
 
       await waitFor('window.__VOCAB_V10_READY__&&window.VocabMasterContentExperience','Phase 4 runtime');
+      await cdp.send('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
       const desktopViewport=await evaluate('document.documentElement.clientWidth');
-      assert.ok(desktopViewport>=800,`Expected desktop viewport before responsive pass, received ${desktopViewport}.`);
+      assert.ok(desktopViewport>=1200,`Expected deterministic desktop layout, received ${desktopViewport}px.`);
       await cdp.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
       await cdp.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
 
