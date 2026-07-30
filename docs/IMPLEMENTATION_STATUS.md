@@ -1,15 +1,17 @@
 # VocabMaster — Implementation Status
 
-Last audited: 2026-07-30, Phase 1 implementation complete; independent acceptance pending
+Last updated: 2026-07-30, Phase 1 delivery handoff opened; CI and independent acceptance pending
 
-Audited source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
+Phase 0 accepted source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
 Baseline predecessor branch: codex/implementation-roadmap at 547e5d665adbf102c15b65ac39def185769e5626
 
-Phase 1 exact source commit: pending authorized commit; current evidence is bound to the working tree described below.
+Phase 1 delivery binding: draft PR #9 from `codex/phase-1-core-unification` into `main`; the final exact SHA is the pushed PR head reported in the PR verification record.
 
 Active implementation branch: codex/phase-1-core-unification
-Scope of this update: Phase 0 remains accepted at exact source commit `d869eb4` with PR #8 Ubuntu CI run 250 green. P1-00…P1-08 are implemented cumulatively on the user-authorized Phase 1 branch with focused tests, full unit/integration coverage and production browser verification. This is implementer evidence only: no P1 package or Phase 1 exit is marked `ACCEPTED` until an independent reviewer reproduces the clean exact-source gate.
+Delivery status: `PUSHED / PR_OPEN / CI_PENDING / INDEPENDENT_REVIEW_REQUIRED`
+
+Scope of this update: Phase 0 remains accepted at exact source commit `d869eb4` with PR #8 Ubuntu CI run 250 green. P1-00…P1-08 are implemented cumulatively on the user-authorized Phase 1 branch, committed without rewriting `13e32f1` or `6390489`, pushed and opened as draft PR #9. This is implementer evidence only: no P1 package or Phase 1 exit is marked `ACCEPTED` until an independent reviewer reproduces the hard gates on the exact pushed SHA and CI is green.
 
 ## 1. Provenance status
 
@@ -338,7 +340,7 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 | Phase | Status | Entry gate | Exit state |
 |---|---|---|---|
 | Phase 0 — Containment and Release Safety | ACCEPTED / GREEN | Baseline audit complete | P0-08 accepted at `d869eb4`; PR #8 Ubuntu CI run 250 passed |
-| Phase 1 — Core Product Unification | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED | P0-08 ACCEPTED | P1-00…P1-08 implemented; independent acceptance and clean exact-source gate pending |
+| Phase 1 — Core Product Unification | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED | P0-08 ACCEPTED | P1-00…P1-08 delivered in draft PR #9; independent acceptance and CI pending |
 | Phase 2 — Caption-first Resolver | BLOCKED_BY_PHASE_1 | P1-08 ACCEPTED | Not started |
 | Phase 3 — Full-video Workspace | BLOCKED_BY_PHASE_2 | P2-06 ACCEPTED | Not started |
 | Phase 4 — Remote Content Platform | BLOCKED_BY_PHASE_1 | P1 contracts accepted; production activation also needs platform packages | Not started |
@@ -378,15 +380,15 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 | Package | Branch | Dependency | Status |
 |---|---|---|---|
-| P1-00 Migration ledger | codex/phase-1-core-unification | P0-08 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
-| P1-01 Learning contracts | codex/phase-1-core-unification | P1-00 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
-| P1-02 Event repositories | codex/phase-1-core-unification | P1-01 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
-| P1-03 Cross-DB reconciler | codex/phase-1-core-unification | P1-02 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
-| P1-04 Unified Capture | codex/phase-1-core-unification | P1-03 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
-| P1-05 Transcript aggregate | codex/phase-1-core-unification | P1-02 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
-| P1-06 Error Repository | codex/phase-1-core-unification | P1-02, P1-05 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
-| P1-07 Today Composer | codex/phase-1-core-unification | P1-02, P1-04, P1-06 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
-| P1-08 Today Runner/cutover | codex/phase-1-core-unification | P1-07 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
+| P1-00 Migration ledger | codex/phase-1-core-unification | P0-08 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
+| P1-01 Learning contracts | codex/phase-1-core-unification | P1-00 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
+| P1-02 Event repositories | codex/phase-1-core-unification | P1-01 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
+| P1-03 Cross-DB reconciler | codex/phase-1-core-unification | P1-02 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
+| P1-04 Unified Capture | codex/phase-1-core-unification | P1-03 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
+| P1-05 Transcript aggregate | codex/phase-1-core-unification | P1-02 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
+| P1-06 Error Repository | codex/phase-1-core-unification | P1-02, P1-05 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
+| P1-07 Today Composer | codex/phase-1-core-unification | P1-02, P1-04, P1-06 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
+| P1-08 Today Runner/cutover | codex/phase-1-core-unification | P1-07 | PUSHED / PR_OPEN / CI_PENDING / REVIEW_REQUIRED |
 
 ### Phase 2
 
@@ -491,9 +493,10 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 - [x] Today composition is deterministic, due-first, timezone-bound and emits exact ActivitySpec rows.
 - [x] Today execution uses a registry, durable run resume, multi-tab lease and exact canonical receipts for skip/cancel.
 - [x] Focused P1 suites, full unit/integration tests, static checks, build and all production browser suites pass in the implementation workspace.
-- [ ] Clean exact-source `npm run phase1:verify` reproduction after an authorized commit.
+- [x] Clean exact-source `npm run phase1:verify` reproduced on the final committed PR head during delivery handoff; exact SHA and results are recorded in PR #9.
 - [ ] Independent package/phase audit and acceptance.
-- [ ] Pushed branch CI on the accepted exact source.
+- [x] Draft PR #9 is open from the pushed Phase 1 branch into `main`; no merge or deploy was performed.
+- [ ] PR #9 CI on the final pushed source.
 
 The Phase 1 implementation report is `docs/phase1/IMPLEMENTATION_REPORT.md`. Phase 2 remains blocked because implementation evidence is not independent acceptance.
 
@@ -501,6 +504,6 @@ The Phase 1 implementation report is `docs/phase1/IMPLEMENTATION_REPORT.md`. Pha
 
 Current package: Phase 1 independent audit/acceptance.
 
-Integration branch: `codex/phase-1-core-unification`.
+Integration branch/PR: `codex/phase-1-core-unification`, draft PR #9.
 
-The cumulative P1 implementation is locally green but intentionally not labeled `ACCEPTED`. Do not unlock Phase 2 until a clean exact commit, independent review and pushed CI evidence are recorded.
+The cumulative P1 implementation is delivered for review but intentionally not labeled `ACCEPTED`. Do not unlock Phase 2 until the final pushed SHA has green CI, independent audit, verified hard gates and merge into `main`.

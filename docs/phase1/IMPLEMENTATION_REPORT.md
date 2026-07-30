@@ -6,9 +6,11 @@ Branch: `codex/phase-1-core-unification`
 
 Baseline: `main` at `c62d773`, containing the accepted Phase 0 source `d869eb4` and PR #8 Ubuntu CI run 250.
 
-Status: `IMPLEMENTED / INTERNAL_GREEN / INDEPENDENT_REVIEW_REQUIRED`
+Pull request: [#9](https://github.com/NguyenDukKyeon/VocabMaster/pull/9) (draft)
 
-This report records implementer evidence. It is not an acceptance report and does not unlock Phase 2.
+Status: `PUSHED / PR_OPEN / CI_PENDING / INDEPENDENT_REVIEW_REQUIRED`
+
+This report records implementer evidence and the delivery handoff. It is not an acceptance report, does not authorize merge or deploy and does not unlock Phase 2.
 
 ## Package results
 
@@ -48,8 +50,10 @@ This report records implementer evidence. It is not an acceptance report and doe
 
 The Phase 0 release gate was rerun on `main` before the branch was created and passed 21/21 with the accepted 26-file artifact digest `71772f3cd42dce06ca537c30fb0d3cda43298691022a27969c43071a6024db54`.
 
+The canonical delivery verification record is the description of draft PR #9 because it can bind results to the final commit SHA without creating another documentation-only head. The delivery is reported complete only after the clean final `HEAD` reruns the cumulative verifier, full suite, static check, production build and every required browser suite.
+
 ## Required independent audit
 
-The reviewer must inspect the cumulative diff, run `npm ci --no-audit --no-fund`, run `npm run phase1:verify` from a clean exact commit, verify real IndexedDB after reload, exercise desktop/mobile production UI, inject crash/duplicate/out-of-order failures and reconcile review/error/progress totals back to canonical attempts.
+The reviewer must bind the audit to the final pushed SHA of draft PR #9, inspect the cumulative diff, run `npm ci --no-audit --no-fund`, run `npm run phase1:verify` from a clean exact commit, verify real IndexedDB after reload, exercise desktop/mobile production UI, inject crash/duplicate/out-of-order failures and reconcile review/error/progress totals back to canonical attempts.
 
-Any P0/P1 finding keeps the affected package and Phase 1 exit unaccepted. Phase 2 stays blocked until the accepted exact source, patch ID and CI result are recorded in the status and decisions documents.
+Any P0/P1 finding keeps the affected package and Phase 1 exit unaccepted. Phase 2 stays blocked until the PR has green CI, the exact source and hard gates are independently accepted, and the PR is merged into `main`.

@@ -494,7 +494,7 @@ Transcript edits create child revisions and never mutate historical source text 
 
 Consequences: backup/restore registry coverage grows with every new physical store. Rollback builds may ignore additive stores but must not delete them. Targetless, stale, unknown-version, collision and unsupported-executor data fail closed or quarantine. The implementation may reduce runnable content when no exact target/executor exists; it cannot substitute a generic target.
 
-Evidence: implementer-focused P1 suites and the cumulative 233/233 unit/integration suite pass with zero skip/todo; Core, IELTS, V10 and Hardening production browser suites pass on Chrome `150.0.7871.188`. Exact clean-source reproduction, independent review and pushed CI remain pending, so this ADR records an implemented decision rather than Phase 1 acceptance.
+Evidence: implementer-focused P1 suites and the cumulative 233/233 unit/integration suite pass with zero skip/todo; Core, IELTS, V10 and Hardening production browser suites pass on Chrome `150.0.7871.188`. Implementer clean-source reproduction is bound to the final SHA in draft PR #9; independent review and pushed CI remain pending, so this ADR records an implemented decision rather than Phase 1 acceptance.
 
 Revisit when: a fourth persistence owner joins the learning transaction, transcript identity must span cross-source alignment, or a new Today executor needs a target type not representable by the current exact learning target. Preserve append-only evidence, immutable source revision and default-deny schedule semantics.
 
