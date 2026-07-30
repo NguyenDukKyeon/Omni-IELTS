@@ -1,6 +1,6 @@
 # VocabMaster — Implementation Status
 
-Last updated: 2026-07-30, Phase 4 implementation complete for internal review; publication approval remains fail-closed
+Last updated: 2026-07-30, Phase 5 implementation complete for internal review; live providers and independent acceptance remain open
 
 Phase 0 accepted source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
@@ -12,8 +12,32 @@ Phase 2 acceptance binding: merged `main` commit `cf28153352110cae510c92e2a8f911
 
 Phase 3 acceptance binding: independently accepted at source HEAD `96aa0172add84186fbe2970cde910b06a0d73672`; exact-head CI run #259 succeeded; PR #11 merged into `main` at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`.
 
-Active implementation branch: codex/phase-4-remote-content-platform
+Active implementation branch: codex/phase-5-asr-cloud-fallback
 Delivery status: `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED`
+
+Phase 5 is not accepted. It was explicitly authorized from merged `main`
+baseline `fc6057fa66c510b0cd12a7fb9e1e74a6379b4225` because its canonical entry
+gate is the accepted P2-06 resolver boundary, not Phase 4 publication. Caption
+resolution remains first. Local ASR is desktop-only, private and unverified;
+Gemini is disabled by default and requires current explicit consent plus a
+public/no-auth/no-cookie/rights-eligible source. The local Whisper/model and
+Gemini paths are covered with deterministic fakes in this environment; no live
+binary, model, provider, credential or quality result is claimed.
+
+## Phase 5 delivery matrix
+
+| Package | Implementation state | Review boundary |
+|---|---|---|
+| P5-00 capability/consent/privacy | IMPLEMENTED / INTERNAL_GREEN | Private defaults, versioned consent, explicit sharing eligibility and honest desktop/mobile matrix |
+| P5-01 secure local companion | IMPLEMENTED / INTERNAL_GREEN | Loopback bearer pairing, origin allowlist, argv-only processes, bounded task media and process-tree cancellation |
+| P5-02 progressive local ASR | IMPLEMENTED / INTERNAL_GREEN | Optional local model, no auto-download, first usable private/unverified batch and raw-media cleanup |
+| P5-03 range resume/merge | IMPLEMENTED / INTERNAL_GREEN | Canonical resolver job checkpoints, deterministic overlap merge, failed-range reuse and cleanup |
+| P5-04 Gemini opt-in | IMPLEMENTED / INTERNAL_GREEN | Server-only credential, explicit consent and rights gate, one-request cost cap, private/unverified output |
+| P5-05 mobile/import/exit | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED | Production rescue UI, strict SRT/VTT/text validation, real IndexedDB reload evidence and Phase 5 gate |
+
+Implementation and evidence details are recorded in
+`docs/phase5/IMPLEMENTATION_REPORT.md`. Exact-head remote CI and independent
+review remain required; no Phase 5 package is marked `ACCEPTED`.
 
 Phase 4 is not accepted. The production signed catalog intentionally contains
 no packs because all 68 rights records and all 72 human-review records in the
@@ -22,7 +46,8 @@ lifecycle, backup/restore, UI and validator paths are implemented and focused
 green; the sampler and four weekly packs are structurally complete drafts only.
 External content-repository provisioning, named human rights/review approval,
 production signing, exact-head remote CI, independent focused audit and merge
-remain required. Phase 5 and Phase 6 remain locked.
+remain required. Phase 5 does not alter those records or publication rights;
+Phase 6 remains locked.
 
 ## Phase 4 delivery matrix
 
@@ -531,13 +556,18 @@ The Phase 1 implementation report is `docs/phase1/IMPLEMENTATION_REPORT.md` and 
 
 ## 8. Phase 3 acceptance state
 
-Phase 3 was independently accepted at exact source HEAD `96aa0172add84186fbe2970cde910b06a0d73672`. Exact-head CI run #259 succeeded, and PR #11 merged into `main` at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`. This independently verified merge unlocks Phase 4. Phase 5 remains locked and is not part of the Phase 4 authorization.
+Phase 3 was independently accepted at exact source HEAD `96aa0172add84186fbe2970cde910b06a0d73672`. Exact-head CI run #259 succeeded, and PR #11 merged into `main` at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`. This independently verified merge unlocked Phase 4. Phase 5 was later explicitly authorized by the user from `main` at `fc6057f`; that authorization does not accept Phase 4 or change its publication records.
 
 ## 9. Next acceptance action
 
-Current handoff: independently re-audit the remediated technical platform on
-PR #12. External repository/CDN provisioning, production signing-key custody,
-named rights approval, human lesson review, sequential weekly defect review
-and production publication remain open.
+Current handoff: independently reproduce the Phase 5 exact-head unit,
+backup/restore and production browser gates on its draft PR. Live Local
+Whisper and Gemini smoke remain conditional on explicitly provisioned binaries,
+model and server credential. For Phase 4, external repository/CDN provisioning,
+production signing-key custody, named rights approval, human lesson review,
+sequential weekly defect review and production publication remain open.
 
-Phase 4 must remain `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED` until exact-head CI is green, an independent focused audit returns ACCEPT, and the Phase 4 pull request is merged. Phase 5 remains locked.
+Phase 4 remains `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED`; merge alone
+did not supply missing rights/human review or independent acceptance. Phase 5
+must also remain `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED` until
+exact-head CI and an independent focused review reproduce the handoff.

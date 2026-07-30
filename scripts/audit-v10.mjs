@@ -23,8 +23,8 @@ const phaseFiles={
 };
 for(const[phase,files]of Object.entries(phaseFiles)){for(const file of files)check(`Phase ${phase} file ${file}`,await exists(file));}
 
-const [mainSource,serverSource,clientTranscript,videoPlayer,ieltsHub,launcherOverride,todayPlanner,contentPlatform,aiFactory,sentenceLoop,contracts,serviceWorker,packageText,catalogText]=await Promise.all([
-  read('src/main.js'),read('server/server.mjs'),read('src/transcript-resolver-v2.js'),read('src/youtube-sentence-player.js'),read('src/ielts-hub-v2.js'),read('src/ielts-launcher-override.js'),read('src/today-planner-v2.js'),read('src/content-platform.js'),read('src/ai-content-factory.js'),read('src/sentence-learning-loop.js'),read('src/v10-contracts.js'),read('public/sw.js'),read('package.json'),read('public/content/catalog.json')
+const [mainSource,serverSource,clientTranscript,fallbackPolicy,fallbackUi,videoPlayer,ieltsHub,launcherOverride,todayPlanner,contentPlatform,aiFactory,sentenceLoop,contracts,serviceWorker,packageText,catalogText]=await Promise.all([
+  read('src/main.js'),read('server/server.mjs'),read('src/transcript-resolver-v2.js'),read('src/asr-fallback-policy.js'),read('src/phase5-fallback-ui.js'),read('src/youtube-sentence-player.js'),read('src/ielts-hub-v2.js'),read('src/ielts-launcher-override.js'),read('src/today-planner-v2.js'),read('src/content-platform.js'),read('src/ai-content-factory.js'),read('src/sentence-learning-loop.js'),read('src/v10-contracts.js'),read('public/sw.js'),read('package.json'),read('public/content/catalog.json')
 ]);
 const pkg=JSON.parse(packageText),catalog=JSON.parse(catalogText),catalogEntries=catalog.payload?.entries||[];
 
@@ -33,9 +33,9 @@ check('V10 runtime is outside AI Studio preview',mainSource.indexOf("import('./v
 const resolverV2=await read('server/caption-resolver-v2.mjs');
 check('Server exposes durable caption resolver',serverSource.includes("/api/transcript/")&&serverSource.includes('createCaptionResolverV2')&&resolverV2.includes('/api/transcript/jobs'));
 check('yt-dlp path is subtitle-only',resolverV2.includes('--skip-download')&&!/--extract-audio|bestaudio|ffmpeg/.test(resolverV2));
-const fastProviderIndex=clientTranscript.indexOf("providers=['indexeddb','shared-cache','backend-provider']");
-const resolverProviderIndex=clientTranscript.indexOf('result=await PROVIDERS[name](context)',fastProviderIndex);
-check('Client uses deterministic caption-first resolver without ASR fallback',fastProviderIndex>=0&&resolverProviderIndex>fastProviderIndex&&!clientTranscript.includes('geminiProvider(context)'));
+const captionFirstIndex=clientTranscript.indexOf('try{return await resolveTranscriptFast');
+const fallbackStartIndex=clientTranscript.indexOf('startResolverFallback(captionError.jobId',captionFirstIndex);
+check('Client uses deterministic caption-first resolver with explicit private fallback',captionFirstIndex>=0&&fallbackStartIndex>captionFirstIndex&&!clientTranscript.includes('GEMINI_API_KEY')&&fallbackPolicy.includes('cloudEnabled:bool(input.cloudEnabled)')&&fallbackUi.includes('Caption luôn được thử trước'));
 check('Transcript is progressive',clientTranscript.includes('firstChunkSeconds=60')&&clientTranscript.includes('continueTranscriptProgressively'));
 check('YouTube sentence loop uses real segment player',videoPlayer.includes("import { YouTubeSegmentPlayer }")&&videoPlayer.includes('player.setSegment')&&ieltsHub.includes('createYoutubeSentencePlayer')&&ieltsHub.includes('openVideoLoop(row)'));
 check('YouTube embed failures are contained',videoPlayer.includes('void ready.catch')&&videoPlayer.includes("host.dataset.status='error'"));
