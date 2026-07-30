@@ -11,6 +11,9 @@ const READY_EXECUTORS=new Set(['core-card','core-intro','ielts-error','content',
 const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const core=()=>globalThis.VocabMasterApp?.getState?.()||{cards:[],settings:{minutes:10,newLimit:5},fsrsConfig:{}};
 const activeCards=()=>core().cards.filter(card=>!card.suspendedAt&&!card.archivedAt);
+let todayActionTail=Promise.resolve();
+let pendingTodayRenders=0;
+let todayStatus={message:'',kind:'neutral'};
 
 export function localDateKey(now=Date.now()){
   const date=new Date(now);
@@ -331,32 +334,74 @@ async function launchActivity(displayed){
   return{started:true,activityId:activity.id,target:activity.target};
 }
 
-function setTodayStatus(message='',kind='neutral'){
+function applyTodayStatus(){
   const node=document.querySelector('#v10TodayStatus');
-  if(node){node.textContent=message;node.dataset.kind=kind;}
+  if(node){node.textContent=todayStatus.message;node.dataset.kind=todayStatus.kind;}
+}
+
+function setTodayStatus(message='',kind='neutral'){
+  todayStatus={message:String(message||''),kind:String(kind||'neutral')};
+  applyTodayStatus();
+}
+
+function setTodayRenderBusy(busy){
+  const host=document.querySelector('#v10TodayPlan');if(!host)return;
+  host.setAttribute('aria-busy',String(Boolean(busy)));
+  if(busy){
+    host.onclick=null;
+    host.querySelectorAll('button').forEach(button=>{button.disabled=true;});
+    return;
+  }
+  const refresh=host.querySelector('#v10RefreshPlan');if(refresh)refresh.disabled=false;
+  const morePractice=host.querySelector('#v10MorePractice');if(morePractice)morePractice.disabled=false;
+}
+
+function enqueueTodayAction(operation){
+  const task=todayActionTail.catch(()=>undefined).then(operation);
+  todayActionTail=task;
+  return task;
+}
+
+function enqueueRender(options={}){
+  pendingTodayRenders+=1;
+  setTodayRenderBusy(true);
+  const task=enqueueTodayAction(()=>renderPlan(options));
+  return task.finally(()=>{
+    pendingTodayRenders-=1;
+    setTodayRenderBusy(pendingTodayRenders>0);
+  });
+}
+
+function enqueueLaunch(activity){
+  return enqueueTodayAction(()=>launchActivity(activity));
 }
 
 async function renderPlan({force=false,degraded=false}={}){
   const host=document.querySelector('#v10TodayPlan');if(!host)return;
   if(degraded){
     host.innerHTML='<div class="v10-today-head"><div><p class="eyebrow">TODAY · SAFE MODE</p><h3>Today tạm dừng trong Core-only degraded mode</h3><p>Không mở phiên học vì V10 durable plan/target verification không khả dụng. Quick Capture vẫn dùng adapter degraded đã verify.</p></div></div><p id="v10TodayStatus" data-kind="error">Không có schedule write hoặc RAM-only fallback.</p>';
+    setTodayStatus('Không có schedule write hoặc RAM-only fallback.','error');
     return;
   }
   const plan=await buildTodayActivityPlan({force});
   const minutes=Math.max(1,Math.round(plan.estimatedSeconds/60));
   const firstReady=plan.activities.find(row=>row.execution?.status==='ready');
   host.innerHTML=`<div class="v10-today-head"><div><p class="eyebrow">CANONICAL TODAY</p><h3>Phiên exact-target ${minutes} phút</h3><p>Mỗi launcher được bind vào durable activity, card/sense/skill/source revision; target stale sẽ fail closed.</p></div><div><button class="secondary-button" id="v10MorePractice">Luyện thêm</button><button class="secondary-button" id="v10RefreshPlan">Lập kế hoạch mới</button><button class="primary-button" id="v10StartPlan" ${firstReady?'':'disabled'}>Bắt đầu target khả dụng đầu tiên</button></div></div><div class="v10-activity-strip">${plan.activities.length?plan.activities.map((row,index)=>`<button data-v10-activity="${escape(row.id)}" data-today-execution="${escape(row.execution?.status||'blocked')}" ${row.execution?.status==='ready'?'':'disabled'}><span>${activityIcon(row.type)}</span><strong>${escape(row.payload?.label||row.type)}</strong><small>${Math.max(1,Math.round(row.estimatedSeconds/60))} phút · ${row.execution?.status==='ready'?(row.evidencePolicy?.affectsSchedule?'exact evidence target':'exact coaching target'):`blocked: ${escape(row.execution?.reason||'unsupported')}`}</small><em>${index+1}</em></button>`).join(''):'<p class="muted">Chưa có exact activity. Không mở phiên tổng hợp thay thế.</p>'}</div><p id="v10TodayStatus" aria-live="polite"></p><small class="v10-plan-coverage">${plan.coverage.cards} hoạt động gắn card · ${plan.coverage.errors} lỗi · ${plan.coverage.listening} nghe · ${plan.coverage.coaching} coaching · ${plan.coverage.content} content</small>`;
+  applyTodayStatus();
   host.dataset.activities=JSON.stringify(plan.activities.map(row=>row.id));
   const byId=new Map(plan.activities.map(row=>[row.id,row]));
   host.onclick=event=>{
     const button=event.target.closest('[data-v10-activity]');
     if(!button)return;
     const activity=byId.get(button.dataset.v10Activity);
-    void launchActivity(activity).then(()=>setTodayStatus('Đã mở đúng durable planned target.','success')).catch(error=>setTodayStatus(`${error.code||'TODAY_LAUNCH_FAILED'}: ${error.message}`,'error'));
+    void enqueueLaunch(activity).then(()=>setTodayStatus('Đã mở đúng durable planned target.','success')).catch(error=>setTodayStatus(`${error.code||'TODAY_LAUNCH_FAILED'}: ${error.message}`,'error'));
   };
-  document.querySelector('#v10StartPlan')?.addEventListener('click',()=>void launchActivity(firstReady).then(()=>setTodayStatus('Đã mở đúng durable planned target.','success')).catch(error=>setTodayStatus(`${error.code||'TODAY_LAUNCH_FAILED'}: ${error.message}`,'error')));
+  document.querySelector('#v10StartPlan')?.addEventListener('click',()=>void enqueueLaunch(firstReady).then(()=>setTodayStatus('Đã mở đúng durable planned target.','success')).catch(error=>setTodayStatus(`${error.code||'TODAY_LAUNCH_FAILED'}: ${error.message}`,'error')));
   document.querySelector('#v10MorePractice')?.addEventListener('click',()=>globalThis.VocabMasterApp?.openPractice?.());
-  document.querySelector('#v10RefreshPlan')?.addEventListener('click',()=>void renderPlan({force:true}).catch(error=>setTodayStatus(error.message,'error')));
+  document.querySelector('#v10RefreshPlan')?.addEventListener('click',()=>{
+    setTodayStatus();
+    void enqueueRender({force:true}).catch(error=>setTodayStatus(`${error.code||'TODAY_RENDER_FAILED'}: ${error.message}`,'error'));
+  });
 }
 
 function mountSection(){
@@ -375,14 +420,15 @@ function mountSection(){
 
 export async function mountTodayPlannerV2({degraded=false}={}){
   if(!document.querySelector('#v10TodaySection'))mountSection();
-  await renderPlan({degraded});
+  await enqueueRender({degraded});
   if(!degraded){
-    globalThis.addEventListener('vocab:external-change',()=>void renderPlan());
-    globalThis.addEventListener('vocab:ielts-data-saved',()=>void renderPlan());
-    globalThis.addEventListener('vocab:v10-personal-content-ready',()=>void renderPlan());
-    globalThis.addEventListener('hashchange',()=>{if(location.hash==='#today')void renderPlan();});
+    const refresh=()=>void enqueueRender().catch(error=>setTodayStatus(`${error.code||'TODAY_RENDER_FAILED'}: ${error.message}`,'error'));
+    globalThis.addEventListener('vocab:external-change',refresh);
+    globalThis.addEventListener('vocab:ielts-data-saved',refresh);
+    globalThis.addEventListener('vocab:v10-personal-content-ready',refresh);
+    globalThis.addEventListener('hashchange',()=>{if(location.hash==='#today')refresh();});
   }
-  globalThis.VocabMasterTodayV2={build:buildTodayActivityPlan,refresh:options=>renderPlan(options),launch:launchActivity,binding:activityLaunchBinding};
+  globalThis.VocabMasterTodayV2={build:options=>enqueueTodayAction(()=>buildTodayActivityPlan(options)),refresh:options=>enqueueRender(options),launch:activity=>enqueueLaunch(activity),binding:activityLaunchBinding};
   return globalThis.VocabMasterTodayV2;
 }
 
