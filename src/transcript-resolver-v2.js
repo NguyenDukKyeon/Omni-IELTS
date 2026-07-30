@@ -67,7 +67,7 @@ export async function waitForResolverJob(jobId,{signal,onProgress=()=>{},after=0
 async function backendProvider(context){
   let resumedJob=context.resumeJobId?await readResolverJob(context.resumeJobId,context.signal).catch(()=>null):null;
   if(terminalJob(resumedJob)&&resumedJob.status!=='complete')resumedJob=null;
-  const created=resumedJob?{job:resumedJob,created:false}:await fetchJson('/api/transcript/jobs',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:context.url,videoId:context.videoId,language:context.language,namespace:'shared'}),signal:context.signal},25_000);
+  const created=resumedJob?{job:resumedJob,created:false}:await fetchJson('/api/transcript/jobs',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url:context.url,videoId:context.videoId,language:context.language,namespace:context.namespace,sharing:context.sharing,fallback:context.fallback}),signal:context.signal},25_000);
   const jobId=created?.job?.id;if(!jobId)throw new Error('resolver-job-create-failed');
   await persistResolverJob(created.job,'resolver-job-created');context.onProgress?.({status:created.job.status||'queued',jobId,job:created.job,resumed:Boolean(context.resumeJobId),deduplicated:created.created===false});
   const job=await waitForResolverJob(jobId,{signal:context.signal,onProgress:context.onProgress});
@@ -81,7 +81,7 @@ async function saveTranscript(context,result){
   const durationSeconds=Math.max(0,finiteNumber(result.durationSeconds,0)),lastEnd=Math.max(0,...segments.map(row=>Number(row.endMs||0)/1000));
   const complete=Boolean(result.complete||(durationSeconds&&lastEnd>=durationSeconds-2));
   const canonical=await createProviderTranscriptRevision({
-    source:{id:`transcript-source:youtube:${context.videoId}`,namespace:result.provider==='imported'?'private':'shared',externalId:context.videoId,sourceType:'youtube',title:result.title||'YouTube video',url:context.url,language:result.language||context.language,status:result.provider==='imported'?'verified':'unverified',complete},
+    source:{id:`transcript-source:${result.provider==='imported'?'private':context.namespace||'private'}:youtube:${context.videoId}`,namespace:result.provider==='imported'?'private':context.namespace||'private',externalId:context.videoId,sourceType:'youtube',title:result.title||'YouTube video',url:context.url,language:result.language||context.language,status:'unverified',complete},
     segments,
     provenance:{kind:'resolver',provider:result.provider,model:result.model||null,cacheKey:context.cacheKey}
   });
@@ -96,10 +96,10 @@ async function saveTranscript(context,result){
 
 async function firstSuccessful(tasks=[]){return new Promise((resolve,reject)=>{let pending=tasks.length,settled=false;const errors=[];if(!pending)return reject(new Error('Không có transcript provider.'));for(const task of tasks)task().then(value=>{if(settled)return;settled=true;resolve(value);}).catch(error=>{errors.push(error);pending-=1;if(!pending&&!settled)reject(new AggregateError(errors,'Không provider nào trả transcript.'));});});}
 
-export async function resolveTranscriptFast({url,language='en',startSeconds=0,firstChunkSeconds=60,providers=['indexeddb','shared-cache','backend-provider'],signal=null,onProgress=null,resumeJobId=null}={}){
+export async function resolveTranscriptFast({url,language='en',startSeconds=0,firstChunkSeconds=60,providers=['indexeddb','backend-provider'],allowSharedCache=false,sharing=null,fallback=null,signal=null,onProgress=null,resumeJobId=null}={}){
   const videoId=parseYouTubeVideoId(url);if(!videoId)throw new Error('URL YouTube không hợp lệ.');const start=Math.max(0,finiteNumber(startSeconds,0)),endSeconds=Math.max(start+30,start+Math.min(180,finiteNumber(firstChunkSeconds,60)));const context={url,videoId,language,startSeconds:start,endSeconds,cacheKey:transcriptCacheKey({videoId,language,startSeconds:start,endSeconds})};
-  Object.assign(context,{signal,onProgress,resumeJobId});
-  const selected=providers.filter(name=>TRANSCRIPT_PROVIDERS.includes(name)&&PROVIDERS[name]);let result,lastError;
+  Object.assign(context,{signal,onProgress,resumeJobId,namespace:allowSharedCache?'shared':'private',sharing,fallback});
+  const selected=providers.filter(name=>name!=='shared-cache'||allowSharedCache).filter(name=>TRANSCRIPT_PROVIDERS.includes(name)&&PROVIDERS[name]);let result,lastError;
   for(const name of selected){try{result=await PROVIDERS[name](context);break;}catch(error){lastError=error;if(name==='backend-provider')throw error;}}
   if(!result)throw lastError||new Error('Không tìm thấy caption phù hợp.');
   const saved=result.cached&&result.id?result:await saveTranscript(context,result);saved.lastAccessedAt=Date.now();await putV10Record(V10_STORES.transcriptCache,saved,'transcript-cache-accessed');return saved;
