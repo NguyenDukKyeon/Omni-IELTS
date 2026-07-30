@@ -7,19 +7,22 @@ const normalizeSegments=(rows=[],language='en')=>(Array.isArray(rows)?rows:[]).s
 
 export function validateGeminiFallbackRequest(job={}){
   const fallback=job.request?.fallback||{},sourcePolicy=job.request?.sourcePolicy||{};
-  if(!fallback.enableGemini||fallback.consentVersion!==CLOUD_CONSENT_VERSION||!/^cloud-consent:/.test(String(fallback.consentReceiptId||'')))throw resolverError('CONSENT_REQUIRED','Current explicit Gemini consent is required.');
+  if(!fallback.enableGemini||fallback.consentVersion!==CLOUD_CONSENT_VERSION||!/^phase5-consent-subject:/.test(String(fallback.consentSubjectId||''))||!/^cloud-consent:/.test(String(fallback.consentReceiptId||'')))throw resolverError('CONSENT_REQUIRED','Current explicit Gemini consent is required.');
   if(fallback.maxBillableRequests!==1)throw resolverError('COST_CAP','Gemini fallback requires a one-request billable cap.');
   if(sourcePolicy.visibility!=='public'||sourcePolicy.requiresAuth!==false||sourcePolicy.cookiesUsed!==false||sourcePolicy.rights!=='eligible')throw resolverError('RIGHTS_INELIGIBLE','Cloud transcription is limited to public, no-auth, no-cookie, rights-eligible sources.');
   return fallback;
 }
 
-export function createGeminiAsrProvider({apiKey=process.env.GEMINI_API_KEY||'',model=process.env.GEMINI_ASR_MODEL||'gemini-3.5-flash',fetchImpl=fetch}={}){
+export function createGeminiAsrProvider({apiKey=process.env.GEMINI_API_KEY||'',model=process.env.GEMINI_ASR_MODEL||'gemini-3.5-flash',fetchImpl=fetch,authorizeConsent=async()=>{throw resolverError('CONSENT_REQUIRED','Durable Gemini consent authority is unavailable.');}}={}){
   const key=String(apiKey).trim();
   return{
     async health(){return{available:Boolean(key),configured:Boolean(key),provider:'gemini',credentialLocation:'server-only'};},
     async transcribe(job,{signal=null}={}){
       const fallback=validateGeminiFallbackRequest(job);if(!key)throw resolverError('CLOUD_UNAVAILABLE','Gemini ASR is not configured on the server.');
-      const duration=Math.max(30,Math.min(1200,Number(job.metadata?.durationSeconds||fallback.maxDurationSeconds||1200)));if(duration>fallback.maxDurationSeconds)throw resolverError('COST_CAP','Media duration exceeds the consented cloud cap.');
+      await authorizeConsent({subjectId:fallback.consentSubjectId,receiptId:fallback.consentReceiptId,consentVersion:fallback.consentVersion});
+      const duration=Number(job.metadata?.durationSeconds);
+      if(!Number.isFinite(duration)||duration<=0)throw resolverError('COST_CAP','Media duration is required before cloud transcription.');
+      if(duration>fallback.maxDurationSeconds)throw resolverError('COST_CAP','Media duration exceeds the consented cloud cap.');
       const prompt='Transcribe spoken English into sentence-level JSON segments with absolute startMs, endMs and text. Preserve contractions and punctuation. Exclude silence. Do not claim verification or confidence.';
       const requestBody={contents:[{role:'user',parts:[{fileData:{fileUri:job.request.source.canonicalUrl,mimeType:'video/*'},videoMetadata:{startOffset:'0s',endOffset:`${duration}s`}},{text:prompt}]}],generationConfig:{responseMimeType:'application/json',responseJsonSchema:{type:'object',properties:{segments:{type:'array',items:{type:'object',properties:{startMs:{type:'number'},endMs:{type:'number'},text:{type:'string'}},required:['startMs','endMs','text']}}},required:['segments']},temperature:0}};
       const call=()=>fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':key},body:JSON.stringify(requestBody),signal});

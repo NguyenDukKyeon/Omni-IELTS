@@ -66,7 +66,7 @@ const DEFAULT_AI_MODEL=AI_MODELS.has(process.env.GEMINI_MODEL)?process.env.GEMIN
 const handleIeltsApi=createIeltsApiHandler({securityHeaders,aiModels:AI_MODELS,defaultAiModel:DEFAULT_AI_MODEL});
 const resolverRepository=new ResolverJobRepository();
 const transcriptResolver=createCaptionResolverV2({securityHeaders,repository:resolverRepository});
-const asrFallbackResolver=createAsrFallbackResolver({securityHeaders,repository:resolverRepository,localClient:createLocalCompanionClient(),cloudClient:createGeminiAsrProvider()});
+const asrFallbackResolver=createAsrFallbackResolver({securityHeaders,repository:resolverRepository,localClient:createLocalCompanionClient(),cloudClient:createGeminiAsrProvider({authorizeConsent:request=>resolverRepository.assertCurrentCloudConsent(request)})});
 const handleTranscriptResolver=async(req,res,path,url)=>{
   if(await asrFallbackResolver.handle(req,res,path))return;
   if(path.endsWith('/cancel')){const jobId=decodeURIComponent(path.split('/').at(-2)||'');if(asrFallbackResolver.isActive(jobId))return json(res,200,{job:await asrFallbackResolver.cancel(jobId)});}

@@ -36,6 +36,7 @@ import {
 } from './backup-registry.js';
 import { MIGRATION_LEDGER_PREFIX } from './migration-ledger.js';
 import { withExclusiveStorageLock } from './storage-lock.js';
+import { PHASE5_CONSENT_KEY,PHASE5_SETTINGS_KEY } from './asr-fallback-policy.js';
 
 export const COMBINED_BACKUP_VERSION=FULL_BACKUP_VERSION;
 export const DEGRADED_CORE_BACKUP_KIND='vocab-master-core-degraded';
@@ -101,6 +102,17 @@ export function validateCombinedBackup(input){
   const coreValidation=validateBackupDocument(input.core);if(!coreValidation.valid)errors.push(...coreValidation.errors.map(error=>`Core: ${error}`));warnings.push(...coreValidation.warnings.map(warning=>`Core: ${warning}`));
   const ieltsValidation=validateIeltsBackup(input.ielts);if(!ieltsValidation.valid)errors.push(...ieltsValidation.errors.map(error=>`IELTS: ${error}`));warnings.push(...ieltsValidation.warnings.map(warning=>`IELTS: ${warning}`));
   return{valid:errors.length===0,errors,warnings,value:errors.length?null:{...input,core:coreValidation.value,ielts:ieltsValidation.value},format:'legacy-v1'};
+}
+
+function preparePhase5SafeRestoreTarget(envelope){
+  const domains=structuredClone(envelope.domains),meta=domains.v10.stores[V10_STORES.meta]||[];let changed=false;
+  domains.v10.stores[V10_STORES.meta]=meta.map(row=>{
+    if(row.key===PHASE5_SETTINGS_KEY&&row.cloudEnabled===true){changed=true;return{...row,cloudEnabled:false,restoreReactivationRequired:true,updatedAt:Date.now()};}
+    if(row.key===PHASE5_CONSENT_KEY&&row.decision==='accepted'){changed=true;return{...row,reactivationRequired:true,updatedAt:Date.now()};}
+    return row;
+  });
+  if(!changed)return envelope;
+  return buildFullBackupEnvelope({core:domains.core.stores,ielts:domains.ielts.stores,v10:domains.v10.stores});
 }
 
 function coreStoresFromLegacy(currentStores,legacy){
@@ -366,7 +378,11 @@ export async function restoreCombinedBackup(input,options={}){
   return withExclusiveStorageLock(async restoreToken=>{
     invalidateCoreScheduledMaintenance({restoreToken});
     await recoverInterruptedRestoreLocked(restoreToken);
-    if(validation.format==='vnext')return restorePreparedTargetLocked(validation.value,restoreToken,{warnings:validation.warnings,hooks});
+    if(validation.format==='vnext'){
+      const target=preparePhase5SafeRestoreTarget(validation.value);
+      const warnings=target===validation.value?validation.warnings:[...validation.warnings,'Phase 5 cloud access was disabled after restore and requires fresh explicit consent activation.'];
+      return restorePreparedTargetLocked(target,restoreToken,{warnings,hooks});
+    }
     if(validation.format==='degraded-core-v1'){
       const current=await buildCombinedBackup({restoreToken});
       const target=buildFullBackupEnvelope({core:validation.value.domains.core.stores,ielts:current.domains.ielts.stores,v10:current.domains.v10.stores});
