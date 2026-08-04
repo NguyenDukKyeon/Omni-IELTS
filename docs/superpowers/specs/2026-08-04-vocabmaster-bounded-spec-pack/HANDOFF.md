@@ -1,148 +1,526 @@
-# VocabMaster Bounded Specification Pack — Handoff
+# VocabMaster Bounded Specification Pack — Corrected GitHub Connector v4 Handoff
 
-Handoff status: `DOCS_REVIEW_COMPLETE / EWF_ARTIFACT_SLICE_AUTHORIZED`
+Handoff status: `DOCS_PREPARED / CONNECTOR_AUTHORIZATION_V4_PENDING_INDEPENDENT_AUDIT / NOT_ACCEPTANCE`
 
-This is still not `HANDOFF_READY` for every package, product acceptance, merge or
-release. It records an independently reviewed frozen specification subject and
-one separately authorized EWF-00 implementation slice.
+This handoff preserves the frozen bounded specification pack and accepted `EWF00-ARTIFACTS-001` slice while recording the corrected connector-native v4 authorization for `EWF00-PREFLIGHT-001`. It does not implement source, create an implementation branch, open an implementation PR, change CI/dependencies/canonical status, authorize pilots, edit or close historical PRs, merge any PR, or issue implementation/package acceptance.
 
-## Frozen subject identity
+## 1. Canonical authority and frozen subject
 
-| Field | Value |
+Canonical authority remains solely:
+
+```text
+AGENTS.md
+docs/ROADMAP.md
+docs/IMPLEMENTATION_PLAN.md
+docs/IMPLEMENTATION_STATUS.md
+docs/DECISIONS.md
+```
+
+| Field | Exact value |
 |---|---|
-| Subject commit | `0b43efac974c3fbbc489f10e9fa668bac84c9b43` |
-| Subject parent | `31c3c8a73363d3c88cb0719d799f597b3d381467` |
-| Subject message | `docs: add coverage matrices and delivery wave drafts` |
-| Original pack branch | `codex/canonical-reconciliation-spec-pack` |
-| Scope | 25 specification-pack artifacts under this directory, excluding this handoff |
-| Architecture baseline | `adc3726620f4badddb16309e375f8f17b6af1404` — approved design only, not Foundation implementation/acceptance |
-| Canonical bootstrap chain | `adc3726 → 0639637 → 9be9914 → d8ec9c7` |
+| Frozen bounded-spec subject | `0b43efac974c3fbbc489f10e9fa668bac84c9b43` |
+| Frozen subject parent | `31c3c8a73363d3c88cb0719d799f597b3d381467` |
+| Architecture baseline | `adc3726620f4badddb16309e375f8f17b6af1404` |
+| Independent bounded-spec documentation review | `d059aeee7d5ddf4691a1bd72628cb0bce31453fd` |
+| Exact main baseline | `474bde8e3c7b09f757e7df4a1587f8a71b2e7865` |
 
-The subject commit contains all bounded specs, matrices, future-boundary drafts
-and the implementation queue. The subject artifacts were not edited merely to
-change their internal `DRAFT` labels. Later review/authorization records are
-separate evidence revisions bound to this exact subject.
+The bounded specs, matrices, future-boundary drafts, implementation queue, plans, briefs, handoffs, GitHub metadata, CI evidence, and audit comments remain subordinate. They cannot replace canonical package ownership, dependency, status, release-safety, or acceptance authority.
 
-## Review and authorization records
+## 2. Preserved accepted EWF artifact slice
 
-| Record | Exact commit | Effect |
-|---|---|---|
-| Independent documentation review | `d059aeee7d5ddf4691a1bd72628cb0bce31453fd` | Seven package specs reviewed; EWF artifact spec approved as implementation baseline; matrices accepted only as gap ledgers |
-| EWF artifact implementation plan | `1ce97fc99f2b430839bdaa693639ef9d71277b62` | Exact approved implementation predecessor and plan content |
-| Frozen EWF artifact authorization brief | `a1e3433d13936b392919648fcf4b9ab024178303` | Authorizes only `EWF00-ARTIFACTS-001` under the declared allowlist and gates |
-
-The implementation branch for the first task must start from exact commit
-`1ce97fc99f2b430839bdaa693639ef9d71277b62`, not from a newer evidence-only
-handoff commit. The authorization brief is consumed as read-only evidence from
-its exact commit.
-
-## Authority and effective status boundary
-
-`AGENTS.md`, `docs/ROADMAP.md`, `docs/IMPLEMENTATION_PLAN.md`,
-`docs/IMPLEMENTATION_STATUS.md` and `docs/DECISIONS.md` remain the only
-canonical governance sources.
-
-Canonical package status remains unchanged:
-
-- LI-00, SRC-00, ERR-00, QAR-00 and EWF-00 remain
-  `PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED`.
-- U-LI, U-AI, U-PCS, U-4S and U-FD remain grouping labels only.
-
-Effective review results:
-
-- `EWF00-ARTIFACTS-001`: reviewed and approved as an implementation baseline;
-  implementation is authorized only by the frozen brief above.
-- `EWF00-PREFLIGHT-001` and `EWF00-PILOTS-001`: reviewed and approved as bounded
-  specifications, but not implementation-authorized.
-- LI-00, SRC-00, ERR-00 and QAR-00 specs: reviewed and approved as bounded
-  specifications, but not implementation-authorized.
-- all eight coverage matrices remain `DRAFT_PENDING_CANONICAL_REBIND` and are
-  accepted only as honest gap ledgers;
-- all seven future-boundary drafts remain noncanonical and require just-in-time
-  ratification/rebind;
-- the implementation queue remains sequencing guidance, not a status ledger.
-
-No document in this pack changes Phase 4/5 acceptance, P5-05 history, ADR-042, a
-product behavior or a canonical status row.
-
-## Included artifacts
-
-| Group | Subject artifacts | Review intent |
-|---|---:|---|
-| Canonical product specs | 4 | LI-00, SRC-00, ERR-00, QAR-00 bounded scopes and acceptance evidence |
-| EWF specs | 3 | Artifact contracts; preflight/verification/trace; pilots/measurement/audit |
-| Coverage matrices | 8 | Reading, Listening, Writing, Speaking, Academic/GT, source/import, capability/tool, assessment/readiness gaps |
-| Future boundary drafts | 7 | Preserved 34 candidate dispositions, just-in-time ratification and deferred work |
-| Integration brief | 1 | One audio→activity→attempt→feedback→candidate→advisory recommendation slice |
-| Delivery queue | 1 | Ordered, non-authorizing delivery waves |
-| Pack README | 1 | Lineage, status rules, manifest and stop conditions |
-
-## Verification recorded for the frozen subject
-
-| Check | Result |
+| Field | Exact value |
 |---|---|
-| Subject diff scope | 18 files, all under this specification-pack directory |
-| Whitespace check | `git diff --cached --check` clean before subject commit |
-| Matrix/future count | 8 matrices; 8 future artifacts including 7 wave/deferred drafts plus 1 vertical brief |
-| Rebind status check | 8/8 matrices and 8/8 future artifacts carry `DRAFT_PENDING_CANONICAL_REBIND` |
-| Candidate parity | 34/34 future candidates appear in queue; zero appeared in ROADMAP/PLAN/STATUS package tables |
-| Coverage taxonomy check | All required Reading/Listening/Writing/Speaking/Academic-GT/source/tool/readiness terms present in the matrices |
-| Canonical parity | ROADMAP/PLAN/STATUS each expose 66 package IDs with exact parity; dependency graph has 66 nodes and 0 cycles |
-| Umbrella rule | 0 umbrella status rows and 0 umbrella package-dependency rows |
-| Roadmap audit | `node scripts/audit-roadmap.mjs` passed 12/12 at the subject worktree |
+| Accepted slice | `EWF00-ARTIFACTS-001` |
+| Accepted implementation subject | `dc3aa8aa8084abee6819ffcbc238bd7e6f483b6c` |
+| Accepted evidence HEAD | `826dbe9027325c350b0b734a3861e0dfa038e0cd` |
+| Artifact merge / exact current main | `474bde8e3c7b09f757e7df4a1587f8a71b2e7865` |
+| Effect of v4 | preservation only; no artifact source/template/test mutation |
 
-No production source changed. After the subject pack was completed, `npm test`
-was attempted in the clean worktree: 159 tests passed and 31 stopped before their
-assertions because `fake-indexeddb`, `ts-fsrs` and `esbuild` were absent. No
-dependency installation was authorized, so this is an environment limitation,
-not a green production-suite result or a product acceptance verdict. The roadmap
-audit is likewise not package implementation or acceptance evidence.
+The future preflight adapter must reuse accepted exports from `scripts/ewf-artifacts.mjs` and must not modify that file or accepted artifact templates/tests:
 
-The independent documentation review found no blocking internal contradiction
-among the seven package specs. It did not run or claim a green production suite.
+```text
+COMMAND_RESULTS
+canonicalizeArtifact
+digestArtifact
+validateArtifact
+validateFrozenBrief
+redactPortableValue
+```
 
-## Known open conditions
+Direct `node:crypto` and duplicate digest, canonicalization, or portable-redaction implementations remain forbidden.
 
-- `CANONICAL_CONFLICT — NEEDS_SEPARATE_RESOLUTION`: the Speaking matrix records
-  an apparent P3-02 Shadowing acceptance/evidence mismatch. This pack neither
-  changes nor resolves it; no new spec may rely on the disputed receipt claim.
-- Full IELTS profile/inventory ownership, productive-practice ownership, personal
-  content ingress/compiler ownership, assessment/readiness ownership and most
-  technical-capability choices remain deliberately uncanonicalized.
-- Phase 4/5 implementation/remediation evidence remains preserved as recorded;
-  it is not reinterpreted as independent acceptance here.
-- No GitHub Actions run exists for the reviewed documentation head merely from
-  pushing the non-PR branch.
+## 3. Connector authorization v4 exact identity
 
-## Stop conditions for a coding agent
+| Field | Exact value |
+|---|---|
+| Package / bounded spec | `EWF-00` / `EWF00-PREFLIGHT-001` |
+| Requirement namespace | `EWF00-PVT-01` through `EWF00-PVT-12` |
+| Frozen spec subject | `0b43efac974c3fbbc489f10e9fa668bac84c9b43` |
+| Authorization branch | `chatgpt/ewf-00-preflight-trace-authorization-v4` |
+| Exact plan path | `docs/superpowers/plans/2026-08-05-ewf-00-preflight-verification-trace-github-connector-v4.md` |
+| Exact plan commit / approved implementation predecessor | `250b879fa06b7be50a198e3cf007637c5f9d7306` |
+| Exact plan parent | `474bde8e3c7b09f757e7df4a1587f8a71b2e7865` |
+| Exact plan blob | `c45255836ca211d7f07f010016c68b568da6b193` |
+| Frozen authorization brief path | `docs/superpowers/briefs/2026-08-05-ewf00-preflight-verification-trace-github-connector-v4-authorization.md` |
+| Frozen authorization brief commit | `03f892611925a60fcf1743cf16ffcd7c1385e5a2` |
+| Required implementation branch | `chatgpt/ewf-00-preflight-verification-trace-mvp` |
+| Designated connector writer | `chatgpt-github-ewf00-preflight-primary-writer` |
+| Writer mode | `exclusive` |
+| Execution substrate | `GitHub connector + existing GitHub Actions` |
+| Package status | `PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED` |
 
-Do not start source implementation if any of the following is true:
+Commit `250b879fa06b7be50a198e3cf007637c5f9d7306` is a direct child of exact main and changes only the v4 plan path. Its plan is exact blob `c45255836ca211d7f07f010016c68b568da6b193`. Commit `03f892611925a60fcf1743cf16ffcd7c1385e5a2` is a direct child of the plan commit and changes only the v4 brief path.
 
-- the requested task is not `EWF00-ARTIFACTS-001` under the frozen brief;
-- HEAD is not exact predecessor `1ce97fc99f2b430839bdaa693639ef9d71277b62`;
-- branch/worktree/writer scope or the brief is missing or mismatched;
-- the implementation needs a file outside the brief allowlist;
-- a requested boundary has no canonical package owner;
-- an umbrella is presented as an owner or dependency node;
-- a future candidate is not separately ratified/rebound for its wave;
-- an implementation would introduce a second runtime/store/scheduler/evidence/
-  status/acceptance authority;
-- a source, transcript, AI output, tool/provider, privacy/rights/cost claim or
-  readiness result lacks its declared validation/consent/evidence gate;
-- the P3-02 Shadowing conflict is implicated;
-- an action requires dependency installation, automatic initialization, CI
-  modification or a new overlapping writer without separate authorization.
+The rejected v3 plan `42bf5bdb782984d0ed662202d1b5a9a3d5066d43` is historical evidence only and is not an implementation predecessor under v4.
 
-## Authorized immediate successor
+Any rewritten SHA, different parent/path/blob, abbreviated SHA, squash, rebase, force-push, or topology change invalidates this handoff.
 
-Create branch `chatgpt/ewf-00-artifact-contracts-mvp` from exact commit
-`1ce97fc99f2b430839bdaa693639ef9d71277b62`, then implement the plan at:
+## 4. Effectiveness and historical PR boundary
 
-`docs/superpowers/plans/2026-08-04-ewf-00-artifact-contracts-mvp.md`
+Authorization v4 is not effective before a fresh independent docs-only exact-head audit returns `ACCEPT` on the exact final v4 authorization PR head.
 
-under the frozen authorization brief at:
+Before that verdict:
 
-`docs/superpowers/briefs/2026-08-04-ewf00-artifact-contracts-mvp-authorization.md`
+- do not create `chatgpt/ewf-00-preflight-verification-trace-mvp`;
+- do not write implementation source/template/test paths;
+- do not open an implementation PR;
+- do not claim implementation or package acceptance;
+- do not supersede or mutate historical authorization PRs.
 
-No LI-00, SRC-00, ERR-00, QAR-00, EWF preflight/trace or pilot implementation is
-authorized by this handoff.
+Historical open authorization state is preserved honestly:
+
+- PR #18 remains open and declares `EWF00-PREFLIGHT-001`;
+- PR #20 remains open and declares `EWF00-PREFLIGHT-001`;
+- PR #21 remains open and is the independently rejected v3 connector authorization;
+- this v4 handoff does not edit, rewrite, add commits to, mark ready, merge, or close PR #18, PR #20, or PR #21.
+
+After v4 receives exact-head docs `ACCEPT`, a separate explicit governance action is required to remove overlapping historical PRs from the open registry. Connector Governance Stage 0 remains blocked while a retained open PR declares the same spec, semantic key, branch, writer, or implementation path. The registry rules must not be weakened merely to ignore history.
+
+A v4 docs `ACCEPT` is authorization acceptance only. It is not adapter implementation acceptance and not `EWF-00` package acceptance.
+
+## 5. Exact future implementation allowlist
+
+Only these paths may be created or modified by the future implementation subject:
+
+```text
+.specify/templates/ewf/preflight-result.template.json
+.specify/templates/ewf/trace-manifest.template.json
+scripts/ewf-preflight-trace.mjs
+tests/ewf-preflight-verification-trace.test.mjs
+```
+
+Everything else is unauthorized, including:
+
+```text
+AGENTS.md
+docs/ROADMAP.md
+docs/IMPLEMENTATION_PLAN.md
+docs/IMPLEMENTATION_STATUS.md
+docs/DECISIONS.md
+.github/**
+src/**
+server/**
+public/**
+package.json
+package-lock.json
+scripts/ewf-artifacts.mjs
+existing accepted EWF templates/tests
+evidence/report files in the implementation subject
+dependencies
+CI
+product behavior
+pilots
+P3-02
+package status
+acceptance verdicts
+```
+
+No retry, discovery, installation, remediation engine, workflow runtime, scheduler, daemon, dashboard, acceptance generation, or status mutation is authorized.
+
+## 6. Mandatory two-contract separation
+
+### Contract A — Connector Governance Stage 0
+
+Connector Governance Stage 0 is external GitHub repository/API governance protecting only remote implementation-branch creation.
+
+It is not:
+
+- the adapter preflight;
+- an implementation of `EWF00-PVT-01` or `EWF00-PVT-02`;
+- a replacement for local Git/filesystem/worktree observation;
+- command-result evidence;
+- executable adapter evidence;
+- a content-digested EWF artifact;
+- acceptance evidence.
+
+### Contract B — Frozen Product Adapter
+
+The adapter remains the frozen bounded-spec contract. It validates an approved change-set declaration against read-only Git/filesystem state, including repository root, canonical files, HEAD, parent, symbolic ref, local ref, worktree, single-worktree and clean-state evidence, remote collision, writer/registry, file/semantic overlap, canonical gates, allowlist/exclusions, and zero-write behavior.
+
+Contract A cannot satisfy, replace, reinterpret, remove, or weaken Contract B.
+
+## 7. Contract A — raw Connector Governance Stage 0
+
+Stage 0 reads and records:
+
+- repository `NguyenDukKyeon/VocabMaster`;
+- default/base branch `main`;
+- exact main `474bde8e3c7b09f757e7df4a1587f8a71b2e7865`;
+- exact plan commit `250b879fa06b7be50a198e3cf007637c5f9d7306`;
+- exact plan parent, path, and blob `c45255836ca211d7f07f010016c68b568da6b193`;
+- implementation branch and implementation PR absence;
+- v4 authorization PR state, Draft state, branch, and exact audited head;
+- complete open-PR registry and complete changed filenames;
+- spec, semantic-key, branch, and writer declarations;
+- designated writer and mode;
+- exact allowlist and semantic-conflict keys;
+- canonical entry gates;
+- no source/CI/dependency/status/pilot/product/acceptance mutation.
+
+Semantic-conflict keys remain exactly:
+
+```text
+ewf:preflight-observation
+ewf:verification-execution
+ewf:trace-validation
+ewf:frozen-handoff-validation
+```
+
+### Complete registry rules
+
+Before implementation branch creation:
+
+1. enumerate all open PRs across all pages;
+2. read number, state, Draft state, head branch, head SHA, body, and complete changed filenames for each;
+3. exclude only the exact audited v4 authorization PR;
+4. retain every other open PR;
+5. fail closed if enumeration, pagination, body retrieval, or filename retrieval is incomplete.
+
+Block if another open PR:
+
+- changes an implementation allowlist path;
+- declares `EWF00-PREFLIGHT-001`;
+- declares a semantic-conflict key;
+- uses the implementation branch;
+- declares the designated writer;
+- has unclear writer ownership for the same scope.
+
+Do not infer independence from filenames, branches, Draft state, history, narrative intent, or prior verdict.
+
+### Raw normalized output and no premature digest
+
+Stage 0 emits only:
+
+```text
+recordType = CONNECTOR_GOVERNANCE_STAGE_0_RAW_METADATA
+result = PASS | BLOCKED
+observedAt
+repository
+repositoryApiIdentity
+defaultBranch
+mainRef
+mainSha
+planCommit
+planParent
+planPath
+planBlob
+authorizationPrNumber
+authorizationPrState
+authorizationPrDraft
+authorizationPrHeadBranch
+authorizationPrHeadSha
+implementationBranch
+implementationBranchState
+implementationPrState
+writer
+writerMode
+allowlist
+semanticConflictKeys
+canonicalGateResults
+openPrRows
+diagnostics
+```
+
+Stable ordering is raw evidence shaping only: numeric PR ordering, lexicographic filenames/declarations, deterministic diagnostics, and preserved exact GitHub strings/SHAs/timestamp/source identities.
+
+The raw Stage 0 record must not contain, require, or claim:
+
+```text
+openPrRegistryDigest
+contentDigest
+declarationDigest
+verificationManifestDigest
+digestArtifact execution
+canonicalizeArtifact execution
+redactPortableValue execution
+command-result evidence
+local Git evidence
+local filesystem/worktree evidence
+```
+
+No external hash/canonicalization/redaction implementation may be invented. Digesting preserved Stage 0 metadata is deferred to a separately authorized evidence-only revision after the executable adapter and exact-head GREEN CI exist.
+
+A Stage 0 `BLOCKED` result permits zero mutation. A Stage 0 `PASS` remains governance metadata only.
+
+## 8. Sole future connector mutation
+
+Only after:
+
+1. v4 receives fresh independent exact-head docs `ACCEPT`;
+2. a separate governance action removes every retained open overlap;
+3. fresh complete Stage 0 returns `PASS`;
+4. implementation branch and PR remain absent;
+
+create exactly:
+
+```text
+branch: chatgpt/ewf-00-preflight-verification-trace-mvp
+source SHA: 250b879fa06b7be50a198e3cf007637c5f9d7306
+```
+
+Do not create from main, v3 plan, PR #18/#20/#21, another authorization head, another plan, or abbreviated SHA.
+
+If the branch exists, do not update, reuse, delete, force, replace, or create an alternate branch. Stop. No second writer branch, merge, rebase, reset, local checkout/worktree/index/ref mutation, or force-push is authorized.
+
+## 9. Contract B — frozen adapter behavior
+
+The approved declaration binds:
+
+```text
+repository
+repositoryRoot
+requiredCanonicalFiles
+approvedPlanPath
+approvedPlanCommit
+approvedPlanBlob
+expectedHead
+expectedPredecessorParent
+expectedSymbolicRef
+expectedLocalTargetRef
+expectedWorktree
+requiredSingleWorktree
+remoteName
+remoteTargetRef
+remoteCollisionPolicy
+remoteExpectedState
+remoteExpectedSha
+writer
+writerMode
+activeWriterRegistry
+allowlist
+exclusions
+semanticConflictKeys
+canonicalEntryGates
+verificationManifest
+```
+
+The adapter supports and tests:
+
+- exact repository and repository-root identity;
+- required canonical files beneath root;
+- exact HEAD and parent;
+- exact symbolic branch/ref;
+- exact local target ref and SHA;
+- exact worktree identity;
+- exactly one declared implementation worktree;
+- clean tracked, staged/index, and untracked state;
+- remote repository identity and target collision policy;
+- declared writer and complete active writer registry;
+- file and semantic overlap;
+- canonical entry gates;
+- exact allowlist and exclusions;
+- zero writes on every blocking/error result.
+
+Read-only Git observations must represent:
+
+```text
+git rev-parse --show-toplevel
+git rev-parse HEAD
+git rev-parse HEAD^
+git symbolic-ref --quiet HEAD
+git show-ref --verify refs/heads/chatgpt/ewf-00-preflight-verification-trace-mvp
+git status --porcelain=v1 -z --untracked-files=all
+git worktree list --porcelain
+git remote get-url origin
+git ls-remote --refs origin refs/heads/chatgpt/ewf-00-preflight-verification-trace-mvp
+```
+
+Missing, malformed, truncated, ambiguous, or failed required observations block. GitHub connector metadata cannot prove local root, ref, worktree, or cleanliness.
+
+## 10. Mandatory local-adapter negative fixtures
+
+The authorized test file must include at least:
+
+- wrong repository;
+- wrong repository root;
+- missing required canonical file;
+- canonical path escaping root;
+- wrong HEAD;
+- wrong parent;
+- detached symbolic ref;
+- wrong symbolic ref;
+- wrong local target ref;
+- local target ref at wrong SHA;
+- wrong worktree identity;
+- multiple declared worktrees;
+- malformed/incomplete worktree registry;
+- dirty tracked worktree;
+- staged/index change;
+- dirty untracked worktree;
+- malformed/incomplete status observation;
+- missing writer;
+- wrong writer;
+- non-exclusive writer mode;
+- missing registry;
+- incomplete registry;
+- file overlap;
+- semantic overlap;
+- remote collision;
+- remote observation failure;
+- malformed remote identity/row;
+- broken canonical gate;
+- allowlist mismatch;
+- exclusion mismatch;
+- attempted out-of-bound write;
+- zero-write assertion for every blocking fixture.
+
+Fixtures use disposable repositories/directories and synthetic evidence. They must not dirty or alter the user's source worktree. Connector Stage 0 cannot remove, replace, skip, or weaken them.
+
+## 11. Verification, trace, brief, and executable digest
+
+The adapter retains:
+
+- `argv` as execution authority and `command` as display-only;
+- exact cwd/environment/timeout/tool requirement;
+- `declarationDigest` and `verificationManifestDigest`;
+- states `PASS`, `FAIL`, `ERROR`, `NOT_RUN`, `NOT_AVAILABLE`;
+- no retry/discovery/install/remediation;
+- deterministic ordering;
+- trace `requirement → test → command → evidence`;
+- duplicate/broken/missing/mismatched identity detection;
+- brief identity/completeness validation without acceptance verdict.
+
+Adapter-produced artifacts use:
+
+```text
+normalize complete object
+→ redactPortableValue
+→ omit top-level contentDigest
+→ digestArtifact
+→ attach contentDigest
+→ serialize
+```
+
+Declaration and manifest identities use accepted `digestArtifact` after omitting their own digest fields. This executable mechanism belongs to the implemented adapter and CI tests, not pre-implementation Stage 0.
+
+GitHub metadata evidence and executable CI evidence remain distinct provenance layers.
+
+## 12. CI-driven implementation commits A–D
+
+### Commit A
+
+```text
+message: test(ewf): define preflight verification trace contracts
+parent: 250b879fa06b7be50a198e3cf007637c5f9d7306
+changed path only: tests/ewf-preflight-verification-trace.test.mjs
+```
+
+Open a Draft implementation PR after Commit A. Existing CI is expected RED because implementation/templates are absent. The failure must reflect missing authorized implementation, not an artificial failing assertion.
+
+### Commit B
+
+```text
+message: feat(ewf): add preflight verification trace templates
+parent: exact Commit A
+changed paths only:
+  .specify/templates/ewf/preflight-result.template.json
+  .specify/templates/ewf/trace-manifest.template.json
+```
+
+### Commit C
+
+```text
+message: feat(ewf): implement preflight verification trace adapter
+parent: exact Commit B
+changed path only: scripts/ewf-preflight-trace.mjs
+```
+
+Commit C implements Contract B, not Contract A.
+
+### Commit D
+
+```text
+message: test(ewf): complete preflight verification trace matrix
+parent: exact Commit C
+changed path only: tests/ewf-preflight-verification-trace.test.mjs
+```
+
+Commit D completes original local adapter fixtures, connector-governance separation, full PVT matrix, digest/redaction/error cases, and boundary prohibitions. Existing CI must be GREEN at exact Commit D.
+
+Remediation, if required, uses separate disclosed commits within the four paths, preserves failed evidence, keeps Draft state, and never rewrites A–D.
+
+## 13. Existing CI and connector write discipline
+
+`.github/**` remains unchanged. Focused EWF gates live in the authorized test file and are exercised through existing `npm test`; no standalone command is claimed unless CI actually runs it.
+
+Evidence distinguishes:
+
+1. raw Connector Governance Stage 0 metadata;
+2. static GitHub object/diff observations;
+3. focused sub-gates inside the test harness;
+4. commands actually executed by existing CI;
+5. independent acceptance observations.
+
+After valid implementation-branch creation:
+
+- only the designated connector writer writes;
+- re-read exact branch HEAD before every write;
+- bind exact expected predecessor;
+- verify new-path absence or exact current blob;
+- no parallel same-path writes or overwrite of unread changes;
+- stop on unexpected head movement;
+- read back exact ref, commit, parent, changed paths, and blobs.
+
+Remote connector lineage does not replace executable Contract B behavior.
+
+## 14. Evidence and acceptance boundary
+
+After final implementation subject and exact-head GREEN CI:
+
+- evidence files require separate evidence-only revision authorization;
+- preserved raw Stage 0 metadata may be digested only under that later authorization through accepted executable code;
+- implementer evidence status is `IMPLEMENTER_EVIDENCE / NOT_ACCEPTANCE`;
+- evidence binds plan, brief, implementation subject, exact changed files, CI run/job IDs, declaration/manifest/trace/evidence/brief identities, GitHub metadata, and executable CI observations;
+- fresh independent exact-head read-only audit owns the implementation verdict.
+
+Passing this slice does not accept `EWF-00`, authorize `EWF00-PILOTS-001`, change package status, authorize product work, resolve P3-02, or merge any PR.
+
+## 15. Effective package and successor status
+
+- `EWF00-ARTIFACTS-001`: independently accepted and merged; preserved.
+- `EWF00-PREFLIGHT-001`: v4 docs authorization prepared but inactive before exact-head docs `ACCEPT`; not implemented and not accepted.
+- `EWF00-PILOTS-001`: unauthorized.
+- `EWF-00`: `PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED`.
+- LI-00, SRC-00, ERR-00, and QAR-00 remain unchanged.
+- P3-02 and product work remain outside scope.
+
+## 16. Stop conditions
+
+Do not start implementation if:
+
+- main, plan commit, parent, path, or blob mismatches;
+- brief commit is not exact `03f892611925a60fcf1743cf16ffcd7c1385e5a2`;
+- v4 exact-head docs `ACCEPT` is absent;
+- any retained open PR overlap remains;
+- complete registry or changed-filename retrieval is unavailable;
+- implementation branch or PR exists;
+- Stage 0 claims a digest/helper execution/command result/local evidence;
+- branch creation needs update/reuse/delete/force/alternate behavior;
+- a write needs a path outside the four-file allowlist;
+- Contract B omits or weakens repository root, canonical files, HEAD, parent, ref, local ref, worktree, single-worktree, cleanliness, remote collision, writer, registry, overlap, gates, allowlist/exclusions, or zero-write behavior;
+- disposable local-adapter fixtures are removed, replaced, skipped, or weakened;
+- CI/dependencies/accepted EWF artifacts/canonical docs/status/product/pilots/P3-02/acceptance must change;
+- exact-SHA executable CI evidence is unavailable;
+- a false local, connector, digest, or acceptance claim is required.
+
+This handoff remains subordinate docs-only authorization and remains `NOT_ACCEPTANCE`.
