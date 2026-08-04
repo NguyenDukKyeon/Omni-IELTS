@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "implementation-report",
+  "authorityLabel": "IMPLEMENTER_EVIDENCE / NOT_ACCEPTANCE",
+  "specId": "EWF00-ARTIFACTS-001",
+  "handoffState": "HANDOFF_READY",
+  "subjectCommit": "dc3aa8aa8084abee6819ffcbc238bd7e6f483b6c",
+  "parentCommit": "b85212abcd2a1a4597ae95fdf64221f62377d9ed",
+  "changedFiles": [
+    ".specify/memory/constitution.md",
+    ".specify/templates/ewf/audit-result.template.json",
+    ".specify/templates/ewf/change-set.template.json",
+    ".specify/templates/ewf/frozen-acceptance-brief.template.json",
+    ".specify/templates/ewf/implementation-report.template.json",
+    ".specify/templates/ewf/lightweight-repair.template.json",
+    ".specify/templates/ewf/spec-metadata.template.json",
+    ".specify/templates/ewf/verification-manifest.template.json",
+    "scripts/ewf-artifacts.mjs",
+    "tests/ewf-artifact-contracts.test.mjs"
+  ],
+  "requirementTrace": [
+    "EWF00-AC-01",
+    "EWF00-AC-02",
+    "EWF00-AC-03",
+    "EWF00-AC-04",
+    "EWF00-AC-05",
+    "EWF00-AC-06",
+    "EWF00-AC-07",
+    "EWF00-AC-08",
+    "EWF00-AC-09",
+    "EWF00-AC-10",
+    "EWF00-AC-11",
+    "EWF00-AC-12"
+  ],
+  "commandResults": [
+    {
+      "command": "node --test tests/ewf-artifact-contracts.test.mjs",
+      "result": "PASS",
+      "durationMs": 354.505779,
+      "exitCode": 0,
+      "environment": "isolated exact-blob verification; Node v22.16.0; 22 tests passed, 0 failed"
+    },
+    {
+      "command": "node scripts/ewf-artifacts.mjs --check",
+      "result": "PASS",
+      "durationMs": 29.252,
+      "exitCode": 0,
+      "environment": "isolated exact-blob verification; Node v22.16.0; valid=true, 0 errors"
+    },
+    {
+      "command": "GitHub Actions CI run 30895237553 (#275), job test",
+      "result": "PASS",
+      "durationMs": 79035.912,
+      "exitCode": 0,
+      "environment": "GitHub-hosted ubuntu-24.04; Node v22.23.1; npm 10.9.8; elapsed from job log timestamps"
+    }
+  ],
+  "environment": {
+    "focusedNode": "v22.16.0",
+    "focusedNpm": "10.9.2",
+    "ciRunnerImage": "ubuntu-24.04",
+    "ciNode": "v22.23.1",
+    "ciNpm": "10.9.8"
+  },
+  "extensions": {
+    "specRevision": "0b43efac974c3fbbc489f10e9fa668bac84c9b43",
+    "focusedSummary": {
+      "passed": 22,
+      "failed": 0
+    },
+    "ciEvidence": {
+      "runId": 30895237553,
+      "runNumber": 275,
+      "jobName": "test",
+      "conclusion": "success"
+    },
+    "evidenceFiles": [
+      "docs/superpowers/evidence/2026-08-04-ewf00-artifacts-001/implementation-report.json",
+      "docs/superpowers/evidence/2026-08-04-ewf00-artifacts-001/requirement-trace.json",
+      "docs/superpowers/evidence/2026-08-04-ewf00-artifacts-001/frozen-acceptance-brief.json"
+    ],
+    "evidenceDigestProjection": {
+      "traceDigest": "digestArtifact(requirement-trace.json)",
+      "evidenceDigest": "digestArtifact(implementation-report.json with the top-level frozenBriefDigest field omitted)",
+      "briefDigest": "digestArtifact(frozen-acceptance-brief.json with the top-level briefDigest field omitted)"
+    },
+    "implementationSubjectFrozen": true,
+    "independentReviewRequired": true
+  },
+  "frozenBriefDigest": "bdceb3ca7ec4e24751c17096197b1157a15313fc784954fa8b7a543ba206af7e"
+}

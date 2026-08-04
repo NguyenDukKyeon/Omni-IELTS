@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "spec-metadata",
+  "authorityLabel": "SUBORDINATE_SPEC_METADATA / NOT_CANONICAL",
+  "canonicalPackageId": "EWF-00",
+  "specId": "EWF00-ARTIFACTS-001",
+  "revision": "0b43efac974c3fbbc489f10e9fa668bac84c9b43",
+  "requirements": [
+    {
+      "id": "EWF00-AC-01",
+      "description": "Example namespaced requirement."
+    }
+  ],
+  "profiles": {
+    "focused": [
+      "node --test tests/ewf-artifact-contracts.test.mjs"
+    ],
+    "pr": [
+      "npm test"
+    ]
+  },
+  "extensions": {}
+}
