@@ -551,6 +551,12 @@ boundaries, not implementation authorization or acceptance evidence.
 | ERR-00 ErrorCandidate lifecycle | LI-00, P1-06 | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
 | QAR-00 Shared question activity contracts | LI-00, SRC-00 | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
 
+### Cross-cutting Repository Engineering
+
+| Package | Dependency/evidence boundary | Status |
+|---|---|---|
+| EWF-00 Engineering Workflow Foundation | No hard product-package dependency; approved architecture baseline `adc3726620f4badddb16309e375f8f17b6af1404`; CR-3 records governance metadata only | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
+
 ## 6. Phase 0 exit checklist
 
 - [x] One central default-deny EvidencePolicy guards every schedule write.

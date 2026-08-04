@@ -971,6 +971,26 @@ trong ROADMAP/ADR như grouping labels và không có acceptance boundary riêng
 - Rủi ro: High shared-executor boundary.
 - Điều kiện dừng: dừng nếu QAR owns Today/attempt persistence, invents IELTS profile inventory, uses AI as answer authority or labels matrix coverage as implemented without executor/evidence.
 
+## Cross-cutting Repository Engineering
+
+### EWF-00 — Engineering Workflow Foundation
+
+- Placement: Cross-cutting Repository Engineering, outside Phase 0–7 and outside U-LI/U-AI/U-PCS/U-4S/U-FD.
+- Architecture baseline: approved design commit `adc3726620f4badddb16309e375f8f17b6af1404`; the design file remains unchanged.
+- Initial status: `PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED`.
+- Delivery authorization: `NOT_GRANTED`; CR-3 is governance bootstrap only and creates no implementation branch, source, test, initializer or dependency change.
+- Dependency: no hard product-package dependency. Reuse the existing acceptance harness and independent-audit conventions without reopening Phase 0 or taking ownership from canonical package/phase gates.
+- Entry gate for later implementation: EWF-00 bounded specs approved; exact implementation predecessor and one-writer worktree approved separately; required artifact schemas and allowed-file boundary frozen before first write.
+- In scope: minimal constitutional bridge; one-writer/worktree preflight; lightweight repair record; structured spec metadata; focused/PR verification profiles; implementation verification report; frozen acceptance brief; `requirement → test → command → evidence` trace validator; negative fixtures for wrong HEAD, dirty tree, overlap, broken trace and mismatched brief; CLI-absent operation; one small-repair pilot; one bounded spec-level pilot; overhead measurement; independent audit.
+- Authority boundary: AGENTS/ROADMAP/PLAN/STATUS/DECISIONS remain canonical. EWF outputs are subordinate artifacts and never create package status, acceptance verdict or release authority. Implementer evidence cannot self-accept.
+- Non-goals: product behavior; Phase 4/5 reconciliation; second status/acceptance authority; dashboard; daemon; workflow runtime/DAG/scheduler/retry engine; CI workflow mutation or complex CI orchestration; mutation suite; broad fuzz; portability automation; automatic initializer, Spec Kit, fast-check or other dependency installation.
+- Migration/rollback: additive repository-local metadata/templates/wrappers only after separate authorization; no product schema/data migration. Rollback removes only declared EWF artifacts/hooks and must leave the canonical workflow operational when Spec Kit CLI is absent.
+- Test bắt buộc: wrong-head/dirty/untracked/overlap preflight; duplicate requirement and broken reference; missing required evidence; commit/spec/trace/evidence-digest mismatch; focused/PR result classification; CLI unavailable; deterministic artifact digest; small-repair and bounded-spec pilot evidence.
+- Acceptance criteria: every required negative fixture fails closed; both pilots complete without granting product status; exact identity and trace evidence are reproducible; measured overhead is recorded; no canonical authority is duplicated; an independent auditor at the exact commit issues the verdict.
+- Acceptance owner: independent canonical auditor at the exact implementation commit.
+- Rủi ro: High verification/governance integrity; Medium operational overhead.
+- Điều kiện dừng: dừng nếu implementation needs to rewrite canonical docs at runtime, auto-install tools, infer predecessor/acceptance, orchestrate a general workflow engine, absorb a pilot's product boundary or use implementer evidence as acceptance.
+
 ## 7. Thứ tự merge theo dependency thực
 
 Trục bắt buộc đầu tiên:

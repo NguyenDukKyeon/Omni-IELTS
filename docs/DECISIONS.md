@@ -685,3 +685,36 @@ IMPLEMENTATION_STATUS owns their honest planning state. Umbrella labels never
 appear in the status ledger. This decision does not change Phase 0–7 gates,
 Phase 4/5 evidence, historical P5-05/ADR-042, or authorize a future package by
 mention alone.
+
+## ADR-044 — EWF-00 is a cross-cutting repository foundation with no product authority
+
+Status: CONFIRMED
+
+Context: the Engineering Workflow Foundation design at exact commit
+`adc3726620f4badddb16309e375f8f17b6af1404` is approved as the architecture
+baseline. Design approval does not mean implementation or acceptance. The
+design file deliberately remains unchanged; before this governance bootstrap,
+Foundation implementation remains `GOVERNANCE_BLOCKED`.
+
+Decision: canonicalize EWF-00 — Engineering Workflow Foundation under
+Cross-cutting Repository Engineering, outside Phase 0–7 and outside all five
+U-* portfolio umbrellas. EWF-00 has no hard product-package dependency and
+reuses existing acceptance-harness and independent-audit conventions without
+owning them. After this bootstrap its initial package status is
+`PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED`.
+
+EWF-00 acceptance is bounded to the minimal constitutional bridge,
+one-writer/worktree preflight, lightweight repair record, structured spec
+metadata, focused/PR verification profiles, implementation verification
+report, frozen acceptance brief, requirement-to-test-to-command-to-evidence
+trace validation, declared negative fixtures, CLI-absent operation, one
+small-repair pilot, one bounded spec-level pilot, overhead measurements and an
+independent exact-commit audit. The independent canonical auditor owns the
+acceptance verdict; the implementer cannot self-accept.
+
+Consequences: CR-3 changes governance metadata only. It does not implement
+EWF-00, change product behavior, reconcile Phase 4/5, create another
+status/acceptance authority, install Spec Kit/fast-check/dependencies, or
+authorize dashboard, daemon, workflow runtime, mutation suite, broad fuzz or
+portability automation. Every later specification, implementation and pilot
+requires its own exact predecessor, boundary and authorization.

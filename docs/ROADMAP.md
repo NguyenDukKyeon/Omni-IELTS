@@ -163,6 +163,20 @@ phục vụ nhiều umbrella.
 All four packages are planning boundaries only. Canonicalization does not
 authorize implementation, create a branch or supply acceptance evidence.
 
+### Cross-cutting Repository Engineering
+
+This placement is outside Phase 0–7 and outside the five U-* portfolio
+umbrellas. It is repository engineering support, not a product phase or
+product capability owner.
+
+| Package | Canonical scope | Dependency |
+|---|---|---|
+| EWF-00 | Engineering Workflow Foundation: constitutional bridge, one-writer preflight, bounded repair/spec metadata, focused/PR evidence packaging, trace validation, frozen acceptance brief and independently audited pilots | No hard product-package dependency; architecture baseline `adc3726620f4badddb16309e375f8f17b6af1404`; reuse existing acceptance-harness and independent-audit conventions |
+
+EWF-00 does not own package status, product acceptance or canonical governance.
+Its bootstrap records planning metadata only and does not implement the
+Foundation.
+
 ## 5. Quy tắc thay đổi roadmap
 
 - Không mở rộng sản phẩm trong package containment/audit.
