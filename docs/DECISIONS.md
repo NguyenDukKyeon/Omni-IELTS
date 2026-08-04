@@ -655,3 +655,33 @@ Phase 5 remains `REVIEW_REQUIRED`; Phase 6 and Phase 7 are not authorized.
 Revisit when: a reviewed mobile on-device ASR, a different approved server
 provider, changed Gemini retention/billing terms or private/authenticated media
 support materially changes the capability, privacy, rights or cost boundary.
+
+## ADR-043 — Portfolio umbrellas are grouping-only and package boundaries are ratified incrementally
+
+Status: CONFIRMED
+
+Context: VocabMaster needs a portfolio view across learning integrity,
+local-first assistance, personal content, four-skill practice and diagnostics
+without replacing the canonical Phase 0–7 roadmap. A prior working-tree
+planning overlay contained useful future boundaries but was based on stale
+lineage and cannot be ratified wholesale.
+
+Decision: establish five grouping-only umbrella identifiers: U-LI, U-AI,
+U-PCS, U-4S and U-FD. They are not phases, packages, dependency nodes, status
+owners, gates or acceptance owners. Canonical ownership remains
+package-specific under ROADMAP/PLAN/STATUS/DECISIONS authority.
+
+CR-2A ratifies only LI-00, SRC-00, ERR-00 and QAR-00 as canonical package
+boundaries. Each begins `PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED`;
+documentation creates no branch, source implementation, evidence or
+acceptance. Remaining candidate dispositions stay preserved as noncanonical
+planning input and may be rebound only in a separately approved wave
+immediately before implementation. Merge candidates are ported into their
+existing owner rather than receiving a silent duplicate status row.
+
+Consequences: ROADMAP owns the four identities/scopes/dependencies;
+IMPLEMENTATION_PLAN owns their bounded acceptance criteria;
+IMPLEMENTATION_STATUS owns their honest planning state. Umbrella labels never
+appear in the status ledger. This decision does not change Phase 0–7 gates,
+Phase 4/5 evidence, historical P5-05/ADR-042, or authorize a future package by
+mention alone.

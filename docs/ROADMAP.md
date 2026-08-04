@@ -133,7 +133,37 @@ P0-00 được chấp nhận khi harness phân loại và dọn tài nguyên đ�
 | P7-04 | Workload simulator và deterministic recommender | P7-02, P7-03, P4-10, P6-05 |
 | P7-05 | Guarded personalization experiments và Phase 7 exit | P7-04, adequate baseline cohort |
 
-## 4. Quy tắc thay đổi roadmap
+## 4. Cross-cutting architecture taxonomy
+
+Phần này bổ sung taxonomy cắt ngang mà không tạo phase mới hoặc thay đổi Phase
+0–7. Năm umbrella dưới đây chỉ là nhãn portfolio để nhóm capability. Chúng
+không phải package, dependency node, phase gate, status owner hay acceptance
+owner. Một package vẫn có đúng một canonical boundary trong roadmap dù có thể
+phục vụ nhiều umbrella.
+
+### Portfolio umbrellas — grouping only
+
+| Umbrella | Capability grouping | Canonical ownership rule |
+|---|---|---|
+| U-LI — Learning Integrity and Evidence | Execution integrity, evidence safety và error-candidate promotion | LI-00 và ERR-00 sở hữu các boundary được ratify; U-LI không sở hữu status/acceptance |
+| U-AI — Local-first Assistance and Durable Work | Local-first assistance, durable work và provider governance | Chưa có package owner mới trong CR-2A; capability hiện hữu giữ nguyên owner |
+| U-PCS — Personal Content Supply | Source intake, private revision, compilation và provenance | SRC-00 chỉ sở hữu source-reference seam; các boundary khác chưa được ratify |
+| U-4S — Four-skill Practice | Reading, Listening, Writing và Speaking practice | QAR-00 chỉ sở hữu shared question contracts; skill inventory/executor giữ owner riêng |
+| U-FD — Focus, Weakness and Diagnostics | Weakness, focus, assessment và readiness evidence | Chưa có package owner mới trong CR-2A; Today/metrics/assessment owner hiện hữu không đổi |
+
+### Minimum cross-cutting packages
+
+| Package | Canonical scope | Dependency |
+|---|---|---|
+| LI-00 | Additive execution-safety seam that freezes Run bindings and requires one terminal Receipt through canonical Activity/Run/Attempt/Receipt, Today and EvidencePolicy owners | P1-01, P1-02, P1-07, P1-08, EvidencePolicy |
+| SRC-00 | Stable `SourceRevisionRef` adapter seam across canonical activity, Transcript and content identities; no new source store or trust authority | P1-01, P1-05, P3-06; public-pack adapter additionally requires accepted P4 contracts |
+| ERR-00 | ErrorCandidate lifecycle and atomic, policy-qualified promotion into the existing global Error Repository | LI-00, P1-06 |
+| QAR-00 | Shared question-type schema, normalization and scoring registry consumed by canonical executors; no second runtime, attempt store or scheduler | LI-00, SRC-00 |
+
+All four packages are planning boundaries only. Canonicalization does not
+authorize implementation, create a branch or supply acceptance evidence.
+
+## 5. Quy tắc thay đổi roadmap
 
 - Không mở rộng sản phẩm trong package containment/audit.
 - Thay đổi dependency hoặc phase gate phải có ADR, impact đến migration/rollback/evidence và cập nhật đồng bộ plan/status.

@@ -538,6 +538,19 @@ rights, editorial and independent-review gates are satisfied.
 | P7-04 Workload recommender | codex/p7-04-workload-recommender | P7-02, P7-03, P4-10, P6-05 | PHASE_BLOCKED |
 | P7-05 Personalization exit | codex/p7-05-personalization-exit | P7-04, adequate baseline cohort | PHASE_BLOCKED |
 
+### Cross-cutting packages canonicalized by CR-2A
+
+The five U-* identifiers are portfolio grouping labels only and intentionally
+have no status rows. The four package rows below record canonical planning
+boundaries, not implementation authorization or acceptance evidence.
+
+| Package | Dependency | Status |
+|---|---|---|
+| LI-00 Canonical execution safety and Frozen Run | P1-01, P1-02, P1-07, P1-08, EvidencePolicy | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
+| SRC-00 Stable SourceRevisionRef seam | P1-01, P1-05, P3-06; public-pack adapter additionally requires accepted P4 contracts | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
+| ERR-00 ErrorCandidate lifecycle | LI-00, P1-06 | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
+| QAR-00 Shared question activity contracts | LI-00, SRC-00 | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
+
 ## 6. Phase 0 exit checklist
 
 - [x] One central default-deny EvidencePolicy guards every schedule write.
