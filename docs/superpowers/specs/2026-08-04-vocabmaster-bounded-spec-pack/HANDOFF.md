@@ -67,10 +67,12 @@ ADR-042, a product behavior or a canonical status row.
 | Umbrella rule | 0 umbrella status rows and 0 umbrella package-dependency rows |
 | Roadmap audit | `node scripts/audit-roadmap.mjs` passed 12/12 at the subject worktree |
 
-No production source changed. The full production test suite was not run: this
-is documentation-only and the clean worktree has no dependency install; no
-dependency installation was authorized. The roadmap audit is not package
-implementation or acceptance evidence.
+No production source changed. After the subject pack was completed, `npm test`
+was attempted in the clean worktree: 159 tests passed and 31 failed before their
+assertions because `fake-indexeddb`, `ts-fsrs` and `esbuild` are absent. No
+dependency installation was authorized, so this is an environment limitation,
+not a green production-suite result or a product acceptance verdict. The roadmap
+audit is likewise not package implementation or acceptance evidence.
 
 ## Required next review
 
