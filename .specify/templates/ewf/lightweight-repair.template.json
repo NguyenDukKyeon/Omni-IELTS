@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "lightweight-repair",
+  "authorityLabel": "SUBORDINATE_REPAIR_RECORD / NOT_ACCEPTANCE",
+  "specId": "EWF00-ARTIFACTS-001",
+  "eligibility": {
+    "boundedScope": true,
+    "noProductBehaviorChange": true,
+    "noCanonicalChange": true,
+    "noDependencyChange": true,
+    "noCiChange": true,
+    "reversible": true
+  },
+  "evidence": {
+    "changedFiles": [],
+    "commands": []
+  },
+  "extensions": {}
+}

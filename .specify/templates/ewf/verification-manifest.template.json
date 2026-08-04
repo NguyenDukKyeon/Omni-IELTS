@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "verification-manifest",
+  "authorityLabel": "DECLARED_VERIFICATION / NOT_EXECUTION",
+  "specId": "EWF00-ARTIFACTS-001",
+  "commands": {
+    "focused": [
+      {
+        "id": "ewf-contracts",
+        "command": "node --test tests/ewf-artifact-contracts.test.mjs",
+        "requirements": [
+          "EWF00-AC-01"
+        ]
+      }
+    ],
+    "pr": [
+      {
+        "id": "repository-tests",
+        "command": "npm test",
+        "requirements": [
+          "EWF00-AC-01"
+        ]
+      }
+    ]
+  },
+  "extensions": {}
+}

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "change-set",
+  "authorityLabel": "SUBORDINATE_CHANGE_DECLARATION / NOT_CANONICAL",
+  "specId": "EWF00-ARTIFACTS-001",
+  "predecessor": "0000000000000000000000000000000000000000",
+  "branch": "feature/example",
+  "worktree": {
+    "mode": "isolated",
+    "path": ".worktrees/feature-example"
+  },
+  "writer": {
+    "identity": "single-writer",
+    "mode": "exclusive"
+  },
+  "allowlist": [
+    ".specify/example.json"
+  ],
+  "exclusions": [
+    "src/**"
+  ],
+  "stopConditions": [
+    "Stop if a required write falls outside the allowlist."
+  ],
+  "extensions": {}
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "implementation-report",
+  "authorityLabel": "IMPLEMENTER_EVIDENCE / NOT_ACCEPTANCE",
+  "specId": "EWF00-ARTIFACTS-001",
+  "handoffState": "DRAFT",
+  "subjectCommit": null,
+  "parentCommit": null,
+  "changedFiles": [],
+  "requirementTrace": [],
+  "commandResults": [],
+  "environment": {},
+  "frozenBriefDigest": null,
+  "extensions": {}
+}

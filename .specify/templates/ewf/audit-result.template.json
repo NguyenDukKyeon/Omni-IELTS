@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "audit-result",
+  "authorityLabel": "INDEPENDENT_AUDIT / AUDIT_VERDICT",
+  "briefDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+  "auditResult": "BLOCKED_BY_INVALID_BRIEF",
+  "auditor": {
+    "identity": "independent-read-only-auditor"
+  },
+  "findings": [],
+  "extensions": {}
+}
