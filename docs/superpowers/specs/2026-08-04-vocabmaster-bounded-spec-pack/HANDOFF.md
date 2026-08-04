@@ -1,9 +1,10 @@
 # VocabMaster Bounded Specification Pack — Handoff
 
-Handoff status: `DOCS_ONLY_HANDOFF / SOURCE_IMPLEMENTATION_NOT_AUTHORIZED`
+Handoff status: `DOCS_REVIEW_COMPLETE / EWF_ARTIFACT_SLICE_AUTHORIZED`
 
-This is a review handoff for documentation only. It is not `HANDOFF_READY` for
-any package implementation, acceptance, merge or release.
+This is still not `HANDOFF_READY` for every package, product acceptance, merge or
+release. It records an independently reviewed frozen specification subject and
+one separately authorized EWF-00 implementation slice.
 
 ## Frozen subject identity
 
@@ -12,34 +13,57 @@ any package implementation, acceptance, merge or release.
 | Subject commit | `0b43efac974c3fbbc489f10e9fa668bac84c9b43` |
 | Subject parent | `31c3c8a73363d3c88cb0719d799f597b3d381467` |
 | Subject message | `docs: add coverage matrices and delivery wave drafts` |
-| Branch | `codex/canonical-reconciliation-spec-pack` |
+| Original pack branch | `codex/canonical-reconciliation-spec-pack` |
 | Scope | 25 specification-pack artifacts under this directory, excluding this handoff |
 | Architecture baseline | `adc3726620f4badddb16309e375f8f17b6af1404` — approved design only, not Foundation implementation/acceptance |
 | Canonical bootstrap chain | `adc3726 → 0639637 → 9be9914 → d8ec9c7` |
 
 The subject commit contains all bounded specs, matrices, future-boundary drafts
-and the implementation queue. This later handoff commit must not change the
-subject identity. Any change to the subject artifacts requires a new subject,
-new validation results and a new handoff.
+and the implementation queue. The subject artifacts were not edited merely to
+change their internal `DRAFT` labels. Later review/authorization records are
+separate evidence revisions bound to this exact subject.
 
-## Authority and status boundary
+## Review and authorization records
+
+| Record | Exact commit | Effect |
+|---|---|---|
+| Independent documentation review | `d059aeee7d5ddf4691a1bd72628cb0bce31453fd` | Seven package specs reviewed; EWF artifact spec approved as implementation baseline; matrices accepted only as gap ledgers |
+| EWF artifact implementation plan | `1ce97fc99f2b430839bdaa693639ef9d71277b62` | Exact approved implementation predecessor and plan content |
+| Frozen EWF artifact authorization brief | `a1e3433d13936b392919648fcf4b9ab024178303` | Authorizes only `EWF00-ARTIFACTS-001` under the declared allowlist and gates |
+
+The implementation branch for the first task must start from exact commit
+`1ce97fc99f2b430839bdaa693639ef9d71277b62`, not from a newer evidence-only
+handoff commit. The authorization brief is consumed as read-only evidence from
+its exact commit.
+
+## Authority and effective status boundary
 
 `AGENTS.md`, `docs/ROADMAP.md`, `docs/IMPLEMENTATION_PLAN.md`,
 `docs/IMPLEMENTATION_STATUS.md` and `docs/DECISIONS.md` remain the only
 canonical governance sources.
 
+Canonical package status remains unchanged:
+
 - LI-00, SRC-00, ERR-00, QAR-00 and EWF-00 remain
   `PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED`.
-- The seven package specs are `DRAFT` only.
-- All eight coverage matrices, seven future-boundary drafts and the vertical
-  slice brief are `DRAFT_PENDING_CANONICAL_REBIND` where no complete canonical
-  owner exists.
-- The implementation queue is `PLANNING_ONLY / NO_IMPLEMENTATION_AUTHORIZATION`.
-- U-LI, U-AI, U-PCS, U-4S and U-FD are grouping labels only. They own no
-  dependency, package status, acceptance verdict or implementation work.
+- U-LI, U-AI, U-PCS, U-4S and U-FD remain grouping labels only.
 
-No document in this pack changes Phase 4/5 acceptance, P5-05 history,
-ADR-042, a product behavior or a canonical status row.
+Effective review results:
+
+- `EWF00-ARTIFACTS-001`: reviewed and approved as an implementation baseline;
+  implementation is authorized only by the frozen brief above.
+- `EWF00-PREFLIGHT-001` and `EWF00-PILOTS-001`: reviewed and approved as bounded
+  specifications, but not implementation-authorized.
+- LI-00, SRC-00, ERR-00 and QAR-00 specs: reviewed and approved as bounded
+  specifications, but not implementation-authorized.
+- all eight coverage matrices remain `DRAFT_PENDING_CANONICAL_REBIND` and are
+  accepted only as honest gap ledgers;
+- all seven future-boundary drafts remain noncanonical and require just-in-time
+  ratification/rebind;
+- the implementation queue remains sequencing guidance, not a status ledger.
+
+No document in this pack changes Phase 4/5 acceptance, P5-05 history, ADR-042, a
+product behavior or a canonical status row.
 
 ## Included artifacts
 
@@ -53,7 +77,7 @@ ADR-042, a product behavior or a canonical status row.
 | Delivery queue | 1 | Ordered, non-authorizing delivery waves |
 | Pack README | 1 | Lineage, status rules, manifest and stop conditions |
 
-## Verification recorded for the subject
+## Verification recorded for the frozen subject
 
 | Check | Result |
 |---|---|
@@ -68,26 +92,14 @@ ADR-042, a product behavior or a canonical status row.
 | Roadmap audit | `node scripts/audit-roadmap.mjs` passed 12/12 at the subject worktree |
 
 No production source changed. After the subject pack was completed, `npm test`
-was attempted in the clean worktree: 159 tests passed and 31 failed before their
-assertions because `fake-indexeddb`, `ts-fsrs` and `esbuild` are absent. No
+was attempted in the clean worktree: 159 tests passed and 31 stopped before their
+assertions because `fake-indexeddb`, `ts-fsrs` and `esbuild` were absent. No
 dependency installation was authorized, so this is an environment limitation,
 not a green production-suite result or a product acceptance verdict. The roadmap
 audit is likewise not package implementation or acceptance evidence.
 
-## Required next review
-
-1. Review the seven bounded package specs for exact canonical scope,
-   dependency, acceptance and no-second-authority rules.
-2. Review each matrix as a gap ledger, especially its `GAP` versus `PARTIAL`
-   classifications; do not approve a full-coverage claim from it.
-3. Review the 34 candidate dispositions immediately before the respective wave;
-   do not bulk-ratify them.
-4. Review the first vertical-slice ownership map. Its weakness/recommendation
-   end is advisory preview only until a canonical Focus/Weakness owner is
-   separately rebound.
-5. If Foundation implementation is considered, approve an exact EWF-00
-   implementation predecessor and file boundary under the three EWF specs. Do
-   not install Spec Kit, fast-check or another dependency by default.
+The independent documentation review found no blocking internal contradiction
+among the seven package specs. It did not run or claim a green production suite.
 
 ## Known open conditions
 
@@ -99,27 +111,38 @@ audit is likewise not package implementation or acceptance evidence.
   technical-capability choices remain deliberately uncanonicalized.
 - Phase 4/5 implementation/remediation evidence remains preserved as recorded;
   it is not reinterpreted as independent acceptance here.
-- A separate independent documentation review of this pack remains pending.
+- No GitHub Actions run exists for the reviewed documentation head merely from
+  pushing the non-PR branch.
 
 ## Stop conditions for a coding agent
 
 Do not start source implementation if any of the following is true:
 
+- the requested task is not `EWF00-ARTIFACTS-001` under the frozen brief;
+- HEAD is not exact predecessor `1ce97fc99f2b430839bdaa693639ef9d71277b62`;
+- branch/worktree/writer scope or the brief is missing or mismatched;
+- the implementation needs a file outside the brief allowlist;
 - a requested boundary has no canonical package owner;
 - an umbrella is presented as an owner or dependency node;
 - a future candidate is not separately ratified/rebound for its wave;
-- the exact predecessor, worktree, writer scope or acceptance brief is missing;
 - an implementation would introduce a second runtime/store/scheduler/evidence/
   status/acceptance authority;
 - a source, transcript, AI output, tool/provider, privacy/rights/cost claim or
   readiness result lacks its declared validation/consent/evidence gate;
 - the P3-02 Shadowing conflict is implicated;
-- an action requires dependency installation, automatic initialization or a new
-  worktree without separate authorization.
+- an action requires dependency installation, automatic initialization, CI
+  modification or a new overlapping writer without separate authorization.
 
-## Recommended immediate successor
+## Authorized immediate successor
 
-The immediate successor is a read-only review of this subject commit, followed
-by one explicit choice: authorize the minimum EWF-00 implementation slice, or
-authorize LI-00/SRC-00 planning independently. It is not an instruction to
-implement either package now.
+Create branch `chatgpt/ewf-00-artifact-contracts-mvp` from exact commit
+`1ce97fc99f2b430839bdaa693639ef9d71277b62`, then implement the plan at:
+
+`docs/superpowers/plans/2026-08-04-ewf-00-artifact-contracts-mvp.md`
+
+under the frozen authorization brief at:
+
+`docs/superpowers/briefs/2026-08-04-ewf00-artifact-contracts-mvp-authorization.md`
+
+No LI-00, SRC-00, ERR-00, QAR-00, EWF preflight/trace or pilot implementation is
+authorized by this handoff.
