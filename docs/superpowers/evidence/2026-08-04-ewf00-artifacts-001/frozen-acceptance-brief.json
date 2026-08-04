@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "frozen-acceptance-brief",
+  "authorityLabel": "FROZEN_AUDIT_BOUNDARY / NOT_ACCEPTANCE",
+  "specId": "EWF00-ARTIFACTS-001",
+  "subjectCommit": "dc3aa8aa8084abee6819ffcbc238bd7e6f483b6c",
+  "parentCommit": "b85212abcd2a1a4597ae95fdf64221f62377d9ed",
+  "specRevision": "0b43efac974c3fbbc489f10e9fa668bac84c9b43",
+  "traceDigest": "d11f3b8b0db8b60f9029f9bb35dd50bbcbb428ec3c983ae5fb35c832c1b798fd",
+  "evidenceDigest": "4f2016f0fe05517ed2992a1b220b4c7eaf32569ac881dd862c37f126a148b7b4",
+  "briefIdentity": "docs/superpowers/evidence/2026-08-04-ewf00-artifacts-001/frozen-acceptance-brief.json@dc3aa8aa8084abee6819ffcbc238bd7e6f483b6c",
+  "extensions": {
+    "evidenceDigestProjection": {
+      "traceDigest": "digestArtifact(requirement-trace.json)",
+      "evidenceDigest": "digestArtifact(implementation-report.json with the top-level frozenBriefDigest field omitted)",
+      "briefDigest": "digestArtifact(frozen-acceptance-brief.json with the top-level briefDigest field omitted)"
+    },
+    "implementationSubjectFrozen": true,
+    "independentReviewRequired": true
+  },
+  "briefDigest": "bdceb3ca7ec4e24751c17096197b1157a15313fc784954fa8b7a543ba206af7e"
+}
