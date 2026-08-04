@@ -17,9 +17,9 @@ mega-spec, implementation plan, package-status authority or acceptance record.
 
 Canonical authority remains `AGENTS.md`, `docs/ROADMAP.md`,
 `docs/IMPLEMENTATION_PLAN.md`, `docs/IMPLEMENTATION_STATUS.md` and
-`docs/DECISIONS.md`. The preserved dirty planning at
-`D:\Workspace\VocabMaster` is provenance input only and was not replayed
-wholesale.
+`docs/DECISIONS.md`. The dirty planning snapshot preserved by the CR preflight
+is provenance input only and was not replayed wholesale; portable artifacts do
+not embed its machine-local path.
 
 ## Status rules
 
