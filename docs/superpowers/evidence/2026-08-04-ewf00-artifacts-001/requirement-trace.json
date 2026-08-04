@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "requirement-trace",
+  "authorityLabel": "IMPLEMENTER_TRACE / NOT_ACCEPTANCE",
+  "specId": "EWF00-ARTIFACTS-001",
+  "subjectCommit": "dc3aa8aa8084abee6819ffcbc238bd7e6f483b6c",
+  "parentCommit": "b85212abcd2a1a4597ae95fdf64221f62377d9ed",
+  "specRevision": "0b43efac974c3fbbc489f10e9fa668bac84c9b43",
+  "requirements": [
+    {
+      "id": "EWF00-AC-01",
+      "criterion": "The constitutional bridge links all five canonical sources, declares itself noncanonical and non-acceptance, and copies no canonical governance structure.",
+      "disposition": "IMPLEMENTED_AND_VERIFIED",
+      "implementation": [
+        ".specify/memory/constitution.md",
+        "scripts/ewf-artifacts.mjs"
+      ],
+      "tests": [
+        "constitution links every canonical authority and declares subordination",
+        "forbidden-authority scanner rejects copied governance structures, not links",
+        "--check rejects a bridge missing canonical links or authority declarations"
+      ],
+      "commands": [
+        "node --test tests/ewf-artifact-contracts.test.mjs",
+        "node scripts/ewf-artifacts.mjs --check",
+        "GitHub Actions CI run 30895237553 (#275), job test"
+      ],
+      "evidence": [
+        "Focused tests passed 22/22.",
+        "CI run 30895237553 (#275) completed successfully."
+      ]
+    },
+    {
+      "id": "EWF00-AC-02",
+      "criterion": "Every EWF template is versioned, typed and subordinate.",
+      "disposition": "IMPLEMENTED_AND_VERIFIED",
+      "implementation": [
+        ".specify/templates/ewf/change-set.template.json",
+        ".specify/templates/ewf/lightweight-repair.template.json",
+        ".specify/templates/ewf/spec-metadata.template.json",
+        ".specify/templates/ewf/verification-manifest.template.json",
+        ".specify/templates/ewf/implementation-report.template.json",
+        ".specify/templates/ewf/frozen-acceptance-brief.template.json",
+        ".specify/templates/ewf/audit-result.template.json"
+      ],
+      "tests": [
+        "every EWF template is versioned, typed, subordinate and valid"
+      ],
+      "commands": [
+        "node --test tests/ewf-artifact-contracts.test.mjs",
+        "node scripts/ewf-artifacts.mjs --check",
+        "GitHub Actions CI run 30895237553 (#275), job test"
+      ],
+      "evidence": [
+        "All seven template contracts validated at the frozen implementation subject."
+      ]
+    },
+    {
+      "id": "EWF00-AC-03",
+      "criterion": "Lightweight repair validation fails unless every eligibility predicate is explicitly true.",
+      "disposition": "IMPLEMENTED_AND_VERIFIED",
+      "implementation": [
+        "scripts/ewf-artifacts.mjs",
+        ".specify/templates/ewf/lightweight-repair.template.json"
+      ],
+      "tests": [
+        "lightweight repair requires every eligibility predicate to be explicitly true"
+      ],
+      "commands": [
+        "node --test tests/ewf-artifact-contracts.test.mjs",
+        "GitHub Actions CI run 30895237553 (#275), job test"
+      ],
+      "evidence": [
+        "Negative cases for false and missing predicates passed."
+      ]
+    },
+    {
+      "id": "EWF00-AC-04",
+      "criterion": "Spec metadata requires an existing canonical package reference and unique namespaced requirement identifiers.",
+      "disposition": "IMPLEMENTED_AND_VERIFIED",
+      "implementation": [
+        "scripts/ewf-artifacts.mjs",
+        ".specify/templates/ewf/spec-metadata.template.json"
+      ],
+      "tests": [
+        "spec metadata requires an existing package and unique namespaced requirements"
+      ],
+      "commands": [
+        "node --test tests/ewf-artifact-contracts.test.mjs",
+        "GitHub Actions CI run 30895237553 (#275), job test"
+      ],
+      "evidence": [
+        "Missing package, duplicate ID and wrong namespace cases fail closed."
+      ]
+    },
+    {
+      "id": "EWF00-AC-05",
+      "criterion": "Implementation reports remain IMPLEMENTER_EVIDENCE / NOT_ACCEPTANCE and cannot become HANDOFF_READY without complete frozen bindings.",
+      "disposition": "IMPLEMENTED_AND_VERIFIED",
+      "implementation": [
+        "scripts/ewf-artifacts.mjs",
+        ".specify/templates/ewf/implementation-report.template.json"
+      ],
+      "tests": [
+        "implementation reports preserve non-acceptance and cannot fake readiness",
+        "HANDOFF_READY requires a lowercase frozen brief SHA-256 digest"
+      ],
+      "commands": [
+        "node --test tests/ewf-artifact-contracts.test.mjs",
+        "GitHub Actions CI run 30895237553 (#275), job test"
+      ],
+      "evidence": [
+        "The final report is validated only after its frozenBriefDigest is bound."
+      ]
+    },
+    {
+      "id": "EWF00-AC-06",
+      "criterion": "Command results preserve exactly PASS, FAIL, ERROR, NOT_RUN and NOT_AVAILABLE.",
+      "disposition": "IMPLEMENTED_AND_VERIFIED",
+      "implementation": [
+        "scripts/ewf-artifacts.mjs"
+      ],
+      "tests": [
+        "command and audit results accept exactly their frozen vocabularies"
+      ],
+      "commands": [
+        "node --test tests/ewf-artifact-contracts.test.mjs",
+        "GitHub Actions CI run 30895237553 (#275), job test"
+      ],
+      "evidence": [
+        "All five command values pass and an undeclared value fails."
+      ]
+    },
+    {
+      "id": "EWF00-AC-07",
+      "criterion": "Audit-result artifacts accept only the frozen result vocabulary, while implementation code never emits an independent decision.",
+      "disposition": "IMPLEMENTED_AND_VERIFIED",
+      "implementation": [
+        "scripts/ewf-artifacts.mjs",
+        ".specify/templates/ewf/audit-result.template.json"
+      ],
+      "tests": [
+        "command and audit results accept exactly their frozen vocabularies",
+        "frozen brief validates identity/completeness without issuing acceptance"
+      ],
+      "commands": [
+        "node --test tests/ewf-artifact-contracts.test.mjs",
+        "GitHub Actions CI run 30895237553 (#275), job test"
+      ],
+      "evidence": [
+        "Implementer evidence contains no independent audit decision."
+      ]
+    },
+    {
+      "id": "EWF00-AC-08",
+      "criterion": "Canonical JSON and lowercase SHA-256 digests are deterministic for logically equal JSON values.",
+      "disposition": "IMPLEMENTED_AND_VERIFIED",
+      "implementation": [
+        "scripts/ewf-artifacts.mjs"
+      ],
+      "tests": [
+        "canonicalization and digest are deterministic for logical JSON equality",
+        "canonicalization rejects non-JSON values instead of coercing them"
+      ],
+      "commands": [
+        "node --test tests/ewf-artifact-contracts.test.mjs",
+        "GitHub Actions CI run 30895237553 (#275), job test"
+      ],
+      "evidence": [
+        "The evidence package uses the same digestArtifact implementation."
+      ]
+    },
+    {
+      "id": "EWF00-AC-09",
+      "criterion": "A change to subject, parent, spec revision, trace digest, evidence digest, brief identity or brief digest invalidates the frozen brief.",
+      "disposition": "IMPLEMENTED_AND_VERIFIED",
+      "implementation": [
+        "scripts/ewf-artifacts.mjs",
+        ".specify/templates/ewf/frozen-acceptance-brief.template.json"
+      ],
+      "tests": [
+        "frozen brief validates identity/completeness without issuing acceptance",
+        "any frozen subject, parent, revision, evidence or identity mismatch blocks the brief",
+        "tampering with the stored brief digest blocks validation even when bindings match it"
+      ],
+      "commands": [
+        "node --test tests/ewf-artifact-contracts.test.mjs",
+        "GitHub Actions CI run 30895237553 (#275), job test"
+      ],
+      "evidence": [
+        "This brief binds all seven validator binding fields."
+      ]
+    },
+    {
+      "id": "EWF00-AC-10",
+      "criterion": "Portable output redacts secrets and machine-absolute private paths, including /mnt/data, while preserving safe repository-relative paths.",
+      "disposition": "IMPLEMENTED_AND_VERIFIED",
+      "implementation": [
+        "scripts/ewf-artifacts.mjs"
+      ],
+      "tests": [
+        "portable redaction removes secrets and machine-absolute private paths"
+      ],
+      "commands": [
+        "node --test tests/ewf-artifact-contracts.test.mjs",
+        "GitHub Actions CI run 30895237553 (#275), job test"
+      ],
+      "evidence": [
+        "/mnt/data/... is redacted and mnt/data/... remains unchanged."
+      ]
+    },
+    {
+      "id": "EWF00-AC-11",
+      "criterion": "--check works without Spec Kit CLI and performs no writes or installations.",
+      "disposition": "IMPLEMENTED_AND_VERIFIED",
+      "implementation": [
+        "scripts/ewf-artifacts.mjs"
+      ],
+      "tests": [
+        "--check rejects a bridge missing canonical links or authority declarations",
+        "--check succeeds without Spec Kit on PATH and performs zero repository writes",
+        "CLI rejects unsupported modes without writing"
+      ],
+      "commands": [
+        "node --test tests/ewf-artifact-contracts.test.mjs",
+        "node scripts/ewf-artifacts.mjs --check",
+        "GitHub Actions CI run 30895237553 (#275), job test"
+      ],
+      "evidence": [
+        "Fresh --check completed with valid=true and zero errors."
+      ]
+    },
+    {
+      "id": "EWF00-AC-12",
+      "criterion": "Removing only the authorized EWF implementation files restores the prior manual workflow without changing product or canonical data.",
+      "disposition": "IMPLEMENTED_WITH_STATIC_ROLLBACK_EVIDENCE",
+      "implementation": [
+        ".specify/memory/constitution.md",
+        ".specify/templates/ewf/change-set.template.json",
+        ".specify/templates/ewf/lightweight-repair.template.json",
+        ".specify/templates/ewf/spec-metadata.template.json",
+        ".specify/templates/ewf/verification-manifest.template.json",
+        ".specify/templates/ewf/implementation-report.template.json",
+        ".specify/templates/ewf/frozen-acceptance-brief.template.json",
+        ".specify/templates/ewf/audit-result.template.json",
+        "scripts/ewf-artifacts.mjs",
+        "tests/ewf-artifact-contracts.test.mjs"
+      ],
+      "tests": [],
+      "commands": [
+        "GitHub Actions CI run 30895237553 (#275), job test"
+      ],
+      "evidence": [
+        "The implementation subject is additive and confined to the ten authorized implementation paths.",
+        "No destructive rollback execution was performed on the implementation branch; a read-only auditor may independently reproduce deletion-based rollback."
+      ]
+    }
+  ],
+  "deferredScope": [
+    {
+      "item": "Git/worktree preflight, overlap discovery and general trace traversal",
+      "disposition": "DEFERRED_TO_LATER_EWF_SPEC"
+    },
+    {
+      "item": "Arbitrary verification command execution, workflow runtime, scheduler and retry behavior",
+      "disposition": "DEFERRED_TO_LATER_EWF_SPEC"
+    },
+    {
+      "item": "Small-repair pilot, bounded spec-level pilot and package-level acceptance",
+      "disposition": "DEFERRED_TO_SEPARATE_AUTHORIZATION"
+    },
+    {
+      "item": "Independent final audit decision",
+      "disposition": "RESERVED_FOR_READ_ONLY_AUDITOR"
+    }
+  ],
+  "extensions": {
+    "evidenceDigestProjection": {
+      "traceDigest": "digestArtifact(requirement-trace.json)",
+      "evidenceDigest": "digestArtifact(implementation-report.json with the top-level frozenBriefDigest field omitted)",
+      "briefDigest": "digestArtifact(frozen-acceptance-brief.json with the top-level briefDigest field omitted)"
+    }
+  }
+}
