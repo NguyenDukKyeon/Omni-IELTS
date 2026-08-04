@@ -1,148 +1,175 @@
-# VocabMaster Bounded Specification Pack — Handoff
+# VocabMaster Bounded Specification Pack — Final Authorization Handoff
 
-Handoff status: `DOCS_REVIEW_COMPLETE / EWF_ARTIFACT_SLICE_AUTHORIZED`
+Handoff status: `DOCS_REVIEW_COMPLETE / EWF_PREFLIGHT_IMPLEMENTATION_AUTHORIZED / NOT_ACCEPTANCE`
 
-This is still not `HANDOFF_READY` for every package, product acceptance, merge or
-release. It records an independently reviewed frozen specification subject and
-one separately authorized EWF-00 implementation slice.
+This handoff records the replacement docs-only authorization for `EWF00-PREFLIGHT-001`. It does not implement source code, create the implementation branch, accept `EWF-00`, authorize pilots, change canonical status, merge an implementation, or issue an acceptance verdict.
 
-## Frozen subject identity
+## Frozen specification and predecessor identity
 
-| Field | Value |
+| Field | Exact value |
 |---|---|
-| Subject commit | `0b43efac974c3fbbc489f10e9fa668bac84c9b43` |
-| Subject parent | `31c3c8a73363d3c88cb0719d799f597b3d381467` |
-| Subject message | `docs: add coverage matrices and delivery wave drafts` |
-| Original pack branch | `codex/canonical-reconciliation-spec-pack` |
-| Scope | 25 specification-pack artifacts under this directory, excluding this handoff |
-| Architecture baseline | `adc3726620f4badddb16309e375f8f17b6af1404` — approved design only, not Foundation implementation/acceptance |
-| Canonical bootstrap chain | `adc3726 → 0639637 → 9be9914 → d8ec9c7` |
+| Frozen bounded-spec subject | `0b43efac974c3fbbc489f10e9fa668bac84c9b43` |
+| Frozen subject parent | `31c3c8a73363d3c88cb0719d799f597b3d381467` |
+| Independent documentation review | `d059aeee7d5ddf4691a1bd72628cb0bce31453fd` |
+| Exact main baseline | `474bde8e3c7b09f757e7df4a1587f8a71b2e7865` |
+| Accepted artifact implementation subject | `dc3aa8aa8084abee6819ffcbc238bd7e6f483b6c` |
+| Accepted artifact evidence HEAD | `826dbe9027325c350b0b734a3861e0dfa038e0cd` |
+| Artifact merge commit | `474bde8e3c7b09f757e7df4a1587f8a71b2e7865` |
 
-The subject commit contains all bounded specs, matrices, future-boundary drafts
-and the implementation queue. The subject artifacts were not edited merely to
-change their internal `DRAFT` labels. Later review/authorization records are
-separate evidence revisions bound to this exact subject.
+Canonical authority remains solely `AGENTS.md`, `docs/ROADMAP.md`, `docs/IMPLEMENTATION_PLAN.md`, `docs/IMPLEMENTATION_STATUS.md`, and `docs/DECISIONS.md` including ADR-044.
 
-## Review and authorization records
+## Final EWF00-PREFLIGHT-001 authorization identity
 
-| Record | Exact commit | Effect |
-|---|---|---|
-| Independent documentation review | `d059aeee7d5ddf4691a1bd72628cb0bce31453fd` | Seven package specs reviewed; EWF artifact spec approved as implementation baseline; matrices accepted only as gap ledgers |
-| EWF artifact implementation plan | `1ce97fc99f2b430839bdaa693639ef9d71277b62` | Exact approved implementation predecessor and plan content |
-| Frozen EWF artifact authorization brief | `a1e3433d13936b392919648fcf4b9ab024178303` | Authorizes only `EWF00-ARTIFACTS-001` under the declared allowlist and gates |
-
-The implementation branch for the first task must start from exact commit
-`1ce97fc99f2b430839bdaa693639ef9d71277b62`, not from a newer evidence-only
-handoff commit. The authorization brief is consumed as read-only evidence from
-its exact commit.
-
-## Authority and effective status boundary
-
-`AGENTS.md`, `docs/ROADMAP.md`, `docs/IMPLEMENTATION_PLAN.md`,
-`docs/IMPLEMENTATION_STATUS.md` and `docs/DECISIONS.md` remain the only
-canonical governance sources.
-
-Canonical package status remains unchanged:
-
-- LI-00, SRC-00, ERR-00, QAR-00 and EWF-00 remain
-  `PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED`.
-- U-LI, U-AI, U-PCS, U-4S and U-FD remain grouping labels only.
-
-Effective review results:
-
-- `EWF00-ARTIFACTS-001`: reviewed and approved as an implementation baseline;
-  implementation is authorized only by the frozen brief above.
-- `EWF00-PREFLIGHT-001` and `EWF00-PILOTS-001`: reviewed and approved as bounded
-  specifications, but not implementation-authorized.
-- LI-00, SRC-00, ERR-00 and QAR-00 specs: reviewed and approved as bounded
-  specifications, but not implementation-authorized.
-- all eight coverage matrices remain `DRAFT_PENDING_CANONICAL_REBIND` and are
-  accepted only as honest gap ledgers;
-- all seven future-boundary drafts remain noncanonical and require just-in-time
-  ratification/rebind;
-- the implementation queue remains sequencing guidance, not a status ledger.
-
-No document in this pack changes Phase 4/5 acceptance, P5-05 history, ADR-042, a
-product behavior or a canonical status row.
-
-## Included artifacts
-
-| Group | Subject artifacts | Review intent |
-|---|---:|---|
-| Canonical product specs | 4 | LI-00, SRC-00, ERR-00, QAR-00 bounded scopes and acceptance evidence |
-| EWF specs | 3 | Artifact contracts; preflight/verification/trace; pilots/measurement/audit |
-| Coverage matrices | 8 | Reading, Listening, Writing, Speaking, Academic/GT, source/import, capability/tool, assessment/readiness gaps |
-| Future boundary drafts | 7 | Preserved 34 candidate dispositions, just-in-time ratification and deferred work |
-| Integration brief | 1 | One audio→activity→attempt→feedback→candidate→advisory recommendation slice |
-| Delivery queue | 1 | Ordered, non-authorizing delivery waves |
-| Pack README | 1 | Lineage, status rules, manifest and stop conditions |
-
-## Verification recorded for the frozen subject
-
-| Check | Result |
+| Field | Exact value |
 |---|---|
-| Subject diff scope | 18 files, all under this specification-pack directory |
-| Whitespace check | `git diff --cached --check` clean before subject commit |
-| Matrix/future count | 8 matrices; 8 future artifacts including 7 wave/deferred drafts plus 1 vertical brief |
-| Rebind status check | 8/8 matrices and 8/8 future artifacts carry `DRAFT_PENDING_CANONICAL_REBIND` |
-| Candidate parity | 34/34 future candidates appear in queue; zero appeared in ROADMAP/PLAN/STATUS package tables |
-| Coverage taxonomy check | All required Reading/Listening/Writing/Speaking/Academic-GT/source/tool/readiness terms present in the matrices |
-| Canonical parity | ROADMAP/PLAN/STATUS each expose 66 package IDs with exact parity; dependency graph has 66 nodes and 0 cycles |
-| Umbrella rule | 0 umbrella status rows and 0 umbrella package-dependency rows |
-| Roadmap audit | `node scripts/audit-roadmap.mjs` passed 12/12 at the subject worktree |
+| Package / spec | `EWF-00` / `EWF00-PREFLIGHT-001` |
+| Final plan path | `docs/superpowers/plans/2026-08-04-ewf-00-preflight-verification-trace-mvp.md` |
+| Final plan commit / approved implementation predecessor | `97cee2619c51e9dbee9191c191cdb5543aa6eaa1` |
+| Final plan blob | `b224bfb9f2ebae949e1bac43015210b43e007dad` |
+| Final plan parent | `474bde8e3c7b09f757e7df4a1587f8a71b2e7865` |
+| Frozen authorization brief path | `docs/superpowers/briefs/2026-08-04-ewf00-preflight-verification-trace-mvp-authorization.md` |
+| Frozen authorization commit | `2881dbdfe9990b60ffefd22e7c12fe363e53e33b` |
+| Required implementation branch | `chatgpt/ewf-00-preflight-verification-trace-mvp` |
+| Required local ref | `refs/heads/chatgpt/ewf-00-preflight-verification-trace-mvp` |
+| Exact worktree | `../VocabMaster-ewf00-preflight-verification-trace-mvp-worktree` |
+| Target remote/ref | `origin` / `refs/heads/chatgpt/ewf-00-preflight-verification-trace-mvp` |
+| Collision contract | `REQUIRE_ABSENT / ABSENT / null` |
+| Writer | `chatgpt-ewf00-preflight-primary-writer / exclusive` |
 
-No production source changed. After the subject pack was completed, `npm test`
-was attempted in the clean worktree: 159 tests passed and 31 stopped before their
-assertions because `fake-indexeddb`, `ts-fsrs` and `esbuild` were absent. No
-dependency installation was authorized, so this is an environment limitation,
-not a green production-suite result or a product acceptance verdict. The roadmap
-audit is likewise not package implementation or acceptance evidence.
+The implementation branch must start from exact `97cee2619c51e9dbee9191c191cdb5543aa6eaa1`. The plan at that commit must be exact blob `b224bfb9f2ebae949e1bac43015210b43e007dad` at the exact plan path. No older plan commit, path-only retrieval, abbreviated SHA, or another blob is authorized.
 
-The independent documentation review found no blocking internal contradiction
-among the seven package specs. It did not run or claim a green production suite.
+## Exact implementation allowlist and exclusions
 
-## Known open conditions
+Only:
 
-- `CANONICAL_CONFLICT — NEEDS_SEPARATE_RESOLUTION`: the Speaking matrix records
-  an apparent P3-02 Shadowing acceptance/evidence mismatch. This pack neither
-  changes nor resolves it; no new spec may rely on the disputed receipt claim.
-- Full IELTS profile/inventory ownership, productive-practice ownership, personal
-  content ingress/compiler ownership, assessment/readiness ownership and most
-  technical-capability choices remain deliberately uncanonicalized.
-- Phase 4/5 implementation/remediation evidence remains preserved as recorded;
-  it is not reinterpreted as independent acceptance here.
-- No GitHub Actions run exists for the reviewed documentation head merely from
-  pushing the non-PR branch.
+```text
+.specify/templates/ewf/preflight-result.template.json
+.specify/templates/ewf/trace-manifest.template.json
+scripts/ewf-preflight-trace.mjs
+tests/ewf-preflight-verification-trace.test.mjs
+```
 
-## Stop conditions for a coding agent
+Everything else is excluded, including canonical docs, `.github/**`, `src/**`, `server/**`, `public/**`, package files/lockfiles, dependencies, existing EWF artifact implementation/templates/tests, evidence files, product behavior, pilots, P3-02 work, package/status mutation, acceptance generation, automatic discovery, retry, remediation, installation, Spec Kit initialization, fast-check, mutation tooling, DAGs, schedulers, queues, daemons, dashboards, and workflow servers.
 
-Do not start source implementation if any of the following is true:
+`scripts/ewf-artifacts.mjs` is excluded and must be reused through accepted exports. Direct `node:crypto` import and a second digest, canonicalization, or redaction implementation are forbidden.
 
-- the requested task is not `EWF00-ARTIFACTS-001` under the frozen brief;
-- HEAD is not exact predecessor `1ce97fc99f2b430839bdaa693639ef9d71277b62`;
-- branch/worktree/writer scope or the brief is missing or mismatched;
-- the implementation needs a file outside the brief allowlist;
-- a requested boundary has no canonical package owner;
-- an umbrella is presented as an owner or dependency node;
-- a future candidate is not separately ratified/rebound for its wave;
-- an implementation would introduce a second runtime/store/scheduler/evidence/
-  status/acceptance authority;
-- a source, transcript, AI output, tool/provider, privacy/rights/cost claim or
-  readiness result lacks its declared validation/consent/evidence gate;
-- the P3-02 Shadowing conflict is implicated;
-- an action requires dependency installation, automatic initialization, CI
-  modification or a new overlapping writer without separate authorization.
+## Reachable bootstrap handoff
 
-## Authorized immediate successor
+### Stage 0 — clean main checkout
 
-Create branch `chatgpt/ewf-00-artifact-contracts-mvp` from exact commit
-`1ce97fc99f2b430839bdaa693639ef9d71277b62`, then implement the plan at:
+Start from clean `refs/heads/main` at exact `474bde8e3c7b09f757e7df4a1587f8a71b2e7865`. Stage 0 does not require HEAD to equal the implementation predecessor. It observes repository, main HEAD/ref, clean state, normalized `origin`, exact plan object/parent/one-file diff/blob/path, absence of implementation local ref/worktree/remote ref, and explicit writer/active-registry non-overlap.
 
-`docs/superpowers/plans/2026-08-04-ewf-00-artifact-contracts-mvp.md`
+Literal immutable-plan observations are:
 
-under the frozen authorization brief at:
+```text
+git cat-file -e 97cee2619c51e9dbee9191c191cdb5543aa6eaa1^{commit}
+git rev-list --parents -n 1 97cee2619c51e9dbee9191c191cdb5543aa6eaa1
+git diff-tree --no-commit-id --name-only -r 97cee2619c51e9dbee9191c191cdb5543aa6eaa1
+git ls-tree 97cee2619c51e9dbee9191c191cdb5543aa6eaa1 -- docs/superpowers/plans/2026-08-04-ewf-00-preflight-verification-trace-mvp.md
+```
 
-`docs/superpowers/briefs/2026-08-04-ewf00-artifact-contracts-mvp-authorization.md`
+Expected plan tree row:
 
-No LI-00, SRC-00, ERR-00, QAR-00, EWF preflight/trace or pilot implementation is
-authorized by this handoff.
+```text
+100644 blob b224bfb9f2ebae949e1bac43015210b43e007dad docs/superpowers/plans/2026-08-04-ewf-00-preflight-verification-trace-mvp.md
+```
+
+Only after Stage 0 passes is this one Git metadata mutation authorized:
+
+```text
+git worktree add -b chatgpt/ewf-00-preflight-verification-trace-mvp \
+  ../VocabMaster-ewf00-preflight-verification-trace-mvp-worktree \
+  97cee2619c51e9dbee9191c191cdb5543aa6eaa1
+```
+
+No checkout, switch, reset, rebase, force, detached worktree, alternate branch/path, second setup command, or fetch is authorized.
+
+### Stage 1 — implementation worktree
+
+Inside the implementation worktree, exact expectations are:
+
+```text
+HEAD = 97cee2619c51e9dbee9191c191cdb5543aa6eaa1
+HEAD^ = 474bde8e3c7b09f757e7df4a1587f8a71b2e7865
+symbolic ref = refs/heads/chatgpt/ewf-00-preflight-verification-trace-mvp
+local ref SHA = 97cee2619c51e9dbee9191c191cdb5543aa6eaa1
+clean tracked/untracked state = empty bytes
+worktree = exact declared realpath
+origin = NguyenDukKyeon/VocabMaster after frozen normalization
+remote implementation ref = ABSENT / null
+writer/registry = exact Stage 0 evidence with no overlap
+```
+
+Only after Stage 1 passes and an external valid bootstrap record exists may the first source write occur. The record is:
+
+```text
+ewf00-preflight-bootstrap-97cee2619c51e9dbee9191c191cdb5543aa6eaa1.json
+MANUAL_BOOTSTRAP_PREFLIGHT / NOT_AUTHORIZATION
+zeroRepositoryWrites: true
+```
+
+After Task 2 the adapter self-hosts later preflights; it does not replace first-write bootstrap evidence.
+
+## Exact remote URL normalization handoff
+
+Accepted forms are exactly HTTPS, `ssh://git@github.com/...`, and `git@github.com:...`, each with either no suffix or one lowercase `.git`. Host must normalize to `github.com`. Explicit ports, HTTPS credentials, non-`git` SSH users, passwords, query, fragment, percent-encoding, backslash, trailing/doubled/extra/malformed paths, dot segments, and doubled `.git.git` are rejected.
+
+Owner/repository comparisons are ASCII case-insensitive against `NguyenDukKyeon/VocabMaster`; canonical output is exactly `NguyenDukKyeon/VocabMaster`. Required fixtures cover accepted HTTPS/SSH/SCP-like forms, case handling, credential-bearing URL, wrong host/repository, malformed URL, query, fragment, port, percent encoding, and path/suffix rejection.
+
+## Parent/ref, collision, and zero-write contract
+
+The adapter observes exact HEAD, parent, full symbolic ref, local branch ref, worktree, clean tracked/untracked state, origin URL, and remote target using read-only Git commands. Collision policy is declared, never inferred. `REQUIRE_ABSENT` requires `ls-remote` exit `0` and empty stdout. No fetch or remote-tracking inference is permitted.
+
+A blocked or errored preflight produces zero repository content writes, zero index writes, zero Git metadata mutations, zero installation, zero retry, and zero remediation. Semantic overlap is mechanical intersection over declared keys and active registrations; the adapter cannot infer package ownership or semantic independence.
+
+## Verification, trace, and digest handoff
+
+`argv` is execution authority; display `command` is not execution authority. Each declaration and every result/evidence binding includes exact argv, cwd, inherited/explicit environment, timeout, tool requirement, and `declarationDigest`. The manifest includes `extensions.verificationManifestDigest`. ID-only matching is invalid.
+
+Focused profile, exact order:
+
+```text
+node --test tests/ewf-preflight-verification-trace.test.mjs
+node scripts/ewf-artifacts.mjs --check
+node --check scripts/ewf-preflight-trace.mjs
+node --check tests/ewf-preflight-verification-trace.test.mjs
+git diff --check
+```
+
+PR profile, exact order:
+
+```text
+npm test
+npm run check
+npm run audit:roadmap
+npm run build
+```
+
+No profile command may be discovered, substituted, reordered, retried, or expanded.
+
+Portable result projection is exactly:
+
+```text
+normalize → portable redaction → omit contentDigest → digest → attach → serialize
+```
+
+Trace remains exactly `requirement → test → command declaration → command result/evidence`. Frozen-handoff validation binds package/spec, exact plan path/commit/blob/parent, implementation subject/parent/spec revision, trace/evidence/brief digests, verification manifest/declaration digests, allowlist/exclusions/actual changed files, and required PASS results.
+
+## Effective package and successor status
+
+- `EWF00-ARTIFACTS-001`: independently accepted and merged.
+- `EWF00-PREFLIGHT-001`: implementation-authorized only by the final plan and frozen brief; not implemented, not audited, and not accepted.
+- `EWF00-PILOTS-001`: not authorized.
+- `EWF-00`: remains `PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED`.
+- LI-00, SRC-00, ERR-00, and QAR-00 remain unchanged.
+- Passing the preflight slice will not accept EWF-00 or authorize pilots.
+
+## Evidence and acceptance boundary
+
+After a four-file implementation subject and green focused/PR/CI evidence, a separate evidence-only revision authorization is required. Implementer evidence must remain `IMPLEMENTER_EVIDENCE / NOT_ACCEPTANCE`, bind exact plan path/commit/blob and all trace/verification digests, and contain no implementer `ACCEPT`. A fresh independent exact-head read-only audit must return `ACCEPT` before merge.
+
+## Stop conditions
+
+Do not create or write the implementation branch if any Stage 0 identity, plan commit/blob/parent/path, remote normalization/collision, writer/registry, overlap, main, or clean-state gate fails. Stop during implementation on any branch/ref/worktree, allowlist/exclusion, canonical gate, command declaration, digest, required result, or evidence mismatch, or if fetch, another Git mutation, source/product/canonical/CI/package/dependency changes, pilots, P3-02, package status, acceptance, retry, discovery, remediation, or orchestration is required.
+
+This handoff is subordinate implementation authorization only and remains `NOT_ACCEPTANCE`.
