@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -132,6 +133,34 @@ test('implementation reports preserve non-acceptance and cannot fake readiness',
   const incomplete = clone(template);
   incomplete.handoffState = 'HANDOFF_READY';
   assert.equal(validateArtifact('implementation-report', incomplete).valid, false);
+});
+
+test('HANDOFF_READY requires a lowercase frozen brief SHA-256 digest', async () => {
+  const report = await loadTemplate('implementation-report');
+  Object.assign(report, {
+    handoffState: 'HANDOFF_READY',
+    subjectCommit: 'a'.repeat(40),
+    parentCommit: 'b'.repeat(40),
+    changedFiles: ['scripts/ewf-artifacts.mjs'],
+    requirementTrace: [{ requirementId: 'EWF00-AC-01' }],
+    commandResults: [{
+      command: 'node --test tests/ewf-artifact-contracts.test.mjs',
+      result: 'PASS',
+      durationMs: 1,
+      exitCode: 0,
+      environment: 'node-test'
+    }],
+    environment: { node: process.version }
+  });
+
+  report.frozenBriefDigest = null;
+  assert.equal(validateArtifact('implementation-report', report).valid, false);
+
+  report.frozenBriefDigest = 'A'.repeat(64);
+  assert.equal(validateArtifact('implementation-report', report).valid, false);
+
+  report.frozenBriefDigest = 'c'.repeat(64);
+  assert.equal(validateArtifact('implementation-report', report).valid, true);
 });
 
 test('command and audit results accept exactly their frozen vocabularies', async () => {
@@ -338,8 +367,10 @@ async function snapshotPortableFiles() {
 test('portable redaction removes secrets and machine-absolute private paths', () => {
   const original = {
     repoPath: 'scripts/ewf-artifacts.mjs',
+    relativeDataPath: 'mnt/data/VocabMaster/evidence.json',
     identity: 'NguyenDukKyeon',
     posixPath: '/home/alice/VocabMaster/.env',
+    sandboxPath: '/mnt/data/VocabMaster/evidence.json',
     windowsPath: 'C:\\Users\\Alice\\VocabMaster\\secret.txt',
     log: 'failed at /Users/alice/VocabMaster/private.json',
     apiKey: 'plain-secret-value',
@@ -356,8 +387,10 @@ test('portable redaction removes secrets and machine-absolute private paths', ()
   const redacted = redactPortableValue(original);
   assert.notStrictEqual(redacted, original);
   assert.equal(redacted.repoPath, original.repoPath);
+  assert.equal(redacted.relativeDataPath, original.relativeDataPath);
   assert.equal(redacted.identity, original.identity);
   assert.equal(redacted.posixPath, '[REDACTED_ABSOLUTE_PATH]');
+  assert.equal(redacted.sandboxPath, '[REDACTED_ABSOLUTE_PATH]');
   assert.equal(redacted.windowsPath, '[REDACTED_ABSOLUTE_PATH]');
   assert.equal(redacted.log, 'failed at [REDACTED_ABSOLUTE_PATH]');
   assert.equal(redacted.apiKey, '[REDACTED_SECRET]');
@@ -368,6 +401,57 @@ test('portable redaction removes secrets and machine-absolute private paths', ()
   assert.equal(redacted.nested.authenticatedUrl, 'https://[REDACTED_CREDENTIALS]@example.com/private');
   assert.equal(redacted.nested.safeUrl, original.nested.safeUrl);
   assert.equal(original.apiKey, 'plain-secret-value');
+});
+
+async function runCheckWithBridge(bridgeText) {
+  const tempRoot = await mkdtemp(join(tmpdir(), 'ewf-check-'));
+  try {
+    await mkdir(join(tempRoot, 'scripts'), { recursive: true });
+    await mkdir(join(tempRoot, '.specify', 'memory'), { recursive: true });
+    await cp(
+      join(repositoryRoot, '.specify', 'templates'),
+      join(tempRoot, '.specify', 'templates'),
+      { recursive: true }
+    );
+    await cp(
+      join(repositoryRoot, 'scripts', 'ewf-artifacts.mjs'),
+      join(tempRoot, 'scripts', 'ewf-artifacts.mjs')
+    );
+    await writeFile(join(tempRoot, '.specify', 'memory', 'constitution.md'), bridgeText, 'utf8');
+    return spawnSync(
+      process.execPath,
+      [join(tempRoot, 'scripts', 'ewf-artifacts.mjs'), '--check'],
+      { cwd: tempRoot, encoding: 'utf8', env: { ...process.env, PATH: '' } }
+    );
+  } finally {
+    await rm(tempRoot, { recursive: true, force: true });
+  }
+}
+
+test('--check rejects a bridge missing canonical links or authority declarations', async () => {
+  const cases = [
+    {
+      name: 'canonical link',
+      value: bridge.replaceAll('docs/DECISIONS.md', 'docs/DECISIONS-REMOVED.md'),
+      code: 'MISSING_CANONICAL_AUTHORITY_LINK'
+    },
+    {
+      name: 'noncanonical declaration',
+      value: bridge.replace(/not canonical authority/i, 'local reference'),
+      code: 'MISSING_NONCANONICAL_DECLARATION'
+    },
+    {
+      name: 'non-acceptance declaration',
+      value: bridge.replace(/not acceptance evidence/i, 'supporting notes'),
+      code: 'MISSING_NONACCEPTANCE_DECLARATION'
+    }
+  ];
+
+  for (const fixture of cases) {
+    const result = await runCheckWithBridge(fixture.value);
+    assert.notEqual(result.status, 0, fixture.name);
+    assert.match(result.stdout, new RegExp(fixture.code), fixture.name);
+  }
 });
 
 test('--check succeeds without Spec Kit on PATH and performs zero repository writes', async () => {

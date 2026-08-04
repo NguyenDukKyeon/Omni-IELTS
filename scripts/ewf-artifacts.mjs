@@ -65,6 +65,13 @@ const FORBIDDEN_CLAIM_KEYS = new Set([
 
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
 const DIGEST_PATTERN = /^[0-9a-f]{64}$/;
+const CANONICAL_AUTHORITY_PATHS = Object.freeze([
+  'AGENTS.md',
+  'docs/ROADMAP.md',
+  'docs/IMPLEMENTATION_PLAN.md',
+  'docs/IMPLEMENTATION_STATUS.md',
+  'docs/DECISIONS.md'
+]);
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -365,6 +372,14 @@ function validateImplementationReport(value, errors) {
     if (!isRecord(value.environment) || Object.keys(value.environment).length === 0) {
       issue(errors, 'INCOMPLETE_HANDOFF', '$.environment', 'environment must be populated for HANDOFF_READY.');
     }
+    if (typeof value.frozenBriefDigest !== 'string' || !DIGEST_PATTERN.test(value.frozenBriefDigest)) {
+      issue(
+        errors,
+        'INCOMPLETE_HANDOFF',
+        '$.frozenBriefDigest',
+        'frozenBriefDigest must be a lowercase SHA-256 digest for HANDOFF_READY.'
+      );
+    }
   }
 }
 
@@ -614,7 +629,7 @@ function redactString(value) {
     (_match, prefix) => `${prefix}${REDACTED_PATH}`
   );
   redacted = redacted.replace(
-    /(^|[\s("'=])\/(?:Users|home|root|private|tmp|var\/folders|workspace|mnt\/[a-z]\/Users)(?:\/[^\s"'`]*)?/g,
+    /(^|[\s("'=])\/(?:Users|home|root|private|tmp|var\/folders|workspace|mnt\/data|mnt\/[a-z]\/Users)(?:\/[^\s"'`]*)?/g,
     (_match, prefix) => `${prefix}${REDACTED_PATH}`
   );
   return redacted;
@@ -661,6 +676,29 @@ async function runCheck() {
   try {
     const bridge = await readFile(new URL('.specify/memory/constitution.md', repositoryRoot), 'utf8');
     checked.push('.specify/memory/constitution.md');
+    for (const authorityPath of CANONICAL_AUTHORITY_PATHS) {
+      if (!bridge.includes(authorityPath)) {
+        errors.push({
+          code: 'MISSING_CANONICAL_AUTHORITY_LINK',
+          path: '.specify/memory/constitution.md',
+          message: `Constitution bridge must link ${authorityPath}.`
+        });
+      }
+    }
+    if (!/not canonical authority/i.test(bridge)) {
+      errors.push({
+        code: 'MISSING_NONCANONICAL_DECLARATION',
+        path: '.specify/memory/constitution.md',
+        message: 'Constitution bridge must declare that it is not canonical authority.'
+      });
+    }
+    if (!/not acceptance evidence/i.test(bridge)) {
+      errors.push({
+        code: 'MISSING_NONACCEPTANCE_DECLARATION',
+        path: '.specify/memory/constitution.md',
+        message: 'Constitution bridge must declare that it is not acceptance evidence.'
+      });
+    }
     if (containsForbiddenAuthorityCopy(bridge)) {
       errors.push({
         code: 'FORBIDDEN_AUTHORITY_COPY',
