@@ -1,6 +1,6 @@
 # VocabMaster — Implementation Status
 
-Last updated: 2026-07-31, Phase 5 focused audit remediation implemented; exact-head review remains open
+Last updated: 2026-08-04, Phase 4/5 delivery status reconciled against the merged implementation and remediation lineage; independent acceptance remains open
 
 Phase 0 accepted source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
@@ -12,8 +12,12 @@ Phase 2 acceptance binding: merged `main` commit `cf28153352110cae510c92e2a8f911
 
 Phase 3 acceptance binding: independently accepted at source HEAD `96aa0172add84186fbe2970cde910b06a0d73672`; exact-head CI run #259 succeeded; PR #11 merged into `main` at `d1fe0dbec9db6405938ec74111e8e25ba4792fee`.
 
-Active implementation branch: codex/phase-5-audit-remediation
-Delivery status: `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED`
+Current canonical delivery lineage: Phase 4 PR #12 merged at
+`fc6057fa66c510b0cd12a7fb9e1e74a6379b4225`; Phase 5 PR #13 merged at
+`d654356078d2b4d44a03ba17809c7bedeb6c8f14`; Phase 5 focused remediation
+PR #14 merged at `6e0165d63db39b8e586f3e9c981c6ae4495df66a`.
+Historical remediation branch: `codex/phase-5-audit-remediation`.
+Phase 4 and Phase 5 delivery status: `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED`
 
 Phase 5 is not accepted. It was explicitly authorized from merged `main`
 baseline `fc6057fa66c510b0cd12a7fb9e1e74a6379b4225` because its canonical entry
@@ -27,12 +31,14 @@ binary, model, provider, credential or quality result is claimed.
 The Phase 5 source HEAD `f56f84a0fe0398ac44d331d02df6a911bee62d50`
 passed remote CI run #266 and merged through PR #13 at
 `d654356078d2b4d44a03ba17809c7bedeb6c8f14`. A focused post-merge technical
-audit identified nine Phase 5 defects. The remediation branch above starts
-exactly from that merge and adds deterministic regression coverage for durable
+audit identified nine Phase 5 defects. The remediation lineage starts exactly
+from that merge, adds deterministic regression coverage for durable
 Gemini consent/restore behavior, HTTP-to-process-tree cancellation, lease
 heartbeat/fencing, restart cleanup and resource bounds, over-cap duration
 rejection, model/checkpoint integrity, overlap merge semantics, and unaligned
-text import containment. This remediation does not mark Phase 5 accepted.
+text import containment, and was merged through PR #14 at
+`6e0165d63db39b8e586f3e9c981c6ae4495df66a`. This remediation does not mark
+Phase 5 accepted.
 
 ## Phase 5 delivery matrix
 
@@ -55,9 +61,10 @@ AI-assisted content draft remain pending. The platform, trust, install,
 lifecycle, backup/restore, UI and validator paths are implemented and focused
 green; the sampler and four weekly packs are structurally complete drafts only.
 External content-repository provisioning, named human rights/review approval,
-production signing, exact-head remote CI, independent focused audit and merge
-remain required. Phase 5 does not alter those records or publication rights;
-Phase 6 remains locked.
+production signing and independent acceptance remain required. PR #12 merged
+at `fc6057fa66c510b0cd12a7fb9e1e74a6379b4225`; that merge does not supply the
+missing external, rights, editorial or independent-acceptance evidence. Phase 5
+does not alter those records or publication rights; Phase 6 remains locked.
 
 ## Phase 4 delivery matrix
 
@@ -73,7 +80,7 @@ Phase 6 remains locked.
 | P4-07 week 2 | DRAFT_VALIDATED / HUMAN_REVIEW_REQUIRED | Publication depends on approved week-1 defect review |
 | P4-08 week 3 | DRAFT_VALIDATED / HUMAN_REVIEW_REQUIRED | Publication depends on approved week-2 defect review |
 | P4-09 week 4 | DRAFT_VALIDATED / HUMAN_REVIEW_REQUIRED | Publication depends on approved week-3 defect review |
-| P4-10 verification/release | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED | Local focused gates green; exact-head CI, independent ACCEPT and merge still required |
+| P4-10 verification/release | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED | Local focused gates green and PR #12 merged at `fc6057f`; independent acceptance plus external, rights and editorial gates remain open |
 
 Scope of this update: Phase 0 remains accepted at exact source commit `d869eb4` with PR #8 Ubuntu CI run 250 green. PR #9 was merged into `main` at `9da21e1`. GitHub Actions CI run 255 (`30533541002`) completed successfully on that exact merge commit. An independent read-only audit reviewed the cumulative 44-file P1 diff, reproduced `npm ci --no-audit --no-fund`, `npm run phase0:gate` (21/21), and `npm run phase1:verify` (22/22, including 233/233 unit/integration and all production browser suites) on clean `main`; no P0/P1 finding remained. P1-00…P1-08 are therefore accepted at `9da21e1` and unlock P2-00.
 
@@ -393,8 +400,8 @@ P0-08 adds no product data migration and changes no database version. It makes t
 | B-010 | P1/High | Three DBs and several cross-DB writes lack a shared migration/saga/reconciler model | P1-00, P1-03 |
 | B-011 | P2/High | Transcript resolver is range/cache-RAM based, reparses weakly and lacks durable jobs | P2-00–P2-06 |
 | B-012 | P3/Critical | Dictation answer remains in transcript rail DOM/a11y surface | P3-03 |
-| B-013 | P4/Critical | Content packs lack immutable signed catalog, transactional install and full rights workflow | P4-00–P4-10 |
-| B-014 | P5/Critical | Cloud fallback consent/shared-cache policy and local process safety are not production-ready | P5-00–P5-05 |
+| B-013 | P4/Critical | The remote platform is implemented, but external repository/CDN provisioning, production signing, named rights approval, human review and sequential defect-review evidence remain open | P4-00–P4-10 |
+| B-014 | P5/Critical | Phase 5 implementation and focused remediation are merged, but independent exact-head review remains open; live-provider smoke remains conditional on explicit provisioning, and deterministic fixtures do not establish a live-provider result | P5-00–P5-05 |
 | B-015 | P7/High | Metrics/calibration are too weak for safe personalization or FSRS tuning | P7-00–P7-05 |
 
 Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006, B-007, B-008 and B-009. Core schedule writes are policy-gated and receipt-bound; skill unlock is based on successful qualified evidence; IELTS/V10 exposed, unverified and Retell coaching paths cannot schedule; Retell learner output is durable across evaluator failure; the browser harness remains independently accepted; portable export covers every durable Core/IELTS/V10 store policy including drafts and outbox; restore is journaled, crash-recoverable, verified after reopen and explicit about degraded durability; Capture has one durable Inbox with safe retry/migration behavior; and Today has one canonical route whose launchers preserve exact durable targets or fail closed.
@@ -407,8 +414,8 @@ Resolved at the current audited commit: B-001, B-002, B-003, B-004, B-005, B-006
 | Phase 1 — Core Product Unification | ACCEPTED / GREEN | P0-08 ACCEPTED | PR #9 merged at `9da21e1`; CI run 255 and independent reproduction passed |
 | Phase 2 — Caption-first Resolver | ACCEPTED / GREEN_WITH_LIMITATIONS | P1-05, P1-08 ACCEPTED | Merged at `cf281533`; accepted limitations are integrated into Phase 3 |
 | Phase 3 — Full-video Workspace | ACCEPTED / GREEN | P2-06 ACCEPTED | Independently accepted at `96aa017`; exact-head CI run #259 passed; PR #11 merged at `d1fe0db` |
-| Phase 4 — Remote Content Platform | UNLOCKED / NOT_STARTED | Phase 3 accepted and merged; P1 contracts accepted | Authorized on `codex/phase-4-remote-content-platform` |
-| Phase 5 — ASR/Cloud Fallback | BLOCKED_BY_PHASE_2 | P2-06 and policy approval | Not started |
+| Phase 4 — Remote Content Platform | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED | Phase 3 accepted and merged; P1 contracts accepted | PR #12 merged at `fc6057f`; P4-10 remains blocked by review and external gates; not accepted |
+| Phase 5 — ASR/Cloud Fallback | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED | P2-06 accepted and explicit policy authorization recorded | PR #13 and focused remediation PR #14 merged through `6e0165d`; independent acceptance remains open |
 | Phase 6 — Content Factory/Scale | BLOCKED_BY_PHASE_4 | P4-10 ACCEPTED | Not started |
 | Phase 7 — Measurement/Personalization | BLOCKED | Clean event model; rollout also needs content/outcomes | Not started |
 
@@ -480,6 +487,10 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 ### Phase 4
 
+The delivery matrix records implemented artifacts. The package ledger records
+the remaining acceptance boundary: P4-10 stays blocked until its external,
+rights, editorial and independent-review gates are satisfied.
+
 | Package | Branch/repository | Dependency | Status |
 |---|---|---|---|
 | P4-00 Content contracts | codex/phase-4-remote-content-platform | P1-01, P1-05 | IMPLEMENTED / REVIEW_REQUIRED |
@@ -498,12 +509,12 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 
 | Package | Branch | Dependency | Status |
 |---|---|---|---|
-| P5-00 Fallback policy | codex/p5-00-fallback-policy | P2-06 | PHASE_BLOCKED |
-| P5-01 Local companion | codex/p5-01-local-companion | P5-00 | PHASE_BLOCKED |
-| P5-02 Local ASR | codex/p5-02-local-asr | P5-01 | PHASE_BLOCKED |
-| P5-03 ASR resume/cleanup | codex/p5-03-asr-resume | P5-02, P2-04 | PHASE_BLOCKED |
-| P5-04 Gemini opt-in | codex/p5-04-gemini-opt-in | P5-00, resolver jobs | PHASE_BLOCKED |
-| P5-05 Fallback exit | codex/p5-05-fallback-exit | P5-03, P5-04 | PHASE_BLOCKED |
+| P5-00 Fallback policy | codex/p5-00-fallback-policy | P2-06 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
+| P5-01 Local companion | codex/p5-01-local-companion | P5-00 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
+| P5-02 Local ASR | codex/p5-02-local-asr | P5-01 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
+| P5-03 ASR resume/cleanup | codex/p5-03-asr-resume | P5-02, P2-04 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
+| P5-04 Gemini opt-in | codex/p5-04-gemini-opt-in | P5-00, resolver jobs | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
+| P5-05 Fallback exit | codex/p5-05-fallback-exit | P5-03, P5-04 | IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED |
 
 ### Phase 6
 
@@ -526,6 +537,25 @@ Phase branch/PR: `codex/phase-0-release-safety`; P0-00…P0-08 là commit/packag
 | P7-03 Outcomes/calibration | codex/p7-03-outcomes-calibration | P7-00, mature clean cohort | PHASE_BLOCKED |
 | P7-04 Workload recommender | codex/p7-04-workload-recommender | P7-02, P7-03, P4-10, P6-05 | PHASE_BLOCKED |
 | P7-05 Personalization exit | codex/p7-05-personalization-exit | P7-04, adequate baseline cohort | PHASE_BLOCKED |
+
+### Cross-cutting packages canonicalized by CR-2A
+
+The five U-* identifiers are portfolio grouping labels only and intentionally
+have no status rows. The four package rows below record canonical planning
+boundaries, not implementation authorization or acceptance evidence.
+
+| Package | Dependency | Status |
+|---|---|---|
+| LI-00 Canonical execution safety and Frozen Run | P1-01, P1-02, P1-07, P1-08, EvidencePolicy | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
+| SRC-00 Stable SourceRevisionRef seam | P1-01, P1-05, P3-06; public-pack adapter additionally requires accepted P4 contracts | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
+| ERR-00 ErrorCandidate lifecycle | LI-00, P1-06 | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
+| QAR-00 Shared question activity contracts | LI-00, SRC-00 | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
+
+### Cross-cutting Repository Engineering
+
+| Package | Dependency/evidence boundary | Status |
+|---|---|---|
+| EWF-00 Engineering Workflow Foundation | No hard product-package dependency; approved architecture baseline `adc3726620f4badddb16309e375f8f17b6af1404`; CR-3 records governance metadata only | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
 
 ## 6. Phase 0 exit checklist
 
@@ -571,7 +601,8 @@ Phase 3 was independently accepted at exact source HEAD `96aa0172add84186fbe2970
 ## 9. Next acceptance action
 
 Current handoff: independently reproduce the Phase 5 exact-head unit,
-backup/restore and production browser gates on its draft PR. Live Local
+backup/restore and production browser gates at the merged remediation lineage
+`6e0165d63db39b8e586f3e9c981c6ae4495df66a`. Live Local
 Whisper and Gemini smoke remain conditional on explicitly provisioned binaries,
 model and server credential. For Phase 4, external repository/CDN provisioning,
 production signing-key custody, named rights approval, human lesson review,

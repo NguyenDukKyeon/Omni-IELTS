@@ -900,6 +900,97 @@ Exit gate Phase 7: metrics derive deterministically from canonical events and ex
 - Rủi ro: Critical if underpowered or optimizing proxy metrics.
 - Điều kiện dừng: dừng if sample insufficient, harm guardrail trips, attribution unavailable, or proposed experiment changes FSRS parameters before validated outcomes.
 
+## Cross-cutting minimum architecture packages
+
+Các package trong phần này không phải phase mới và không được implementation
+authorization từ việc xuất hiện trong canonical docs. Trạng thái ban đầu của
+từng package là `PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED`. Năm U-* chỉ tồn tại
+trong ROADMAP/ADR như grouping labels và không có acceptance boundary riêng.
+
+### LI-00 — Canonical execution safety and Frozen Run
+
+- Delivery authorization: `NOT_GRANTED`; chưa có branch/PR triển khai.
+- Mục tiêu: harden additive canonical ActivitySpec/Run/Attempt/Receipt path để một started Run đóng băng target, source revision, prompt/key, scoring và evidence-policy bindings; mọi kết thúc tạo đúng một terminal Receipt hoặc fail closed.
+- Canonical owner/boundary: LI-00 sở hữu execution-safety contract và frozen binding seam; existing P1 repositories, Today Runner và EvidencePolicy tiếp tục sở hữu persistence, execution, scheduling và evidence verdict.
+- Dependency: accepted P1-01, P1-02, P1-07, P1-08 và current EvidencePolicy.
+- Entry gate: bounded spec được duyệt; terminal state vocabulary, immutable binding fields và migration compatibility được chốt; không có active writer overlap trên learning contracts/Today Runner.
+- In scope: strict binding validation, first-terminal-wins Receipt semantics, duplicate/idempotent completion, assistance/provenance binding và fail-closed stale/missing target behavior.
+- Non-goals: activity UI inventory, new scheduler, new Attempt/Receipt store, multi-item assessment aggregate, AI authority hoặc thay đổi FSRS.
+- Migration/rollback: additive fields/readers only; legacy Run/Receipt thiếu required authority remains ineligible with reason; rollback ignores new optional fields without deleting durable attempts or evidence.
+- Test bắt buộc: source/policy changes after start, stale target, duplicate completion, competing terminal writers, reveal/assistance transitions, crash/reopen, backup/restore và unknown/future fields.
+- Acceptance criteria: exact frozen bindings survive reload; one terminal Receipt wins deterministically; no caller/provider string can grant independent/verified authority; existing eligible evidence remains reproducible.
+- Acceptance owner: independent canonical reviewer at the exact implementation commit.
+- Rủi ro: Critical learning/evidence boundary.
+- Điều kiện dừng: dừng nếu implementation needs a parallel runtime/store, rewrites historical evidence, infers target from UI state or allows caller-selected evidence authority.
+
+### SRC-00 — Stable SourceRevisionRef seam
+
+- Delivery authorization: `NOT_GRANTED`; chưa có branch/PR triển khai.
+- Mục tiêu: define one stable reference contract for canonical card/activity, Transcript revision and content revision identities so compilers/executors can bind exact source without owning another source database.
+- Canonical owner/boundary: SRC-00 owns only reference shape, adapter validation and resolution result semantics; Card, Transcript, private content and public pack repositories retain their data/trust ownership.
+- Dependency: accepted P1-01, P1-05 and P3-06; a public-pack adapter additionally requires accepted P4 contracts, while the neutral seam does not wait for P4.
+- Entry gate: supported source-kind registry, revision/tombstone semantics, privacy/provenance fields and unresolved-reference behavior are reviewed.
+- In scope: typed source/revision identity, immutable digest/reference fields, adapter registry, resolution errors, provenance projection and portable reference backup.
+- Non-goals: source ingestion, URL/PDF/media acquisition, private Library, content compilation, publication/signing or a fourth source store.
+- Migration/rollback: additive reference adapter over existing IDs; unresolved legacy identities remain explicit and non-qualifying; rollback preserves original repository records.
+- Test bắt buộc: each accepted adapter, missing/revoked/tombstoned revision, digest mismatch, private/public separation, duplicate IDs, backup/restore/reopen and forward-compatible unknown source kinds.
+- Acceptance criteria: the same exact revision resolves deterministically or fails with a typed reason; no adapter upgrades private/unverified content or bypasses public-pack trust; no durable source is duplicated.
+- Acceptance owner: independent canonical reviewer at the exact implementation commit.
+- Rủi ro: High provenance and compatibility boundary.
+- Điều kiện dừng: dừng nếu seam requires a new source authority/store, rewrites source history or treats unresolved/invalid provenance as canonical.
+
+### ERR-00 — ErrorCandidate lifecycle and atomic promotion
+
+- Delivery authorization: `NOT_GRANTED`; chưa có branch/PR triển khai.
+- Mục tiêu: contain advisory/AI or uncertain error signals as candidates and promote them atomically into the existing global Error Repository only after user confirmation or qualified evidence.
+- Canonical owner/boundary: ERR-00 owns candidate state, decision provenance and promotion saga; P1-06 remains the sole ErrorRecord/occurrence/repair-queue owner and EvidencePolicy remains evidence authority.
+- Dependency: LI-00 and accepted P1-06.
+- Entry gate: candidate taxonomy, promotion authorities, idempotency key, retraction/correction semantics and source-error separation are approved.
+- In scope: candidate create/update/confirm/reject/expire states, immutable advisory provenance, atomic promotion/idempotency and replay/reconciliation after interruption.
+- Non-goals: direct AI-to-ErrorRecord writes, scoring, schedule/mastery mutation, duplicate Error Repository, provider evaluation or WeaknessProfile ownership.
+- Migration/rollback: wrap legacy advisory writes as non-promoted candidates where provenance permits; never synthesize confirmation; rollback leaves canonical ErrorRecords untouched and preserves unresolved candidates for export.
+- Test bắt buộc: forged caller decision, duplicate promotion, crash between candidate decision and ErrorRecord write, replay/out-of-order events, source error, correction after reveal, reject/expire and backup/restore/reopen.
+- Acceptance criteria: advisory output cannot create canonical error/schedule evidence directly; one qualified decision creates at most one canonical occurrence; totals/replay stay deterministic after recovery.
+- Acceptance owner: independent canonical reviewer at the exact implementation commit.
+- Rủi ro: Critical authority and learner-model boundary.
+- Điều kiện dừng: dừng nếu promotion trusts provider agreement, writes two error stores, bypasses P1-06 or mutates evidence/mastery directly.
+
+### QAR-00 — Shared Question Activity Runtime contracts
+
+- Delivery authorization: `NOT_GRANTED`; chưa có branch/PR triển khai.
+- Mục tiêu: define shared question-type schemas, deterministic answer normalization/scoring/review semantics and executor registration for Reading/Listening activities while reusing canonical Activity/Run/Attempt/Receipt execution.
+- Canonical owner/boundary: QAR-00 owns question contract/registry only; canonical P1 runtime, Today, EvidencePolicy, skill executors, Transcript/media and IELTS profile/inventory retain ownership.
+- Dependency: LI-00 and SRC-00.
+- Entry gate: versioned question-kind registry, answer-authority rules, scoring/review semantics and unsupported-kind behavior are reviewed; at least one existing executor adapter is selected for a later implementation slice.
+- In scope: item schema, validator, normalization, deterministic scorer/reviewer interface, executor capability registration and typed unsupported/fail-closed behavior.
+- Non-goals: second runtime/scheduler/attempt store, IELTS inventory ownership, productive Writing/Speaking artifacts, qualified-evidence policy, media acquisition or full-coverage claim.
+- Migration/rollback: adapters wrap existing accepted Reading/Dictation primitives without rewriting attempts; unknown future kinds remain preserved but unexecutable; rollback uses existing executors.
+- Test bắt buộc: schema versions, malformed item/key, normalization ambiguity, deterministic scorer, unsupported kind, exact source binding through LI/SRC, existing executor adapter and backup/restore of attempts.
+- Acceptance criteria: registered kinds execute through the canonical Run/Attempt/Receipt path; same frozen input yields the same normalized/scored result; unsupported or ambiguous kinds fail closed; no parallel runtime state appears.
+- Acceptance owner: independent canonical reviewer at the exact implementation commit.
+- Rủi ro: High shared-executor boundary.
+- Điều kiện dừng: dừng nếu QAR owns Today/attempt persistence, invents IELTS profile inventory, uses AI as answer authority or labels matrix coverage as implemented without executor/evidence.
+
+## Cross-cutting Repository Engineering
+
+### EWF-00 — Engineering Workflow Foundation
+
+- Placement: Cross-cutting Repository Engineering, outside Phase 0–7 and outside U-LI/U-AI/U-PCS/U-4S/U-FD.
+- Architecture baseline: approved design commit `adc3726620f4badddb16309e375f8f17b6af1404`; the design file remains unchanged.
+- Initial status: `PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED`.
+- Delivery authorization: `NOT_GRANTED`; CR-3 is governance bootstrap only and creates no implementation branch, source, test, initializer or dependency change.
+- Dependency: no hard product-package dependency. Reuse the existing acceptance harness and independent-audit conventions without reopening Phase 0 or taking ownership from canonical package/phase gates.
+- Entry gate for later implementation: EWF-00 bounded specs approved; exact implementation predecessor and one-writer worktree approved separately; required artifact schemas and allowed-file boundary frozen before first write.
+- In scope: minimal constitutional bridge; one-writer/worktree preflight; lightweight repair record; structured spec metadata; focused/PR verification profiles; implementation verification report; frozen acceptance brief; `requirement → test → command → evidence` trace validator; negative fixtures for wrong HEAD, dirty tree, overlap, broken trace and mismatched brief; CLI-absent operation; one small-repair pilot; one bounded spec-level pilot; overhead measurement; independent audit.
+- Authority boundary: AGENTS/ROADMAP/PLAN/STATUS/DECISIONS remain canonical. EWF outputs are subordinate artifacts and never create package status, acceptance verdict or release authority. Implementer evidence cannot self-accept.
+- Non-goals: product behavior; Phase 4/5 reconciliation; second status/acceptance authority; dashboard; daemon; workflow runtime/DAG/scheduler/retry engine; CI workflow mutation or complex CI orchestration; mutation suite; broad fuzz; portability automation; automatic initializer, Spec Kit, fast-check or other dependency installation.
+- Migration/rollback: additive repository-local metadata/templates/wrappers only after separate authorization; no product schema/data migration. Rollback removes only declared EWF artifacts/hooks and must leave the canonical workflow operational when Spec Kit CLI is absent.
+- Test bắt buộc: wrong-head/dirty/untracked/overlap preflight; duplicate requirement and broken reference; missing required evidence; commit/spec/trace/evidence-digest mismatch; focused/PR result classification; CLI unavailable; deterministic artifact digest; small-repair and bounded-spec pilot evidence.
+- Acceptance criteria: every required negative fixture fails closed; both pilots complete without granting product status; exact identity and trace evidence are reproducible; measured overhead is recorded; no canonical authority is duplicated; an independent auditor at the exact commit issues the verdict.
+- Acceptance owner: independent canonical auditor at the exact implementation commit.
+- Rủi ro: High verification/governance integrity; Medium operational overhead.
+- Điều kiện dừng: dừng nếu implementation needs to rewrite canonical docs at runtime, auto-install tools, infer predecessor/acceptance, orchestrate a general workflow engine, absorb a pilot's product boundary or use implementer evidence as acceptance.
+
 ## 7. Thứ tự merge theo dependency thực
 
 Trục bắt buộc đầu tiên:
