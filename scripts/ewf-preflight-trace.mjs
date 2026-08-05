@@ -1078,7 +1078,31 @@ export function validateFrozenHandoff(brief, bindings) {
   const results = Array.isArray(bindings.requiredCommandResults) ? bindings.requiredCommandResults : [];
   for (const command of requiredCommands) {
     const result = results.find((entry) => isRecord(entry) && entry.id === command.id);
-    if (!result || result.declarationDigest !== command.declarationDigest) {
+    const declarationMatches = isRecord(command) &&
+      isRecord(result) &&
+      result.id === command.id &&
+      typeof command.declarationDigest === 'string' &&
+      typeof result.declarationDigest === 'string' &&
+      result.declarationDigest === command.declarationDigest &&
+      Array.isArray(command.argv) &&
+      Array.isArray(result.argv) &&
+      sameJson(result.argv, command.argv) &&
+      typeof command.cwd === 'string' &&
+      typeof result.cwd === 'string' &&
+      result.cwd === command.cwd &&
+      Array.isArray(command.inheritEnvironment) &&
+      Array.isArray(result.inheritEnvironment) &&
+      sameJson(result.inheritEnvironment, command.inheritEnvironment) &&
+      isRecord(command.environment) &&
+      isRecord(result.environment) &&
+      sameJson(result.environment, command.environment) &&
+      Number.isFinite(command.timeoutMs) &&
+      Number.isFinite(result.timeoutMs) &&
+      result.timeoutMs === command.timeoutMs &&
+      typeof command.toolRequirement === 'string' &&
+      typeof result.toolRequirement === 'string' &&
+      result.toolRequirement === command.toolRequirement;
+    if (!declarationMatches) {
       issue(errors, 'REQUIRED_COMMAND_DECLARATION_MISMATCH', '$.bindings.requiredCommandResults', `Required command declaration mismatch: ${command.id}.`);
       continue;
     }

@@ -1292,7 +1292,7 @@ test('verification rejects an empty declared profile instead of fabricating a ze
   });
   assert.equal(attempts, 0);
   assert.equal(result.valid, false);
-  assert.ok(diagnosticCodes(result).includes('MISSING_VERIFICATION_PROFILE'));
+  assert.ok(diagnosticCodes(result).includes('EMPTY_VERIFICATION_PROFILE'));
 });
 
 test('verification rejects duplicate command IDs before spawn', async () => {
