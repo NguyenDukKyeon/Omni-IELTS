@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "trace-manifest",
+  "authorityLabel": "IMPLEMENTER_TRACE / NOT_ACCEPTANCE",
+  "specId": "EWF00-PREFLIGHT-001",
+  "subjectCommit": "0000000000000000000000000000000000000000",
+  "parentCommit": "250b879fa06b7be50a198e3cf007637c5f9d7306",
+  "specRevision": "0b43efac974c3fbbc489f10e9fa668bac84c9b43",
+  "verificationManifestDigest": null,
+  "requirements": [
+    {
+      "id": "EWF00-PVT-01",
+      "tests": [
+        "EWF00-TEST-001"
+      ],
+      "disposition": "REQUIRED"
+    }
+  ],
+  "tests": [
+    {
+      "id": "EWF00-TEST-001",
+      "commands": [
+        "ewf-preflight-focused"
+      ],
+      "scope": "LOCAL",
+      "sharedScopeRationale": null
+    }
+  ],
+  "commands": [
+    {
+      "id": "ewf-preflight-focused",
+      "declarationRef": "verification-manifest#commands.focused[0]",
+      "declarationDigest": null,
+      "evidence": [
+        "EWF00-EVIDENCE-001"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EWF00-EVIDENCE-001",
+      "authorityLabel": "IMPLEMENTER_EVIDENCE / NOT_ACCEPTANCE",
+      "subjectCommit": "0000000000000000000000000000000000000000",
+      "parentCommit": "250b879fa06b7be50a198e3cf007637c5f9d7306",
+      "specRevision": "0b43efac974c3fbbc489f10e9fa668bac84c9b43",
+      "verificationManifestDigest": null,
+      "commandId": "ewf-preflight-focused",
+      "declarationDigest": null,
+      "result": "NOT_RUN",
+      "contentDigest": null
+    }
+  ],
+  "contentDigest": null,
+  "extensions": {
+    "canonicalPackageId": "EWF-00",
+    "repository": "NguyenDukKyeon/VocabMaster",
+    "approvedPlan": {
+      "path": "docs/superpowers/plans/2026-08-05-ewf-00-preflight-verification-trace-github-connector-v4.md",
+      "commit": "250b879fa06b7be50a198e3cf007637c5f9d7306",
+      "parent": "474bde8e3c7b09f757e7df4a1587f8a71b2e7865",
+      "blob": "c45255836ca211d7f07f010016c68b568da6b193"
+    },
+    "implementationBinding": {
+      "branch": "chatgpt/ewf-00-preflight-verification-trace-mvp",
+      "writer": "chatgpt-github-ewf00-preflight-primary-writer",
+      "writerMode": "exclusive"
+    },
+    "semanticKeyMapping": {
+      "preflightObservation": "ewf:preflight-observation",
+      "verificationExecution": "ewf:verification-execution",
+      "traceValidation": "ewf:trace-validation",
+      "frozenHandoffValidation": "ewf:frozen-handoff-validation"
+    },
+    "digestBindings": {
+      "declarationDigest": null,
+      "verificationManifestDigest": null,
+      "evidenceDigest": null,
+      "traceDigest": null,
+      "frozenBriefDigest": null
+    },
+    "frozenHandoffValidationBinding": {
+      "semanticKey": "ewf:frozen-handoff-validation",
+      "briefIdentity": null,
+      "briefDigest": null,
+      "validationEvidenceRef": null
+    },
+    "commandResultVocabulary": [
+      "PASS",
+      "FAIL",
+      "ERROR",
+      "NOT_RUN",
+      "NOT_AVAILABLE"
+    ],
+    "sharedScopeRule": {
+      "rationaleRequiredWhenScopeIsShared": true
+    },
+    "portableRepresentation": {
+      "representation": "REDACTED_CANONICAL_JSON",
+      "repositoryRelativePathsPreserved": true,
+      "privateAbsolutePathsAllowed": false,
+      "rawEnvironmentValuesAllowed": false,
+      "secretsAllowed": false
+    },
+    "evidenceBoundary": {
+      "connectorGovernanceMetadataIsExecutableEvidence": false,
+      "commandDeclarationsAreReferencedByIdentity": true,
+      "digestComputationUsesAcceptedEwfPrimitives": true
+    }
+  }
+}
