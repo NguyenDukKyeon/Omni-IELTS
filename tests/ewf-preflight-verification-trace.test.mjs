@@ -946,35 +946,12 @@ for (const fixture of TRACE_DEFECTS) {
 }
 
 test('frozen handoff binds plan, subject, digests, boundary, declarations and required results', () => {
-  const { brief, trace, command, manifest } = makeFrozenBrief();
-  const bindings = {
-    canonicalPackageId: 'EWF-00',
-    specId: SPEC_ID,
-    subjectCommit: brief.subjectCommit,
-    parentCommit: brief.parentCommit,
-    specRevision: brief.specRevision,
-    traceDigest: brief.traceDigest,
-    evidenceDigest: brief.evidenceDigest,
-    briefDigest: brief.briefDigest,
-    approvedPlanPath: PLAN_PATH,
-    approvedPlanCommit: PLAN_COMMIT,
-    approvedPlanBlob: PLAN_BLOB,
-    approvedPlanParent: PLAN_PARENT,
-    allowlist: [...ALLOWLIST],
-    exclusions: [...EXCLUSIONS],
-    actualChangedFiles: [...ALLOWLIST],
-    verificationManifestDigest: manifest.extensions.verificationManifestDigest,
-    requiredCommandResults: [{
-      id: command.id,
-      declarationDigest: command.declarationDigest,
-      result: 'PASS'
-    }],
-    trace
-  };
-  const result = validateFrozenHandoff(brief, bindings);
+  const fixture = makeFrozenBrief();
+  const bindings = makeFrozenHandoffBindings(fixture);
+  const result = validateFrozenHandoff(fixture.brief, bindings);
   assert.equal(result.valid, true, JSON.stringify(result.errors));
-  assert.equal(Object.hasOwn(result, 'auditResult'), false);
-  assert.equal(Object.hasOwn(result, 'verdict'), false);
+  assert.deepEqual(result.errors, []);
+  assertNoAuthorityFields(result);
 });
 
 const BRIEF_MISMATCHES = [
@@ -998,37 +975,13 @@ const BRIEF_MISMATCHES = [
 
 for (const [name, code, mutate] of BRIEF_MISMATCHES) {
   test(`frozen handoff blocks ${name} mismatch without product verdict`, () => {
-    const { brief, trace, command, manifest } = makeFrozenBrief();
-    const bindings = {
-      canonicalPackageId: 'EWF-00',
-      specId: SPEC_ID,
-      subjectCommit: brief.subjectCommit,
-      parentCommit: brief.parentCommit,
-      specRevision: brief.specRevision,
-      traceDigest: brief.traceDigest,
-      evidenceDigest: brief.evidenceDigest,
-      briefDigest: brief.briefDigest,
-      approvedPlanPath: PLAN_PATH,
-      approvedPlanCommit: PLAN_COMMIT,
-      approvedPlanBlob: PLAN_BLOB,
-      approvedPlanParent: PLAN_PARENT,
-      allowlist: [...ALLOWLIST],
-      exclusions: [...EXCLUSIONS],
-      actualChangedFiles: [...ALLOWLIST],
-      verificationManifestDigest: manifest.extensions.verificationManifestDigest,
-      requiredCommandResults: [{
-        id: command.id,
-        declarationDigest: command.declarationDigest,
-        result: 'PASS'
-      }],
-      trace
-    };
+    const fixture = makeFrozenBrief();
+    const bindings = makeFrozenHandoffBindings(fixture);
     mutate(bindings);
-    const result = validateFrozenHandoff(brief, bindings);
+    const result = validateFrozenHandoff(fixture.brief, bindings);
     assert.equal(result.valid, false);
     assert.ok(result.errors.some((error) => error.code === code), JSON.stringify(result.errors));
-    assert.equal(Object.hasOwn(result, 'auditResult'), false);
-    assert.equal(Object.hasOwn(result, 'verdict'), false);
+    assertNoAuthorityFields(result);
   });
 }
 
