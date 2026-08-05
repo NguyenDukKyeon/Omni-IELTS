@@ -977,10 +977,17 @@ trong ROADMAP/ADR như grouping labels và không có acceptance boundary riêng
 
 - Placement: Cross-cutting Repository Engineering, outside Phase 0–7 and outside U-LI/U-AI/U-PCS/U-4S/U-FD.
 - Architecture baseline: approved design commit `adc3726620f4badddb16309e375f8f17b6af1404`; the design file remains unchanged.
-- Initial status: `PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED`.
-- Delivery authorization: `NOT_GRANTED`; CR-3 is governance bootstrap only and creates no implementation branch, source, test, initializer or dependency change.
+- Current implementation state: `IMPLEMENTED / PILOTS_PENDING / NOT_ACCEPTED`.
+- Accepted foundation slices:
+  - `EWF00-ARTIFACTS-001`
+  - `EWF00-PREFLIGHT-001`
+- Remaining acceptance gates:
+  - one independently audited eligible small-repair pilot;
+  - one independently audited bounded spec-level pilot;
+  - measured overhead data;
+  - independent exact-commit EWF-00 package audit.
+- Pilot authorization: `EWF00-PILOTS-001` remains `NOT_GRANTED / UNAUTHORIZED`.
 - Dependency: no hard product-package dependency. Reuse the existing acceptance harness and independent-audit conventions without reopening Phase 0 or taking ownership from canonical package/phase gates.
-- Entry gate for later implementation: EWF-00 bounded specs approved; exact implementation predecessor and one-writer worktree approved separately; required artifact schemas and allowed-file boundary frozen before first write.
 - In scope: minimal constitutional bridge; one-writer/worktree preflight; lightweight repair record; structured spec metadata; focused/PR verification profiles; implementation verification report; frozen acceptance brief; `requirement → test → command → evidence` trace validator; negative fixtures for wrong HEAD, dirty tree, overlap, broken trace and mismatched brief; CLI-absent operation; one small-repair pilot; one bounded spec-level pilot; overhead measurement; independent audit.
 - Authority boundary: AGENTS/ROADMAP/PLAN/STATUS/DECISIONS remain canonical. EWF outputs are subordinate artifacts and never create package status, acceptance verdict or release authority. Implementer evidence cannot self-accept.
 - Non-goals: product behavior; Phase 4/5 reconciliation; second status/acceptance authority; dashboard; daemon; workflow runtime/DAG/scheduler/retry engine; CI workflow mutation or complex CI orchestration; mutation suite; broad fuzz; portability automation; automatic initializer, Spec Kit, fast-check or other dependency installation.

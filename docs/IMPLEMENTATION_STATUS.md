@@ -1,6 +1,6 @@
 # VocabMaster — Implementation Status
 
-Last updated: 2026-08-04, Phase 4/5 delivery status reconciled against the merged implementation and remediation lineage; independent acceptance remains open
+Last updated: 2026-08-05
 
 Phase 0 accepted source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
@@ -351,7 +351,7 @@ Independently accepted source commit pending Ubuntu confirmation: `d869eb444ea91
 | Matrix per implementer gate | Restore/rollback 28/28, full suite 192/192, browser harness 12/12, static/audits/build/server/preview and Core/IELTS/V10/Hardening browser suites PASS; 0 failed/skipped/todo |
 | Environment | Windows `10.0.26200` x64; Node `v24.15.0`; Chrome `150.0.7871.188` |
 | Canonical artifact | 26 files, 741702 bytes, SHA-256 `71772f3cd42dce06ca537c30fb0d3cda43298691022a27969c43071a6024db54` on all three runs |
-| Independent reviewer | ACCEPTED exact source commit; audio 6/6, late-refresh/`voiceschanged` probe, Core browser and full gate 21/21 in 55.9 s with the same artifact digest; clean diff/worktree/cleanup and no P0/P1 |
+| Independent reviewer | ACCEPTED exact source commit; audio 6/6, late-refresh/`voiceschanged` probe, Core browser and full gate 21/21 in 55.9 s with the same digest; clean diff/worktree/cleanup and no P0/P1 |
 | Stable cumulative remediation patch ID | `66a72821e3df6f89d449ce428065f522f8ee163f` from PR #8 pre-remediation head `af663f3` |
 | Migration/rollback | No DB/store version or durable-data migration. Rollback reverts only source coordination/discovery changes; durable stores and records remain untouched |
 | Release check | PR #8 Ubuntu CI run 250 passed on integration head `ebe276a`; final documentation-only head must remain CI green |
@@ -555,7 +555,46 @@ boundaries, not implementation authorization or acceptance evidence.
 
 | Package | Dependency/evidence boundary | Status |
 |---|---|---|
-| EWF-00 Engineering Workflow Foundation | No hard product-package dependency; approved architecture baseline `adc3726620f4badddb16309e375f8f17b6af1404`; CR-3 records governance metadata only | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
+| EWF-00 Engineering Workflow Foundation | No hard product-package dependency; EWF00-ARTIFACTS-001 and EWF00-PREFLIGHT-001 independently accepted and integrated; both required pilots remain unauthorized and pending | IMPLEMENTED / PILOTS_PENDING / NOT_ACCEPTED |
+
+#### EWF-00 accepted foundation slices
+
+`EWF00-ARTIFACTS-001`
+
+- implementation subject:
+  `dc3aa8aa8084abee6819ffcbc238bd7e6f483b6c`
+- evidence subject:
+  `826dbe9027325c350b0b734a3861e0dfa038e0cd`
+- integrated main:
+  `474bde8e3c7b09f757e7df4a1587f8a71b2e7865`
+- state:
+  `ACCEPTED / INTEGRATED`
+
+`EWF00-PREFLIGHT-001`
+
+- implementation subject:
+  `51bea1457153b3e3a686fe4689ed0bfabbd0072a`
+- evidence subject:
+  `255aafe80ad477dd1ac737f51951e2fbd89fd7ea`
+- authorization merge:
+  `8bd47a9304cb457a611ca0ce2228e87ae56f468e`
+- integration merge:
+  `57bfa4e77c392a70429c212971c6917b43697213`
+- final-main CI:
+  `run 31006812002 / #292 / success / 484 of 484`
+- state:
+  `ACCEPTED / INTEGRATED`
+
+PR #23 was not separately merged through a merge operation. GitHub recorded it
+as merged because its exact head became reachable through descendant PR #24.
+Its `merge_commit_sha` equals its implementation head, so this does not
+represent a duplicate implementation merge.
+
+Remaining package boundary:
+
+- `EWF00-PILOTS-001`: `UNAUTHORIZED`
+- `EWF-00`: `NOT_ACCEPTED`
+- Next canonical gate: separate pilot authorization.
 
 ## 6. Phase 0 exit checklist
 

@@ -718,3 +718,22 @@ status/acceptance authority, install Spec Kit/fast-check/dependencies, or
 authorize dashboard, daemon, workflow runtime, mutation suite, broad fuzz or
 portability automation. Every later specification, implementation and pilot
 requires its own exact predecessor, boundary and authorization.
+
+## ADR-045 — EWF foundation implementation is integrated while package acceptance remains pilot-gated
+
+Status: CONFIRMED
+
+Context: `EWF00-ARTIFACTS-001` and `EWF00-PREFLIGHT-001` have each received independent exact-identity acceptance and are integrated into `main`. Their implementation and evidence identities remain subordinate evidence under canonical AGENTS/ROADMAP/PLAN/STATUS/DECISIONS authority; they do not self-determine package status or acceptance.
+
+Decision:
+
+- `EWF00-ARTIFACTS-001` is `ACCEPTED / INTEGRATED` at implementation subject `dc3aa8aa8084abee6819ffcbc238bd7e6f483b6c`, evidence subject `826dbe9027325c350b0b734a3861e0dfa038e0cd`, and integrated main `474bde8e3c7b09f757e7df4a1587f8a71b2e7865`.
+- `EWF00-PREFLIGHT-001` is `ACCEPTED / INTEGRATED` at approved implementation predecessor `250b879fa06b7be50a198e3cf007637c5f9d7306`, implementation subject `51bea1457153b3e3a686fe4689ed0bfabbd0072a`, evidence revision `255aafe80ad477dd1ac737f51951e2fbd89fd7ea`, authorization merge `8bd47a9304cb457a611ca0ce2228e87ae56f468e`, and final integration merge `57bfa4e77c392a70429c212971c6917b43697213`. Final-main CI run `31006812002` / `#292` completed successfully with 484 of 484 tests passing.
+- PR #22 merged the authorization documentation. PR #24 merged the accepted implementation/evidence lineage.
+- PR #23 was not separately merged through a merge operation. GitHub automatically recorded it as merged because its exact head became an ancestor of `main` through descendant PR #24. Its `merge_commit_sha` equals its implementation head, so no distinct PR #23 merge commit and no duplicate implementation integration occurred.
+- The canonical EWF-00 state is `IMPLEMENTED / PILOTS_PENDING / NOT_ACCEPTED`.
+- `EWF00-PILOTS-001` remains `NOT_GRANTED / UNAUTHORIZED`; no pilot has begun and no pilot evidence is claimed.
+
+Package acceptance remains gated on one independently audited eligible small-repair pilot, one independently audited bounded spec-level pilot, measured overhead data, and an independent exact-commit EWF-00 package audit.
+
+Consequences: this reconciliation changes canonical delivery status only. It does not change EWF-00 scope, dependency, product behavior, Phase 0–7 gates or ownership. It does not authorize or unlock product work, P3-02, LI-00, SRC-00, ERR-00, QAR-00 or any other product package. A separate pilot authorization is the next canonical gate.
