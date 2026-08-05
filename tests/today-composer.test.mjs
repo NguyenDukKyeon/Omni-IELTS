@@ -53,3 +53,32 @@ test('timezone day boundaries are stable and explicit',()=>{
   assert.equal(dateKeyInTimezone(later,'Asia/Saigon'),'2026-07-31');
   assert.equal(dateKeyInTimezone(later,'America/Los_Angeles'),'2026-07-30');
 });
+
+test('non-finite estimatedSeconds falls back before time-budget accounting',()=>{
+  const plan=composeTodayPlan({
+    dueReviews:[
+      row('due-finite',{dueAt:100,estimatedSeconds:60}),
+      row('due-non-finite',{dueAt:200,estimatedSeconds:'not-a-number'})
+    ],
+    minutes:1,
+    now
+  });
+
+  assert.deepEqual(
+    plan.activities.map(activity=>activity.id),
+    ['due-finite']
+  );
+  assert.equal(
+    plan.excluded.some(
+      entry=>entry.id==='due-non-finite'&&entry.reason==='time-budget'
+    ),
+    true
+  );
+  assert.equal(Number.isFinite(plan.estimatedSeconds),true);
+  assert.equal(
+    plan.activities.every(
+      activity=>Number.isFinite(activity.estimatedSeconds)
+    ),
+    true
+  );
+});
