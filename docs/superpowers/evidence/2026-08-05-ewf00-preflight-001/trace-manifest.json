@@ -1,0 +1,374 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "trace-manifest",
+  "authorityLabel": "IMPLEMENTER_TRACE / NOT_ACCEPTANCE",
+  "specId": "EWF00-PREFLIGHT-001",
+  "subjectCommit": "51bea1457153b3e3a686fe4689ed0bfabbd0072a",
+  "parentCommit": "062026ae88507bdfc03d9744c42563d755b8f417",
+  "specRevision": "0b43efac974c3fbbc489f10e9fa668bac84c9b43",
+  "verificationManifestDigest": "dba50a998f1eeb9f3e9a38a5e10f7caea5535d7aeb0b6aa63417f059b49fd9a9",
+  "requirements": [
+    {
+      "id": "EWF00-PVT-01",
+      "tests": [
+        "EWF00-TEST-001"
+      ],
+      "disposition": "REQUIRED"
+    },
+    {
+      "id": "EWF00-PVT-02",
+      "tests": [
+        "EWF00-TEST-002"
+      ],
+      "disposition": "REQUIRED"
+    },
+    {
+      "id": "EWF00-PVT-03",
+      "tests": [
+        "EWF00-TEST-003"
+      ],
+      "disposition": "REQUIRED"
+    },
+    {
+      "id": "EWF00-PVT-04",
+      "tests": [
+        "EWF00-TEST-004"
+      ],
+      "disposition": "REQUIRED"
+    },
+    {
+      "id": "EWF00-PVT-05",
+      "tests": [
+        "EWF00-TEST-005"
+      ],
+      "disposition": "REQUIRED"
+    },
+    {
+      "id": "EWF00-PVT-06",
+      "tests": [
+        "EWF00-TEST-006"
+      ],
+      "disposition": "REQUIRED"
+    },
+    {
+      "id": "EWF00-PVT-07",
+      "tests": [
+        "EWF00-TEST-007"
+      ],
+      "disposition": "REQUIRED"
+    },
+    {
+      "id": "EWF00-PVT-08",
+      "tests": [
+        "EWF00-TEST-008"
+      ],
+      "disposition": "REQUIRED"
+    },
+    {
+      "id": "EWF00-PVT-09",
+      "tests": [
+        "EWF00-TEST-009"
+      ],
+      "disposition": "REQUIRED"
+    },
+    {
+      "id": "EWF00-PVT-10",
+      "tests": [
+        "EWF00-TEST-010"
+      ],
+      "disposition": "REQUIRED"
+    },
+    {
+      "id": "EWF00-PVT-11",
+      "tests": [
+        "EWF00-TEST-011"
+      ],
+      "disposition": "REQUIRED"
+    },
+    {
+      "id": "EWF00-PVT-12",
+      "tests": [
+        "EWF00-TEST-012"
+      ],
+      "disposition": "REQUIRED"
+    }
+  ],
+  "tests": [
+    {
+      "id": "EWF00-TEST-001",
+      "name": "preflight blocks wrong HEAD with zero side effects",
+      "commands": [
+        "ewf-preflight-focused"
+      ],
+      "scope": "LOCAL",
+      "sharedScopeRationale": null
+    },
+    {
+      "id": "EWF00-TEST-002",
+      "name": "preflight blocks dirty tracked worktree with zero side effects",
+      "commands": [
+        "ewf-preflight-focused"
+      ],
+      "scope": "LOCAL",
+      "sharedScopeRationale": null
+    },
+    {
+      "id": "EWF00-TEST-003",
+      "name": "preflight blocks broken canonical entry gate with zero side effects",
+      "commands": [
+        "ewf-preflight-focused"
+      ],
+      "scope": "LOCAL",
+      "sharedScopeRationale": null
+    },
+    {
+      "id": "EWF00-TEST-004",
+      "name": "verification executes exact argv once with shell disabled and binds declaration identity",
+      "commands": [
+        "ewf-preflight-focused"
+      ],
+      "scope": "LOCAL",
+      "sharedScopeRationale": null
+    },
+    {
+      "id": "EWF00-TEST-005",
+      "name": "verification preserves PASS for successful exit without retry",
+      "commands": [
+        "ewf-preflight-focused"
+      ],
+      "scope": "LOCAL",
+      "sharedScopeRationale": null
+    },
+    {
+      "id": "EWF00-TEST-006",
+      "name": "trace reports duplicate requirement ID",
+      "commands": [
+        "ewf-preflight-focused"
+      ],
+      "scope": "LOCAL",
+      "sharedScopeRationale": null
+    },
+    {
+      "id": "EWF00-TEST-007",
+      "name": "trace reports shared test without rationale",
+      "commands": [
+        "ewf-preflight-focused"
+      ],
+      "scope": "LOCAL",
+      "sharedScopeRationale": null
+    },
+    {
+      "id": "EWF00-TEST-008",
+      "name": "frozen handoff binds plan, subject, digests, boundary, declarations and required results",
+      "commands": [
+        "ewf-preflight-focused"
+      ],
+      "scope": "LOCAL",
+      "sharedScopeRationale": null
+    },
+    {
+      "id": "EWF00-TEST-009",
+      "name": "successful verification never invokes discovery, installation, retry or remediation callbacks",
+      "commands": [
+        "ewf-preflight-focused"
+      ],
+      "scope": "LOCAL",
+      "sharedScopeRationale": null
+    },
+    {
+      "id": "EWF00-TEST-010",
+      "name": "diagnostics are deterministic regardless of unordered overlap input",
+      "commands": [
+        "ewf-preflight-focused"
+      ],
+      "scope": "LOCAL",
+      "sharedScopeRationale": null
+    },
+    {
+      "id": "EWF00-TEST-011",
+      "name": "portable evidence redacts secrets and private absolute paths before digesting",
+      "commands": [
+        "ewf-preflight-focused"
+      ],
+      "scope": "LOCAL",
+      "sharedScopeRationale": null
+    },
+    {
+      "id": "EWF00-TEST-012",
+      "name": "static implementation boundary preserves accepted helpers and forbids duplicate engines or repository mutation",
+      "commands": [
+        "ewf-preflight-focused"
+      ],
+      "scope": "LOCAL",
+      "sharedScopeRationale": null
+    }
+  ],
+  "commands": [
+    {
+      "id": "ewf-preflight-focused",
+      "declarationRef": "docs/superpowers/evidence/2026-08-05-ewf00-preflight-001/verification-manifest.json#commands.focused[0]",
+      "declarationDigest": "b172e68c64becb2ea1cefafbf3d03002bbfb5d60e59fb42ecfa7a85c744f0155",
+      "evidence": [
+        "ewf-preflight-focused-result"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ewf-preflight-focused-result",
+      "authorityLabel": "IMPLEMENTER_EVIDENCE / NOT_ACCEPTANCE",
+      "commandId": "ewf-preflight-focused",
+      "profile": "focused",
+      "verificationManifestDigest": "dba50a998f1eeb9f3e9a38a5e10f7caea5535d7aeb0b6aa63417f059b49fd9a9",
+      "declarationDigest": "b172e68c64becb2ea1cefafbf3d03002bbfb5d60e59fb42ecfa7a85c744f0155",
+      "argv": [
+        "node",
+        "--test",
+        "tests/ewf-preflight-verification-trace.test.mjs"
+      ],
+      "cwd": ".",
+      "inheritEnvironment": [
+        "PATH",
+        "HOME",
+        "USERPROFILE",
+        "SYSTEMROOT",
+        "COMSPEC",
+        "PATHEXT",
+        "TEMP",
+        "TMP",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "CI"
+      ],
+      "environment": {},
+      "timeoutMs": 120000,
+      "toolRequirement": "REQUIRED",
+      "requirements": [
+        "EWF00-PVT-01",
+        "EWF00-PVT-02",
+        "EWF00-PVT-03",
+        "EWF00-PVT-04",
+        "EWF00-PVT-05",
+        "EWF00-PVT-06",
+        "EWF00-PVT-07",
+        "EWF00-PVT-08",
+        "EWF00-PVT-09",
+        "EWF00-PVT-10",
+        "EWF00-PVT-11",
+        "EWF00-PVT-12"
+      ],
+      "result": "PASS",
+      "durationMs": 304.268665,
+      "exitCode": 0,
+      "signal": null,
+      "timedOut": false,
+      "errorCode": null,
+      "stdoutDigest": "d9dfc5985f51d961726f37e412e2ced79f94ff8d6c8b9e86de0e5f1fafe0e772",
+      "stderrDigest": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "subjectCommit": "51bea1457153b3e3a686fe4689ed0bfabbd0072a",
+      "parentCommit": "062026ae88507bdfc03d9744c42563d755b8f417",
+      "specRevision": "0b43efac974c3fbbc489f10e9fa668bac84c9b43",
+      "contentDigest": "c148dd0e6531bf1f89e6f7021f22e640a877b8090d0f020ce213aff7eb0276db"
+    }
+  ],
+  "extensions": {
+    "canonicalPackageId": "EWF-00",
+    "repository": "NguyenDukKyeon/VocabMaster",
+    "approvedPlan": {
+      "path": "docs/superpowers/plans/2026-08-05-ewf-00-preflight-verification-trace-github-connector-v4.md",
+      "commit": "250b879fa06b7be50a198e3cf007637c5f9d7306",
+      "parent": "474bde8e3c7b09f757e7df4a1587f8a71b2e7865",
+      "blob": "c45255836ca211d7f07f010016c68b568da6b193"
+    },
+    "implementationBinding": {
+      "branch": "chatgpt/ewf-00-preflight-verification-trace-mvp",
+      "writer": "chatgpt-github-ewf00-preflight-primary-writer",
+      "writerMode": "exclusive",
+      "subjectCommit": "51bea1457153b3e3a686fe4689ed0bfabbd0072a",
+      "parentCommit": "062026ae88507bdfc03d9744c42563d755b8f417",
+      "approvedPredecessor": "250b879fa06b7be50a198e3cf007637c5f9d7306",
+      "fileBlobs": {
+        ".specify/templates/ewf/preflight-result.template.json": "77dd6087514defba2e1fb971c1f0a041c8f14b59",
+        ".specify/templates/ewf/trace-manifest.template.json": "5c597b1aaf6242ce8cfbf01eb46546ae96cca463",
+        "scripts/ewf-preflight-trace.mjs": "a8b03f7ee43a4c567afb9df9daa690bc25887332",
+        "tests/ewf-preflight-verification-trace.test.mjs": "87c760e7f0f548f9b2bc6feee037ee383691d417"
+      }
+    },
+    "semanticKeyMapping": {
+      "preflightObservation": "ewf:preflight-observation",
+      "verificationExecution": "ewf:verification-execution",
+      "traceValidation": "ewf:trace-validation",
+      "frozenHandoffValidation": "ewf:frozen-handoff-validation"
+    },
+    "connectorGovernanceStage0Provenance": {
+      "artifactPath": "docs/superpowers/evidence/2026-08-05-ewf00-preflight-001/connector-governance-stage-0.raw.json",
+      "recordType": "CONNECTOR_GOVERNANCE_STAGE_0_RAW_METADATA",
+      "observedAt": "2026-08-05T07:26:34+07:00",
+      "historicalResult": "PASS",
+      "bindingDigest": "0aa6261a2c83c0d06ee1fdd1952ac9a6983c92742cadebb288b5f0efcbbaa137",
+      "executableCommandEvidence": false
+    },
+    "ciProvenance": {
+      "workflow": "CI",
+      "workflowId": 322561862,
+      "runId": 30975240754,
+      "runNumber": 288,
+      "event": "pull_request",
+      "implementationSubjectSha": "51bea1457153b3e3a686fe4689ed0bfabbd0072a",
+      "runState": "completed",
+      "conclusion": "success",
+      "jobId": 92207776692,
+      "jobName": "test",
+      "tests": 484,
+      "pass": 484,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "pullRequest": {
+        "number": 23,
+        "baseBranch": "main",
+        "baseSha": "474bde8e3c7b09f757e7df4a1587f8a71b2e7865",
+        "headBranch": "chatgpt/ewf-00-preflight-verification-trace-mvp",
+        "headSha": "51bea1457153b3e3a686fe4689ed0bfabbd0072a"
+      },
+      "syntheticMergePreview": {
+        "sha": "3b680390d1a964e8520aa595ff1ebea006dd9409",
+        "isImplementationSubject": false
+      },
+      "workflowArtifact": {
+        "artifactName": "verification-output",
+        "artifactId": 8918005975,
+        "artifactZipDigest": "sha256:e13f482a2757f3d8c2ed6398899b15b76b1d582651cbe9764a1af816cc8d0ea4"
+      },
+      "adapterProducedCommandResult": false
+    },
+    "digestBindings": {
+      "declarationDigest": "b172e68c64becb2ea1cefafbf3d03002bbfb5d60e59fb42ecfa7a85c744f0155",
+      "verificationManifestDigest": "dba50a998f1eeb9f3e9a38a5e10f7caea5535d7aeb0b6aa63417f059b49fd9a9",
+      "evidenceDigest": "d200388f9665e9879423ebbaa20169eec74e57e57e61ae3d072c1f38319c5387",
+      "traceDigestProjection": "digestArtifact(redacted trace manifest without a top-level contentDigest)",
+      "frozenBriefDigest": null
+    },
+    "commandResultVocabulary": [
+      "PASS",
+      "FAIL",
+      "ERROR",
+      "NOT_RUN",
+      "NOT_AVAILABLE"
+    ],
+    "portableRepresentation": {
+      "representation": "REDACTED_CANONICAL_JSON",
+      "repositoryRelativePathsPreserved": true,
+      "privateAbsolutePathsAllowed": false,
+      "rawEnvironmentValuesAllowed": false,
+      "secretsAllowed": false
+    },
+    "evidenceBoundary": {
+      "connectorGovernanceMetadataIsExecutableEvidence": false,
+      "ciProvenanceIsAdapterCommandResult": false,
+      "commandDeclarationsAreReferencedByIdentity": true,
+      "digestComputationUsesAcceptedEwfPrimitives": true
+    }
+  }
+}

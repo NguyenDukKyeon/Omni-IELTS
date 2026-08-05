@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "verification-manifest",
+  "authorityLabel": "DECLARED_VERIFICATION / NOT_EXECUTION",
+  "specId": "EWF00-PREFLIGHT-001",
+  "commands": {
+    "focused": [
+      {
+        "id": "ewf-preflight-focused",
+        "profile": "focused",
+        "command": "node --test tests/ewf-preflight-verification-trace.test.mjs",
+        "argv": [
+          "node",
+          "--test",
+          "tests/ewf-preflight-verification-trace.test.mjs"
+        ],
+        "cwd": ".",
+        "inheritEnvironment": [
+          "PATH",
+          "HOME",
+          "USERPROFILE",
+          "SYSTEMROOT",
+          "COMSPEC",
+          "PATHEXT",
+          "TEMP",
+          "TMP",
+          "APPDATA",
+          "LOCALAPPDATA",
+          "CI"
+        ],
+        "environment": {},
+        "timeoutMs": 120000,
+        "toolRequirement": "REQUIRED",
+        "requirements": [
+          "EWF00-PVT-01",
+          "EWF00-PVT-02",
+          "EWF00-PVT-03",
+          "EWF00-PVT-04",
+          "EWF00-PVT-05",
+          "EWF00-PVT-06",
+          "EWF00-PVT-07",
+          "EWF00-PVT-08",
+          "EWF00-PVT-09",
+          "EWF00-PVT-10",
+          "EWF00-PVT-11",
+          "EWF00-PVT-12"
+        ],
+        "declarationDigest": "b172e68c64becb2ea1cefafbf3d03002bbfb5d60e59fb42ecfa7a85c744f0155"
+      }
+    ],
+    "pr": [
+      {
+        "id": "ewf-preflight-pr",
+        "profile": "pr",
+        "command": "npm test",
+        "argv": [
+          "npm",
+          "test"
+        ],
+        "cwd": ".",
+        "inheritEnvironment": [
+          "PATH",
+          "HOME",
+          "USERPROFILE",
+          "SYSTEMROOT",
+          "COMSPEC",
+          "PATHEXT",
+          "TEMP",
+          "TMP",
+          "APPDATA",
+          "LOCALAPPDATA",
+          "CI"
+        ],
+        "environment": {},
+        "timeoutMs": 120000,
+        "toolRequirement": "REQUIRED",
+        "requirements": [
+          "EWF00-PVT-01",
+          "EWF00-PVT-02",
+          "EWF00-PVT-03",
+          "EWF00-PVT-04",
+          "EWF00-PVT-05",
+          "EWF00-PVT-06",
+          "EWF00-PVT-07",
+          "EWF00-PVT-08",
+          "EWF00-PVT-09",
+          "EWF00-PVT-10",
+          "EWF00-PVT-11",
+          "EWF00-PVT-12"
+        ],
+        "declarationDigest": "9fd722396d85f3ce4bcac2c04328b1774f0bdd3cf9fdffffafea62b7dcde9723"
+      }
+    ]
+  },
+  "extensions": {
+    "verificationManifestDigest": "dba50a998f1eeb9f3e9a38a5e10f7caea5535d7aeb0b6aa63417f059b49fd9a9",
+    "implementationSubject": "51bea1457153b3e3a686fe4689ed0bfabbd0072a",
+    "implementationParent": "062026ae88507bdfc03d9744c42563d755b8f417",
+    "approvedImplementationPredecessor": "250b879fa06b7be50a198e3cf007637c5f9d7306",
+    "manifestScope": "FOCUSED_ADAPTER_EXECUTION_AND_PR_CI_DECLARATION"
+  }
+}

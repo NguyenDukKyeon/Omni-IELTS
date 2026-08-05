@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "preflight-result",
+  "authorityLabel": "SUBORDINATE_PREFLIGHT_RESULT / NOT_ACCEPTANCE",
+  "specId": "EWF00-PREFLIGHT-001",
+  "specRevision": "0b43efac974c3fbbc489f10e9fa668bac84c9b43",
+  "repositoryBinding": {
+    "identity": "NguyenDukKyeon/VocabMaster",
+    "rootRepresentation": "REPOSITORY_RELATIVE"
+  },
+  "planBinding": {
+    "path": "docs/superpowers/plans/2026-08-05-ewf-00-preflight-verification-trace-github-connector-v4.md",
+    "commit": "250b879fa06b7be50a198e3cf007637c5f9d7306",
+    "parent": "474bde8e3c7b09f757e7df4a1587f8a71b2e7865",
+    "blob": "c45255836ca211d7f07f010016c68b568da6b193"
+  },
+  "implementationBinding": {
+    "branch": "chatgpt/ewf-00-preflight-verification-trace-mvp",
+    "symbolicRef": "refs/heads/chatgpt/ewf-00-preflight-verification-trace-mvp",
+    "localTargetRef": "refs/heads/chatgpt/ewf-00-preflight-verification-trace-mvp",
+    "writer": {
+      "identity": "chatgpt-github-ewf00-preflight-primary-writer",
+      "mode": "exclusive"
+    }
+  },
+  "semanticKeyMapping": {
+    "preflightObservation": "ewf:preflight-observation",
+    "verificationExecution": "ewf:verification-execution",
+    "traceValidation": "ewf:trace-validation",
+    "frozenHandoffValidation": "ewf:frozen-handoff-validation"
+  },
+  "canonicalGateObservations": [
+    {
+      "id": "EWF-00-status",
+      "source": "docs/IMPLEMENTATION_STATUS.md",
+      "expected": "PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED",
+      "classification": "NOT_OBSERVED"
+    },
+    {
+      "id": "EWF-artifact-predecessor",
+      "source": "docs/superpowers/specs/2026-08-04-vocabmaster-bounded-spec-pack/HANDOFF.md",
+      "expected": "EWF00-ARTIFACTS-001",
+      "classification": "NOT_OBSERVED"
+    },
+    {
+      "id": "EWF00-PILOTS-001-authorization",
+      "source": "docs/superpowers/specs/2026-08-04-vocabmaster-bounded-spec-pack/HANDOFF.md",
+      "expected": "UNAUTHORIZED",
+      "classification": "NOT_OBSERVED"
+    }
+  ],
+  "pathBoundary": {
+    "allowlist": [
+      ".specify/templates/ewf/preflight-result.template.json",
+      ".specify/templates/ewf/trace-manifest.template.json",
+      "scripts/ewf-preflight-trace.mjs",
+      "tests/ewf-preflight-verification-trace.test.mjs"
+    ],
+    "exclusions": [
+      "AGENTS.md",
+      "docs/ROADMAP.md",
+      "docs/IMPLEMENTATION_PLAN.md",
+      "docs/IMPLEMENTATION_STATUS.md",
+      "docs/DECISIONS.md",
+      ".github/**",
+      "src/**",
+      "server/**",
+      "public/**",
+      "package.json",
+      "package-lock.json",
+      "scripts/ewf-artifacts.mjs",
+      "docs/superpowers/evidence/**"
+    ],
+    "requestedChanges": []
+  },
+  "localObservationClassifications": {
+    "observationKind": "LOCAL_READ_ONLY_PREFLIGHT_OBSERVATION",
+    "completeness": "NOT_OBSERVED",
+    "repositoryIdentity": "NOT_OBSERVED",
+    "repositoryRoot": "NOT_OBSERVED",
+    "canonicalFiles": "NOT_OBSERVED",
+    "head": "NOT_OBSERVED",
+    "parent": "NOT_OBSERVED",
+    "symbolicRef": "NOT_OBSERVED",
+    "localTargetRef": "NOT_OBSERVED",
+    "worktreeRegistry": "NOT_OBSERVED",
+    "trackedState": "NOT_OBSERVED",
+    "indexState": "NOT_OBSERVED",
+    "untrackedState": "NOT_OBSERVED",
+    "writerRegistry": "NOT_OBSERVED",
+    "fileOverlap": "NOT_OBSERVED",
+    "semanticOverlap": "NOT_OBSERVED"
+  },
+  "remoteCollisionObservation": {
+    "policy": "REQUIRE_ABSENT",
+    "expectedState": "ABSENT",
+    "expectedSha": null,
+    "classification": "NOT_OBSERVED",
+    "observedState": null,
+    "observedSha": null
+  },
+  "diagnostics": [],
+  "effects": {
+    "contentWrites": 0,
+    "indexWrites": 0,
+    "gitMutations": 0,
+    "branchMutations": 0,
+    "installations": 0,
+    "retries": 0,
+    "remediations": 0,
+    "acceptanceOutputs": 0
+  },
+  "portableEvidence": {
+    "representation": "REDACTED_CANONICAL_JSON",
+    "redactionRequired": true,
+    "repositoryRelativePathsPreserved": true,
+    "privateAbsolutePathsAllowed": false,
+    "rawEnvironmentValuesAllowed": false,
+    "secretsAllowed": false
+  },
+  "result": "BLOCKED",
+  "contentDigest": null,
+  "extensions": {
+    "resultVocabulary": [
+      "PASS",
+      "BLOCKED"
+    ],
+    "observationClassificationVocabulary": [
+      "MATCH",
+      "MISMATCH",
+      "MISSING",
+      "MALFORMED",
+      "INCOMPLETE",
+      "ERROR",
+      "NOT_OBSERVED"
+    ],
+    "remoteCollisionPolicyVocabulary": [
+      "REQUIRE_ABSENT",
+      "REQUIRE_EXACT_SHA"
+    ],
+    "digestPrimitive": "scripts/ewf-artifacts.mjs#digestArtifact",
+    "canonicalizationPrimitive": "scripts/ewf-artifacts.mjs#canonicalizeArtifact",
+    "redactionPrimitive": "scripts/ewf-artifacts.mjs#redactPortableValue"
+  }
+}

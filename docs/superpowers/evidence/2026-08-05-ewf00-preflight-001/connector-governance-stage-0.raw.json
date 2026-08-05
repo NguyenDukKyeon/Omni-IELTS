@@ -1,0 +1,145 @@
+{
+  "recordType": "CONNECTOR_GOVERNANCE_STAGE_0_RAW_METADATA",
+  "result": "PASS",
+  "observedAt": "2026-08-05T07:26:34+07:00",
+  "repository": "NguyenDukKyeon/VocabMaster",
+  "repositoryApiIdentity": {
+    "repositoryId": "1315491594",
+    "apiUrl": "https://api.github.com/repos/NguyenDukKyeon/VocabMaster"
+  },
+  "defaultBranch": "main",
+  "mainRef": "refs/heads/main",
+  "mainSha": "474bde8e3c7b09f757e7df4a1587f8a71b2e7865",
+  "planCommit": "250b879fa06b7be50a198e3cf007637c5f9d7306",
+  "planParent": "474bde8e3c7b09f757e7df4a1587f8a71b2e7865",
+  "planPath": "docs/superpowers/plans/2026-08-05-ewf-00-preflight-verification-trace-github-connector-v4.md",
+  "planBlob": "c45255836ca211d7f07f010016c68b568da6b193",
+  "authorizationPrNumber": 22,
+  "authorizationPrState": "OPEN",
+  "authorizationPrDraft": true,
+  "authorizationPrHeadBranch": "chatgpt/ewf-00-preflight-trace-authorization-v4",
+  "authorizationPrHeadSha": "92966cf4aa04050b084a745faf87071d349aa9cd",
+  "implementationBranch": "chatgpt/ewf-00-preflight-verification-trace-mvp",
+  "implementationBranchState": "ABSENT",
+  "implementationPrState": "ABSENT",
+  "writer": "chatgpt-github-ewf00-preflight-primary-writer",
+  "writerMode": "exclusive",
+  "allowlist": [
+    ".specify/templates/ewf/preflight-result.template.json",
+    ".specify/templates/ewf/trace-manifest.template.json",
+    "scripts/ewf-preflight-trace.mjs",
+    "tests/ewf-preflight-verification-trace.test.mjs"
+  ],
+  "semanticConflictKeys": [
+    "ewf:frozen-handoff-validation",
+    "ewf:preflight-observation",
+    "ewf:trace-validation",
+    "ewf:verification-execution"
+  ],
+  "canonicalGateResults": {
+    "acceptedArtifactSlice": {
+      "result": "PASS",
+      "observed": "EWF00-ARTIFACTS-001 accepted and preserved"
+    },
+    "authorizationReview": {
+      "result": "PASS",
+      "observed": "Review 4859825628 ACCEPT at exact 92966cf4aa04050b084a745faf87071d349aa9cd"
+    },
+    "ewfStatus": {
+      "result": "PASS",
+      "observed": "PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED"
+    },
+    "implementationBranch": {
+      "result": "PASS",
+      "observed": "ABSENT"
+    },
+    "implementationPr": {
+      "result": "PASS",
+      "observed": "ABSENT"
+    },
+    "main": {
+      "result": "PASS",
+      "observed": "474bde8e3c7b09f757e7df4a1587f8a71b2e7865"
+    },
+    "pilots": {
+      "result": "PASS",
+      "observed": "EWF00-PILOTS-001 unauthorized"
+    },
+    "planLineage": {
+      "result": "PASS",
+      "observed": "250b879fa06b7be50a198e3cf007637c5f9d7306 direct child of exact main"
+    },
+    "planObject": {
+      "result": "PASS",
+      "observed": "c45255836ca211d7f07f010016c68b568da6b193"
+    },
+    "repository": {
+      "result": "PASS",
+      "observed": "NguyenDukKyeon/VocabMaster"
+    }
+  },
+  "openPrRows": [
+    {
+      "number": 22,
+      "state": "OPEN",
+      "draft": true,
+      "headBranch": "chatgpt/ewf-00-preflight-trace-authorization-v4",
+      "headSha": "92966cf4aa04050b084a745faf87071d349aa9cd",
+      "bodyScopeDeclarations": [
+        "EWF00-PREFLIGHT-001 corrected connector authorization v4",
+        "docs-only",
+        "no implementation branch",
+        "no source implementation",
+        "not implementation acceptance",
+        "not package acceptance",
+        "pilots unauthorized"
+      ],
+      "changedFilenames": [
+        "docs/superpowers/briefs/2026-08-05-ewf00-preflight-verification-trace-github-connector-v4-authorization.md",
+        "docs/superpowers/plans/2026-08-05-ewf-00-preflight-verification-trace-github-connector-v4.md",
+        "docs/superpowers/specs/2026-08-04-vocabmaster-bounded-spec-pack/HANDOFF.md"
+      ],
+      "specDeclarations": [
+        "EWF00-PREFLIGHT-001"
+      ],
+      "semanticKeyDeclarations": [],
+      "writerDeclarations": [
+        "chatgpt-github-ewf00-preflight-primary-writer",
+        "exclusive"
+      ],
+      "overlapDiagnostics": [
+        "EXCLUDED_EXACT_ACCEPTED_AUTHORIZATION_PR_22"
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "INFO",
+      "code": "AUTHORIZATION_PR_EXCLUDED",
+      "prNumber": 22,
+      "path": null,
+      "message": "Exact accepted authorization PR excluded under the v4 registry rule."
+    },
+    {
+      "severity": "INFO",
+      "code": "HISTORICAL_AUTHORIZATIONS_CLOSED",
+      "prNumber": null,
+      "path": null,
+      "message": "PR #18, PR #20 and PR #21 are closed without merge."
+    },
+    {
+      "severity": "INFO",
+      "code": "NO_RETAINED_OPEN_PRS",
+      "prNumber": null,
+      "path": null,
+      "message": "No open PR remains after excluding exact accepted authorization PR #22."
+    },
+    {
+      "severity": "INFO",
+      "code": "STAGE_0_PASS",
+      "prNumber": null,
+      "path": null,
+      "message": "All repository, authorization, branch, registry, overlap and canonical entry gates passed."
+    }
+  ]
+}

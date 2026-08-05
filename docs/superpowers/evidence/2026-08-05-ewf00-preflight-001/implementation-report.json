@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "implementation-report",
+  "authorityLabel": "IMPLEMENTER_EVIDENCE / NOT_ACCEPTANCE",
+  "specId": "EWF00-PREFLIGHT-001",
+  "handoffState": "HANDOFF_READY",
+  "subjectCommit": "51bea1457153b3e3a686fe4689ed0bfabbd0072a",
+  "parentCommit": "062026ae88507bdfc03d9744c42563d755b8f417",
+  "changedFiles": [
+    ".specify/templates/ewf/preflight-result.template.json",
+    ".specify/templates/ewf/trace-manifest.template.json",
+    "scripts/ewf-preflight-trace.mjs",
+    "tests/ewf-preflight-verification-trace.test.mjs"
+  ],
+  "requirementTrace": [
+    "EWF00-PVT-01",
+    "EWF00-PVT-02",
+    "EWF00-PVT-03",
+    "EWF00-PVT-04",
+    "EWF00-PVT-05",
+    "EWF00-PVT-06",
+    "EWF00-PVT-07",
+    "EWF00-PVT-08",
+    "EWF00-PVT-09",
+    "EWF00-PVT-10",
+    "EWF00-PVT-11",
+    "EWF00-PVT-12"
+  ],
+  "commandResults": [
+    {
+      "command": "node --test tests/ewf-preflight-verification-trace.test.mjs",
+      "result": "PASS",
+      "durationMs": 304.268665,
+      "exitCode": 0,
+      "environment": "Disposable exact-subject Node.js sandbox; Node v22.16.0; shell=false; exact declared inherited-key allowlist; one attempt"
+    }
+  ],
+  "environment": {
+    "sandboxKind": "DISPOSABLE_EXACT_SUBJECT_DIRECTORY",
+    "nodeVersion": "v22.16.0",
+    "platform": "linux",
+    "architecture": "x64",
+    "gitMetadataPresent": false,
+    "processShell": false,
+    "declaredInheritedEnvironmentKeys": [
+      "PATH",
+      "HOME",
+      "USERPROFILE",
+      "SYSTEMROOT",
+      "COMSPEC",
+      "PATHEXT",
+      "TEMP",
+      "TMP",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "CI"
+    ],
+    "explicitEnvironment": {}
+  },
+  "frozenBriefDigest": "0d285358dab8f5852e1f3e2c7481d3159d39c6296a8115c82838f9c413cac4c9",
+  "extensions": {
+    "specRevision": "0b43efac974c3fbbc489f10e9fa668bac84c9b43",
+    "canonicalPackageId": "EWF-00",
+    "approvedPlan": {
+      "path": "docs/superpowers/plans/2026-08-05-ewf-00-preflight-verification-trace-github-connector-v4.md",
+      "commit": "250b879fa06b7be50a198e3cf007637c5f9d7306",
+      "parent": "474bde8e3c7b09f757e7df4a1587f8a71b2e7865",
+      "blob": "c45255836ca211d7f07f010016c68b568da6b193"
+    },
+    "implementationBinding": {
+      "branch": "chatgpt/ewf-00-preflight-verification-trace-mvp",
+      "writer": "chatgpt-github-ewf00-preflight-primary-writer",
+      "writerMode": "exclusive",
+      "implementationSubject": "51bea1457153b3e3a686fe4689ed0bfabbd0072a",
+      "implementationParent": "062026ae88507bdfc03d9744c42563d755b8f417",
+      "approvedImplementationPredecessor": "250b879fa06b7be50a198e3cf007637c5f9d7306",
+      "implementationFileBlobs": {
+        ".specify/templates/ewf/preflight-result.template.json": "77dd6087514defba2e1fb971c1f0a041c8f14b59",
+        ".specify/templates/ewf/trace-manifest.template.json": "5c597b1aaf6242ce8cfbf01eb46546ae96cca463",
+        "scripts/ewf-preflight-trace.mjs": "a8b03f7ee43a4c567afb9df9daa690bc25887332",
+        "tests/ewf-preflight-verification-trace.test.mjs": "87c760e7f0f548f9b2bc6feee037ee383691d417"
+      }
+    },
+    "focusedAdapterExecution": {
+      "attempts": 1,
+      "exactArgv": [
+        "node",
+        "--test",
+        "tests/ewf-preflight-verification-trace.test.mjs"
+      ],
+      "cwd": ".",
+      "shell": false,
+      "declaredInheritedEnvironmentKeys": [
+        "PATH",
+        "HOME",
+        "USERPROFILE",
+        "SYSTEMROOT",
+        "COMSPEC",
+        "PATHEXT",
+        "TEMP",
+        "TMP",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "CI"
+      ],
+      "explicitEnvironment": {},
+      "timeoutMs": 120000,
+      "result": "PASS",
+      "durationMs": 304.268665,
+      "exitCode": 0,
+      "signal": null,
+      "timedOut": false,
+      "errorCode": null,
+      "stdoutDigest": "d9dfc5985f51d961726f37e412e2ced79f94ff8d6c8b9e86de0e5f1fafe0e772",
+      "stderrDigest": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "contentDigest": "c148dd0e6531bf1f89e6f7021f22e640a877b8090d0f020ce213aff7eb0276db"
+    },
+    "ciProvenance": {
+      "workflow": "CI",
+      "workflowId": 322561862,
+      "runId": 30975240754,
+      "runNumber": 288,
+      "event": "pull_request",
+      "implementationSubjectSha": "51bea1457153b3e3a686fe4689ed0bfabbd0072a",
+      "runState": "completed",
+      "conclusion": "success",
+      "jobId": 92207776692,
+      "jobName": "test",
+      "tests": 484,
+      "pass": 484,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "pullRequest": {
+        "number": 23,
+        "baseBranch": "main",
+        "baseSha": "474bde8e3c7b09f757e7df4a1587f8a71b2e7865",
+        "headBranch": "chatgpt/ewf-00-preflight-verification-trace-mvp",
+        "headSha": "51bea1457153b3e3a686fe4689ed0bfabbd0072a"
+      },
+      "syntheticMergePreview": {
+        "sha": "3b680390d1a964e8520aa595ff1ebea006dd9409",
+        "isImplementationSubject": false
+      },
+      "workflowArtifact": {
+        "artifactName": "verification-output",
+        "artifactId": 8918005975,
+        "artifactZipDigest": "sha256:e13f482a2757f3d8c2ed6398899b15b76b1d582651cbe9764a1af816cc8d0ea4"
+      },
+      "adapterProducedCommandResult": false
+    },
+    "connectorGovernanceStage0Binding": {
+      "path": "docs/superpowers/evidence/2026-08-05-ewf00-preflight-001/connector-governance-stage-0.raw.json",
+      "sourceRecord": "Văn bản đã dán (1)(10).txt",
+      "recordType": "CONNECTOR_GOVERNANCE_STAGE_0_RAW_METADATA",
+      "observedAt": "2026-08-05T07:26:34+07:00",
+      "bindingDigest": "0aa6261a2c83c0d06ee1fdd1952ac9a6983c92742cadebb288b5f0efcbbaa137",
+      "historicalBranchStatePreserved": "ABSENT",
+      "historicalPrStatePreserved": "ABSENT"
+    },
+    "verificationManifestBinding": {
+      "path": "docs/superpowers/evidence/2026-08-05-ewf00-preflight-001/verification-manifest.json",
+      "digest": "dba50a998f1eeb9f3e9a38a5e10f7caea5535d7aeb0b6aa63417f059b49fd9a9",
+      "focusedDeclarationDigest": "b172e68c64becb2ea1cefafbf3d03002bbfb5d60e59fb42ecfa7a85c744f0155",
+      "prDeclarationDigest": "9fd722396d85f3ce4bcac2c04328b1774f0bdd3cf9fdffffafea62b7dcde9723"
+    },
+    "traceBinding": {
+      "path": "docs/superpowers/evidence/2026-08-05-ewf00-preflight-001/trace-manifest.json",
+      "traceDigest": "606007f4a713b4d4625491af2d7e6d89e78c41498fe87f7bd05ed6f9b7b53382",
+      "evidenceDigest": "d200388f9665e9879423ebbaa20169eec74e57e57e61ae3d072c1f38319c5387"
+    },
+    "frozenBriefBinding": {
+      "path": "docs/superpowers/evidence/2026-08-05-ewf00-preflight-001/frozen-acceptance-brief.json",
+      "briefIdentity": "EWF00-PREFLIGHT-001/51bea1457153b3e3a686fe4689ed0bfabbd0072a",
+      "briefDigest": "0d285358dab8f5852e1f3e2c7481d3159d39c6296a8115c82838f9c413cac4c9"
+    },
+    "canonicalPackageStateObserved": "PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED",
+    "pilotBoundaryObserved": "EWF00-PILOTS-001_UNAUTHORIZED",
+    "implementationSubjectFrozen": true,
+    "independentReviewRequired": true
+  }
+}
