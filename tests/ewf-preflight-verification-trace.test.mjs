@@ -1052,3 +1052,686 @@ test('portable evidence redacts secrets and private absolute paths before digest
     assertPortableDigest(result);
   });
 });
+
+const PVT_REQUIREMENT_IDS = Object.freeze(
+  Array.from({ length: 12 }, (_entry, index) => `EWF00-PVT-${String(index + 1).padStart(2, '0')}`)
+);
+
+function makeCompleteTraceManifest() {
+  const trace = makeTraceManifest();
+  trace.requirements = PVT_REQUIREMENT_IDS.map((id, index) => ({
+    id,
+    tests: [`EWF00-TEST-${String(index + 1).padStart(3, '0')}`],
+    disposition: 'REQUIRED'
+  }));
+  trace.tests = PVT_REQUIREMENT_IDS.map((_id, index) => ({
+    id: `EWF00-TEST-${String(index + 1).padStart(3, '0')}`,
+    commands: [trace.commands[0].id],
+    scope: 'LOCAL'
+  }));
+  return trace;
+}
+
+function rewriteTraceEvidence(trace, mutate) {
+  const payload = omit(trace.evidence[0], 'contentDigest');
+  mutate(payload);
+  trace.evidence[0] = attachContentDigest(payload);
+}
+
+function makeFrozenHandoffBindings(fixture = makeFrozenBrief()) {
+  const { brief, trace, command, manifest } = fixture;
+  return {
+    canonicalPackageId: 'EWF-00',
+    specId: SPEC_ID,
+    subjectCommit: brief.subjectCommit,
+    parentCommit: brief.parentCommit,
+    specRevision: brief.specRevision,
+    traceDigest: brief.traceDigest,
+    evidenceDigest: brief.evidenceDigest,
+    briefIdentity: brief.briefIdentity,
+    briefDigest: brief.briefDigest,
+    approvedPlanPath: PLAN_PATH,
+    approvedPlanCommit: PLAN_COMMIT,
+    approvedPlanBlob: PLAN_BLOB,
+    approvedPlanParent: PLAN_PARENT,
+    allowlist: [...ALLOWLIST],
+    exclusions: [...EXCLUSIONS],
+    actualChangedFiles: [...ALLOWLIST],
+    verificationManifestDigest: manifest.extensions.verificationManifestDigest,
+    requiredCommandResults: [{
+      id: command.id,
+      declarationDigest: command.declarationDigest,
+      argv: [...command.argv],
+      cwd: command.cwd,
+      inheritEnvironment: [...command.inheritEnvironment],
+      environment: clone(command.environment),
+      timeoutMs: command.timeoutMs,
+      toolRequirement: command.toolRequirement,
+      result: 'PASS'
+    }],
+    trace
+  };
+}
+
+function assertNoAuthorityFields(result) {
+  for (const field of [
+    'acceptance',
+    'auditResult',
+    'packageStatus',
+    'releaseSafety',
+    'pilotAuthorization',
+    'verdict'
+  ]) assert.equal(Object.hasOwn(result, field), false, field);
+}
+
+const ADDITIONAL_BLOCKING_FIXTURES = [
+  {
+    name: 'incomplete local observation',
+    code: 'INCOMPLETE_PREFLIGHT_OBSERVATION',
+    mutate: ({ observation }) => { observation.complete = false; }
+  },
+  {
+    name: 'canonical file identity outside its declared slot',
+    code: 'CANONICAL_FILE_IDENTITY_MISMATCH',
+    mutate: ({ observation, root }) => {
+      observation.canonicalFiles[0].absolutePath = resolve(root, 'docs/ROADMAP.md');
+    }
+  },
+  {
+    name: 'worktree registry without rows',
+    code: 'MALFORMED_WORKTREE_OBSERVATION',
+    mutate: ({ observation }) => { observation.worktrees.rows = null; }
+  },
+  {
+    name: 'status registry without tracked rows',
+    code: 'MALFORMED_STATUS_OBSERVATION',
+    mutate: ({ observation }) => { observation.status.tracked = null; }
+  },
+  {
+    name: 'missing observed writer registry',
+    code: 'MISSING_WRITER_REGISTRY',
+    mutate: ({ observation }) => { delete observation.activeWriterRegistry; }
+  },
+  {
+    name: 'wrong remote repository identity',
+    code: 'REMOTE_REPOSITORY_IDENTITY_MISMATCH',
+    mutate: ({ observation }) => {
+      observation.remote.repository = 'Other/Repository';
+      observation.remote.url = 'https://github.com/Other/Repository.git';
+    }
+  },
+  {
+    name: 'wrong remote URL identity',
+    code: 'REMOTE_REPOSITORY_IDENTITY_MISMATCH',
+    mutate: ({ observation }) => {
+      observation.remote.url = 'git@github.com:Other/Repository.git';
+    }
+  },
+  {
+    name: 'observed exclusion mismatch',
+    code: 'EXCLUSION_MISMATCH',
+    mutate: ({ observation }) => { observation.exclusions = observation.exclusions.slice(1); }
+  },
+  {
+    name: 'exact-SHA remote policy mismatch',
+    code: 'REMOTE_TARGET_SHA_MISMATCH',
+    mutate: ({ declaration, observation }) => {
+      declaration.remoteCollisionPolicy = 'REQUIRE_EXACT_SHA';
+      declaration.remoteExpectedState = 'PRESENT';
+      declaration.remoteExpectedSha = '1'.repeat(40);
+      observation.remote.state = 'PRESENT';
+      observation.remote.sha = '2'.repeat(40);
+      observation.remote.rows = [{ ref: IMPLEMENTATION_REF, sha: observation.remote.sha }];
+    }
+  }
+];
+
+for (const fixture of ADDITIONAL_BLOCKING_FIXTURES) {
+  test(`extended preflight blocks ${fixture.name} with the complete zero-effect vector`, async () => {
+    await withDisposableRepositoryRoot(async (root) => {
+      const declaration = makeDeclaration(root);
+      const observation = makeObservation(root);
+      fixture.mutate({ declaration, observation, root });
+      const effects = emptyEffects();
+      const result = await runPreflight(declaration, {
+        observation,
+        initialize: async () => { effects.gitMutations += 1; },
+        writeContent: async () => { effects.contentWrites += 1; },
+        writeIndex: async () => { effects.indexWrites += 1; },
+        mutateGit: async () => { effects.gitMutations += 1; },
+        mutateBranch: async () => { effects.branchMutations += 1; },
+        installTool: async () => { effects.installations += 1; },
+        retry: async () => { effects.retries += 1; },
+        remediate: async () => { effects.remediations += 1; },
+        emitAcceptance: async () => { effects.acceptanceOutputs += 1; }
+      });
+      assert.equal(result.result, 'BLOCKED');
+      assert.ok(diagnosticCodes(result).includes(fixture.code), JSON.stringify(result.diagnostics));
+      assertZeroEffects(effects);
+      assertZeroEffects(result.effects);
+      assertPortableDigest(result);
+    });
+  });
+}
+
+const VERIFICATION_DECLARATION_MATRIX = [
+  {
+    name: 'exact command ID with wrong argv',
+    codes: ['DECLARATION_DIGEST_MISMATCH'],
+    mutate: (command) => { command.argv = ['node', '--version']; }
+  },
+  {
+    name: 'wrong cwd',
+    codes: ['DECLARATION_DIGEST_MISMATCH'],
+    mutate: (command) => { command.cwd = '../outside'; }
+  },
+  {
+    name: 'wrong inherited-environment allowlist',
+    codes: ['INVALID_INHERITED_ENVIRONMENT', 'DECLARATION_DIGEST_MISMATCH'],
+    mutate: (command) => { command.inheritEnvironment.push('NODE_OPTIONS'); }
+  },
+  {
+    name: 'wrong explicit environment',
+    codes: ['DECLARATION_DIGEST_MISMATCH'],
+    mutate: (command) => { command.environment = { CI: 'true' }; }
+  },
+  {
+    name: 'wrong timeout',
+    codes: ['INVALID_COMMAND_TIMEOUT', 'DECLARATION_DIGEST_MISMATCH'],
+    mutate: (command) => { command.timeoutMs = 0; }
+  },
+  {
+    name: 'wrong tool requirement',
+    codes: ['INVALID_TOOL_REQUIREMENT', 'DECLARATION_DIGEST_MISMATCH'],
+    mutate: (command) => { command.toolRequirement = 'FORBIDDEN'; }
+  }
+];
+
+for (const fixture of VERIFICATION_DECLARATION_MATRIX) {
+  test(`verification blocks ${fixture.name} before spawn`, async () => {
+    const manifest = makeVerificationManifest();
+    fixture.mutate(manifest.commands.focused[0]);
+    let attempts = 0;
+    const result = await executeVerificationProfile(manifest, 'focused', {
+      spawn: async () => {
+        attempts += 1;
+        return { exitCode: 0, durationMs: 1 };
+      }
+    });
+    assert.equal(attempts, 0);
+    assert.equal(result.valid, false);
+    for (const code of fixture.codes) {
+      assert.ok(diagnosticCodes(result).includes(code), `${fixture.name}: ${JSON.stringify(result.diagnostics)}`);
+    }
+  });
+}
+
+test('verification blocks a missing profile before process execution', async () => {
+  let attempts = 0;
+  const result = await executeVerificationProfile(makeVerificationManifest(), 'release', {
+    spawn: async () => {
+      attempts += 1;
+      return { exitCode: 0, durationMs: 1 };
+    }
+  });
+  assert.equal(attempts, 0);
+  assert.equal(result.valid, false);
+  assert.ok(diagnosticCodes(result).includes('MISSING_VERIFICATION_PROFILE'));
+});
+
+test('verification rejects an empty declared profile instead of fabricating a zero-command pass', async () => {
+  let manifest = makeVerificationManifest();
+  manifest.commands.focused = [];
+  manifest = withManifestDigest(manifest);
+  let attempts = 0;
+  const result = await executeVerificationProfile(manifest, 'focused', {
+    spawn: async () => {
+      attempts += 1;
+      return { exitCode: 0, durationMs: 1 };
+    }
+  });
+  assert.equal(attempts, 0);
+  assert.equal(result.valid, false);
+  assert.ok(diagnosticCodes(result).includes('MISSING_VERIFICATION_PROFILE'));
+});
+
+test('verification rejects duplicate command IDs before spawn', async () => {
+  const command = makeCommandDeclaration();
+  let manifest = makeVerificationManifest(command);
+  manifest.commands.focused.push(clone(command));
+  manifest = withManifestDigest(manifest);
+  let attempts = 0;
+  const result = await executeVerificationProfile(manifest, 'focused', {
+    spawn: async () => {
+      attempts += 1;
+      return { exitCode: 0, durationMs: 1 };
+    }
+  });
+  assert.equal(attempts, 0);
+  assert.equal(result.valid, false);
+  assert.ok(diagnosticCodes(result).includes('DUPLICATE_COMMAND_ID'));
+});
+
+test('verification rejects a missing process boundary without command discovery', async () => {
+  const result = await executeVerificationProfile(makeVerificationManifest(), 'focused');
+  assert.equal(result.valid, false);
+  assert.deepEqual(result.commandResults, []);
+  assert.ok(diagnosticCodes(result).includes('MISSING_PROCESS_BOUNDARY'));
+});
+
+test('optional unavailable tool remains NOT_AVAILABLE without fabricating PASS', async () => {
+  await withDisposableRepositoryRoot(async (root) => {
+    const declaration = makeDeclaration(root);
+    declaration.verificationManifest = makeVerificationManifest(
+      makeCommandDeclaration({ toolRequirement: 'OPTIONAL' })
+    );
+    const result = await runPreflight(declaration, {
+      observation: makeObservation(root),
+      spawn: async () => ({
+        errorCode: 'ENOENT',
+        exitCode: null,
+        signal: null,
+        timedOut: false,
+        stdout: '',
+        stderr: '',
+        durationMs: 1
+      })
+    });
+    assert.equal(result.result, 'PASS');
+    assert.equal(result.verification.commandResults[0].result, 'NOT_AVAILABLE');
+    assert.notEqual(result.verification.commandResults[0].result, 'PASS');
+  });
+});
+
+test('required unavailable tool blocks the preflight handoff after exactly one attempt', async () => {
+  await withDisposableRepositoryRoot(async (root) => {
+    const declaration = makeDeclaration(root);
+    let attempts = 0;
+    const result = await runPreflight(declaration, {
+      observation: makeObservation(root),
+      spawn: async () => {
+        attempts += 1;
+        return {
+          errorCode: 'ENOENT',
+          exitCode: null,
+          signal: null,
+          timedOut: false,
+          stdout: '',
+          stderr: '',
+          durationMs: 1
+        };
+      }
+    });
+    assert.equal(attempts, 1);
+    assert.equal(result.result, 'BLOCKED');
+    assert.equal(result.verification.commandResults[0].result, 'NOT_AVAILABLE');
+    assert.ok(diagnosticCodes(result).includes('REQUIRED_VERIFICATION_NOT_PASS'));
+    assertZeroEffects(result.effects);
+  });
+});
+
+test('generic thrown process-boundary exception is classified as ERROR with one attempt', async () => {
+  let attempts = 0;
+  const result = await executeVerificationProfile(makeVerificationManifest(), 'focused', {
+    spawn: async () => {
+      attempts += 1;
+      const error = new Error('runner failed');
+      error.code = 'EIO';
+      throw error;
+    }
+  });
+  assert.equal(attempts, 1);
+  assert.equal(result.valid, true);
+  assert.equal(result.commandResults[0].result, 'ERROR');
+  assert.equal(result.commandResults[0].errorCode, 'EIO');
+});
+
+test('successful verification never invokes discovery, installation, retry or remediation callbacks', async () => {
+  await withDisposableRepositoryRoot(async (root) => {
+    const calls = {
+      spawn: 0,
+      discover: 0,
+      install: 0,
+      retry: 0,
+      remediate: 0
+    };
+    const observation = makeObservation(root);
+    observation.specKit = { available: false, source: 'synthetic-observation' };
+    const result = await runPreflight(makeDeclaration(root), {
+      observation,
+      spawn: async (request) => {
+        calls.spawn += 1;
+        assert.equal(request.shell, false);
+        return { exitCode: 0, signal: null, timedOut: false, stdout: '', stderr: '', durationMs: 1 };
+      },
+      discoverCommands: async () => { calls.discover += 1; },
+      installTool: async () => { calls.install += 1; },
+      retry: async () => { calls.retry += 1; },
+      remediate: async () => { calls.remediate += 1; }
+    });
+    assert.equal(result.result, 'PASS');
+    assert.deepEqual(calls, { spawn: 1, discover: 0, install: 0, retry: 0, remediate: 0 });
+  });
+});
+
+test('complete trace represents every frozen EWF00-PVT-01 through EWF00-PVT-12 requirement', () => {
+  const trace = makeCompleteTraceManifest();
+  assert.deepEqual(trace.requirements.map(({ id }) => id), PVT_REQUIREMENT_IDS);
+  const result = validateTraceManifest(trace, {
+    specId: SPEC_ID,
+    subjectCommit: trace.subjectCommit,
+    parentCommit: trace.parentCommit,
+    specRevision: trace.specRevision,
+    verificationManifestDigest: trace.verificationManifestDigest
+  });
+  assert.equal(result.valid, true, JSON.stringify(result.errors));
+});
+
+const EXTENDED_TRACE_DEFECTS = [
+  {
+    name: 'duplicate command ID',
+    code: 'DUPLICATE_COMMAND_ID',
+    mutate: (trace) => { trace.commands.push(clone(trace.commands[0])); }
+  },
+  {
+    name: 'duplicate evidence ID',
+    code: 'DUPLICATE_EVIDENCE_ID',
+    mutate: (trace) => { trace.evidence.push(clone(trace.evidence[0])); }
+  },
+  {
+    name: 'broken command to evidence reference',
+    code: 'MISSING_REQUIRED_EVIDENCE',
+    mutate: (trace) => { trace.commands[0].evidence = ['UNKNOWN-EVIDENCE']; }
+  },
+  {
+    name: 'missing required command declaration',
+    code: 'BROKEN_COMMAND_REFERENCE',
+    mutate: (trace) => { trace.commands = []; }
+  },
+  {
+    name: 'wrong command identity with otherwise valid evidence',
+    code: 'COMMAND_EVIDENCE_MISMATCH',
+    mutate: (trace) => rewriteTraceEvidence(trace, (evidence) => {
+      evidence.commandId = 'different-command';
+    })
+  },
+  {
+    name: 'wrong evidence declaration digest',
+    code: 'DECLARATION_DIGEST_MISMATCH',
+    mutate: (trace) => rewriteTraceEvidence(trace, (evidence) => {
+      evidence.declarationDigest = '0'.repeat(64);
+    })
+  },
+  {
+    name: 'wrong evidence verification-manifest digest',
+    code: 'VERIFICATION_MANIFEST_DIGEST_MISMATCH',
+    mutate: (trace) => rewriteTraceEvidence(trace, (evidence) => {
+      evidence.verificationManifestDigest = '0'.repeat(64);
+    })
+  },
+  {
+    name: 'wrong evidence parent commit',
+    code: 'EVIDENCE_PARENT_MISMATCH',
+    mutate: (trace) => rewriteTraceEvidence(trace, (evidence) => {
+      evidence.parentCommit = '0'.repeat(40);
+    })
+  },
+  {
+    name: 'wrong evidence specification revision',
+    code: 'EVIDENCE_SPEC_REVISION_MISMATCH',
+    mutate: (trace) => rewriteTraceEvidence(trace, (evidence) => {
+      evidence.specRevision = 'wrong-revision';
+    })
+  },
+  {
+    name: 'invalid command result vocabulary',
+    code: 'INVALID_COMMAND_RESULT',
+    mutate: (trace) => rewriteTraceEvidence(trace, (evidence) => {
+      evidence.result = 'GREEN';
+    })
+  }
+];
+
+for (const fixture of EXTENDED_TRACE_DEFECTS) {
+  test(`extended trace rejects ${fixture.name}`, () => {
+    const trace = makeTraceManifest();
+    fixture.mutate(trace);
+    const result = validateTraceManifest(trace, {
+      specId: SPEC_ID,
+      subjectCommit: trace.subjectCommit,
+      parentCommit: trace.parentCommit,
+      specRevision: trace.specRevision,
+      verificationManifestDigest: trace.verificationManifestDigest
+    });
+    assert.equal(result.valid, false);
+    assert.ok(result.errors.some(({ code }) => code === fixture.code), JSON.stringify(result.errors));
+    assertNoAuthorityFields(result);
+  });
+}
+
+const TRACE_BINDING_DEFECTS = [
+  ['subject commit', 'TRACE_SUBJECT_MISMATCH', { subjectCommit: '0'.repeat(40) }],
+  ['parent commit', 'TRACE_PARENT_MISMATCH', { parentCommit: '0'.repeat(40) }],
+  ['specification revision', 'TRACE_SPEC_REVISION_MISMATCH', { specRevision: 'wrong' }],
+  ['verification-manifest digest', 'VERIFICATION_MANIFEST_DIGEST_MISMATCH', { verificationManifestDigest: '0'.repeat(64) }]
+];
+
+for (const [name, code, override] of TRACE_BINDING_DEFECTS) {
+  test(`trace blocks wrong ${name} binding`, () => {
+    const trace = makeTraceManifest();
+    const result = validateTraceManifest(trace, {
+      specId: SPEC_ID,
+      subjectCommit: trace.subjectCommit,
+      parentCommit: trace.parentCommit,
+      specRevision: trace.specRevision,
+      verificationManifestDigest: trace.verificationManifestDigest,
+      ...override
+    });
+    assert.equal(result.valid, false);
+    assert.ok(result.errors.some((error) => error.code === code), JSON.stringify(result.errors));
+  });
+}
+
+test('frozen handoff rejects canonical package, spec and required command identity mismatches independently', () => {
+  const matrix = [
+    ['canonical package', 'CANONICAL_PACKAGE_MISMATCH', (bindings) => { bindings.canonicalPackageId = 'OTHER-00'; }],
+    ['specification', 'SPEC_ID_MISMATCH', (bindings) => { bindings.specId = 'OTHER-SPEC'; }],
+    ['required command ID', 'REQUIRED_COMMAND_DECLARATION_MISMATCH', (bindings) => {
+      bindings.requiredCommandResults[0].id = 'different-command';
+    }]
+  ];
+  for (const [name, code, mutate] of matrix) {
+    const fixture = makeFrozenBrief();
+    const bindings = makeFrozenHandoffBindings(fixture);
+    mutate(bindings);
+    const result = validateFrozenHandoff(fixture.brief, bindings);
+    assert.equal(result.valid, false, name);
+    assert.ok(result.errors.some((error) => error.code === code), `${name}: ${JSON.stringify(result.errors)}`);
+    assertNoAuthorityFields(result);
+  }
+});
+
+const HANDOFF_COMMAND_BINDING_MATRIX = [
+  ['argv', (row) => { row.argv = ['node', '--version']; }],
+  ['cwd', (row) => { row.cwd = '../outside'; }],
+  ['inherited environment boundary', (row) => { row.inheritEnvironment = ['PATH', 'NODE_OPTIONS']; }],
+  ['explicit environment boundary', (row) => { row.environment = { CI: 'true' }; }],
+  ['timeout', (row) => { row.timeoutMs = 1; }],
+  ['tool requirement', (row) => { row.toolRequirement = 'OPTIONAL'; }]
+];
+
+for (const [name, mutate] of HANDOFF_COMMAND_BINDING_MATRIX) {
+  test(`frozen handoff blocks required command ${name} drift`, () => {
+    const fixture = makeFrozenBrief();
+    const bindings = makeFrozenHandoffBindings(fixture);
+    mutate(bindings.requiredCommandResults[0]);
+    const result = validateFrozenHandoff(fixture.brief, bindings);
+    assert.equal(result.valid, false, JSON.stringify(result.errors));
+    assert.ok(
+      result.errors.some(({ code }) => code === 'REQUIRED_COMMAND_DECLARATION_MISMATCH'),
+      `${name}: ${JSON.stringify(result.errors)}`
+    );
+    assertNoAuthorityFields(result);
+  });
+}
+
+test('frozen handoff rejects a trace payload whose digest binding was not refreshed', () => {
+  const fixture = makeFrozenBrief();
+  const bindings = makeFrozenHandoffBindings(fixture);
+  bindings.trace.requirements[0].disposition = 'OPTIONAL';
+  const result = validateFrozenHandoff(fixture.brief, bindings);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some(({ code }) => code === 'TRACE_DIGEST_MISMATCH'), JSON.stringify(result.errors));
+});
+
+test('frozen handoff rejects an evidence aggregate whose digest binding was not refreshed', () => {
+  const fixture = makeFrozenBrief();
+  const bindings = makeFrozenHandoffBindings(fixture);
+  rewriteTraceEvidence(bindings.trace, (evidence) => { evidence.result = 'FAIL'; });
+  const result = validateFrozenHandoff(fixture.brief, bindings);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some(({ code }) => code === 'EVIDENCE_DIGEST_MISMATCH'), JSON.stringify(result.errors));
+});
+
+test('frozen handoff rejects a self-consistent digest with the wrong brief identity', () => {
+  const fixture = makeFrozenBrief();
+  fixture.brief.briefIdentity = `OTHER-SPEC/${fixture.brief.subjectCommit}`;
+  fixture.brief.briefDigest = digestArtifact(withoutBriefDigest(fixture.brief));
+  const bindings = makeFrozenHandoffBindings(fixture);
+  const result = validateFrozenHandoff(fixture.brief, bindings);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some(({ code }) => code === 'BRIEF_IDENTITY_MISMATCH'), JSON.stringify(result.errors));
+  assertNoAuthorityFields(result);
+});
+
+test('valid frozen handoff result contains no acceptance, package, release, pilot or verdict surface', () => {
+  const fixture = makeFrozenBrief();
+  const result = validateFrozenHandoff(fixture.brief, makeFrozenHandoffBindings(fixture));
+  assert.equal(result.valid, true, JSON.stringify(result.errors));
+  assertNoAuthorityFields(result);
+});
+
+test('static implementation boundary preserves accepted helpers and forbids duplicate engines or repository mutation', async () => {
+  const sourceEntries = await Promise.all(ALLOWLIST.map(async (path) => [
+    path,
+    await readFile(new URL(`../${path}`, import.meta.url), 'utf8')
+  ]));
+  const authorizedSources = new Map(sourceEntries);
+  const helperSource = await readFile(new URL('../scripts/ewf-artifacts.mjs', import.meta.url), 'utf8');
+  const adapterSource = authorizedSources.get('scripts/ewf-preflight-trace.mjs');
+
+  assert.deepEqual([...authorizedSources.keys()].sort(), [...ALLOWLIST].sort());
+  for (const source of authorizedSources.values()) assert.ok(source.length > 0);
+  for (const helper of [
+    'COMMAND_RESULTS',
+    'canonicalizeArtifact',
+    'digestArtifact',
+    'validateArtifact',
+    'validateFrozenBrief',
+    'redactPortableValue'
+  ]) {
+    assert.match(adapterSource, new RegExp(`\\b${helper}\\b`), helper);
+    assert.match(helperSource, new RegExp(`\\b${helper}\\b`), helper);
+  }
+
+  assert.doesNotMatch(adapterSource, /from\s+['"]node:crypto['"]/);
+  assert.doesNotMatch(adapterSource, /\bcreateHash\s*\(/);
+  assert.doesNotMatch(adapterSource, /\bJSON\.stringify\s*\(/);
+  assert.doesNotMatch(adapterSource, /\bfunction\s+(?:canonicalize|digest|redact)\w*\s*\(/i);
+  assert.doesNotMatch(adapterSource, /from\s+['"]node:(?:fs|fs\/promises|child_process)['"]/);
+  assert.doesNotMatch(adapterSource, /\bprocess\.(?:argv|cwd|env|exit|exitCode)\b/);
+  assert.doesNotMatch(adapterSource, /\bfetch\s*\(|@octokit|api\.github\.com/i);
+  assert.doesNotMatch(adapterSource, /\bgit\s+(?:rev-parse|status|worktree|remote|ls-remote)\b/i);
+  assert.doesNotMatch(adapterSource, /\b(?:writeFile|appendFile|createWriteStream|unlink|rename|mkdir|rm)\s*\(/);
+  assert.doesNotMatch(adapterSource, /\bwhile\s*\(/);
+  assert.doesNotMatch(adapterSource, /boundaries\.(?:retry|installTool|remediate|emitAcceptance)\s*\(/);
+  assert.doesNotMatch(adapterSource, /\b(?:setPackageStatus|authorizePilot|generateAcceptance|releaseSafety)\s*\(/);
+  for (const path of ALLOWLIST) {
+    assert.doesNotMatch(path, /^(?:\.github\/|src\/|server\/|public\/|docs\/superpowers\/evidence\/)/);
+    assert.notEqual(path, 'package.json');
+    assert.notEqual(path, 'package-lock.json');
+  }
+});
+
+test('equivalent complete observations are byte-equivalent regardless of row ordering', async () => {
+  await withDisposableRepositoryRoot(async (root) => {
+    const declaration = makeDeclaration(root);
+    const firstObservation = makeObservation(root);
+    firstObservation.canonicalFiles.reverse();
+    firstObservation.canonicalEntryGateResults.reverse();
+    firstObservation.requestedChanges.reverse();
+    firstObservation.exclusions.reverse();
+    firstObservation.worktrees.rows.push(
+      { path: `${root}-z`, head: '1'.repeat(40), branchRef: 'refs/heads/z' },
+      { path: `${root}-a`, head: '2'.repeat(40), branchRef: 'refs/heads/a' }
+    );
+    firstObservation.activeWriterRegistry.rows.push(
+      {
+        writer: 'writer-z',
+        writerMode: 'exclusive',
+        branch: 'z',
+        ref: 'refs/heads/z',
+        worktree: `${root}-z`,
+        allowlist: ['docs/z.md'],
+        semanticConflictKeys: ['unrelated:z']
+      },
+      {
+        writer: 'writer-a',
+        writerMode: 'exclusive',
+        branch: 'a',
+        ref: 'refs/heads/a',
+        worktree: `${root}-a`,
+        allowlist: ['docs/a.md'],
+        semanticConflictKeys: ['unrelated:a']
+      }
+    );
+
+    const secondObservation = clone(firstObservation);
+    secondObservation.canonicalFiles.reverse();
+    secondObservation.canonicalEntryGateResults.reverse();
+    secondObservation.requestedChanges.reverse();
+    secondObservation.exclusions.reverse();
+    secondObservation.worktrees.rows.reverse();
+    secondObservation.activeWriterRegistry.rows.reverse();
+
+    const first = await evaluatePreflight(declaration, firstObservation);
+    const second = await evaluatePreflight(clone(declaration), secondObservation);
+    assert.equal(first.result, 'PASS');
+    assert.equal(second.result, 'PASS');
+    assert.equal(canonicalizeArtifact(first), canonicalizeArtifact(second));
+  });
+});
+
+test('verification evidence redacts raw environment secrets while preserving portable keys', async () => {
+  const command = makeCommandDeclaration({
+    environment: {
+      GITHUB_TOKEN: 'raw-environment-secret',
+      PORTABLE_MODE: 'matrix'
+    }
+  });
+  const result = await executeVerificationProfile(makeVerificationManifest(command), 'focused', {
+    spawn: async () => ({
+      exitCode: 0,
+      signal: null,
+      timedOut: false,
+      stdout: '',
+      stderr: '',
+      durationMs: 1
+    })
+  });
+  const serialized = canonicalizeArtifact(result.commandResults[0]);
+  assert.doesNotMatch(serialized, /raw-environment-secret/);
+  assert.match(serialized, /REDACTED_SECRET/);
+  assert.match(serialized, /PORTABLE_MODE/);
+  assert.match(serialized, /matrix/);
+  assertPortableDigest(result.commandResults[0]);
+});
+
+test('raw Stage 0 remains a separate digest-free metadata record', () => {
+  const stage0 = makeStage0Record();
+  assert.equal(stage0.recordType, 'CONNECTOR_GOVERNANCE_STAGE_0_RAW_METADATA');
+  assert.deepEqual(Object.keys(stage0).filter((key) => /digest/i.test(key)), []);
+  assert.equal(Object.hasOwn(stage0, 'commandResults'), false);
+  assert.equal(Object.hasOwn(stage0, 'localGitOutput'), false);
+  assert.equal(Object.hasOwn(stage0, 'localFilesystemOutput'), false);
+});
