@@ -524,3 +524,109 @@ Do not start implementation if:
 - a false local, connector, digest, or acceptance claim is required.
 
 This handoff remains subordinate docs-only authorization and remains `NOT_ACCEPTANCE`.
+
+## 17. EWF Pilot A candidate selection and docs-only authorization
+
+This section is an append-only patch after the exact anchor:
+
+```text
+This handoff remains subordinate docs-only authorization and remains `NOT_ACCEPTANCE`.
+```
+
+The pre-existing handoff content and historical v4 identities above are preserved verbatim. This section records a new, separate Pilot A authorization candidate and does not reinterpret the historical text.
+
+| Field | Exact value |
+|---|---|
+| Handoff base blob | `b1a39f91227a4708225868d67e77005513787863` |
+| Canonical package | `EWF-00` |
+| Pilot specification | `EWF00-PILOTS-001` |
+| Pilot ID | `EWF00-PILOT-A-001` |
+| Candidate ID | `P1-07-TODAY-NONFINITE-ESTIMATE-001` |
+| Canonical product owner | `P1-07 Today Composer` |
+| Accepted owner boundary | integrated Phase 1 main `9da21e1c3cb34b7372f1b33c541d7442dd0390c9` |
+| Authorization base main | `7dd847cc9da2f5595430e20f864c211f3ec5ddfb` |
+| Authorization branch | `chatgpt/ewf-00-pilot-a-small-repair-authorization` |
+| Plan path | `docs/superpowers/plans/2026-08-06-ewf-00-pilot-a-small-repair.md` |
+| Plan commit / approved future implementation predecessor | `7b74bdfed67debec31b7a043a838350946965a72` |
+| Plan parent | `7dd847cc9da2f5595430e20f864c211f3ec5ddfb` |
+| Plan blob | `09a51b614a2818de6c4552c85667c0119e237c24` |
+| Authorization brief path | `docs/superpowers/briefs/2026-08-06-ewf00-pilot-a-small-repair-authorization.md` |
+| Authorization brief commit | `a10c38c88bbf3e39e575ac1e468b73f870f50f54` |
+| Authorization brief blob | `f02721fa6e2b4b8c60e038bcb1d730ffb2553bab` |
+| Future implementation branch | `chatgpt/ewf-00-pilot-a-small-repair` |
+| Designated writer | `chatgpt-github-ewf00-pilot-a-primary-writer` |
+| Writer mode | `exclusive` |
+
+### Candidate and expected behavior
+
+A truthy non-numeric Today Composer `estimatedSeconds` currently becomes `NaN`, bypasses a consumed time budget and makes the aggregate plan estimate non-finite. The future focused regression freezes two ordered due rows under a 60-second budget: the first has `60`, the second has `"not-a-number"`. The expected bounded behavior is to use the existing 60-second default for non-finite input, retain the existing `[10, 900]` clamp for finite input, select only the first row and record the second as `time-budget` excluded.
+
+Selection-time exact implementation blobs are:
+
+```text
+src/today-composer.js
+d63a76c3698fe572790914e687443ee38e6842b2
+
+tests/today-composer.test.mjs
+787b4cb0c1b845aefba4c83eafe5380396f4251a
+```
+
+The source-level reproduction is deterministic but was not executed during candidate selection because no supported exact-byte disposable materialization path was available. No executed-reproduction claim is made. After independent authorization acceptance and fresh preflight, the future writer must first encode the exact failing regression and stop before source modification if it does not fail for the stated reason.
+
+### Exact future implementation allowlist
+
+```text
+tests/today-composer.test.mjs
+src/today-composer.js
+```
+
+No third path is authorized. Everything else remains excluded, including canonical docs/status, `.github/**`, dependencies, schemas/migrations, durable data, backup/restore, outbox/reconciliation, process lifecycle, concurrency/lease/fencing, crash/recovery, provider/network behavior, security/authentication, privacy/consent, rights/publication, new UI/capability, Pilot B, P3-02, LI-00, SRC-00, ERR-00, QAR-00, evidence files, acceptance and merge.
+
+### Frozen verification profiles
+
+Focused profile:
+
+```text
+node --test --test-name-pattern="non-finite estimatedSeconds" tests/today-composer.test.mjs
+node --test tests/today-composer.test.mjs
+node --check src/today-composer.js
+node --check tests/today-composer.test.mjs
+git diff --check -- tests/today-composer.test.mjs src/today-composer.js
+```
+
+PR profile:
+
+```text
+npm test
+npm run check
+npm run audit:roadmap
+npm run audit:ielts
+npm run test:v10
+npm run audit:v10
+npm run build
+```
+
+The existing GitHub Actions workflow is executable PR evidence. `.github/**` must not change.
+
+### Baseline and measurement boundary
+
+Baseline and EWF-assisted runs must use the same exact plan predecessor, clean repository state, OS/environment class, Node/npm versions, command set and monotonic timing method. The reference environment is GitHub-hosted Ubuntu 24.04 / `ubuntu-24.04`, runner image `20260720.247.2`, Node `v22.23.1` and npm `10.9.8`. Actual environment values must match between both paired runs or the comparison is invalidated and both sides are rerun.
+
+Observed metrics are focused duration, PR duration, preflight elapsed time, manual operation count, artifact preparation operations, validator duration, diagnostic review time, rework/invalidation rounds and CLI-absent friction. No arbitrary pass threshold is set. Evidence-file writes require separate authorization.
+
+### Effectiveness and stop boundary
+
+This authorization is inactive until an independent docs-only exact-head audit returns `ACCEPT` for the final authorization PR head. Before that verdict, do not create the future implementation branch, write source/test files, execute the pilot, measure pilot results, create pilot evidence or claim pilot success.
+
+Fresh baseline and preflight must still pass before the first future implementation write. Any identity drift, writer/file/semantic overlap, branch collision, reproduction mismatch, need for an excluded category or path, RED verification, incomparable measurement environment or unverifiable claim stops the pilot without widened remediation.
+
+Effective state after this docs creation remains:
+
+```text
+EWF00-PILOT-A-001: AUTHORIZATION_PENDING_INDEPENDENT_AUDIT
+EWF00-PILOTS-001: NOT_COMPLETED
+Pilot B: UNAUTHORIZED
+EWF-00: IMPLEMENTED / PILOTS_PENDING / NOT_ACCEPTED
+```
+
+This section does not accept the repaired product package, change any canonical status, authorize product work or authorize a merge.
