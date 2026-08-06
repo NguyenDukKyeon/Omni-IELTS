@@ -55,6 +55,14 @@
 - Evidence cuối phải ghi OS, Node, browser/version, exact commit, từng lệnh, exit/result thực tế, migration/rollback fixture, durable read-back và artifact/digest khi gate yêu cầu.
 - Hierarchy evidence: runtime/persistence/browser trên fixture có kiểm soát > integration/unit/property/failure injection > build/static/schema > source-string/DOM presence > report/screenshot. Evidence yếu không được phủ nhận failure mạnh hơn.
 
+## Bounded execution capsules
+
+- Prompt count is not an acceptance gate. An independently accepted Wave Authorization Manifest may pre-authorize bounded conditional transitions for separately identified packages or research lanes.
+- Exact predecessor, canonical owner, one writer, exact file allowlist, test-first Commit A, natural product-defect RED, minimal GREEN, exact-head CI, evidence provenance, migration/rollback obligations and stop conditions remain mandatory.
+- A bounded executor may materialize only the transitions frozen by the accepted manifest and cannot independently accept its own implementation or evidence. A fresh independent final audit remains mandatory.
+- Post-verdict merge or deterministic reconciliation is permitted only when explicitly pre-authorized, after an `ACCEPT` verdict is posted and read back, accepted heads remain unchanged and required CI remains successful.
+- Every capsule fails closed on predecessor or head drift, branch race, ownership or file overlap, dependency violation, invalid or ambiguous RED, unexpected CI identity, missing artifacts or evidence ambiguity.
+
 ## Phase 0 hard gate
 
 P0-08 chỉ `ACCEPTED` khi cùng một exact commit thỏa toàn bộ checklist trong `docs/IMPLEMENTATION_STATUS.md`, gồm evidence matrix không false schedule; backup sentinel 100% mọi durable store Core/IELTS/V10/drafts/outbox; restore/rollback an toàn; Quick Capture reload/degraded; một Today và một Inbox; Retell trung thực; browser/fixture/cleanup ổn định; unit, integration, static, build và browser gates pass; không debug/marker/skip/assertion yếu; reviewer độc lập không còn finding P0/P1.

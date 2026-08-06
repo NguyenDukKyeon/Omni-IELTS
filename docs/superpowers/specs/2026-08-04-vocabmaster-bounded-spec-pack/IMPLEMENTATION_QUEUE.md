@@ -4,8 +4,12 @@ Queue status: `PLANNING_ONLY / NO_IMPLEMENTATION_AUTHORIZATION`
 
 This queue orders future decisions and bounded work. It does not authorize a
 branch, worktree, source write, dependency, package ratification, status change
-or acceptance verdict. Each executable item requires a separately approved exact
-predecessor, owner, allowlist and acceptance brief.
+or acceptance verdict. Each executable item requires either a separately approved
+exact predecessor, owner, allowlist and acceptance brief or one independently
+accepted Wave Authorization Manifest containing a separate exact record for that
+item. Every executable record preserves its exact predecessor, canonical owner,
+implementation allowlist, dependency state, acceptance brief and independent
+verdict; a shared manifest does not merge package ownership or acceptance.
 
 ## Queue invariants
 
@@ -50,6 +54,16 @@ Foundation automation.
 Do not implement LI-00 and QAR-00 in parallel: QAR freezes LI contracts and must
 consume their accepted shape. ERR-00 may not write the P1-06 boundary while a LI
 writer is changing terminal/evidence bindings.
+
+### Wave 1 bounded execution topology
+
+Wave 1 is expected to use two dependency batches after `BOUNDED_EXECUTION_CAPSULE_PROTOCOL_V1` is active and an exact Wave Authorization Manifest is independently accepted. This queue remains `PLANNING_ONLY / NO_IMPLEMENTATION_AUTHORIZATION`; the topology is not implementation authority.
+
+**Batch A** contains `LI-00`, `SRC-00` and read-only/disposable capability research with no repository-writer overlap. `LI-00` and `SRC-00` may share one accepted wave manifest and one executor capsule only after fresh owner, semantic-boundary and path analysis proves non-overlap. They retain separate package commit chains, RED/GREEN and evidence identities, and separate independent verdict findings. Research lanes remain non-writing and cannot create product-package status.
+
+**Batch B** begins only after its Batch A dependencies receive independent acceptance. `ERR-00` requires accepted `LI-00`. `QAR-00` requires accepted `LI-00` and `SRC-00` and must consume those independently accepted contract shapes. `ERR-00` cannot enter P1-06-owned writes while an LI writer is mutating terminal/evidence bindings. Batch B retains separate commits, evidence and per-package verdicts.
+
+The expected cadence is manifest authoring, independent manifest acceptance, Batch A execution, independent Batch A audit/integration, Batch B execution, then independent Batch B audit and any explicitly authorized reconciliation. This cadence is an operational estimate, not an acceptance criterion. A separate reconciliation capsule remains permitted when canonical changes are too large or unsafe to combine.
 
 ## Wave 2 — First end-to-end value slice
 

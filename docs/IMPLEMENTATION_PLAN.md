@@ -105,6 +105,32 @@ Các ranh giới bắt buộc:
 - Mỗi package chỉ được ACCEPTED khi mọi acceptance criteria của chính nó đạt; “test cũ xanh” không thay cho test mới.
 - Điều kiện dừng có quyền chặn merge. Khi dừng, không tự đổi baseline hoặc mở rộng allowed files.
 
+### Bounded execution capsule protocol
+
+Một `Wave Authorization Manifest` chỉ có hiệu lực sau independent exact-head `ACCEPT`. Manifest phải giữ riêng cho từng executable item: wave/package ID, canonical owner, exact predecessor, dependency state, writer, branch/PR topology, file allowlist, exclusions, baseline identity, test-first requirement, natural RED predicate và invalidation predicates, minimal GREEN boundary, verification profile, evidence paths/schema, migration/rollback obligations, stop conditions và nguồn acceptance criteria.
+
+Manifest Author, Bounded Executor và Independent Auditor là các vai trò tách biệt. Executor không được tự chấp nhận implementation hoặc evidence của mình. Auditor phải dùng fresh repository facts và bind verdict vào exact commit, paths, blobs, CI và evidence.
+
+Một manifest đã được independent `ACCEPT` có thể pre-authorize chuỗi điều kiện:
+
+```text
+fresh Stage 0
+→ test-only Commit A
+→ exact-head natural product-defect RED
+→ minimal source-only Commit B
+→ exact-head GREEN
+→ implementer evidence materialization
+→ stop for independent audit
+```
+
+Pre-authorization này chỉ loại bỏ các administrative handoff riêng lẻ. Nó không loại bỏ hoặc làm yếu exact predecessor, one-writer ownership, file allowlist, natural RED, minimal GREEN, exact-head CI, evidence provenance, migration/rollback, stop conditions hoặc independent acceptance.
+
+Nhiều package chỉ được dùng chung manifest hoặc executor capsule khi file và semantic ownership không overlap, dependency order rõ ràng, và mỗi package có commit, RED/GREEN identity, evidence và verdict riêng. Một package phải có thể bị từ chối mà không che khuất kết quả của package khác.
+
+Sau repository-recorded `ACCEPT`, auditor chỉ được thực hiện merge hoặc deterministic status reconciliation khi manifest đã pre-authorize hành động đó, accepted head không đổi, required CI vẫn thành công và mergeability sạch.
+
+Mọi capsule phải fail closed khi có main/head drift, branch race, missing owner, path hoặc semantic overlap, invalid/ambiguous RED, source mutation trước RED, test weakening, unexpected CI identity, evidence mismatch, dependency violation hoặc acceptance conflict.
+
 ## 5. Dependency graph
 
 ~~~mermaid
