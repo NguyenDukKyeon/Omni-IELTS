@@ -876,12 +876,104 @@ question: which tested format and API combinations operate in the recorded envir
 forbidden inference: universal browser or production support
 ```
 
-### W1-RL-ASR-LIVE-BENCHMARK-001
+### W1-RL-ASR-LIVE-COMPARISON-001
 
 ```text
-scope: disposable ASR availability and bounded live-sample benchmark
-question: observed latency, output and failure modes for exact synthetic or consented inputs
-forbidden inference: general ASR quality, provider acceptance or production readiness
+repository mutation: FORBIDDEN
+branch: NONE
+PR: NONE
+durable product evidence: NONE
+package status authority: NONE
+dependency installation or lock: FORBIDDEN
+production provider selection: FORBIDDEN
+
+scope: Disposable exact-environment comparison of Moonshine and faster-whisper for bounded live/local ASR observations.
+baseline: faster-whisper is the existing local ASR baseline for VocabMaster.
+comparison candidates: Moonshine; faster-whisper.
+
+Each tested artifact must record exact identity:
+- upstream repository;
+- release, tag or exact commit;
+- model name and revision;
+- model digest when available;
+- code license;
+- model license;
+- redistribution restrictions;
+- commercial-use restrictions;
+- attribution obligations.
+
+Each benchmark must freeze:
+- operating system;
+- CPU/GPU;
+- RAM;
+- runtime and package version;
+- compute type;
+- quantization;
+- sample rate;
+- audio format;
+- VAD configuration;
+- chunk size and overlap;
+- decoding configuration;
+- beam size;
+- language mode;
+- streaming or batch mode;
+- cold-start or warm state.
+
+Fixture rights boundary:
+- synthetic, rights-cleared or explicitly consented audio only.
+
+Required fixture coverage:
+- English;
+- Vietnamese;
+- English–Vietnamese code-switching;
+- clean speech;
+- noisy speech;
+- short utterance;
+- sustained speech;
+- long-form audio;
+- numbers;
+- proper names;
+- punctuation-sensitive sentence.
+
+Required metrics for each exact model and configuration:
+- model download size;
+- cold-start time;
+- first-partial latency;
+- final-result latency;
+- real-time factor;
+- peak CPU;
+- peak RAM;
+- GPU/VRAM when available;
+- partial-result stability;
+- WER;
+- CER;
+- cancellation behavior;
+- timeout behavior;
+- cleanup behavior;
+- failure modes;
+- offline capability;
+- Windows compatibility.
+
+Inference-mode classification must distinguish:
+- native live/streaming inference;
+- simulated streaming by chunking;
+- batch transcription.
+
+Batch transcription or chunk simulation must not be described as native streaming.
+
+Boundaries:
+- the benchmark does not select a production provider;
+- the benchmark does not authorize dependency installation;
+- the benchmark does not authorize repository mutation;
+- the benchmark does not create package evidence;
+- the benchmark does not change package status;
+- the benchmark does not prove pronunciation-scoring capability;
+- the benchmark does not prove semantic understanding;
+- the benchmark does not prove general ASR quality;
+- results apply only to the exact recorded model, version, language, fixture, hardware, runtime and configuration;
+- Moonshine must not be claimed better than faster-whisper, or faster-whisper better than Moonshine, unless exact evidence supports the specific criterion;
+- lower latency does not imply better accuracy;
+- better WER does not imply better production suitability.
 ```
 
 ### W1-RL-SEGMENTATION-ALIGNMENT-001
