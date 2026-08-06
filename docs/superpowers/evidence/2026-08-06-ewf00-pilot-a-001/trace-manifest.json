@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "trace-manifest",
+  "authorityLabel": "IMPLEMENTER_EVIDENCE / NOT_ACCEPTANCE",
+  "specId": "EWF00-PILOTS-001",
+  "pilotId": "EWF00-PILOT-A-001",
+  "candidateId": "P1-07-TODAY-NONFINITE-ESTIMATE-001",
+  "trace": [
+    {
+      "sequence": 1,
+      "event": "candidate-selection authorization",
+      "binding": "PR #26 comment 5198006544"
+    },
+    {
+      "sequence": 2,
+      "event": "connector-native replacement authorization",
+      "binding": "PR #27 comment 5198432325"
+    },
+    {
+      "sequence": 3,
+      "event": "Stage 0 PASS",
+      "binding": "GitHub connector governance observations"
+    },
+    {
+      "sequence": 4,
+      "event": "Commit A test-only",
+      "binding": "165bc5080bfffd46457c2c096e510b2c0624aad7"
+    },
+    {
+      "sequence": 5,
+      "event": "natural RED run",
+      "binding": "CI run 31056422980"
+    },
+    {
+      "sequence": 6,
+      "event": "independent RED acceptance",
+      "binding": "PR #28 comment 5199114267"
+    },
+    {
+      "sequence": 7,
+      "event": "Commit B source-only",
+      "binding": "31bdd92fc6a86818b5c706ab56b35d33494f66d9"
+    },
+    {
+      "sequence": 8,
+      "event": "exact-head GREEN",
+      "binding": "CI run 31061378924"
+    },
+    {
+      "sequence": 9,
+      "event": "evidence-only authorization",
+      "binding": "PR #28 comment 5199464695"
+    },
+    {
+      "sequence": 10,
+      "event": "evidence revision",
+      "binding": "Repository commit containing this manifest; exact SHA verified after construction"
+    },
+    {
+      "sequence": 11,
+      "event": "independent Pilot A audit required",
+      "binding": "INDEPENDENT_PILOT_A_AUDIT_REQUIRED_AFTER_EVIDENCE"
+    }
+  ],
+  "artifactBindings": [
+    {
+      "runId": 31056422980,
+      "artifactId": 8950418137,
+      "name": "verification-output",
+      "digest": "sha256:6f445f0ccc00ede9f1c8e465ad7d6089bed2d8aaf289dea9c83a7d3e2786c46f"
+    },
+    {
+      "runId": 31061378924,
+      "artifactId": 8952237232,
+      "name": "verification-output",
+      "digest": "sha256:0ec3261c063e4833ae850c144bc36bb7f85dd7d621031fd2aa7eeae279d942e7"
+    },
+    {
+      "runId": 31061378924,
+      "artifactId": 8952247010,
+      "name": "browser-smoke-output",
+      "digest": "sha256:5a39f4789d09c574a230e6d8f9804e49d0c04393fb78213d0e122a7464bf1ff0"
+    },
+    {
+      "runId": 31061378924,
+      "artifactId": 8952248258,
+      "name": "ielts-browser-output",
+      "digest": "sha256:6a61a9507c27870ac4abe0a63ff41b43c9336b06ff13e5e7550f25eebbf5496f"
+    },
+    {
+      "runId": 31061378924,
+      "artifactId": 8952250774,
+      "name": "v10-browser-output",
+      "digest": "sha256:9da7b9bf2e5e38a3e3386ea6fdf6ca1b78a18702b8c53799792b43d171280f7c"
+    },
+    {
+      "runId": 31061378924,
+      "artifactId": 8952252232,
+      "name": "hardening-browser-output",
+      "digest": "sha256:6b6f327b09fc3c854597c925671d7d4769e135ead33f775cc6604e966d2b5f46"
+    }
+  ],
+  "repositoryCommentBindings": [
+    {
+      "pullRequest": 26,
+      "commentId": 5198006544
+    },
+    {
+      "pullRequest": 27,
+      "commentId": 5198432325
+    },
+    {
+      "pullRequest": 28,
+      "commentId": 5199114267
+    },
+    {
+      "pullRequest": 28,
+      "commentId": 5199464695
+    }
+  ],
+  "implementationFileBindings": [
+    {
+      "path": "tests/today-composer.test.mjs",
+      "commitABlob": "c9fe0d03fc89b779a1b618571f7675f0e4362462",
+      "commitBBlob": "c9fe0d03fc89b779a1b618571f7675f0e4362462"
+    },
+    {
+      "path": "src/today-composer.js",
+      "commitBBlob": "9011ebfed543f307dc03ee8e3945fe59fee28b51"
+    }
+  ],
+  "authorityBoundaries": [
+    "Pilot A evidence only",
+    "not independent acceptance",
+    "not Pilot A success",
+    "not product-package acceptance",
+    "Pilot B unauthorized",
+    "EWF-00 not accepted",
+    "no canonical status change",
+    "no merge authorization"
+  ]
+}

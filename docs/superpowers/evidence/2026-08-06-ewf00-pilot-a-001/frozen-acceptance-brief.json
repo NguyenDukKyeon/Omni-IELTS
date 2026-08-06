@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "frozen-acceptance-brief",
+  "authorityLabel": "IMPLEMENTER_EVIDENCE / NOT_ACCEPTANCE",
+  "specId": "EWF00-PILOTS-001",
+  "pilotId": "EWF00-PILOT-A-001",
+  "candidateId": "P1-07-TODAY-NONFINITE-ESTIMATE-001",
+  "canonicalPackageId": "EWF-00",
+  "implementationSubject": "31bdd92fc6a86818b5c706ab56b35d33494f66d9",
+  "implementationParent": "165bc5080bfffd46457c2c096e510b2c0624aad7",
+  "approvedImplementationPredecessor": "ce5a6cf1f0bbdf3426a246423c353e5f60cf8640",
+  "implementationTopology": {
+    "commitA": {
+      "sha": "165bc5080bfffd46457c2c096e510b2c0624aad7",
+      "message": "test(today): reproduce non-finite estimate budget bypass",
+      "parent": "ce5a6cf1f0bbdf3426a246423c353e5f60cf8640",
+      "tree": "46ac1c2200e94f2a30be346be5732b60cabdbc57",
+      "soleChangedPath": "tests/today-composer.test.mjs"
+    },
+    "commitB": {
+      "sha": "31bdd92fc6a86818b5c706ab56b35d33494f66d9",
+      "message": "fix(today): keep activity estimates finite",
+      "parent": "165bc5080bfffd46457c2c096e510b2c0624aad7",
+      "tree": "862dc1d060953afa3c3fb1c51b351d67bc4ac40f",
+      "soleChangedPath": "src/today-composer.js"
+    },
+    "cumulativeImplementationPaths": [
+      "tests/today-composer.test.mjs",
+      "src/today-composer.js"
+    ]
+  },
+  "implementationBlobs": {
+    "tests/today-composer.test.mjs": "c9fe0d03fc89b779a1b618571f7675f0e4362462",
+    "src/today-composer.js": "9011ebfed543f307dc03ee8e3945fe59fee28b51"
+  },
+  "authorizationBindings": {
+    "candidateSelection": {
+      "pullRequest": 26,
+      "commentId": 5198006544
+    },
+    "connectorNativeExecution": {
+      "pullRequest": 27,
+      "head": "98b9ae8297dccef04ce5eba95ff25d32ce55d173",
+      "commentId": 5198432325
+    },
+    "commitARedAcceptance": {
+      "pullRequest": 28,
+      "commentId": 5199114267,
+      "verdict": "ACCEPT"
+    },
+    "evidenceOnlyRevision": {
+      "pullRequest": 28,
+      "commentId": 5199464695,
+      "verdict": "AUTHORIZE"
+    }
+  },
+  "ciBindings": {
+    "red": {
+      "workflow": "CI",
+      "workflowId": 322561862,
+      "runId": 31056422980,
+      "runNumber": 297,
+      "attempt": 1,
+      "head": "165bc5080bfffd46457c2c096e510b2c0624aad7",
+      "conclusion": "failure",
+      "tests": 485,
+      "pass": 484,
+      "fail": 1,
+      "expectedSelectedIds": [
+        "due-finite"
+      ],
+      "actualSelectedIds": [
+        "due-finite",
+        "due-non-finite"
+      ],
+      "artifact": {
+        "id": 8950418137,
+        "name": "verification-output",
+        "digest": "sha256:6f445f0ccc00ede9f1c8e465ad7d6089bed2d8aaf289dea9c83a7d3e2786c46f"
+      }
+    },
+    "green": {
+      "workflow": "CI",
+      "workflowId": 322561862,
+      "runId": 31061378924,
+      "runNumber": 298,
+      "attempt": 1,
+      "event": "pull_request",
+      "head": "31bdd92fc6a86818b5c706ab56b35d33494f66d9",
+      "base": "7dd847cc9da2f5595430e20f864c211f3ec5ddfb",
+      "status": "completed",
+      "conclusion": "success",
+      "jobId": 92489880342,
+      "effectiveGreenTestTotalStatement": "The effective 485/485 GREEN total is a constrained inference from Commit A RED discovering 485 tests, the unchanged Commit A test blob at Commit B, source-only Commit B, and the successful identical npm test command. It is not represented as a direct quotation from the GREEN artifact ZIP.",
+      "artifacts": [
+        {
+          "id": 8952237232,
+          "name": "verification-output",
+          "digest": "sha256:0ec3261c063e4833ae850c144bc36bb7f85dd7d621031fd2aa7eeae279d942e7"
+        },
+        {
+          "id": 8952247010,
+          "name": "browser-smoke-output",
+          "digest": "sha256:5a39f4789d09c574a230e6d8f9804e49d0c04393fb78213d0e122a7464bf1ff0"
+        },
+        {
+          "id": 8952248258,
+          "name": "ielts-browser-output",
+          "digest": "sha256:6a61a9507c27870ac4abe0a63ff41b43c9336b06ff13e5e7550f25eebbf5496f"
+        },
+        {
+          "id": 8952250774,
+          "name": "v10-browser-output",
+          "digest": "sha256:9da7b9bf2e5e38a3e3386ea6fdf6ca1b78a18702b8c53799792b43d171280f7c"
+        },
+        {
+          "id": 8952252232,
+          "name": "hardening-browser-output",
+          "digest": "sha256:6b6f327b09fc3c854597c925671d7d4769e135ead33f775cc6604e966d2b5f46"
+        }
+      ]
+    }
+  },
+  "evidenceRevisionAuthorization": {
+    "commentId": 5199464695,
+    "directParent": "31bdd92fc6a86818b5c706ab56b35d33494f66d9",
+    "commitMessage": "docs: record EWF Pilot A connector-native evidence",
+    "directory": "docs/superpowers/evidence/2026-08-06-ewf00-pilot-a-001/",
+    "fileAllowlist": [
+      "connector-governance-stage-0.raw.json",
+      "frozen-acceptance-brief.json",
+      "implementation-report.json",
+      "trace-manifest.json",
+      "verification-manifest.json"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Exact five new JSON evidence files only",
+    "Implementation subject and source/test blobs remain frozen",
+    "Evidence authority remains implementer evidence and not acceptance",
+    "Independent Pilot A audit is required after evidence"
+  ],
+  "authorityBoundaries": [
+    "Pilot A evidence only",
+    "not independent acceptance",
+    "not Pilot A success",
+    "not product-package acceptance",
+    "Pilot B unauthorized",
+    "EWF-00 not accepted",
+    "no canonical status change",
+    "no merge authorization"
+  ]
+}

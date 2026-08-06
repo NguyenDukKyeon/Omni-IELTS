@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "implementation-report",
+  "authorityLabel": "IMPLEMENTER_EVIDENCE / NOT_ACCEPTANCE",
+  "specId": "EWF00-PILOTS-001",
+  "pilotId": "EWF00-PILOT-A-001",
+  "candidateId": "P1-07-TODAY-NONFINITE-ESTIMATE-001",
+  "handoffState": "HANDOFF_READY",
+  "subjectCommit": "31bdd92fc6a86818b5c706ab56b35d33494f66d9",
+  "parentCommit": "165bc5080bfffd46457c2c096e510b2c0624aad7",
+  "changedFiles": [
+    "tests/today-composer.test.mjs",
+    "src/today-composer.js"
+  ],
+  "implementation": {
+    "commitA": {
+      "classification": "test-only",
+      "sha": "165bc5080bfffd46457c2c096e510b2c0624aad7",
+      "parent": "ce5a6cf1f0bbdf3426a246423c353e5f60cf8640",
+      "message": "test(today): reproduce non-finite estimate budget bypass",
+      "soleChangedPath": "tests/today-composer.test.mjs",
+      "testName": "non-finite estimatedSeconds falls back before time-budget accounting"
+    },
+    "commitB": {
+      "classification": "source-only",
+      "sha": "31bdd92fc6a86818b5c706ab56b35d33494f66d9",
+      "parent": "165bc5080bfffd46457c2c096e510b2c0624aad7",
+      "message": "fix(today): keep activity estimates finite",
+      "soleChangedPath": "src/today-composer.js"
+    },
+    "defectClassification": "A truthy non-numeric estimatedSeconds converted to NaN, bypassed consumed time-budget exclusion and contaminated the aggregate estimate.",
+    "exactSourceReplacement": [
+      "const parsedEstimatedSeconds=Number(row.estimatedSeconds||60);",
+      "const estimatedSeconds=Number.isFinite(parsedEstimatedSeconds)",
+      "  ?Math.max(10,Math.min(900,parsedEstimatedSeconds))",
+      "  :60;"
+    ],
+    "cumulativeBoundary": [
+      "tests/today-composer.test.mjs",
+      "src/today-composer.js"
+    ],
+    "testBlobPreservedAtCommitB": "c9fe0d03fc89b779a1b618571f7675f0e4362462",
+    "sourceBlobAtCommitB": "9011ebfed543f307dc03ee8e3945fe59fee28b51",
+    "thirdImplementationPathPresent": false
+  },
+  "redExecution": {
+    "workflow": "CI",
+    "workflowId": 322561862,
+    "runId": 31056422980,
+    "runNumber": 297,
+    "attempt": 1,
+    "jobId": 92474796863,
+    "head": "165bc5080bfffd46457c2c096e510b2c0624aad7",
+    "status": "completed",
+    "conclusion": "failure",
+    "totals": {
+      "tests": 485,
+      "pass": 484,
+      "fail": 1,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "naturalFailure": {
+      "expectedSelectedIds": [
+        "due-finite"
+      ],
+      "actualSelectedIds": [
+        "due-finite",
+        "due-non-finite"
+      ],
+      "artificialFailure": false,
+      "infrastructureFailure": false
+    },
+    "artifactId": 8950418137,
+    "artifactDigest": "sha256:6f445f0ccc00ede9f1c8e465ad7d6089bed2d8aaf289dea9c83a7d3e2786c46f"
+  },
+  "greenExecution": {
+    "workflow": "CI",
+    "workflowId": 322561862,
+    "runId": 31061378924,
+    "runNumber": 298,
+    "attempt": 1,
+    "jobId": 92489880342,
+    "head": "31bdd92fc6a86818b5c706ab56b35d33494f66d9",
+    "base": "7dd847cc9da2f5595430e20f864c211f3ec5ddfb",
+    "status": "completed",
+    "conclusion": "success",
+    "successfulSteps": [
+      "npm test",
+      "cross-check",
+      "roadmap audit",
+      "IELTS audit",
+      "V10 focused tests",
+      "V10 audit",
+      "build",
+      "Phase 4 exact-head verification",
+      "Phase 5 exact-head verification",
+      "serve",
+      "preview",
+      "Core browser smoke",
+      "IELTS browser smoke",
+      "V10 browser smoke",
+      "hardening browser smoke"
+    ],
+    "effectiveSameSuiteTotal": "485/485",
+    "effectiveSameSuiteTotalBasis": "Constrained inference from Commit A discovering 485 tests, unchanged test blob at Commit B, source-only Commit B and successful identical npm test command.",
+    "directGreenArtifactQuotation": false
+  },
+  "measurements": {
+    "historicalStage0OperationCount": "NOT_EXPOSED",
+    "historicalStage0ElapsedTime": "NOT_EXPOSED",
+    "commitAArtifactPreparationOperationCount": "NOT_EXPOSED",
+    "commitBArtifactPreparationOperationCount": "NOT_EXPOSED",
+    "redRunWallClockSeconds": 33,
+    "redJobWallClockSeconds": 30,
+    "greenRunWallClockSeconds": 79,
+    "greenJobWallClockSeconds": 76,
+    "diagnosticReviewTime": "NOT_EXPOSED",
+    "reworkOrInvalidationRounds": "NOT_EXPOSED",
+    "cliAbsentFriction": "No local Git, checkout, index, worktree or command execution capability was used; repository construction and verification used GitHub connector operations."
+  },
+  "limitations": [
+    "No commandResults field claims local command execution.",
+    "The effective 485/485 GREEN total is not a direct quotation from the GREEN artifact ZIP.",
+    "CI success is implementation evidence and not independent Pilot A acceptance."
+  ],
+  "authorityBoundaries": [
+    "Pilot A evidence only",
+    "not independent acceptance",
+    "not Pilot A success",
+    "not product-package acceptance",
+    "Pilot B unauthorized",
+    "EWF-00 not accepted",
+    "no canonical status change",
+    "no merge authorization"
+  ]
+}

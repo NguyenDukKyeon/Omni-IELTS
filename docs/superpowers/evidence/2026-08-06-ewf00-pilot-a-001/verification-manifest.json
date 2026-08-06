@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "verification-manifest",
+  "authorityLabel": "IMPLEMENTER_EVIDENCE / NOT_ACCEPTANCE",
+  "specId": "EWF00-PILOTS-001",
+  "pilotId": "EWF00-PILOT-A-001",
+  "candidateId": "P1-07-TODAY-NONFINITE-ESTIMATE-001",
+  "implementationSubject": "31bdd92fc6a86818b5c706ab56b35d33494f66d9",
+  "implementationBlobs": {
+    "tests/today-composer.test.mjs": "c9fe0d03fc89b779a1b618571f7675f0e4362462",
+    "src/today-composer.js": "9011ebfed543f307dc03ee8e3945fe59fee28b51"
+  },
+  "evidenceBlobBindings": {
+    "connector-governance-stage-0.raw.json": "1130c2adce12b46275222db88b0477497af07f9f",
+    "frozen-acceptance-brief.json": "10703a3d81ddceead2e2df358007efa5eb236291",
+    "implementation-report.json": "df5d23c1974ae390571d232d46b467c60ddaa377",
+    "trace-manifest.json": "d6bbbc35b2ecadf0d487c24e7efd97d8d06cb7a8"
+  },
+  "redVerification": {
+    "workflowId": 322561862,
+    "runId": 31056422980,
+    "runNumber": 297,
+    "attempt": 1,
+    "head": "165bc5080bfffd46457c2c096e510b2c0624aad7",
+    "conclusion": "failure",
+    "tests": 485,
+    "pass": 484,
+    "fail": 1,
+    "naturalProductDefect": true,
+    "artifactId": 8950418137,
+    "artifactDigest": "sha256:6f445f0ccc00ede9f1c8e465ad7d6089bed2d8aaf289dea9c83a7d3e2786c46f",
+    "acceptanceCommentId": 5199114267
+  },
+  "greenVerification": {
+    "workflowId": 322561862,
+    "runId": 31061378924,
+    "runNumber": 298,
+    "attempt": 1,
+    "head": "31bdd92fc6a86818b5c706ab56b35d33494f66d9",
+    "base": "7dd847cc9da2f5595430e20f864c211f3ec5ddfb",
+    "status": "completed",
+    "conclusion": "success",
+    "jobId": 92489880342,
+    "allRequiredStepsSuccessful": true,
+    "effective485Of485IsConstrainedInference": true,
+    "effective485Of485IsDirectArtifactQuotation": false,
+    "artifactIds": [
+      8952237232,
+      8952247010,
+      8952248258,
+      8952250774,
+      8952252232
+    ]
+  },
+  "structuralVerification": {
+    "exactFiveFileAllowlistPrepared": true,
+    "allFivePathsNew": true,
+    "existingFileModified": false,
+    "evidenceAuthorityLabelPreserved": true,
+    "implementationBlobsPreserved": true,
+    "sourceAndTestUnchanged": true,
+    "oneEvidenceOnlyCommitIntended": true,
+    "independentAuditStillRequired": true,
+    "directParentRequired": "31bdd92fc6a86818b5c706ab56b35d33494f66d9",
+    "commitMessageRequired": "docs: record EWF Pilot A connector-native evidence",
+    "exactPaths": [
+      "docs/superpowers/evidence/2026-08-06-ewf00-pilot-a-001/connector-governance-stage-0.raw.json",
+      "docs/superpowers/evidence/2026-08-06-ewf00-pilot-a-001/frozen-acceptance-brief.json",
+      "docs/superpowers/evidence/2026-08-06-ewf00-pilot-a-001/implementation-report.json",
+      "docs/superpowers/evidence/2026-08-06-ewf00-pilot-a-001/trace-manifest.json",
+      "docs/superpowers/evidence/2026-08-06-ewf00-pilot-a-001/verification-manifest.json"
+    ]
+  },
+  "measurements": {
+    "githubConnectorOperationsBeforeFirstSuccessfulBlob": 35,
+    "firstFourBlobCreationOperations": 4,
+    "firstFourBlobVerificationOperations": 4,
+    "completedGithubConnectorOperationsBeforeThisBlobCreation": 43,
+    "rejectedOperations": 1,
+    "rejectedOperationCreatedRepositoryObject": false,
+    "elapsedTimeForGitDataConstruction": "NOT_EXPOSED"
+  },
+  "handoffState": "READY_FOR_INDEPENDENT_PILOT_A_AUDIT",
+  "authorityBoundaries": [
+    "Pilot A evidence only",
+    "not independent acceptance",
+    "not Pilot A success",
+    "not product-package acceptance",
+    "Pilot B unauthorized",
+    "EWF-00 not accepted",
+    "no canonical status change",
+    "no merge authorization"
+  ]
+}

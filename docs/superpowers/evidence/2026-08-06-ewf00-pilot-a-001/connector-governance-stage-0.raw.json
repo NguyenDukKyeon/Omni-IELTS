@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "connector-governance-stage-0-raw",
+  "authorityLabel": "IMPLEMENTER_EVIDENCE / NOT_ACCEPTANCE",
+  "specId": "EWF00-PILOTS-001",
+  "pilotId": "EWF00-PILOT-A-001",
+  "candidateId": "P1-07-TODAY-NONFINITE-ESTIMATE-001",
+  "observedAt": "2026-08-06T09:06:28+07:00",
+  "result": "PASS",
+  "repository": {
+    "name": "NguyenDukKyeon/VocabMaster",
+    "defaultBranch": "main",
+    "mainSha": "7dd847cc9da2f5595430e20f864c211f3ec5ddfb",
+    "implementationBranch": "chatgpt/ewf-00-pilot-a-small-repair-connector-native-v2",
+    "implementationHeadBeforeEvidence": "31bdd92fc6a86818b5c706ab56b35d33494f66d9"
+  },
+  "authorization": {
+    "historicalCandidateSelection": {
+      "pullRequest": 26,
+      "head": "94e8d9919caf92e9d49509a5b770f4ee43aa2ed7",
+      "commentId": 5198006544
+    },
+    "connectorNativeReplacement": {
+      "pullRequest": 27,
+      "head": "98b9ae8297dccef04ce5eba95ff25d32ce55d173",
+      "commentId": 5198432325,
+      "approvedImplementationPredecessor": "ce5a6cf1f0bbdf3426a246423c353e5f60cf8640"
+    },
+    "commitARedAcceptanceCommentId": 5199114267,
+    "evidenceAuthorizationCommentId": 5199464695,
+    "evidenceAuthorizationVerdict": "AUTHORIZE"
+  },
+  "openPrRegistry": [
+    {
+      "number": 26,
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "base": "main",
+      "baseSha": "7dd847cc9da2f5595430e20f864c211f3ec5ddfb",
+      "head": "chatgpt/ewf-00-pilot-a-small-repair-authorization",
+      "headSha": "94e8d9919caf92e9d49509a5b770f4ee43aa2ed7",
+      "changedFiles": 3,
+      "paths": [
+        "docs/superpowers/briefs/2026-08-06-ewf00-pilot-a-small-repair-authorization.md",
+        "docs/superpowers/plans/2026-08-06-ewf-00-pilot-a-small-repair.md",
+        "docs/superpowers/specs/2026-08-04-vocabmaster-bounded-spec-pack/HANDOFF.md"
+      ]
+    },
+    {
+      "number": 27,
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "base": "main",
+      "baseSha": "7dd847cc9da2f5595430e20f864c211f3ec5ddfb",
+      "head": "chatgpt/ewf-00-pilot-a-connector-native-v2-authorization",
+      "headSha": "98b9ae8297dccef04ce5eba95ff25d32ce55d173",
+      "changedFiles": 3,
+      "paths": [
+        "docs/superpowers/briefs/2026-08-06-ewf00-pilot-a-small-repair-connector-native-v2-authorization.md",
+        "docs/superpowers/plans/2026-08-06-ewf-00-pilot-a-small-repair-connector-native-v2.md",
+        "docs/superpowers/specs/2026-08-04-vocabmaster-bounded-spec-pack/ewf00-pilot-a-connector-native-v2-handoff.md"
+      ]
+    },
+    {
+      "number": 28,
+      "state": "open",
+      "draft": true,
+      "merged": false,
+      "base": "main",
+      "baseSha": "7dd847cc9da2f5595430e20f864c211f3ec5ddfb",
+      "head": "chatgpt/ewf-00-pilot-a-small-repair-connector-native-v2",
+      "headSha": "31bdd92fc6a86818b5c706ab56b35d33494f66d9",
+      "changedFiles": 3,
+      "pathsBeforeEvidence": [
+        "docs/superpowers/plans/2026-08-06-ewf-00-pilot-a-small-repair-connector-native-v2.md",
+        "src/today-composer.js",
+        "tests/today-composer.test.mjs"
+      ]
+    }
+  ],
+  "implementationPreconditions": {
+    "chain": [
+      "ce5a6cf1f0bbdf3426a246423c353e5f60cf8640",
+      "165bc5080bfffd46457c2c096e510b2c0624aad7",
+      "31bdd92fc6a86818b5c706ab56b35d33494f66d9"
+    ],
+    "commitATree": "46ac1c2200e94f2a30be346be5732b60cabdbc57",
+    "commitBTree": "862dc1d060953afa3c3fb1c51b351d67bc4ac40f",
+    "testBlob": "c9fe0d03fc89b779a1b618571f7675f0e4362462",
+    "sourceBlob": "9011ebfed543f307dc03ee8e3945fe59fee28b51",
+    "cumulativeImplementationPaths": [
+      "tests/today-composer.test.mjs",
+      "src/today-composer.js"
+    ],
+    "evidenceDirectoryStatusAtCommitB": "404 Not Found",
+    "allFiveEvidencePathsStatusAtCommitB": "404 Not Found",
+    "similarPilotAEvidenceDirectoryFound": false,
+    "openPrPaginationComplete": true,
+    "openPrOverlapFound": false
+  },
+  "measurement": {
+    "historicalStage0OperationCount": "NOT_EXPOSED",
+    "historicalStage0ElapsedTime": "NOT_EXPOSED",
+    "evidenceAuthoringPreflightStartedAt": "2026-08-06T09:01:51+07:00",
+    "evidenceAuthoringPreflightEndedAt": "2026-08-06T09:06:28+07:00",
+    "evidenceAuthoringPreflightElapsedSeconds": 277,
+    "githubConnectorOperationsBeforeFirstSuccessfulBlob": 35,
+    "rejectedOperationsBeforeFirstSuccessfulBlob": 1,
+    "rejectedOperationMutation": false,
+    "rejectedOperationReason": "Contents API create_file targeted a nonexistent branch and returned 404 before mutation"
+  },
+  "limitations": [
+    "No local checkout was used.",
+    "No local Git ref, index, worktree or command evidence is claimed.",
+    "GitHub connector metadata is not represented as local Git evidence.",
+    "CI evidence is not represented as independent acceptance."
+  ],
+  "authorityBoundaries": [
+    "Pilot A evidence only",
+    "not independent acceptance",
+    "not Pilot A success",
+    "not product-package acceptance",
+    "Pilot B unauthorized",
+    "EWF-00 not accepted",
+    "no canonical status change",
+    "no merge authorization"
+  ]
+}
