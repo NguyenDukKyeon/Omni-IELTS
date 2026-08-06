@@ -737,3 +737,25 @@ Decision:
 Package acceptance remains gated on one independently audited eligible small-repair pilot, one independently audited bounded spec-level pilot, measured overhead data, and an independent exact-commit EWF-00 package audit.
 
 Consequences: this reconciliation changes canonical delivery status only. It does not change EWF-00 scope, dependency, product behavior, Phase 0–7 gates or ownership. It does not authorize or unlock product work, P3-02, LI-00, SRC-00, ERR-00, QAR-00 or any other product package. A separate pilot authorization is the next canonical gate.
+
+## ADR-046 — Bounded execution capsules reduce handoffs without reducing gates
+
+Status: CONFIRMED
+
+Context: the EWF pilot sequence demonstrated that repeated comments can separate authority clearly, but prompt count is not itself an acceptance predicate. Requiring a new user handoff for every mechanically conditional transition adds latency without improving quality when exact authority, immutable repository evidence and independent final acceptance are already frozen.
+
+Decision: adopt `BOUNDED_EXECUTION_CAPSULE_PROTOCOL_V1`. One independently reviewed Wave Authorization Manifest may contain separate exact records for multiple executable packages or research lanes. After repository-recorded manifest `ACCEPT`, bounded executors may perform only the conditional sequence frozen for each record: fresh Stage 0, exact predecessor binding, test-only Commit A, exact-head natural product-defect RED, minimal source-only Commit B, exact-head GREEN, pre-authorized implementer-evidence materialization and exact read-back, followed by a mandatory independent audit.
+
+The manifest freezes canonical owner, writer, exact predecessor, dependency state, branch/PR topology, exact allowlist and exclusions, baseline CI, RED eligibility and invalidation, minimal GREEN, verification profile, evidence schema/path/authority, migration/rollback, stop conditions, integration rule and acceptance-criteria source. One writer remains mandatory. Every package keeps separate commit, RED/GREEN, evidence and verdict identities; one package cannot inherit another package's acceptance.
+
+Quality comes from immutable technical predicates and independent acceptance, not from requiring a separate user prompt for each administrative transition. Exact predecessor, natural RED, minimal GREEN, exact-head CI, exact SHA/blob/path verification, evidence provenance, owner/overlap checks, canonical authority and fresh independent acceptance remain mandatory. The executor cannot self-accept. Drift, overlap, invalid or ambiguous RED, unexpected CI, evidence mismatch and dependency or migration ambiguity fail closed.
+
+A manifest may pre-authorize mechanical post-verdict merge or exact reconciliation only after the independent verdict is posted and read back, accepted heads remain unchanged, required CI remains successful and mergeability is clean. It cannot authorize implementation mutation by the auditor before verdict. Canonical `AGENTS.md`, `docs/ROADMAP.md`, `docs/IMPLEMENTATION_PLAN.md`, `docs/IMPLEMENTATION_STATUS.md` and `docs/DECISIONS.md` retain their existing authority; EWF artifacts and implementer evidence remain subordinate and cannot create status or acceptance.
+
+Protocol V1 does not create a workflow runtime, DAG engine, daemon, scheduler, retry engine, new GitHub Actions workflow, CI mutation, dependency installation, automatic owner, automatic acceptance/status authority, dashboard, mutation suite, broad fuzz or product behavior. Those mechanisms are unnecessary for the bounded governance objective and remain outside EWF-00 scope.
+
+Activation: this protocol is `PROPOSED / NOT ACTIVE` until this governance amendment receives independent exact-head `ACCEPT` and its pull request is merged into `main`. Pilot A remains `ACCEPTED HISTORICALLY / UNCHANGED`; its commits, comments, evidence and verdict are not reinterpreted. Pilot B remains `UNAUTHORIZED`. Pilot B may opt in only after protocol activation and after a separate Pilot B Wave Authorization Manifest freezes its owner, predecessor, allowlist, RED/GREEN rules, evidence and stop conditions and receives independent `ACCEPT`.
+
+Consequences: accepted manifests may remove intermediate administrative authorization comments without removing any technical predicate. Multi-package execution is possible only across independently rejectable, non-overlapping boundaries with explicit dependency sequencing. Independent batch audits remain authoritative and must state per-package verdicts.
+
+Rollback: revert this governance amendment without rewriting implementation history, invalidating prior accepted verdicts or deleting recorded evidence. Future work then returns to per-transition authorization; all historical Pilot A and other accepted evidence remains intact.
