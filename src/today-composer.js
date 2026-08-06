@@ -30,7 +30,10 @@ function candidateRows({dueReviews=[],repairs=[],content=[],newCards=[]}={}){
 function normalizeCandidate(row,index){
   const id=clean(row.id,180)||`today-candidate-${index+1}`;
   const target=clone(row.target||null);
-  const estimatedSeconds=Math.max(10,Math.min(900,Number(row.estimatedSeconds||60)));
+  const parsedEstimatedSeconds=Number(row.estimatedSeconds||60);
+  const estimatedSeconds=Number.isFinite(parsedEstimatedSeconds)
+    ?Math.max(10,Math.min(900,parsedEstimatedSeconds))
+    :60;
   return{
     id,
     type:clean(row.type,80)||'card-review',
