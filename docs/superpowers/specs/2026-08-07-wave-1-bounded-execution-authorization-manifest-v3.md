@@ -100,6 +100,36 @@ independent exact-head ACCEPT
 Third commit:
 FORBIDDEN
 
+Final candidate binding:
+V3_FINALIZATION_RECORD_V1
+Preparatory head:
+874377d8b45032ce41cfce51306f927e13e20950
+Preparatory head authority:
+NOT_AUDIT_SUBJECT
+NOT_ACCEPTANCE
+NOT_EXECUTABLE
+Draft pull request:
+32
+Draft PR state before finalization:
+OPEN / DRAFT / UNMERGED
+Finalization transition:
+one substantive documentation commit after Draft PR creation
+Expected pull_request activity:
+synchronize
+Final candidate:
+the exact Commit B produced by this hunk
+Final candidate authority:
+DRAFT / NOT_EFFECTIVE
+INDEPENDENT_AUDIT_REQUIRED
+NO_SELF_ACCEPTANCE
+Evidence isolation:
+no workflow run, check-run, status or artifact from Commit A may satisfy any
+Commit B gate
+Failure rule:
+if exact Commit B does not receive a natural pull_request workflow run, no
+third commit, rerun, reopen, ready-state toggle, history rewrite or alternate
+trigger is authorized
+
 # Wave 1 Bounded Execution Authorization Manifest
 
 ## 1. Authority, purpose and subordination
