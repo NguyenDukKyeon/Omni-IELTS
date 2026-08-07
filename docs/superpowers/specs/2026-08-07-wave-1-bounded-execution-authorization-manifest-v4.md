@@ -137,23 +137,98 @@ passes
 Commit B event target:
 natural pull_request synchronize after the Draft PR exists
 Commit B requirements:
-exact-head natural pull_request CI success
-workflow ID 322561862
+exact-head CI success
 job test success
 nonzero runner
-non-empty runner name
 executed steps present
 all five required artifacts
-independent exact-head audit
+independent exact-head ACCEPT
 Third commit:
 FORBIDDEN
 Alternate CI trigger:
 FORBIDDEN
 
-Commit A finalization binding:
-INTENTIONALLY_NOT_PRESENT
-The exact Commit A SHA and Draft PR number are bound only by the substantive
-Commit B after the Draft PR exists and the infrastructure race gate passes.
+Pre-Commit-B infrastructure race gate:
+PASSED
+Official GitHub Status:
+ALL_SYSTEMS_OPERATIONAL
+Actions component:
+OPERATIONAL
+Webhooks component:
+OPERATIONAL
+Unresolved GitHub Status incidents:
+NONE
+Incident qcvjkzcs7j74:
+RESOLVED
+Workflow 322561862:
+ACTIVE / CI / .github/workflows/ci.yml
+Main before finalization:
+291ee8ba3c23cd9c64f3bd9b5f7129188cdd3b7a
+
+Final candidate binding:
+V4_FINALIZATION_RECORD_V1
+Preparatory head:
+d298724d002a676cacd290e94ed0054e79d79d9c
+Preparatory head tree:
+5188c90d9acc096b66dfde581631a85a4c081338
+Preparatory head blob:
+24c037d1c728d443f707da8dceff956d91c88d8b
+Preparatory head authority:
+NOT_AUDIT_SUBJECT
+NOT_ACCEPTANCE
+NOT_EXECUTABLE
+Draft pull request:
+33
+Draft PR state before finalization:
+OPEN / DRAFT / UNMERGED
+Draft PR head before finalization:
+d298724d002a676cacd290e94ed0054e79d79d9c
+Finalization transition:
+one substantive documentation commit after Draft PR creation
+Expected pull_request event:
+pull_request
+Expected pull_request activity:
+synchronize
+Final candidate:
+the exact Commit B produced by this hunk
+Final candidate authority:
+FINAL_EXACT_HEAD / SOLE_AUDIT_SUBJECT
+DRAFT / NOT_EFFECTIVE
+INDEPENDENT_AUDIT_REQUIRED
+NO_SELF_ACCEPTANCE
+Evidence isolation:
+no workflow run, check-run, status or artifact from Commit A may satisfy any
+Commit B gate
+Third commit after finalization:
+FORBIDDEN
+Exact-head CI requirements:
+workflow ID 322561862
+workflow name CI
+natural event pull_request
+activity synchronize
+exact head equals Commit B
+run completed
+run conclusion success
+job test success
+runner_id nonzero
+runner_name non-empty
+executed steps non-empty
+verification-output artifact present
+browser-smoke-output artifact present
+ielts-browser-output artifact present
+v10-browser-output artifact present
+hardening-browser-output artifact present
+Failure rule:
+if exact Commit B does not receive a natural pull_request workflow run within
+the bounded read-only observation window, stop as
+BLOCKED / EXACT_HEAD_NATURAL_CI_ABSENT. No third commit, rerun, dispatch,
+reopen, ready-state toggle, PR edit, history rewrite or alternate trigger is
+authorized. Because the prior global incident is resolved, repeat absence
+requires a new root-cause investigation of repository/event generation before
+any further recovery candidate is authorized. If a run exists but no runner is
+acquired, stop as BLOCKED / HOSTED_RUNNER_NOT_ACQUIRED. If the workflow
+executes and fails, record the exact first failing step, test or evidence and do
+not repair V4 inside this record.
 
 # Wave 1 Bounded Execution Authorization Manifest
 
@@ -1304,7 +1379,10 @@ V4 branch absence verified before creation
 V4 PR absence verified before creation
 V4 path absence verified before creation
 V4 Commit A classified preparatory and non-auditable
-Commit A finalization binding intentionally deferred until Draft PR exists
+V4 Draft PR #33 existed before Commit B finalization
+pre-Commit-B infrastructure race gate passed
+Commit B binds exact Commit A and Draft PR metadata
+no Commit A result may satisfy a Commit B gate
 no failed-gate evidence reused
 no PR #30 mutation
 no PR #31 mutation
