@@ -759,3 +759,29 @@ Activation: this protocol is `PROPOSED / NOT ACTIVE` until this governance amend
 Consequences: accepted manifests may remove intermediate administrative authorization comments without removing any technical predicate. Multi-package execution is possible only across independently rejectable, non-overlapping boundaries with explicit dependency sequencing. Independent batch audits remain authoritative and must state per-package verdicts.
 
 Rollback: revert this governance amendment without rewriting implementation history, invalidating prior accepted verdicts or deleting recorded evidence. Future work then returns to per-transition authorization; all historical Pilot A and other accepted evidence remains intact.
+
+## ADR-047 — Measured PMA-12 exception permits one bounded read-only measurement workflow
+
+Status: CONFIRMED
+
+Context: ADR-046 deliberately keeps a new GitHub Actions workflow, workflow runtime and CI mutation outside the general EWF-00 bounded-execution-capsule scope. That general rule remains correct. A later measured need is now independently recorded: PR #37 Governor STOP comment `5225048322` proved that the valid Pilot B partial attempt had no valid pre-Commit-A baseline and no independently bound execution of the eight exact focused declarations. PR #38 Independent Audit comment `5225337210` then accepted `CONTROLLED_SUBJECT_PAIR_V1` but rejected the initial `EWF00-MEASURE-EXEC-001` substrate because a subordinate spec could not override ADR-046 and because five additional execution mechanics remained incomplete.
+
+Decision: ratify one narrow, measured PMA-12 exception to ADR-046. After `EWF00-MEASURE-EXEC-001` receives separate independent exact-head spec acceptance, after a separate substrate implementation authorization is independently accepted, and after the resulting implementation receives independent exact-subject implementation acceptance, that subordinate boundary may own exactly one bounded read-only measurement workflow plus its executor and test:
+
+```text
+.github/workflows/ewf-measurement.yml
+scripts/ewf-measurement-executor.mjs
+tests/ewf-measurement-executor.test.mjs
+```
+
+The exception exists only to form mechanically auditable exact-command and controlled-measurement evidence required by PMA-12 and `CONTROLLED_SUBJECT_PAIR_V1`. It does not itself authorize the implementation, a substrate candidate, a Pilot request, Pilot B, LI-00 or EWF-00 acceptance. The implementation remains subject to one-writer/exact-predecessor/allowlist authority and fresh independent acceptance.
+
+This exception does **not** authorize general CI redesign, a DAG engine, scheduler, daemon, retry engine, automatic remediation, automatic acceptance, automatic status mutation, deployment, package publishing, broad fuzz/mutation automation, product implementation or any second governance/status/acceptance authority. ADR-046 remains controlling everywhere outside the exact three-path measured PMA-12 exception above.
+
+The permitted workflow is read-only with respect to repository and product state. It may read exact repository/PR evidence and create normal Actions logs/artifacts, but it receives no workflow authority to mutate repository refs, comments, package status, deployments or product state. Product commands remain separately authority-bound and cannot grant themselves shell authority through a request manifest.
+
+Activation: ADR-047 does not self-activate the substrate. The current PR #38 root-repair head requires a fresh independent audit after remediation. Only an independently accepted and integrated root repair may support a separately authorized substrate implementation; only an independently accepted substrate implementation may later be referenced by a separately authorized real Pilot measurement.
+
+Consequences: PMA-12 can obtain the missing natural exact-command/measurement carrier without turning EWF-00 into a general workflow framework. All historical PR #37/PR #38 evidence and verdicts keep their original exact-head meaning. No product package status or acceptance changes.
+
+Rollback: removing a future accepted measurement substrate restores the manual EWF path without changing product source, product history, recorded evidence, package status or verdict history. ADR-046 then continues to govern all remaining workflow/automation behavior exactly as before this narrow exception.
