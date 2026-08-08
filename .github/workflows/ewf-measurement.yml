@@ -1,0 +1,108 @@
+name: EWF Measurement Substrate
+
+on:
+  pull_request:
+    branches: [main]
+    types:
+      - opened
+      - synchronize
+    paths:
+      - docs/superpowers/measurement-requests/**
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  sat:
+    if: github.event.pull_request.draft == true
+    name: substrate-acceptance-test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Request checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+          path: request
+
+      - name: Set up exact Node runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.3'
+
+      - name: Bootstrap immutable request identities
+        id: request
+        env:
+          REQUEST_ROOT: ${{ github.workspace }}/request
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from 'node:fs';
+          import { readdir, readFile } from 'node:fs/promises';
+          import { join, relative, sep } from 'node:path';
+
+          const root = process.env.REQUEST_ROOT;
+          const carrierRoot = join(root, 'docs', 'superpowers', 'measurement-requests');
+          const matches = [];
+          async function walk(dir) {
+            for (const entry of await readdir(dir, { withFileTypes: true })) {
+              const path = join(dir, entry.name);
+              if (entry.isDirectory()) await walk(path);
+              else if (/^ewf00-measure-exec-001-auth-001-sat-001-[0-9a-f]{40}\.json$/.test(entry.name)) matches.push(path);
+            }
+          }
+          await walk(carrierRoot);
+          if (matches.length !== 1) throw new Error(`expected exactly one bounded SAT request carrier, found ${matches.length}`);
+          const request = JSON.parse(await readFile(matches[0], 'utf8'));
+          if (!/^[0-9a-f]{40}$/.test(request.candidateToolingRevision ?? '')) throw new Error('candidateToolingRevision is not exact 40-hex');
+          if (!/^[0-9a-f]{40}$/.test(request.syntheticOrDisposableProductSubject ?? '')) throw new Error('product subject is not exact 40-hex');
+          const rel = relative(root, matches[0]).split(sep).join('/');
+          appendFileSync(process.env.GITHUB_OUTPUT, `request_path=${rel}\n`);
+          appendFileSync(process.env.GITHUB_OUTPUT, `candidate=${request.candidateToolingRevision}\n`);
+          appendFileSync(process.env.GITHUB_OUTPUT, `product=${request.syntheticOrDisposableProductSubject}\n`);
+          NODE
+
+      - name: Tooling checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.request.outputs.candidate }}
+          fetch-depth: 1
+          persist-credentials: false
+          path: tooling
+
+      - name: Product checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.request.outputs.product }}
+          fetch-depth: 1
+          persist-credentials: false
+          path: product
+
+      - name: Execute bounded substrate acceptance test
+        working-directory: tooling
+        env:
+          EWF_REPOSITORY: ${{ github.repository }}
+          EWF_REQUEST_PATH: ${{ github.workspace }}/request/${{ steps.request.outputs.request_path }}
+          EWF_REQUEST_CHECKOUT: ${{ github.workspace }}/request
+          EWF_TOOLING_DIR: ${{ github.workspace }}/tooling
+          EWF_PRODUCT_DIR: ${{ github.workspace }}/product
+          EWF_REQUEST_PR: ${{ github.event.pull_request.number }}
+          EWF_REQUEST_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EWF_REQUEST_COMMIT: ${{ github.event.pull_request.head.sha }}
+          EWF_EVENT_ACTION: ${{ github.event.action }}
+          EWF_WORKFLOW_RUN_ID: ${{ github.run_id }}
+          EWF_WORKFLOW_RUN_ATTEMPT: ${{ github.run_attempt }}
+          EWF_JOB_NAME: substrate-acceptance-test
+          EWF_OUTPUT_DIR: ${{ github.workspace }}/tooling/ewf-measurement-evidence
+        run: node scripts/ewf-measurement-executor.mjs --run-sat
+
+      - name: Upload immutable substrate evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ewf00-measure-exec-001-sat-001-${{ github.event.pull_request.head.sha }}
+          path: tooling/ewf-measurement-evidence/
+          if-no-files-found: error
+          retention-days: 90
