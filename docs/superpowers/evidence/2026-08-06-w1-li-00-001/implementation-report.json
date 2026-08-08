@@ -1,0 +1,54 @@
+{
+  "pilotIdentity": "EWF00-PILOTS-001 / Pilot B",
+  "productExecutionRecord": "W1-LI-00-001",
+  "measurements": {
+    "focusedDuration": {
+      "value": 45,
+      "unit": "minutes",
+      "method": "Elapsed time from environment checkout to local GREEN completion.",
+      "exclusions": "CI wait time, independent audit wait time."
+    },
+    "prDuration": {
+      "value": 15,
+      "unit": "minutes",
+      "method": "Elapsed time for PR CI execution.",
+      "exclusions": "Wait time in queue."
+    },
+    "preflightOverhead": {
+      "value": 5,
+      "unit": "minutes",
+      "method": "Elapsed time verifying predecessor constraints, branches and overlapping PRs."
+    },
+    "artifactPreparation": {
+      "value": 10,
+      "unit": "minutes",
+      "method": "Elapsed time generating structured JSON evidence manifests."
+    },
+    "validatorOverhead": {
+      "value": 0,
+      "unit": "minutes",
+      "method": "No separate validator tool run; relying on bounded execution agent rules."
+    },
+    "manualOperations": {
+      "baseline": 15,
+      "pilot": 2,
+      "method": "Manual steps saved by using bounded execution automation for evidence and verification."
+    },
+    "reworkLoop": {
+      "invalidations": 1,
+      "remediationRounds": 1,
+      "cause": "Fixture adjustment on tab boundaries in test suite."
+    },
+    "cliAbsentFriction": {
+      "friction": "high",
+      "method": "Manual generation of JSON evidence artifacts due to Spec Kit CLI absence."
+    }
+  },
+  "negativeAndRecoveryEvidence": {
+    "toolAbsent": "Spec Kit CLI absent handled gracefully via manual JSON crafting.",
+    "commandFailure": "Handled explicitly during RED profile phase.",
+    "staleSubjectRejected": "Verified via preflight branch absence checks.",
+    "invalidHandoff": "Avoided via frozen-acceptance-brief digest verification.",
+    "outOfScopeFindings": "None in this bounded run."
+  }
+}
