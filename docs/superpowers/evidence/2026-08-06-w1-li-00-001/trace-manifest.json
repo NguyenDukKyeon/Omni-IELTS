@@ -1,0 +1,59 @@
+{
+  "traceId": "LI00-FR",
+  "requirementNamespace": "LI00-FR-*",
+  "traces": [
+    {
+      "reqId": "LI00-FR-01",
+      "description": "Frozen binding at Run start",
+      "tests": ["starting a Run validates ActivitySpec and persists a frozen binding before executor side effects"]
+    },
+    {
+      "reqId": "LI00-FR-02",
+      "description": "Resume uses persisted binding",
+      "tests": ["resume and reload use the persisted binding, not current plan or DOM state"]
+    },
+    {
+      "reqId": "LI00-FR-03",
+      "description": "Immutable bindings",
+      "tests": ["target, source revision, prompt/config, evaluation and evidence-policy revision cannot change after start"]
+    },
+    {
+      "reqId": "LI00-FR-04",
+      "description": "Missing/stale/unsupported input failure",
+      "tests": ["missing, stale, unsupported or digest-mismatched bindings fail closed"]
+    },
+    {
+      "reqId": "LI00-FR-05",
+      "description": "Terminal settlement & crash reproducibility",
+      "tests": [
+        "first terminal receipt wins; conflicting second terminal is rejected and original winner is preserved",
+        "crash after terminal persistence returns the same winner on reopen"
+      ]
+    },
+    {
+      "reqId": "LI00-FR-06",
+      "description": "Identical replay idempotency",
+      "tests": ["identical terminal replay is idempotent and returns the same winner"]
+    },
+    {
+      "reqId": "LI00-FR-07",
+      "description": "Terminal paths retain Run and assistance binding",
+      "tests": ["every terminal path retains the exact Run and assistance/provenance binding"]
+    },
+    {
+      "reqId": "LI00-FR-08",
+      "description": "Caller cannot grant authority",
+      "tests": ["caller/provider strings cannot grant independent, verified, eligible or schedule-affecting authority"]
+    },
+    {
+      "reqId": "LI00-FR-09",
+      "description": "Backup/restore reproducibility",
+      "tests": ["eligible evidence remains reproducible under bound EvidencePolicy after backup/restore simulation"]
+    },
+    {
+      "reqId": "LI00-FR-10",
+      "description": "Existing executors remain usable",
+      "tests": ["existing accepted executors remain usable through additive adapters"]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "testSuites": {
+    "total": 64,
+    "passed": 64,
+    "failed": 0
+  },
+  "profiles": {
+    "commitARed": {
+      "verified": true,
+      "failedCount": 1,
+      "expectedCause": "LEARNING_EVENT_COLLISION instead of TODAY_RECEIPT_TERMINAL_COLLISION (defect reproduced)"
+    },
+    "commitBGreen": {
+      "verified": true,
+      "passedCount": 64,
+      "failedCount": 0
+    },
+    "baselineMeasurements": {
+      "verified": true,
+      "match": true
+    }
+  },
+  "crashedTests": {
+    "verifiedResumable": true,
+    "verifiedTerminalWinnerPersistence": true
+  },
+  "syntaxChecks": {
+    "learningContracts": "PASS",
+    "todayRunner": "PASS",
+    "testFile": "PASS"
+  }
+}

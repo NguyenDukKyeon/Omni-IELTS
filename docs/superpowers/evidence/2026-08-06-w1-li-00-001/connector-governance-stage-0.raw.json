@@ -1,0 +1,29 @@
+{
+  "pilotIdentity": "EWF00-PILOTS-001 / Pilot B",
+  "productExecutionRecord": "W1-LI-00-001",
+  "productPackage": "LI-00",
+  "productAuthority": "W1-AUTH-MANIFEST-004",
+  "pilotAuthority": "docs/superpowers/specs/2026-08-08-ewf-00-pilot-b-li-00-authorization-manifest.md",
+  "stage0": {
+    "controlPlane": {
+      "mainSha": "5585ad19599fabdb05063e71562a5706d17ab16f",
+      "branchAbsent": true,
+      "pullRequestAbsent": true
+    },
+    "literalPredecessor": "e53d0971db1160f9b01349d2e4c17e59c6aaa99b",
+    "predecessorBlobs": {
+      "src/learning-contracts.js": "0871eab470027afb61325ba3249cb404ede813b5",
+      "src/today-runner.js": "e80fc68f2596886f3002a312a053e37e302fe071"
+    },
+    "evidenceDirectoryAbsent": true,
+    "testFileAbsent": true,
+    "baselineMeasurements": {
+      "npm_ci_duration_ms": 2000,
+      "test_p1_contracts_ms": 977,
+      "test_p1_runner_ms": 1245,
+      "test_backup_ms": 1293,
+      "test_restore_ms": 4328
+    },
+    "verificationTimestamp": "2026-08-08T02:08:00Z"
+  }
+}

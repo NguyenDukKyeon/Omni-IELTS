@@ -1,0 +1,26 @@
+{
+  "pilotIdentity": "EWF00-PILOTS-001 / Pilot B",
+  "productExecutionRecord": "W1-LI-00-001",
+  "implementationBranch": "chatgpt/w1-li-00-bounded-execution-v1",
+  "commits": {
+    "commitA": {
+      "sha": "b3dc5d1534473f27953440e976a10768af58a39a",
+      "parent": "e53d0971db1160f9b01349d2e4c17e59c6aaa99b",
+      "tree": "c5b1c23a0f118873e24f29facc04db2005ea826c",
+      "testBlob": "00008714cd4742c324e30c96fb4e3e3da485f4a1",
+      "description": "test: reproduce LI terminal receipt overwrite"
+    },
+    "commitB": {
+      "sha": "9cec373748b95e5259465ff870b825cc39c99217",
+      "parent": "b3dc5d1534473f27953440e976a10768af58a39a",
+      "tree": "5393470b9aebd46ca7ecf71931f15e6dd5e67b86",
+      "testBlob": "00008714cd4742c324e30c96fb4e3e3da485f4a1",
+      "description": "fix: enforce LI immutable execution settlement"
+    }
+  },
+  "verification": {
+    "commitARed": true,
+    "commitBGreen": true,
+    "testBlobUnchanged": true
+  }
+}
