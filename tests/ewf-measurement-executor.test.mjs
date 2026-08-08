@@ -584,3 +584,365 @@ test('verification manifest accounts for every EWF00-ME-01..22 and ME-N01..ME-N4
   assert.deepEqual(manifest.requirements.map((row) => row.requirementId), Array.from({ length: 22 }, (_, index) => `EWF00-ME-${String(index + 1).padStart(2, '0')}`));
   assert.deepEqual(manifest.negativeFixtures.map((row) => row.fixtureId), Array.from({ length: 46 }, (_, index) => `ME-N${String(index + 1).padStart(2, '0')}`));
 });
+
+function productionPilotCommands() {
+  return [
+    { commandId: 'pilot-cmd-1', ordinal: 1, command: 'node -e "process.stdout.write(\'PILOT_ONE\\n\')"', cwd: '.', required: true, requirements: ['node==22.22.3'], timeoutMs: 5000, explicitEnvironment: { EWF_PILOT_CASE: 'ONE' } },
+    { commandId: 'pilot-cmd-2', ordinal: 2, command: 'node -e "process.stdout.write(\'PILOT_TWO\\n\')"', cwd: '.', required: true, requirements: ['node==22.22.3'], timeoutMs: 5000, explicitEnvironment: { EWF_PILOT_CASE: 'TWO' } },
+  ];
+}
+
+function productionPilotRequest(overrides = {}) {
+  const commandManifest = productionPilotCommands();
+  return pilotRequest({
+    acceptedMeasurementToolingVerdictCommentId: 456,
+    executionAuthorizationPath: 'docs/superpowers/specs/pilot-execution-authorization.md',
+    commandDeclarationIds: commandManifest.map((row) => row.commandId),
+    commandManifest,
+    commandManifestDigest: sha256(canonicalize(commandManifest)),
+    ...overrides,
+  });
+}
+
+function acceptedToolingFor(request, overrides = {}) {
+  return {
+    accepted: true,
+    toolingRevision: request.acceptedMeasurementToolingRevision,
+    subject: request.acceptedMeasurementToolingRevision,
+    verdict: 'ACCEPT',
+    verdictCommentId: request.acceptedMeasurementToolingVerdictCommentId,
+    superseded: false,
+    boundaryPaths: IMPLEMENTATION_PATHS,
+    workflowBytesMatch: true,
+    executorBytesMatch: true,
+    ...overrides,
+  };
+}
+
+function executionAuthorityFor(request, overrides = {}) {
+  return {
+    accepted: true,
+    identity: request.executionAuthorizationIdentity,
+    subject: request.executionAuthorizationSubject,
+    verdict: 'ACCEPT',
+    verdictCommentId: request.executionAuthorizationVerdictCommentId,
+    path: request.executionAuthorizationPath,
+    canonicalSpecRevision: request.canonicalSpecRevision,
+    verificationManifestDigest: request.verificationManifestDigest,
+    commandDeclarationIds: request.commandDeclarationIds,
+    commandManifest: structuredClone(request.commandManifest),
+    commandManifestDigest: request.commandManifestDigest,
+    ...overrides,
+  };
+}
+
+async function expectAsyncCode(promise, code) {
+  await assert.rejects(promise, (error) => {
+    assert.ok(error instanceof EwfMeasurementError);
+    assert.equal(error.code, code);
+    return true;
+  });
+}
+
+function pilotMetricRows() {
+  return METRIC_DEFINITIONS.map((metric, index) => ({
+    metricId: metric.metricId,
+    value: index === 0 ? 25 : 0,
+    unit: metric.unit,
+    start: '2026-08-08T12:00:00.000Z',
+    end: '2026-08-08T12:00:01.000Z',
+    method: 'PILOT_RAW_MEASUREMENT_V1',
+    exclusions: [],
+    rawEvidenceRef: index === 0 ? 'command-results.json' : 'operation-journal.json',
+    resultState: index === 0 ? 'OBSERVED' : 'OBSERVED_ZERO',
+  }));
+}
+
+test('production remediation: shared dispatcher exists and routes purposes before product spawning', async () => {
+  const executor = await import('../scripts/ewf-measurement-executor.mjs');
+
+  assert.equal(
+    typeof executor.dispatchMeasurementRequest,
+    'function',
+    'PILOT_PRODUCTION_ENTRYPOINT_MISSING',
+  );
+
+  let satRuns = 0;
+  let pilotRuns = 0;
+  let toolingReads = 0;
+  let authorizationReads = 0;
+  const request = productionPilotRequest();
+  const dependencies = {
+    resolveAcceptedTooling: async () => { toolingReads += 1; return acceptedToolingFor(request); },
+    resolveExecutionAuthorization: async () => { authorizationReads += 1; return executionAuthorityFor(request); },
+    runSat: async () => { satRuns += 1; return { handler: 'SAT' }; },
+    runPilot: async () => { pilotRuns += 1; return { handler: 'PILOT' }; },
+  };
+
+  const pilot = await executor.dispatchMeasurementRequest({ request, context: pilotContext(), dependencies });
+  assert.equal(pilot.handler, 'PILOT');
+  assert.equal(pilotRuns, 1);
+  assert.equal(satRuns, 0);
+  assert.equal(toolingReads, 1);
+  assert.equal(authorizationReads, 1);
+
+  const sat = await executor.dispatchMeasurementRequest({ request: satRequest(), context: satContext(), dependencies });
+  assert.equal(sat.handler, 'SAT');
+  assert.equal(satRuns, 1);
+  assert.equal(pilotRuns, 1);
+
+  await expectAsyncCode(
+    executor.dispatchMeasurementRequest({ request: { ...request, requestPurpose: 'UNKNOWN_PURPOSE' }, context: pilotContext(), dependencies }),
+    'INVALID_REQUEST_PURPOSE',
+  );
+  assert.equal(pilotRuns, 1);
+  assert.equal(satRuns, 1);
+
+  const workflow = await readFile(workflowPath, 'utf8');
+  assert.match(workflow, /--run-request/);
+  assert.doesNotMatch(workflow, /run:\s*node scripts\/ewf-measurement-executor\.mjs --run-sat/);
+});
+
+test('production remediation: request discovery selects only the exact new commit delta', async () => {
+  const executor = await import('../scripts/ewf-measurement-executor.mjs');
+  assert.equal(typeof executor.discoverRequestDelta, 'function');
+  const root = await mkdtemp(join(tmpdir(), 'ewf-production-request-delta-'));
+  try {
+    const historical = 'docs/superpowers/measurement-requests/ewf00-measure-exec-001-auth-001-sat-001-historical.json';
+    const current = 'docs/superpowers/measurement-requests/ewf00-production-pilot-request.json';
+    await mkdir(join(root, 'docs', 'superpowers', 'measurement-requests'), { recursive: true });
+    await writeFile(join(root, historical), JSON.stringify(satRequest()));
+    const expected = productionPilotRequest();
+    await writeFile(join(root, current), JSON.stringify(expected));
+    const reads = [];
+    const result = await executor.discoverRequestDelta({
+      requestCommit: R,
+      currentPrHead: R,
+      parentShas: ['a'.repeat(40)],
+      changedPaths: [current],
+      readRequest: async (path) => {
+        reads.push(path);
+        return JSON.parse(await readFile(join(root, path), 'utf8'));
+      },
+    });
+    assert.equal(result.requestPath, current);
+    assert.equal(result.request.requestPurpose, 'PILOT_MEASUREMENT');
+    assert.deepEqual(reads, [current]);
+    for (const invalid of [
+      { parentShas: [] },
+      { parentShas: ['a'.repeat(40), 'b'.repeat(40)] },
+      { currentPrHead: '9'.repeat(40) },
+      { changedPaths: [current, historical] },
+      { changedPaths: ['src/not-a-request.js'] },
+    ]) {
+      await expectAsyncCode(executor.discoverRequestDelta({
+        requestCommit: R,
+        currentPrHead: R,
+        parentShas: ['a'.repeat(40)],
+        changedPaths: [current],
+        readRequest: async (path) => JSON.parse(await readFile(join(root, path), 'utf8')),
+        ...invalid,
+      }), 'REQUEST_BOUNDARY_INVALID');
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('production remediation: tooling and execution authority are independently resolved and exact', async () => {
+  const executor = await import('../scripts/ewf-measurement-executor.mjs');
+  const request = productionPilotRequest();
+  const context = pilotContext();
+  let productRuns = 0;
+  const baseDependencies = {
+    resolveAcceptedTooling: async () => acceptedToolingFor(request),
+    resolveExecutionAuthorization: async () => executionAuthorityFor(request),
+    runPilot: async () => { productRuns += 1; return { ok: true }; },
+  };
+
+  for (const tooling of [
+    acceptedToolingFor(request, { accepted: false }),
+    acceptedToolingFor(request, { subject: '9'.repeat(40) }),
+    acceptedToolingFor(request, { superseded: true }),
+  ]) {
+    await expectAsyncCode(executor.dispatchMeasurementRequest({
+      request,
+      context,
+      dependencies: { ...baseDependencies, resolveAcceptedTooling: async () => tooling },
+    }), 'UNACCEPTED_TOOLING');
+  }
+  assert.equal(productRuns, 0);
+
+  for (const authority of [
+    executionAuthorityFor(request, { subject: '9'.repeat(40) }),
+    executionAuthorityFor(request, { verdictCommentId: 999 }),
+    executionAuthorityFor(request, { canonicalSpecRevision: '8'.repeat(40) }),
+    executionAuthorityFor(request, { verificationManifestDigest: '7'.repeat(64) }),
+    executionAuthorityFor(request, { verdict: 'REJECT' }),
+  ]) {
+    await expectAsyncCode(executor.dispatchMeasurementRequest({
+      request,
+      context,
+      dependencies: { ...baseDependencies, resolveExecutionAuthorization: async () => authority },
+    }), 'INVALID_EXECUTION_AUTHORITY');
+  }
+  assert.equal(productRuns, 0);
+});
+
+test('production remediation: every command declaration field is externally authoritative before spawn', async () => {
+  const executor = await import('../scripts/ewf-measurement-executor.mjs');
+  const authorizedRequest = productionPilotRequest();
+  const authority = executionAuthorityFor(authorizedRequest);
+  const variants = [
+    (rows) => [...rows, { ...rows[1], commandId: 'pilot-extra', ordinal: 3 }],
+    (rows) => rows.slice(0, 1),
+    (rows) => [...rows].reverse(),
+    (rows) => rows.map((row, index) => index === 0 ? { ...row, command: 'node -e "process.exit(0)"' } : row),
+    (rows) => rows.map((row, index) => index === 0 ? { ...row, cwd: 'other' } : row),
+    (rows) => rows.map((row, index) => index === 0 ? { ...row, timeoutMs: row.timeoutMs + 1 } : row),
+    (rows) => rows.map((row, index) => index === 0 ? { ...row, explicitEnvironment: { EWF_PILOT_CASE: 'CHANGED' } } : row),
+  ];
+  let productRuns = 0;
+  for (const mutate of variants) {
+    const commandManifest = mutate(structuredClone(authorizedRequest.commandManifest));
+    const request = {
+      ...authorizedRequest,
+      commandManifest,
+      commandDeclarationIds: commandManifest.map((row) => row.commandId),
+      commandManifestDigest: sha256(canonicalize(commandManifest)),
+    };
+    await expectAsyncCode(executor.dispatchMeasurementRequest({
+      request,
+      context: pilotContext(),
+      dependencies: {
+        resolveAcceptedTooling: async () => acceptedToolingFor(request),
+        resolveExecutionAuthorization: async () => authority,
+        runPilot: async () => { productRuns += 1; return { ok: true }; },
+      },
+    }), 'UNAUTHORIZED_COMMAND');
+  }
+  assert.equal(productRuns, 0);
+});
+
+test('production remediation: control token is isolated and pilot artifact shape is deterministic', async () => {
+  const executor = await import('../scripts/ewf-measurement-executor.mjs');
+  assert.equal(buildChildEnvironment({}, { PATH: '/bin', EWF_GITHUB_READ_TOKEN: 'CONTROL_ONLY_SECRET' }).EWF_GITHUB_READ_TOKEN, undefined);
+  assert.equal(typeof executor.writePilotEvidence, 'function');
+
+  const commandResults = [
+    {
+      commandId: 'pilot-cmd-1', ordinal: 1, command: productionPilotCommands()[0].command, cwd: '.', start: '2026-08-08T12:00:00.000Z', end: '2026-08-08T12:00:00.025Z', durationMs: 25, exitCode: 0,
+      stdout: 'PILOT_ONE\n', stderr: '', stdoutDigest: sha256('PILOT_ONE\n'), stderrDigest: sha256(''), timeoutMs: 5000, result: 'PASS', errorClass: null, attemptCount: 1,
+    },
+    {
+      commandId: 'pilot-cmd-2', ordinal: 2, command: productionPilotCommands()[1].command, cwd: '.', start: '2026-08-08T12:00:00.025Z', end: '2026-08-08T12:00:00.025Z', durationMs: 0, exitCode: null,
+      stdout: '', stderr: '', stdoutDigest: sha256(''), stderrDigest: sha256(''), timeoutMs: 5000, result: 'NOT_RUN', errorClass: 'BLOCKED_BY_REQUIRED_PREDECESSOR', attemptCount: 1,
+    },
+  ];
+  const journal = {
+    schemaVersion: 'EWF00_MEASUREMENT_OPERATION_JOURNAL_V1',
+    requestPurpose: 'PILOT_MEASUREMENT',
+    attemptId: 'PILOT-ATTEMPT-001',
+    requestPR: 42,
+    requestHeadSha: R,
+    journalDigest: '6'.repeat(64),
+    observationWindowStart: '2026-08-08T12:00:00.000Z',
+    observationWindowEnd: '2026-08-08T12:00:01.000Z',
+    entries: [],
+    manualOperationCount: 0,
+  };
+  const identity = { requestPR: 42, requestHeadSha: R, requestCommit: R };
+  const digests = [];
+  for (const phase of ['baseline', 'assisted']) {
+    const request = productionPilotRequest({ measurementPhase: phase });
+    const dirA = await mkdtemp(join(tmpdir(), `ewf-pilot-${phase}-a-`));
+    const dirB = await mkdtemp(join(tmpdir(), `ewf-pilot-${phase}-b-`));
+    try {
+      const args = {
+        request,
+        requestIdentity: identity,
+        commandResults,
+        metricObservations: pilotMetricRows(),
+        operationJournal: journal,
+        controlledEnvironmentFingerprint: '5'.repeat(64),
+        journalDigest: journal.journalDigest,
+        controlTokenValue: 'CONTROL_ONLY_SECRET',
+      };
+      const first = await executor.writePilotEvidence({ outputDir: dirA, ...args });
+      const second = await executor.writePilotEvidence({ outputDir: dirB, ...args });
+      assert.equal(first.manifest.datasetDigest, second.manifest.datasetDigest);
+      digests.push(first.manifest.datasetDigest);
+      const environment = JSON.parse(await readFile(join(dirA, 'environment.json'), 'utf8'));
+      const rows = JSON.parse(await readFile(join(dirA, 'command-results.json'), 'utf8'));
+      const metrics = JSON.parse(await readFile(join(dirA, 'measurement-observations.json'), 'utf8'));
+      const operation = JSON.parse(await readFile(join(dirA, 'operation-journal.json'), 'utf8'));
+      const manifest = JSON.parse(await readFile(join(dirA, 'artifact-manifest.json'), 'utf8'));
+      assert.equal(environment.measurementPhase, phase);
+      assert.equal(environment.requestPR, 42);
+      assert.equal(environment.requestHeadSha, R);
+      assert.equal(environment.requestCommit, R);
+      assert.equal(environment.measurementPairId, request.measurementPairId);
+      assert.equal(environment.attemptId, request.attemptId);
+      assert.equal(environment.productSubject, request.productSubject);
+      assert.equal(environment.acceptedMeasurementToolingRevision, request.acceptedMeasurementToolingRevision);
+      assert.equal(environment.executionAuthorizationIdentity, request.executionAuthorizationIdentity);
+      assert.equal(environment.executionAuthorizationSubject, request.executionAuthorizationSubject);
+      assert.equal(environment.executionAuthorizationVerdictCommentId, request.executionAuthorizationVerdictCommentId);
+      assert.equal(environment.commandManifestDigest, request.commandManifestDigest);
+      assert.equal(environment.controlledEnvironmentFingerprint, '5'.repeat(64));
+      assert.equal(environment.journalDigest, journal.journalDigest);
+      assert.equal(environment.operationDefinitionRevision, request.operationDefinitionRevision);
+      assert.equal(environment.rawEvidenceFormatRevision, request.rawEvidenceFormatRevision);
+      assert.deepEqual(metrics.map((row) => row.metricId), METRIC_DEFINITIONS.map((row) => row.metricId));
+      assert.deepEqual(new Set(rows.map((row) => row.result)), new Set(['PASS', 'NOT_RUN']));
+      assert.equal(operation.requestHeadSha, R);
+      assert.match(manifest.datasetDigest, /^[0-9a-f]{64}$/);
+      assert.equal(await readFile(join(dirA, 'commands', '01-pilot-cmd-1.stdout.txt'), 'utf8'), 'PILOT_ONE\n');
+      assert.equal(await readFile(join(dirA, 'commands', '01-pilot-cmd-1.stderr.txt'), 'utf8'), '');
+      const artifactTexts = await Promise.all([
+        'environment.json', 'command-results.json', 'measurement-observations.json', 'operation-journal.json', 'artifact-manifest.json',
+        'commands/01-pilot-cmd-1.stdout.txt', 'commands/01-pilot-cmd-1.stderr.txt',
+      ].map((path) => readFile(join(dirA, path), 'utf8')));
+      assert.equal(artifactTexts.join('\n').includes('CONTROL_ONLY_SECRET'), false);
+    } finally {
+      await rm(dirA, { recursive: true, force: true });
+      await rm(dirB, { recursive: true, force: true });
+    }
+  }
+  assert.equal(digests.length, 2);
+
+  const satDir = await mkdtemp(join(tmpdir(), 'ewf-sat-reclassify-'));
+  try {
+    await expectAsyncCode(executor.writePilotEvidence({
+      outputDir: satDir,
+      request: satRequest(),
+      requestIdentity: identity,
+      commandResults,
+      metricObservations: pilotMetricRows(),
+      operationJournal: journal,
+      controlledEnvironmentFingerprint: '5'.repeat(64),
+      journalDigest: journal.journalDigest,
+    }), 'EVIDENCE_DOMAIN_RECLASSIFICATION_FORBIDDEN');
+  } finally {
+    await rm(satDir, { recursive: true, force: true });
+  }
+
+  const leakDir = await mkdtemp(join(tmpdir(), 'ewf-pilot-token-leak-'));
+  try {
+    const leaked = structuredClone(commandResults);
+    leaked[0].stdout = 'CONTROL_ONLY_SECRET';
+    await expectAsyncCode(executor.writePilotEvidence({
+      outputDir: leakDir,
+      request: productionPilotRequest(),
+      requestIdentity: identity,
+      commandResults: leaked,
+      metricObservations: pilotMetricRows(),
+      operationJournal: journal,
+      controlledEnvironmentFingerprint: '5'.repeat(64),
+      journalDigest: journal.journalDigest,
+      controlTokenValue: 'CONTROL_ONLY_SECRET',
+    }), 'CREDENTIAL_LEAKAGE');
+  } finally {
+    await rm(leakDir, { recursive: true, force: true });
+  }
+});
