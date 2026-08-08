@@ -343,4 +343,42 @@ export function adaptLegacyLearningEnvelope({activitySpec={},attempt={},run={},r
   return deepFreeze({activitySpec:canonicalActivity,run:canonicalRun,attempt:canonicalAttempt,receipt:canonicalReceipt});
 }
 
+export const FROZEN_BINDING_VERSION=1;
+
+export function createFrozenBinding(input={}){
+  const activitySpec=input.activitySpec?createActivitySpec(input.activitySpec):null;
+  const run=input.run?createRun(input.run):null;
+  const target=normalizeLearningTarget(activitySpec?.target||input.target);
+  const binding=deepFreeze({
+    version:FROZEN_BINDING_VERSION,
+    runId:run?.id||nullable(input.runId,180),
+    activitySpecId:activitySpec?.id||nullable(input.activitySpecId,180),
+    activitySpecDigest:activitySpec?learningContractDigest(activitySpec):(nullable(input.activitySpecDigest,240)),
+    target,
+    executor:nullable(activitySpec?.executor||input.executor,120),
+    executionConfig:nullable(input.executionConfig,240)||'inapplicable',
+    evaluationRef:nullable(input.evaluationRef,240)||'inapplicable',
+    evaluationDigest:nullable(input.evaluationDigest,240)||'inapplicable',
+    policyVersion:nullable(activitySpec?.policyVersion||input.policyVersion,120)||'inapplicable',
+    assistanceMode:nullable(input.assistanceMode,120)||'standard',
+    provenanceRef:nullable(input.provenanceRef,240)||'inapplicable',
+    terminalIdempotencyKey:clean(input.terminalIdempotencyKey,240)||`terminal:${run?.id||'unbound'}`,
+    createdAt:finiteTime(input.createdAt)
+  });
+  return binding;
+}
+
+export function validateFrozenBinding(binding){
+  const errors=[];
+  if(!binding)return{valid:false,errors:['Frozen binding is missing.'],value:null};
+  if(Number(binding.version)!==FROZEN_BINDING_VERSION)errors.push(`Frozen binding version ${binding.version??'missing'} not supported.`);
+  if(!binding.runId)errors.push('Frozen binding missing runId.');
+  if(!binding.activitySpecId)errors.push('Frozen binding missing activitySpecId.');
+  if(!binding.activitySpecDigest)errors.push('Frozen binding missing activitySpecDigest.');
+  if(!isCompleteLearningTarget(binding.target))errors.push('Frozen binding missing complete target.');
+  if(!binding.executor)errors.push('Frozen binding missing executor.');
+  if(!binding.terminalIdempotencyKey)errors.push('Frozen binding missing terminalIdempotencyKey.');
+  return{valid:errors.length===0,errors,value:binding};
+}
+
 export const __testing=Object.freeze({canonicalValue,deepFreeze,sameTarget,normalizeAssistanceEvents});

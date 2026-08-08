@@ -2,6 +2,7 @@ import {
   completeAssistanceTrace,
   createAssistanceTrace,
   createAttempt,
+  createFrozenBinding,
   createReceipt,
   createRun,
   learningContractDigest,
@@ -58,6 +59,8 @@ export async function startTodayRun(activity,{tabId='default-tab',now=Date.now()
     return{run:resumed,resumed:true,terminal:false};
   }
   const canonicalRun=createRun({id,activitySpec,status:'active',startedAt:Number(now),timezone:activitySpec.timezone});
+  const frozenBinding=createFrozenBinding({activitySpec,run:canonicalRun,createdAt:Number(now)});
+  const frozenBindingDigest=learningContractDigest(frozenBinding);
   const row={
     id,
     kind:'today-run-state',
@@ -68,12 +71,15 @@ export async function startTodayRun(activity,{tabId='default-tab',now=Date.now()
     activitySpec,
     activitySpecDigest:learningContractDigest(activitySpec),
     canonicalRun,
+    frozenBinding,
+    frozenBindingDigest,
     status:'active',
     ownerTabId:tabId,
     leaseUntil:Number(now)+Math.max(1_000,Number(leaseMs||DEFAULT_LEASE_MS)),
     resumeCount:0,
     attemptId:null,
     receiptId:null,
+    terminalCollisions:[],
     createdAt:Number(now),
     updatedAt:Number(now)
   };
@@ -119,6 +125,19 @@ export async function recordTodayReceipt(runId,envelope,{status='completed',now=
   if(!validation.valid)throw runnerError('TODAY_RECEIPT_INVALID',validation.errors.join(' '),{runId});
   if(validation.value.run.id!==row.canonicalRun.id||learningContractDigest(validation.value.activitySpec)!==row.activitySpecDigest){
     throw runnerError('TODAY_RECEIPT_BINDING_MISMATCH','Receipt không khớp exact Today run.',{runId,receiptId:validation.value.receipt.id});
+  }
+  // ── LI-00 Terminal settlement: first-terminal-wins compare-and-set ──
+  const TERMINAL_STATUSES=['completed','skipped','cancelled','failed','abstained'];
+  if(TERMINAL_STATUSES.includes(row.status)&&row.receiptId){
+    // Check identical replay idempotency
+    if(row.receiptId===validation.value.receipt.id&&row.status===status){
+      return row;
+    }
+    // Conflicting terminal: reject and preserve durable collision diagnostic
+    const collision={conflictingReceiptId:validation.value.receipt.id,conflictingStatus:status,conflictingAttemptId:validation.value.attempt.id,existingReceiptId:row.receiptId,existingStatus:row.status,rejectedAt:Number(now)};
+    const collisions=[...(row.terminalCollisions||[]),collision].slice(-20);
+    await putV10Record(V10_STORES.todayRuns,{...row,terminalCollisions:collisions,updatedAt:Number(now)},'today-run-terminal-collision');
+    throw runnerError('TODAY_RECEIPT_TERMINAL_COLLISION','Terminal receipt đã tồn tại; conflicting receipt bị từ chối.',{runId,existingReceiptId:row.receiptId,existingStatus:row.status,conflictingReceiptId:validation.value.receipt.id,conflictingStatus:status});
   }
   const terminal={...row,status,attemptId:validation.value.attempt.id,receiptId:validation.value.receipt.id,envelope:clone(envelope),leaseUntil:0,completedAt:Number(now),updatedAt:Number(now)};
   await putV10Record(V10_STORES.todayRuns,terminal,'today-run-receipt-recorded');
