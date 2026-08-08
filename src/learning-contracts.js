@@ -10,6 +10,7 @@ export const LEARNING_CONTRACT_KIND=Object.freeze({
 export const RUN_STATUSES=Object.freeze(['planned','active','completed','cancelled','failed']);
 export const RECEIPT_STATUSES=Object.freeze(['completed','failed','skipped','cancelled','abstained']);
 export const LEARNING_SKILLS=Object.freeze(['recognition','recall','listening','collocation','production']);
+export const FROZEN_RUN_BINDING_VERSION=1;
 
 const RUN_STATUS_SET=new Set(RUN_STATUSES);
 const RECEIPT_STATUS_SET=new Set(RECEIPT_STATUSES);
@@ -341,6 +342,89 @@ export function adaptLegacyLearningEnvelope({activitySpec={},attempt={},run={},r
     metadata:{...normalizedMetadata(receipt.metadata),legacyAdapter:true}
   });
   return deepFreeze({activitySpec:canonicalActivity,run:canonicalRun,attempt:canonicalAttempt,receipt:canonicalReceipt});
+}
+
+function frozenRevision(metadata,key,fallback='not-applicable'){
+  return nullable(metadata?.[key],240)||fallback;
+}
+
+export function createFrozenRunBinding({run={},activitySpec=null,launchBinding=null}={}){
+  const canonicalActivity=createActivitySpec(activitySpec||run?.activitySpec||{});
+  const canonicalRun=createRun({...run,activitySpec:canonicalActivity});
+  const metadata=canonicalActivity.metadata||{};
+  const activitySpecDigest=learningContractDigest(canonicalActivity);
+  const target=canonicalActivity.target?clone(canonicalActivity.target):null;
+  return deepFreeze({
+    kind:'FrozenRunBinding',
+    schemaVersion:FROZEN_RUN_BINDING_VERSION,
+    runId:canonicalRun.id,
+    runIdempotencyKey:canonicalRun.idempotencyKey,
+    activitySpecId:canonicalActivity.id,
+    activitySpecDigest,
+    target,
+    targetDigest:learningContractDigest(target),
+    source:{
+      sourceId:target?.sourceId||null,
+      sourceRevision:target?.sourceRevision||null
+    },
+    execution:{
+      executor:canonicalActivity.executor,
+      activityRevision:frozenRevision(metadata,'activityRevision',`activity-spec-v${canonicalActivity.schemaVersion}`),
+      promptRevision:frozenRevision(metadata,'promptRevision'),
+      configRevision:frozenRevision(metadata,'configRevision')
+    },
+    evaluation:{
+      rubricRevision:frozenRevision(metadata,'rubricRevision'),
+      scoringRevision:frozenRevision(metadata,'scoringRevision')
+    },
+    evidence:{
+      policyRevision:canonicalActivity.policyVersion||'phase0-evidence-v1',
+      policyRef:frozenRevision(metadata,'evidencePolicyRef',canonicalActivity.policyVersion||'phase0-evidence-v1')
+    },
+    assistance:{
+      mode:frozenRevision(metadata,'assistanceMode','independent'),
+      provenance:frozenRevision(metadata,'assistanceProvenance',canonicalActivity.executor||'unknown-executor')
+    },
+    idempotency:{
+      startKey:canonicalRun.idempotencyKey,
+      terminalKey:`terminal:${canonicalRun.id||'unbound'}:${activitySpecDigest}`
+    },
+    launchBinding:nullable(launchBinding,240)
+  });
+}
+
+export function validateFrozenRunBinding(input,{activitySpec=null,run=null,storedDigest=null}={}){
+  if(!input||typeof input!=='object'||Array.isArray(input)){
+    return{valid:false,code:'LI_FROZEN_BINDING_MISSING',errors:['Frozen Run binding is missing.'],value:null};
+  }
+  if(Number(input.schemaVersion)!==FROZEN_RUN_BINDING_VERSION||input.kind!=='FrozenRunBinding'){
+    return{valid:false,code:'LI_FROZEN_BINDING_UNSUPPORTED',errors:['Frozen Run binding schema is unsupported.'],value:null};
+  }
+  const digest=learningContractDigest(input);
+  if(storedDigest!==null&&storedDigest!==undefined&&storedDigest!==digest){
+    return{valid:false,code:'LI_FROZEN_BINDING_DIGEST_MISMATCH',errors:['Frozen Run binding digest mismatch.'],value:null};
+  }
+  const canonicalActivity=createActivitySpec(activitySpec||run?.activitySpec||{});
+  const canonicalRun=createRun({...run,activitySpec:canonicalActivity});
+  const expectedActivityDigest=learningContractDigest(canonicalActivity);
+  const expectedTargetDigest=learningContractDigest(canonicalActivity.target);
+  const stable=Boolean(
+    input.runId&&input.runId===canonicalRun.id&&
+    input.activitySpecId&&input.activitySpecId===canonicalActivity.id&&
+    input.activitySpecDigest===expectedActivityDigest&&
+    input.targetDigest===expectedTargetDigest&&
+    learningContractDigest(input.target)===expectedTargetDigest&&
+    input.source?.sourceId===(canonicalActivity.target?.sourceId||null)&&
+    input.source?.sourceRevision===(canonicalActivity.target?.sourceRevision||null)&&
+    input.execution?.executor===canonicalActivity.executor&&
+    input.evidence?.policyRevision===(canonicalActivity.policyVersion||'phase0-evidence-v1')&&
+    input.idempotency?.startKey===canonicalRun.idempotencyKey&&
+    typeof input.idempotency?.terminalKey==='string'&&input.idempotency.terminalKey.length>0
+  );
+  if(!stable){
+    return{valid:false,code:'LI_FROZEN_BINDING_STALE',errors:['Frozen Run binding no longer matches the persisted Run/ActivitySpec.'],value:null};
+  }
+  return{valid:true,code:null,errors:[],value:deepFreeze(clone(input)),digest};
 }
 
 export const __testing=Object.freeze({canonicalValue,deepFreeze,sameTarget,normalizeAssistanceEvents});
