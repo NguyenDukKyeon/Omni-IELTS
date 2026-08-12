@@ -158,7 +158,8 @@ export async function saveFallbackSettings(input={}){
 
 export async function saveCloudConsent(input={}){
   const subject=await ensurePhase5ConsentSubject();
-  const record=cloudConsentIsAuthentic(input)&&input.subjectId===subject.subjectId
+  const isReplay=cloudConsentIsAuthentic(input)&&input.subjectId===subject.subjectId;
+  const record=isReplay
     ?Object.freeze({...input,reactivationRequired:false})
     :createCloudConsent({...input,subjectId:subject.subjectId});
   const history={
@@ -176,7 +177,10 @@ export async function saveCloudConsent(input={}){
   await transactV10([V10_STORES.meta],async({stores,memory,requestResult})=>{
     const put=row=>memory?memory[V10_STORES.meta].set(row.key,structuredClone(row)):stores[V10_STORES.meta].put(structuredClone(row));
     const existing=memory?memory[V10_STORES.meta].get(PHASE5_CONSENT_KEY):await requestResult(stores[V10_STORES.meta].get(PHASE5_CONSENT_KEY));
-    if(existing&&Number(existing.updatedAt)>Number(record.updatedAt))throw fallbackPolicyError('CONSENT_REQUIRED','A stale consent decision cannot replace the current durable state.');
+    if(existing){
+      if(Number(existing.updatedAt)>Number(record.updatedAt))throw fallbackPolicyError('CONSENT_REQUIRED','A stale consent decision cannot replace the current durable state.');
+      if(isReplay&&Number(existing.updatedAt)===Number(record.updatedAt)&&existing.receiptId!==record.receiptId)throw fallbackPolicyError('CONSENT_REQUIRED','A stale consent decision cannot replace the current durable state.');
+    }
     put(record);put(history);
   },'phase5-cloud-consent-saved');
   return record;
