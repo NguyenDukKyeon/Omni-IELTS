@@ -1287,6 +1287,7 @@ h1, h2, h3, h4, .brand {
 }
 
 /* Library View Redesign */
+.private-source-library{margin:20px 0;padding:18px;border:1px solid #dbeafe;border-radius:16px;background:#f8fbff}.private-source-library form{display:grid;gap:10px}.private-source-library label{display:grid;gap:4px}.private-source-library textarea{min-height:100px}.private-source-card{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px;border-top:1px solid #dbeafe}.private-source-card div{display:flex;gap:8px}
 .library-hero-header {
   display: flex;
   flex-direction: column;
@@ -3386,3 +3387,4 @@ h1, h2, h3, h4, .brand {
 #sourceContextInput,#contextCaptureText,#editSourceContext{resize:vertical;min-height:84px}
 .study-overlay[aria-hidden="true"]{visibility:hidden;pointer-events:none}
 .study-overlay.open[aria-hidden="false"]{visibility:visible;pointer-events:auto}
+.private-source-library{display:grid;gap:12px}.private-source-library form{display:grid;gap:10px}.private-source-library label{display:grid;gap:5px}.private-source-actions{display:flex;gap:8px;flex-wrap:wrap}.private-source-card{display:grid;gap:6px;padding:12px;border:1px solid var(--border-color,#d7dce5);border-radius:10px}.private-source-card>div{display:flex;gap:8px;flex-wrap:wrap}.private-source-library pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:16rem;overflow:auto}

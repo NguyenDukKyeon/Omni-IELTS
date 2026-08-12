@@ -8,10 +8,15 @@ import {
   validatePackActivationReceipt
 } from './content-contracts-v2.js';
 import { indexEffectiveRevocations } from './content-revocation-contract.js';
+import { canonicalContentJson } from './content-contracts-v2.js';
+import { validateIeltsObjectiveInventoryItem } from './ielts-profile-inventory.js';
+import { validatePersistedObjectiveSpatialTerminal } from './question-activity-contracts.js';
+import { validateArtifactLineage,validatePersistedProductiveTerminal } from './productive-text-contracts.js';
+import { validatePrivateSourceStore } from './private-source-contracts.js';
 
 export const FULL_BACKUP_KIND='vocab-master-full';
-export const FULL_BACKUP_VERSION=3;
-export const BACKUP_REGISTRY_VERSION=2;
+export const FULL_BACKUP_VERSION=5;
+export const BACKUP_REGISTRY_VERSION=5;
 export const BACKUP_CLASSIFICATIONS=Object.freeze(['durable','reconstructable-cache','ephemeral']);
 
 const MAX_DEPTH=100;
@@ -102,6 +107,44 @@ function normalizedStores(owner,stores={}){
     rows.sort((left,right)=>codeUnitCompare(idbKeyFingerprint(left?.[keyPath]),idbKeyFingerprint(right?.[keyPath])));
     return[store,rows.map(canonicalValue)];
   }));
+}
+
+function objectiveInventoryErrors(domains){
+  const rows=domains?.ielts?.stores?.[IELTS_STORE_NAMES.objectiveInventory];if(!Array.isArray(rows))return[];
+  const errors=[];for(const [index,row] of rows.entries()){const result=validateIeltsObjectiveInventoryItem(row,{historical:true});if(!result.valid)errors.push(`ielts.${IELTS_STORE_NAMES.objectiveInventory}[${index}] is not canonical inventory data.`);else if(canonicalContentJson(result.value)!==canonicalContentJson(row))errors.push(`ielts.${IELTS_STORE_NAMES.objectiveInventory}[${index}] is not canonical inventory data.`);}return errors;
+}
+function objectiveSpatialTerminalErrors(domains){
+  const inventory=domains?.ielts?.stores?.[IELTS_STORE_NAMES.objectiveInventory],runs=domains?.v10?.stores?.[V10_STORES.todayRuns];if(!Array.isArray(inventory)||!Array.isArray(runs))return[];
+  const byId=new Map(inventory.map(row=>[row?.id,row])),seenActivities=new Set(),errors=[];
+  for(const [index,row] of runs.entries()){
+    const targetId=row?.activitySpec?.target?.targetId,owner=byId.get(targetId),kind=owner?.questionBinding?.kind,spatial=kind==='reading-diagram-label-completion'||kind==='listening-plan-map-diagram-labelling',launchRevision=row?.canonicalRun?.frozenBinding?.launch?.configRevision?.value??row?.envelope?.run?.frozenBinding?.launch?.configRevision?.value??row?.activitySpec?.launch?.configRevision,marked=typeof launchRevision==='string'&&launchRevision.startsWith('qar-objective-spatial-');
+    if(!spatial){if(marked)errors.push(`v10.${V10_STORES.todayRuns}[${index}] spatial terminal has no authentic spatial inventory owner.`);continue;}
+    const identity=String(row?.activitySpec?.id||'');if(!identity||seenActivities.has(identity))errors.push(`v10.${V10_STORES.todayRuns}[${index}] duplicates a spatial terminal activity identity.`);else seenActivities.add(identity);
+    const result=validatePersistedObjectiveSpatialTerminal(row,owner);if(!result.valid)errors.push(`v10.${V10_STORES.todayRuns}[${index}] spatial terminal is not authentic: ${result.errors.join(' ')}`);
+  }
+  return errors;
+}
+function productiveArtifactErrors(domains){
+  const rows=domains?.ielts?.stores?.[IELTS_STORE_NAMES.learnerArtifacts];if(!Array.isArray(rows))return[];
+  const artifacts=rows.filter(row=>row?.kind==='learner-text-artifact'),revisions=rows.filter(row=>row?.kind==='learner-text-artifact-revision'),feedback=rows.filter(row=>row?.kind==='productive-advisory-feedback'),errors=[];
+  if(artifacts.length+revisions.length+feedback.length!==rows.length)errors.push('ielts.learnerArtifacts contains an unknown record kind.');
+  for(const artifact of artifacts){const checked=validateArtifactLineage({artifact,revisions:revisions.filter(row=>row.artifactId===artifact.id),feedback:feedback.filter(row=>row.artifactId===artifact.id)});if(!checked.valid)errors.push(`ielts.learnerArtifacts/${artifact.id||'unknown'} has invalid immutable lineage.`);}
+  for(const row of [...revisions,...feedback])if(!artifacts.some(artifact=>artifact.id===row.artifactId))errors.push(`ielts.learnerArtifacts/${row?.id||'unknown'} has no artifact owner.`);
+  return errors;
+}
+function productiveTerminalErrors(domains){
+  const rows=domains?.ielts?.stores?.[IELTS_STORE_NAMES.learnerArtifacts],runs=domains?.v10?.stores?.[V10_STORES.todayRuns];if(!Array.isArray(rows)||!Array.isArray(runs))return[];
+  const feedbackRows=rows.filter(row=>row?.kind==='productive-advisory-feedback'),errors=[],seenActivities=new Set();
+  const marked=row=>row?.activitySpec?.target?.targetType==='productive-text-revision'||row?.activitySpec?.executor==='productive-practice'||String(row?.activitySpec?.id||'').startsWith('productive-writing-self-review:')||row?.canonicalRun?.frozenBinding?.launch?.configRevision?.value==='productive-writing-self-review-v1';
+  for(const [index,row] of runs.entries()){
+    if(!marked(row))continue;
+    const activityId=row?.activitySpec?.id;if(typeof activityId!=='string'||!activityId||seenActivities.has(activityId)){errors.push(`v10.${V10_STORES.todayRuns}[${index}] duplicates or omits a productive activity identity.`);continue;}seenActivities.add(activityId);
+    if(row?.activitySpec?.target?.targetType!=='productive-text-revision'){errors.push(`v10.${V10_STORES.todayRuns}[${index}] productive marker has no productive owner target.`);continue;}
+    const metadata=row?.envelope?.attempt?.metadata,matching=feedbackRows.filter(value=>value?.runId===row?.id),feedback=matching[0],artifact=rows.find(value=>value?.kind==='learner-text-artifact'&&value.id===metadata?.artifactId);
+    const checked=matching.length===1?validatePersistedProductiveTerminal(row,{artifact,revisions:rows.filter(value=>value?.kind==='learner-text-artifact-revision'&&value.artifactId===metadata?.artifactId),feedback}):{valid:false,errors:['Productive Run must have exactly one feedback owner.']};
+    if(!checked.valid)errors.push(`v10.${V10_STORES.todayRuns}[${index}] productive terminal row/owner authentication failed: ${(checked.errors||[])[0]||'binding mismatch'}`);
+  }
+  return errors;
 }
 
 function primaryKeyErrors(domains={}){
@@ -200,9 +243,10 @@ function sourceShapeErrors(rawDomains){
   }
   return errors;
 }
+function privateSourceErrors(domains){try{validatePrivateSourceStore(domains?.v10?.stores?.[V10_STORES.privateSources]||[]);return [];}catch(error){return[`v10.${V10_STORES.privateSources} is invalid: ${error.code||error.message}`];}}
 
 export function buildFullBackupEnvelope({core={},ielts={},v10={},exportedAt=new Date().toISOString()}={}){
-  const rawDomains={core:{stores:core},ielts:{stores:ielts},v10:{stores:v10}};const errors=[...sourceShapeErrors(rawDomains),...safetyErrorsForDomains(rawDomains),...primaryKeyErrors(rawDomains),...uniqueIndexErrors(rawDomains)];if(errors.length)throw Object.assign(new Error(errors.join('\n')),{code:'BACKUP_PAYLOAD_UNSAFE'});
+  const rawDomains={core:{stores:core},ielts:{stores:ielts},v10:{stores:v10}};const errors=[...sourceShapeErrors(rawDomains),...privateSourceErrors(rawDomains),...safetyErrorsForDomains(rawDomains),...primaryKeyErrors(rawDomains),...uniqueIndexErrors(rawDomains),...objectiveInventoryErrors(rawDomains),...objectiveSpatialTerminalErrors(rawDomains),...productiveArtifactErrors(rawDomains),...productiveTerminalErrors(rawDomains)];if(errors.length)throw Object.assign(new Error(errors.join('\n')),{code:'BACKUP_PAYLOAD_UNSAFE'});
   const domains=canonicalBackupPayload(rawDomains);
   const stores=BACKUP_STORE_REGISTRY.map(row=>{const rows=row.backupRule==='exclude'?[]:domains[row.owner].stores[row.store];return{...row,recordCount:rows.length,contentDigest:row.backupRule==='exclude'?null:`sha256:${sha256Hex(JSON.stringify(rows))}`};});
   return{app:'Vocab Master',kind:FULL_BACKUP_KIND,schemaVersion:FULL_BACKUP_VERSION,registryVersion:BACKUP_REGISTRY_VERSION,exportedAt:String(exportedAt),manifest:{stores,external:structuredClone(BACKUP_EXTERNAL_REGISTRY)},domains,payloadDigest:canonicalBackupDigest(domains)};
@@ -213,16 +257,18 @@ function upgradeLegacyV2Envelope(input){
   if(input.kind!==FULL_BACKUP_KIND)return{error:'Legacy v2 backup kind is invalid.'};
   const domains=structuredClone(input.domains||{});
   if(input.payloadDigest!==canonicalBackupDigest(domains))return{error:'Legacy v2 backup payload digest does not match.'};
+  if(domains?.v10?.database!==V10_DB_NAME||Number(domains?.v10?.databaseVersion)!==7)return{error:'Legacy v2 V10 database identity is invalid.'};
+  const legacyV10Stores=ownerEntries('v10').filter(row=>row.store!==V10_STORES.privateSources).map(row=>row.store);
   for(const owner of ['core','ielts','v10']){
     const stores=domains?.[owner]?.stores;
     if(!stores||typeof stores!=='object'||Array.isArray(stores))return{error:`Legacy v2 backup is missing ${owner}.stores.`};
-    const allowed=new Set(ownerEntries(owner).map(row=>row.store));
+    const allowed=new Set(owner==='v10'?legacyV10Stores:ownerEntries(owner).map(row=>row.store));
     const unknown=Object.keys(stores).filter(store=>!allowed.has(store));
-    if(unknown.length)return{error:`Legacy v2 backup contains unknown ${owner} stores: ${unknown.join(', ')}.`};
-    for(const store of allowed)if(!Object.hasOwn(stores,store))stores[store]=[];
+    if(unknown.length||[...allowed].some(store=>!Array.isArray(stores[store])))return{error:`Legacy v2 backup has an invalid ${owner} store set.`};
     domains[owner].database=ownerEntries(owner)[0].database;
-    domains[owner].databaseVersion=ownerEntries(owner)[0].databaseVersion;
+    domains[owner].databaseVersion=owner==='v10'?7:ownerEntries(owner)[0].databaseVersion;
   }
+  domains.v10.stores[V10_STORES.privateSources]=[];
   return{
     value:buildFullBackupEnvelope({
       core:domains.core.stores,
@@ -232,6 +278,50 @@ function upgradeLegacyV2Envelope(input){
     }),
     warning:'Legacy full-backup v2 was additively upgraded with empty Phase 4 install metadata stores; learner data was preserved.'
   };
+}
+
+function upgradeRegistryV2Envelope(input){
+  if(Number(input?.schemaVersion)!==3||Number(input?.registryVersion)!==2)return null;
+  if(input.kind!==FULL_BACKUP_KIND)return{error:'Legacy registry-v2 backup kind is invalid.'};
+  const domains=structuredClone(input.domains||{});if(input.payloadDigest!==canonicalBackupDigest(domains))return{error:'Legacy registry-v2 backup payload digest does not match.'};
+  const legacyIeltsStores=Object.values(IELTS_STORE_NAMES).filter(store=>![IELTS_STORE_NAMES.objectiveInventory,IELTS_STORE_NAMES.learnerArtifacts].includes(store));
+  const legacyV10Stores=ownerEntries('v10').filter(row=>row.store!==V10_STORES.privateSources).map(row=>row.store);
+  for(const owner of ['core','ielts','v10']){
+    const stores=domains?.[owner]?.stores;if(!stores||typeof stores!=='object'||Array.isArray(stores))return{error:`Legacy registry-v2 backup is missing ${owner}.stores.`};
+    const allowed=owner==='ielts'?legacyIeltsStores:owner==='v10'?legacyV10Stores:ownerEntries(owner).map(row=>row.store);
+    if(Object.keys(stores).some(store=>!allowed.includes(store))||allowed.some(store=>!Array.isArray(stores[store])))return{error:`Legacy registry-v2 backup has an invalid ${owner} store set.`};
+  }
+  const identities={core:{database:DB_NAME,databaseVersion:DB_VERSION},ielts:{database:IELTS_DB_NAME,databaseVersion:1},v10:{database:V10_DB_NAME,databaseVersion:7}};for(const [owner,identity] of Object.entries(identities))if(domains[owner].database!==identity.database||Number(domains[owner].databaseVersion)!==identity.databaseVersion)return{error:`Legacy registry-v2 ${owner} database identity is invalid.`};
+  if(!input.manifest||!Array.isArray(input.manifest.stores)||input.manifest.stores.some(row=>!row||typeof row!=='object'||!row.owner||!row.store)||canonicalContentJson(input.manifest.external)!==canonicalContentJson(BACKUP_EXTERNAL_REGISTRY))return{error:'Legacy registry-v2 backup manifest is invalid.'};
+  const expectedRows=BACKUP_STORE_REGISTRY.filter(row=>!(row.owner==='ielts'&&[IELTS_STORE_NAMES.objectiveInventory,IELTS_STORE_NAMES.learnerArtifacts].includes(row.store))&&!(row.owner==='v10'&&row.store===V10_STORES.privateSources)).map(row=>row.owner==='ielts'?{...row,databaseVersion:1}:row.owner==='v10'?{...row,databaseVersion:7}:row);if(input.manifest.stores.length!==expectedRows.length)return{error:'Legacy registry-v2 backup manifest count is invalid.'};for(let index=0;index<expectedRows.length;index++){const row=input.manifest.stores[index],expected=expectedRows[index];const rows=domains?.[row.owner]?.stores?.[row.store];for(const key of ['owner','database','databaseVersion','store','keyPath','classification','backupRule','restoreRule','note'])if(row[key]!==expected[key])return{error:'Legacy registry-v2 backup manifest metadata is invalid.'};if(row.backupRule==='exclude'){if(rows!==undefined||row.recordCount!==0||row.contentDigest!==null)return{error:'Legacy registry-v2 backup manifest digest is invalid.'};continue;}const digest=`sha256:${sha256Hex(JSON.stringify(rows))}`;if(!Array.isArray(rows)||row.recordCount!==rows.length||row.contentDigest!==digest)return{error:'Legacy registry-v2 backup manifest digest is invalid.'};}
+  domains.ielts.stores[IELTS_STORE_NAMES.objectiveInventory]=[];domains.ielts.stores[IELTS_STORE_NAMES.learnerArtifacts]=[];domains.ielts.database=IELTS_DB_NAME;domains.ielts.databaseVersion=IELTS_DB_VERSION;domains.v10.stores[V10_STORES.privateSources]=[];
+  return{value:buildFullBackupEnvelope({core:domains.core.stores,ielts:domains.ielts.stores,v10:domains.v10.stores,exportedAt:input.exportedAt}),warning:'Full backup registry v2 was additively upgraded with empty canonical inventory and productive artifact stores.'};
+}
+
+function upgradeRegistryV3Envelope(input){
+  if(Number(input?.schemaVersion)!==3||Number(input?.registryVersion)!==3)return null;
+  if(input.kind!==FULL_BACKUP_KIND)return{error:'Legacy registry-v3 backup kind is invalid.'};
+  const domains=structuredClone(input.domains||{});if(input.payloadDigest!==canonicalBackupDigest(domains))return{error:'Legacy registry-v3 backup payload digest does not match.'};
+  const expectedRows=BACKUP_STORE_REGISTRY.filter(row=>!(row.owner==='ielts'&&row.store===IELTS_STORE_NAMES.learnerArtifacts)&&!(row.owner==='v10'&&row.store===V10_STORES.privateSources)).map(row=>row.owner==='ielts'?{...row,databaseVersion:2}:row.owner==='v10'?{...row,databaseVersion:7}:row);
+  if(!Array.isArray(input?.manifest?.stores)||input.manifest.stores.length!==expectedRows.length||canonicalContentJson(input.manifest.external)!==canonicalContentJson(BACKUP_EXTERNAL_REGISTRY))return{error:'Legacy registry-v3 backup structure is invalid.'};
+  const identities={core:{database:DB_NAME,databaseVersion:DB_VERSION},ielts:{database:IELTS_DB_NAME,databaseVersion:2},v10:{database:V10_DB_NAME,databaseVersion:7}};for(const [owner,identity] of Object.entries(identities)){const stores=domains?.[owner]?.stores,allowed=expectedRows.filter(row=>row.owner===owner&&row.backupRule!=='exclude').map(row=>row.store);if(domains?.[owner]?.database!==identity.database||Number(domains?.[owner]?.databaseVersion)!==identity.databaseVersion||!stores||Object.keys(stores).some(store=>!allowed.includes(store))||allowed.some(store=>!Array.isArray(stores[store])))return{error:`Legacy registry-v3 ${owner} domain is invalid.`};}
+  for(let index=0;index<expectedRows.length;index++){const actual=input.manifest.stores[index],expected=expectedRows[index],rows=domains[expected.owner].stores[expected.store];if(!actual)return{error:'Legacy registry-v3 backup manifest is invalid.'};for(const key of ['owner','database','databaseVersion','store','keyPath','classification','backupRule','restoreRule','note'])if(actual[key]!==expected[key])return{error:'Legacy registry-v3 backup manifest metadata is invalid.'};const digest=expected.backupRule==='exclude'?null:`sha256:${sha256Hex(JSON.stringify(rows))}`;if(Number(actual.recordCount)!==(expected.backupRule==='exclude'?0:rows.length)||actual.contentDigest!==digest)return{error:'Legacy registry-v3 backup manifest digest is invalid.'};}
+  domains.ielts.stores[IELTS_STORE_NAMES.learnerArtifacts]=[];domains.ielts.database=IELTS_DB_NAME;domains.ielts.databaseVersion=IELTS_DB_VERSION;domains.v10.stores[V10_STORES.privateSources]=[];
+  return{value:buildFullBackupEnvelope({core:domains.core.stores,ielts:domains.ielts.stores,v10:domains.v10.stores,exportedAt:input.exportedAt}),warning:'Full backup registry v3 was additively upgraded with an empty productive artifact store.'};
+}
+
+function upgradeRegistryV4Envelope(input){
+  if(Number(input?.schemaVersion)!==4||Number(input?.registryVersion)!==4)return null;
+  if(input.kind!==FULL_BACKUP_KIND)return{error:'Legacy registry-v4 backup kind is invalid.'};
+  const domains=structuredClone(input.domains||{});
+  if(input.payloadDigest!==canonicalBackupDigest(domains))return{error:'Legacy registry-v4 backup payload digest does not match.'};
+  const expectedRows=BACKUP_STORE_REGISTRY.filter(row=>!(row.owner==='v10'&&row.store===V10_STORES.privateSources)).map(row=>row.owner==='v10'?{...row,databaseVersion:7}:row);
+  if(!Array.isArray(input?.manifest?.stores)||input.manifest.stores.length!==expectedRows.length||canonicalContentJson(input.manifest.external)!==canonicalContentJson(BACKUP_EXTERNAL_REGISTRY))return{error:'Legacy registry-v4 backup manifest is invalid.'};
+  const identities={core:{database:DB_NAME,databaseVersion:DB_VERSION},ielts:{database:IELTS_DB_NAME,databaseVersion:IELTS_DB_VERSION},v10:{database:V10_DB_NAME,databaseVersion:7}};
+  for(const [owner,identity] of Object.entries(identities)){const stores=domains?.[owner]?.stores,allowed=expectedRows.filter(row=>row.owner===owner&&row.backupRule!=='exclude').map(row=>row.store);if(domains?.[owner]?.database!==identity.database||Number(domains?.[owner]?.databaseVersion)!==identity.databaseVersion||!stores||Object.keys(stores).some(store=>!allowed.includes(store))||allowed.some(store=>!Array.isArray(stores[store])))return{error:`Legacy registry-v4 ${owner} domain is invalid.`};}
+  for(let index=0;index<expectedRows.length;index++){const actual=input.manifest.stores[index],expected=expectedRows[index],rows=domains[expected.owner].stores[expected.store];if(!actual)return{error:'Legacy registry-v4 backup manifest is invalid.'};for(const key of ['owner','database','databaseVersion','store','keyPath','classification','backupRule','restoreRule','note'])if(actual[key]!==expected[key])return{error:'Legacy registry-v4 backup manifest metadata is invalid.'};const digest=expected.backupRule==='exclude'?null:`sha256:${sha256Hex(JSON.stringify(rows))}`;if(Number(actual.recordCount)!==(expected.backupRule==='exclude'?0:rows.length)||actual.contentDigest!==digest)return{error:'Legacy registry-v4 backup manifest digest is invalid.'};}
+  domains.v10.stores[V10_STORES.privateSources]=[];domains.v10.database=V10_DB_NAME;domains.v10.databaseVersion=V10_DB_VERSION;
+  return{value:buildFullBackupEnvelope({core:domains.core.stores,ielts:domains.ielts.stores,v10:domains.v10.stores,exportedAt:input.exportedAt}),warning:'Legacy full-backup v4 was additively upgraded with an empty privateSources store.'};
 }
 
 function validateManifest(input,domains,errors){
@@ -410,13 +500,22 @@ export function validateFullBackupEnvelope(input){
   const legacy=upgradeLegacyV2Envelope(input);
   if(legacy?.error)return{valid:false,errors:[legacy.error],warnings,value:null};
   if(legacy?.value){input=legacy.value;warnings.push(legacy.warning);}
+  const registryLegacy=upgradeRegistryV2Envelope(input);
+  if(registryLegacy?.error)return{valid:false,errors:[registryLegacy.error],warnings,value:null};
+  if(registryLegacy?.value){input=registryLegacy.value;warnings.push(registryLegacy.warning);}
+  const registryV3=upgradeRegistryV3Envelope(input);
+  if(registryV3?.error)return{valid:false,errors:[registryV3.error],warnings,value:null};
+  if(registryV3?.value){input=registryV3.value;warnings.push(registryV3.warning);}
+  const registryV4=upgradeRegistryV4Envelope(input);
+  if(registryV4?.error)return{valid:false,errors:[registryV4.error],warnings,value:null};
+  if(registryV4?.value){input=registryV4.value;warnings.push(registryV4.warning);}
   const envelopeSafety=jsonSafetyErrors(input,'backup');if(envelopeSafety.length)return{valid:false,errors:envelopeSafety,warnings,value:null};
   if(input.kind!==FULL_BACKUP_KIND)errors.push('Khong phai full backup Vocab Master vNext.');
   if(Number(input.schemaVersion||0)!==FULL_BACKUP_VERSION)errors.push(Number(input.schemaVersion||0)>FULL_BACKUP_VERSION?'Backup dung schema moi hon ung dung.':'Backup vNext thieu hoac sai schema version.');
   if(Number(input.registryVersion||0)!==BACKUP_REGISTRY_VERSION)errors.push(Number(input.registryVersion||0)>BACKUP_REGISTRY_VERSION?'Backup dung store registry moi hon ung dung.':'Backup thieu hoac sai store registry version.');
   const domains=input.domains&&typeof input.domains==='object'&&!Array.isArray(input.domains)?input.domains:{};
   const safetyErrors=safetyErrorsForDomains(domains);errors.push(...safetyErrors);if(safetyErrors.length)return{valid:false,errors,warnings,value:null};
-  errors.push(...primaryKeyErrors(domains),...uniqueIndexErrors(domains));
+  errors.push(...privateSourceErrors(domains),...primaryKeyErrors(domains),...uniqueIndexErrors(domains),...objectiveInventoryErrors(domains),...objectiveSpatialTerminalErrors(domains),...productiveArtifactErrors(domains),...productiveTerminalErrors(domains));
   for(const owner of ['core','ielts','v10']){
     const domain=domains[owner];if(!domain||typeof domain!=='object'||Array.isArray(domain)){errors.push(`Thieu domain ${owner}.`);continue;}
     const expectedOwner=ownerEntries(owner)[0];if(domain.database!==expectedOwner.database)errors.push(`${owner}.database khong khop registry.`);if(Number(domain.databaseVersion)!==expectedOwner.databaseVersion)errors.push(Number(domain.databaseVersion)>expectedOwner.databaseVersion?`${owner} database version moi hon ung dung.`:`${owner} database version khong khop registry.`);

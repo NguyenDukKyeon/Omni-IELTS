@@ -13,8 +13,17 @@ import {
   createRun,
   learningContractDigest,
   validateActivitySpec,
+  validateFrozenRunBinding,
+  isCompleteLearningTarget,
+  normalizeLearningTarget,
   validateLearningEnvelope
 } from '../src/learning-contracts.js';
+
+test('normalizes a productive text revision target',()=>{
+  const target=normalizeLearningTarget({schemaVersion:2,targetType:'productive-text-revision',targetId:'artifact-revision:demo',cardId:null,senseId:null,skill:'production',sourceId:'controlled-writing-self-review',sourceRevision:'controlled-writing-self-review-v1'});
+  assert.equal(target?.targetType,'productive-text-revision');
+  assert.equal(isCompleteLearningTarget(target),true);
+});
 import { buildCoreEvidenceEnvelope } from '../src/schedule-gateway.js';
 import { buildIeltsEvidenceEnvelope } from '../src/ielts-domain.js';
 import { buildV10CoachingEnvelope } from '../src/v10-contracts.js';
@@ -119,4 +128,42 @@ test('Core, IELTS and V10 envelope builders emit the same canonical four-contrac
     assert.equal(validateLearningEnvelope(envelope).valid,true);
     assert.equal(envelope.receipt.id,envelope.attempt.receiptId);
   }
+});
+
+test('LearningTarget v2 admits only exact objective-item and core-card target identities',()=>{
+  const objective={schemaVersion:2,targetType:'ielts-objective-item',targetId:'ielts-objective:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',cardId:null,senseId:null,skill:'reading',sourceId:'reading-source:fixture',sourceRevision:'reading-source:fixture:1'};
+  const spec=createActivitySpec({id:'v2-objective',type:'reading',target:objective,plannedAt:10,executor:'qar-reading'});
+  assert.deepEqual(spec.target,objective);
+  assert.equal(spec.schemaVersion,2);
+  assert.equal(validateActivitySpec(spec).valid,true);
+  assert.equal(validateActivitySpec({...spec,target:{...objective,cardId:'card-injection'}}).valid,false);
+  assert.equal(validateActivitySpec({...spec,target:{...objective,targetType:'future-item'}}).valid,false);
+});
+
+test('LearningTarget v2 rejects forged scalar identity and accessors without invoking them',()=>{
+  const core={schemaVersion:2,targetType:'core-card',targetId:'card-1',cardId:'card-1',senseId:'sense-1',skill:'recall',sourceId:'core-card:card-1',sourceRevision:'revision-1'};
+  assert.deepEqual(normalizeLearningTarget(core),core);
+  for(const altered of [{...core,targetId:'card-other'},{...core,targetId:' card-1',cardId:' card-1'},{...core,cardId:' card-1'},{...core,sourceId:' core-card:card-1'},{...core,sourceRevision:'revision-1 '},{...core,senseId:''},{...core,senseId:' sense-1'},{...core,extra:true}])assert.equal(normalizeLearningTarget(altered),null);
+  let reads=0;const hostile={...core};Object.defineProperty(hostile,'targetId',{enumerable:true,get(){reads+=1;throw new Error('must not read');}});
+  assert.equal(normalizeLearningTarget(hostile),null);assert.equal(reads,0);
+  const frozen={schemaVersion:2,runId:'run-v2',activitySpecId:'activity-v2',activitySpecDigest:'digest',target:hostile,executor:{state:'bound',value:'core-card'},launch:{binding:{state:'inapplicable',value:null},promptRevision:{state:'inapplicable',value:null},configRevision:{state:'inapplicable',value:null},configDigest:{state:'inapplicable',value:null}},evaluation:{marker:'inapplicable',revision:{state:'inapplicable',value:null},keyRevision:{state:'inapplicable',value:null},keyDigest:{state:'inapplicable',value:null},rubricRevision:{state:'inapplicable',value:null},rubricDigest:{state:'inapplicable',value:null},scoringPolicyRevision:{state:'inapplicable',value:null},reviewPolicyRevision:{state:'inapplicable',value:null}},evidencePolicy:{version:{state:'bound',value:'phase0-evidence-v1'},reference:{state:'inapplicable',value:null}},assistance:{collectionMode:{state:'bound',value:'core-session'}},startIdempotencyKey:'activity:activity-v2',digest:'bad'};
+  assert.equal(validateFrozenRunBinding(frozen).valid,false);assert.equal(reads,0);
+});
+
+test('legacy target digest remains byte-compatible while objective ids stay exact',()=>{
+  assert.equal(learningContractDigest({cardId:'card-1',senseId:null,skill:'listening',sourceId:'media-1',sourceRevision:'sha256:abc'}),'fnv1a64:105:d3b0e049e7dc83fb');
+  const objective={schemaVersion:2,targetType:'ielts-objective-item',targetId:'ielts-objective:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',cardId:null,senseId:null,skill:'reading',sourceId:'reading-source:fixture',sourceRevision:'reading-source:fixture:1'};
+  assert.equal(normalizeLearningTarget({...objective,targetId:'ielts-objective:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'}),null);
+  assert.equal(normalizeLearningTarget({...objective,targetId:'ielts-objective:aaaaaaaa'}),null);
+});
+
+test('v2 core target keeps v1 identity and source bounds without truncation',()=>{
+  const core={schemaVersion:2,targetType:'core-card',targetId:'c'.repeat(180),cardId:'c'.repeat(180),senseId:'s'.repeat(180),skill:'recall',sourceId:'i'.repeat(240),sourceRevision:'r'.repeat(240)};
+  assert.deepEqual(normalizeLearningTarget(core),core);
+  for(const altered of [
+    {...core,targetId:'c'.repeat(181),cardId:'c'.repeat(181)},
+    {...core,senseId:'s'.repeat(181)},
+    {...core,sourceId:'i'.repeat(241)},
+    {...core,sourceRevision:'r'.repeat(241)}
+  ])assert.equal(normalizeLearningTarget(altered),null);
 });

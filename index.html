@@ -611,6 +611,11 @@
             </button>
           </div>
         </div>
+        <section class="private-source-library" data-private-source-library aria-label="Nguồn văn bản riêng tư">
+          <h2>Nguồn văn bản riêng tư</h2><p>Nội dung chỉ được lưu cục bộ, chưa được xuất bản hay dùng để đánh giá.</p>
+          <form data-private-source-form><label>Tiêu đề<input name="title" required maxlength="200"></label><label>Văn bản<textarea name="text" required></textarea></label><div class="private-source-actions"><button type="button" data-private-source-preview>Xem trước</button><button class="primary-button" type="submit" disabled>Lưu văn bản riêng tư</button></div><input name="query" placeholder="Tìm nguồn đã lưu"></form>
+          <p data-private-source-message aria-live="polite"></p><pre data-private-source-preview-output hidden></pre><div data-private-source-results></div>
+        </section>
 
         <!-- Main Word Cards Grid / List Container -->
         <div class="library-grid-container" id="wordList"></div>

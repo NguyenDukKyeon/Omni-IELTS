@@ -1,0 +1,138 @@
+{
+  "kind": "wave2-controlled-listening-fixture",
+  "version": 1,
+  "implementationId": "W2-LISTENING-UI-FIXTURE-LOCAL-003-20260810T020824Z",
+  "coverage": "ONE_LISTENING_MULTIPLE_CHOICE_CONTROL_FLOW_PROOF",
+  "audio": {
+    "kind": "canonical-pcm-wave",
+    "version": 1,
+    "path": "/tests/fixtures/wave2-listening-tone-fixture.wav",
+    "audioFormat": 1,
+    "channels": 1,
+    "bitsPerSample": 16,
+    "sampleRate": 8000,
+    "durationMs": 1800,
+    "sectionDurationMs": 600,
+    "toneDurationMs": 500,
+    "silenceDurationMs": 100,
+    "fadeDurationMs": 10,
+    "amplitude": 0.25,
+    "frequencies": [
+      440,
+      660,
+      440
+    ],
+    "byteLength": 28844,
+    "sha256": "41f90218a5ba4069c987d76352944b55773fe9f59ee53d011612ba047a1661c9",
+    "generator": {
+      "id": "wave2-listening-tone-generator",
+      "version": 1,
+      "rounding": "Math.round",
+      "fade": "linear-endpoints-inclusive"
+    }
+  },
+  "source": {
+    "id": "wave2-controlled-tone-source-v1",
+    "namespace": "private",
+    "sourceType": "controlled-test-fixture",
+    "title": "Wave 2 controlled deterministic tone fixture",
+    "language": "en",
+    "status": "verified",
+    "complete": true,
+    "createdAt": 1786320000000
+  },
+  "transcript": {
+    "language": "en",
+    "complete": true,
+    "segments": [
+      {
+        "startMs": 0,
+        "endMs": 600,
+        "text": "low tone",
+        "language": "en",
+        "status": "verified",
+        "aligned": true
+      },
+      {
+        "startMs": 600,
+        "endMs": 1200,
+        "text": "high tone",
+        "language": "en",
+        "status": "verified",
+        "aligned": true
+      },
+      {
+        "startMs": 1200,
+        "endMs": 1800,
+        "text": "low tone",
+        "language": "en",
+        "status": "verified",
+        "aligned": true
+      }
+    ],
+    "provenance": {
+      "origin": "project-generated-controlled-fixture",
+      "generator": "wave2-listening-tone-generator",
+      "generatorVersion": 1,
+      "verification": "verified",
+      "rights": "allowed",
+      "privacy": "private",
+      "aligned": true,
+      "alignmentStatus": "timed",
+      "externalSource": false,
+      "provider": null,
+      "model": null,
+      "tts": false
+    }
+  },
+  "rights": {
+    "kind": "controlled-test-fixture-rights",
+    "version": 1,
+    "basis": "project-created-mathematical-waveform",
+    "externalCopyrightedMedia": false,
+    "scope": "CONTROLLED_LOCAL_TEST_ONLY",
+    "publishable": false,
+    "productionCatalogAuthority": false
+  },
+  "approval": {
+    "state": "APPROVED_FOR_CONTROLLED_TEST_ONLY",
+    "authority": "W2-LISTENING-UI-FIXTURE-LOCAL-003-20260810T020824Z",
+    "basis": "local-governor-capsule",
+    "publication": false,
+    "learnerEvidence": false,
+    "productionCatalog": false,
+    "coverage": "ONE_LISTENING_MULTIPLE_CHOICE_CONTROL_FLOW_PROOF"
+  },
+  "question": {
+    "id": "wave2-controlled-tone-sequence-mcq-v1",
+    "kind": "listening-multiple-choice",
+    "prompt": "Which sequence of tones is played?",
+    "target": {
+      "cardId": "wave2-controlled-tone-sequence-v1",
+      "senseId": null,
+      "skill": "listening"
+    },
+    "options": [
+      {
+        "id": "low-high-low",
+        "text": "Low, high, low",
+        "correct": true,
+        "rationale": "The first and third tones are 440 Hz; the middle tone is 660 Hz."
+      },
+      {
+        "id": "high-low-high",
+        "text": "High, low, high",
+        "correct": false,
+        "rationale": "The selected order reverses all three fixture tones."
+      },
+      {
+        "id": "low-low-high",
+        "text": "Low, low, high",
+        "correct": false,
+        "rationale": "The middle fixture tone is high and the final fixture tone is low."
+      }
+    ],
+    "createdAt": 1786320000000,
+    "updatedAt": 1786320000000
+  }
+}
