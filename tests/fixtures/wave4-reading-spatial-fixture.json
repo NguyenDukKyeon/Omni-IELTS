@@ -1,0 +1,21 @@
+{
+  "kind": "wave4-reading-spatial-fixture",
+  "version": 1,
+  "scope": "CONTROLLED_LOCAL_TEST_ONLY",
+  "publication": false,
+  "definition": {
+    "kind": "reading-diagram-label-completion",
+    "prompt": "Complete the controlled diagram labels.",
+    "spatialPrompt": {
+      "schema": "objective-spatial-prompt",
+      "version": 1,
+      "mode": "diagram",
+      "title": "Controlled Reading diagram",
+      "description": "A rectangle joins a labelled line and two answer anchors.",
+      "width": 100,
+      "height": 80,
+      "elements": [{"id":"outline","kind":"rect","x":0,"y":0,"width":100,"height":80,"label":"Outline"},{"id":"route","kind":"line","x1":0,"y1":0,"x2":100,"y2":80}],
+      "anchors": [{"slotId":"one","x":20,"y":20,"label":"First label"},{"slotId":"two","x":80,"y":60,"label":"Second label"}]
+    }
+  }
+}

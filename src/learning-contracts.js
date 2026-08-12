@@ -1,4 +1,6 @@
 export const LEARNING_CONTRACT_VERSION=1;
+export const LEARNING_TARGET_VERSION=2;
+export const FROZEN_RUN_BINDING_VERSION=1;
 export const LEARNING_CONTRACT_KIND=Object.freeze({
   activitySpec:'ActivitySpec',
   run:'Run',
@@ -7,7 +9,7 @@ export const LEARNING_CONTRACT_KIND=Object.freeze({
   assistanceTrace:'AssistanceTrace'
 });
 
-export const RUN_STATUSES=Object.freeze(['planned','active','completed','cancelled','failed']);
+export const RUN_STATUSES=Object.freeze(['planned','active','completed','failed','skipped','cancelled','abstained']);
 export const RECEIPT_STATUSES=Object.freeze(['completed','failed','skipped','cancelled','abstained']);
 export const LEARNING_SKILLS=Object.freeze(['recognition','recall','listening','collocation','production']);
 
@@ -18,6 +20,15 @@ const clean=(value,max=240)=>String(value??'').trim().slice(0,max);
 const nullable=(value,max=240)=>clean(value,max)||null;
 const finiteTime=value=>Number.isFinite(Number(value))&&Number(value)>=0?Number(value):0;
 const codeUnitCompare=(left,right)=>left<right?-1:left>right?1:0;
+const isPlainObject=value=>Boolean(value)&&typeof value==='object'&&!Array.isArray(value);
+const FROZEN_TARGET_FIELDS=Object.freeze(['cardId','senseId','skill','sourceId','sourceRevision']);
+const FROZEN_TARGET_V2_FIELDS=Object.freeze(['schemaVersion','targetType','targetId','cardId','senseId','skill','sourceId','sourceRevision']);
+const FROZEN_BINDING_FIELDS=Object.freeze(['state','value']);
+const FROZEN_LAUNCH_FIELDS=Object.freeze(['binding','promptRevision','configRevision','configDigest']);
+const FROZEN_EVALUATION_FIELDS=Object.freeze(['marker','revision','keyRevision','keyDigest','rubricRevision','rubricDigest','scoringPolicyRevision','reviewPolicyRevision']);
+const FROZEN_EVIDENCE_POLICY_FIELDS=Object.freeze(['version','reference']);
+const FROZEN_ASSISTANCE_FIELDS=Object.freeze(['collectionMode']);
+const FROZEN_RUN_BINDING_FIELDS=Object.freeze(['schemaVersion','runId','activitySpecId','activitySpecDigest','target','executor','launch','evaluation','evidencePolicy','assistance','startIdempotencyKey','digest']);
 
 function clone(value){
   return value==null?value:structuredClone(value);
@@ -59,6 +70,17 @@ export function normalizeTimezone(value='UTC'){
 
 export function normalizeLearningTarget(input=null){
   if(!input||typeof input!=='object')return null;
+  if(Object.prototype.hasOwnProperty.call(input,'targetType')||Object.prototype.hasOwnProperty.call(input,'targetId')){
+    let descriptors;try{descriptors=Object.getOwnPropertyDescriptors(input);}catch{return null;}
+    if((Object.getPrototypeOf(input)!==Object.prototype&&Object.getPrototypeOf(input)!==null)||Object.getOwnPropertySymbols(input).length||Object.keys(descriptors).length!==FROZEN_TARGET_V2_FIELDS.length||FROZEN_TARGET_V2_FIELDS.some(key=>!Object.prototype.hasOwnProperty.call(descriptors,key)||!Object.prototype.hasOwnProperty.call(descriptors[key],'value')))return null;
+    const value=Object.fromEntries(FROZEN_TARGET_V2_FIELDS.map(key=>[key,descriptors[key].value]));
+    const exactString=(value,max)=>typeof value==='string'&&value.length>0&&value.length<=max&&value===value.trim();
+    if(value.schemaVersion!==LEARNING_TARGET_VERSION||!['core-card','ielts-objective-item','productive-text-revision'].includes(value.targetType)||!exactString(value.targetId,180)||!exactString(value.sourceId,240)||!exactString(value.sourceRevision,240))return null;
+    if(value.targetType==='core-card'){if(!exactString(value.cardId,180)||value.cardId!==value.targetId||(value.senseId!==null&&!exactString(value.senseId,180))||!SKILL_SET.has(value.skill))return null;}
+    else if(value.targetType==='ielts-objective-item'){if(value.cardId!==null||value.senseId!==null||!['reading','listening'].includes(value.skill)||!/^ielts-objective:[a-f0-9]{64}$/.test(value.targetId))return null;}
+    else if(value.cardId!==null||value.senseId!==null||value.skill!=='production')return null;
+    return deepFreeze({schemaVersion:2,targetType:value.targetType,targetId:value.targetId,cardId:value.cardId,senseId:value.senseId,skill:value.skill,sourceId:value.sourceId,sourceRevision:value.sourceRevision});
+  }
   return deepFreeze({
     cardId:nullable(input.cardId,180),
     senseId:nullable(input.senseId,180),
@@ -70,12 +92,137 @@ export function normalizeLearningTarget(input=null){
 
 export function isCompleteLearningTarget(input){
   const target=normalizeLearningTarget(input);
-  return Boolean(target?.cardId&&target.skill&&target.sourceId&&target.sourceRevision);
+  return Boolean(target&&(target.schemaVersion===2?target.targetId&&target.skill&&target.sourceId&&target.sourceRevision:target.cardId&&target.skill&&target.sourceId&&target.sourceRevision));
 }
 
 function normalizedMetadata(input){
   return input&&typeof input==='object'&&!Array.isArray(input)?clone(input):{};
 }
+
+function explicitBindingValue(value,max=240){
+  if(isPlainObject(value)&&value.state==='inapplicable')return deepFreeze({state:'inapplicable',value:null});
+  const supplied=isPlainObject(value)&&value.state==='bound'?value.value:value;
+  const normalized=nullable(supplied,max);
+  return deepFreeze(normalized?{state:'bound',value:normalized}:{state:'inapplicable',value:null});
+}
+
+function frozenBindingPayload(input={}){
+  const target=normalizeLearningTarget(input.target);
+  const evaluation=input.evaluation&&typeof input.evaluation==='object'?input.evaluation:{};
+  const launch=input.launch&&typeof input.launch==='object'?input.launch:{};
+  const evidencePolicy=input.evidencePolicy&&typeof input.evidencePolicy==='object'?input.evidencePolicy:{};
+  const assistance=input.assistance&&typeof input.assistance==='object'?input.assistance:{};
+  return {
+    schemaVersion:target?.schemaVersion===2?2:FROZEN_RUN_BINDING_VERSION,
+    runId:nullable(input.runId,180),
+    activitySpecId:nullable(input.activitySpecId,180),
+    activitySpecDigest:nullable(input.activitySpecDigest,240),
+    target,
+    executor:explicitBindingValue(input.executor,120),
+    launch:deepFreeze({
+      binding:explicitBindingValue(input.launchBinding??launch.binding,240),
+      promptRevision:explicitBindingValue(input.promptRevision??launch.promptRevision,240),
+      configRevision:explicitBindingValue(input.configRevision??launch.configRevision,240),
+      configDigest:explicitBindingValue(input.configDigest??launch.configDigest,240)
+    }),
+    evaluation:deepFreeze({
+      revision:explicitBindingValue(evaluation.revision,240),
+      keyRevision:explicitBindingValue(evaluation.keyRevision,240),
+      keyDigest:explicitBindingValue(evaluation.keyDigest,240),
+      rubricRevision:explicitBindingValue(evaluation.rubricRevision,240),
+      rubricDigest:explicitBindingValue(evaluation.rubricDigest,240),
+      scoringPolicyRevision:explicitBindingValue(evaluation.scoringPolicyRevision,240),
+      reviewPolicyRevision:explicitBindingValue(evaluation.reviewPolicyRevision,240),
+      marker:evaluation.applicable===true||evaluation.marker==='applicable'?'applicable':'inapplicable'
+    }),
+    evidencePolicy:deepFreeze({
+      version:explicitBindingValue(input.evidencePolicyVersion??evidencePolicy.version,120),
+      reference:explicitBindingValue(input.evidencePolicyReference??evidencePolicy.reference,240)
+    }),
+    assistance:deepFreeze({collectionMode:explicitBindingValue(input.assistanceCollectionMode??assistance.collectionMode,120)}),
+    startIdempotencyKey:nullable(input.startIdempotencyKey,240)
+  };
+}
+
+export function createFrozenRunBinding(input={}){
+  const value=frozenBindingPayload(input);
+  return deepFreeze({...value,digest:learningContractDigest(value)});
+}
+
+function hasExactFields(value,fields,label,errors){
+  if(!isPlainObject(value)){
+    errors.push(`${label} must be an object.`);
+    return false;
+  }
+  const missing=fields.filter(field=>!Object.prototype.hasOwnProperty.call(value,field));
+  const unknown=Object.keys(value).filter(field=>!fields.includes(field));
+  if(missing.length)errors.push(`${label} missing required fields: ${missing.join(',')}.`);
+  if(unknown.length)errors.push(`${label} contains unsupported fields: ${unknown.join(',')}.`);
+  return missing.length===0&&unknown.length===0;
+}
+
+function validateExplicitBinding(value,label,errors){
+  if(!hasExactFields(value,FROZEN_BINDING_FIELDS,label,errors))return;
+  if(value.state==='inapplicable'){
+    if(value.value!==null)errors.push(`${label} inapplicable requires null value.`);
+    return;
+  }
+  if(value.state!=='bound'){
+    errors.push(`${label} state must be bound or inapplicable.`);
+    return;
+  }
+  if(typeof value.value!=='string'||!value.value.trim())errors.push(`${label} bound requires a nonempty value.`);
+}
+
+function validateFrozenTarget(value,errors){
+  const normalized=normalizeLearningTarget(value);
+  if(!normalized){errors.push('Frozen Run binding target is not canonical.');return;}
+  const fields=normalized.schemaVersion===2?FROZEN_TARGET_V2_FIELDS:FROZEN_TARGET_FIELDS;
+  if(!hasExactFields(value,fields,'Frozen Run binding target',errors))return;
+  if(normalized.schemaVersion!==2&&learningContractDigest(value)!==learningContractDigest(normalized))errors.push('Frozen Run binding target is not canonical.');
+  if(!(normalized.schemaVersion===2?normalized.targetId&&normalized.skill&&normalized.sourceId&&normalized.sourceRevision:normalized.cardId&&normalized.skill&&normalized.sourceId&&normalized.sourceRevision))errors.push('Frozen Run binding target is incomplete.');
+}
+
+function validateStrictFrozenBinding(input={}){
+  const errors=[];
+  const shapeValid=hasExactFields(input,FROZEN_RUN_BINDING_FIELDS,'Frozen Run binding',errors);
+  if(![FROZEN_RUN_BINDING_VERSION,2].includes(Number(input?.schemaVersion)))errors.push('Frozen Run binding schemaVersion is unsupported.');
+  if(shapeValid){
+    const target=normalizeLearningTarget(input.target);
+    if(typeof input.runId!=='string'||!input.runId.trim()||typeof input.activitySpecId!=='string'||!input.activitySpecId.trim()||typeof input.activitySpecDigest!=='string'||!input.activitySpecDigest.trim()||typeof input.startIdempotencyKey!=='string'||!input.startIdempotencyKey.trim())errors.push('Frozen Run binding is missing required identity fields.');
+    validateFrozenTarget(input.target,errors);
+    if(target?.schemaVersion===2&&input.schemaVersion!==2)errors.push('Frozen Run binding schemaVersion does not match target contract version.');
+    validateExplicitBinding(input.executor,'Frozen Run binding executor',errors);
+    if(hasExactFields(input.launch,FROZEN_LAUNCH_FIELDS,'Frozen Run binding launch',errors))for(const field of FROZEN_LAUNCH_FIELDS)validateExplicitBinding(input.launch[field],`Frozen Run binding launch.${field}`,errors);
+    if(hasExactFields(input.evaluation,FROZEN_EVALUATION_FIELDS,'Frozen Run binding evaluation',errors)){
+      if(!['applicable','inapplicable'].includes(input.evaluation.marker))errors.push('Frozen Run binding evaluation marker is invalid.');
+      for(const field of FROZEN_EVALUATION_FIELDS.filter(field=>field!=='marker'))validateExplicitBinding(input.evaluation[field],`Frozen Run binding evaluation.${field}`,errors);
+      const anyApplicable=FROZEN_EVALUATION_FIELDS.filter(field=>field!=='marker').some(field=>input.evaluation[field]?.state==='bound');
+      if((input.evaluation.marker==='applicable')!==anyApplicable)errors.push('Frozen Run binding evaluation marker conflicts with its values.');
+    }
+    if(hasExactFields(input.evidencePolicy,FROZEN_EVIDENCE_POLICY_FIELDS,'Frozen Run binding evidencePolicy',errors))for(const field of FROZEN_EVIDENCE_POLICY_FIELDS)validateExplicitBinding(input.evidencePolicy[field],`Frozen Run binding evidencePolicy.${field}`,errors);
+    if(hasExactFields(input.assistance,FROZEN_ASSISTANCE_FIELDS,'Frozen Run binding assistance',errors))validateExplicitBinding(input.assistance.collectionMode,'Frozen Run binding assistance.collectionMode',errors);
+    if(errors.length===0){
+      const payload=frozenBindingPayload({...input,evaluation:{...input.evaluation,applicable:input.evaluation?.marker==='applicable'}});
+      if(input.digest!==learningContractDigest(payload))errors.push('Frozen Run binding digest mismatch.');
+    }
+  }
+  return{valid:errors.length===0,errors,value:errors.length===0?deepFreeze(clone(input)):null};
+}
+
+export function validateFrozenRunBinding(input={}){
+  return validateStrictFrozenBinding(input);
+  const payload=frozenBindingPayload(input);
+  const errors=[];
+  const unknown=Object.keys(input&&typeof input==='object'?input:{}).filter(key=>!['schemaVersion','runId','activitySpecId','activitySpecDigest','target','executor','launchBinding','promptRevision','configRevision','configDigest','launch','evaluation','evidencePolicyVersion','evidencePolicyReference','evidencePolicy','assistanceCollectionMode','assistance','startIdempotencyKey','digest'].includes(key));
+  if(Number(input?.schemaVersion)!==FROZEN_RUN_BINDING_VERSION)errors.push('Frozen Run binding schemaVersion không được hỗ trợ.');
+  if(unknown.length)errors.push(`Frozen Run binding chứa field không hỗ trợ: ${unknown.join(',')}.`);
+  if(!payload.runId||!payload.activitySpecId||!payload.activitySpecDigest||!isCompleteLearningTarget(payload.target)||!payload.startIdempotencyKey)errors.push('Frozen Run binding thiếu định danh hoặc exact target.');
+  if(input?.digest!==learningContractDigest(payload))errors.push('Frozen Run binding digest mismatch.');
+  return{valid:errors.length===0,errors,value:deepFreeze({...payload,digest:input?.digest||null})};
+}
+
+function targetContractVersion(target){return target?.schemaVersion===2?2:LEARNING_CONTRACT_VERSION;}
 
 export function createActivitySpec(input={}){
   const id=nullable(input.id,180);
@@ -85,7 +232,7 @@ export function createActivitySpec(input={}){
   const idempotencyKey=clean(input.idempotencyKey,240)||`activity:${id||'unbound'}`;
   return deepFreeze({
     kind:LEARNING_CONTRACT_KIND.activitySpec,
-    schemaVersion:Number(input.schemaVersion||LEARNING_CONTRACT_VERSION),
+    schemaVersion:Number(input.schemaVersion??targetContractVersion(target)),
     id,
     type,
     target,
@@ -108,7 +255,7 @@ export function createRun(input={}){
   const status=RUN_STATUS_SET.has(input.status)?input.status:'planned';
   return deepFreeze({
     kind:LEARNING_CONTRACT_KIND.run,
-    schemaVersion:Number(input.schemaVersion||LEARNING_CONTRACT_VERSION),
+    schemaVersion:Number(input.schemaVersion??targetContractVersion(activitySpec?.target)),
     id,
     activitySpecId,
     activitySpecDigest,
@@ -119,6 +266,7 @@ export function createRun(input={}){
     timezone:normalizeTimezone(input.timezone||activitySpec?.timezone),
     idempotencyKey:clean(input.idempotencyKey,240)||`run:${id||'unbound'}`,
     resumedFromRunId:nullable(input.resumedFromRunId,180),
+    frozenBinding:input.frozenBinding?clone(input.frozenBinding):null,
     metadata:normalizedMetadata(input.metadata)
   });
 }
@@ -177,7 +325,7 @@ export function createAttempt(input={}){
   const receiptId=nullable(input.receiptId,180);
   return deepFreeze({
     kind:LEARNING_CONTRACT_KIND.attempt,
-    schemaVersion:Number(input.schemaVersion||LEARNING_CONTRACT_VERSION),
+    schemaVersion:Number(input.schemaVersion??targetContractVersion(target)),
     id,
     runId:nullable(input.runId,180)||run?.id||null,
     activitySpecId,
@@ -205,7 +353,7 @@ export function createReceipt(input={}){
   const target=normalizeLearningTarget(input.target??attempt?.target??activitySpec?.target);
   return deepFreeze({
     kind:LEARNING_CONTRACT_KIND.receipt,
-    schemaVersion:Number(input.schemaVersion||LEARNING_CONTRACT_VERSION),
+    schemaVersion:Number(input.schemaVersion??targetContractVersion(target)),
     id,
     runId:nullable(input.runId,180)||run?.id||attempt?.runId||null,
     attemptId:nullable(input.attemptId,180)||attempt?.id||null,
@@ -228,6 +376,12 @@ function sameTarget(left,right){
 
 function baseValidation(value,kind){
   const errors=[];
+  if(Number(value?.schemaVersion)===2){
+    if(value?.kind!==kind)errors.push(`kind must be ${kind}.`);
+    if(!value?.id)errors.push(`${kind} requires id.`);
+    if(!value?.idempotencyKey)errors.push(`${kind} requires idempotencyKey.`);
+    return errors;
+  }
   if(value?.kind!==kind)errors.push(`kind phải là ${kind}.`);
   if(Number(value?.schemaVersion)!==LEARNING_CONTRACT_VERSION)errors.push(`schemaVersion ${value?.schemaVersion??'missing'} không được hỗ trợ.`);
   if(!value?.id)errors.push(`${kind} thiếu id.`);
@@ -238,6 +392,7 @@ function baseValidation(value,kind){
 export function validateActivitySpec(input,{allowIncompleteTarget=false}={}){
   const value=createActivitySpec(input);
   const errors=baseValidation(value,LEARNING_CONTRACT_KIND.activitySpec);
+  if(value.schemaVersion!==targetContractVersion(value.target))errors.push('ActivitySpec schemaVersion does not match target contract version.');
   if(!value.type||value.type==='unknown')errors.push('ActivitySpec thiếu type đã biết.');
   if(!allowIncompleteTarget&&!isCompleteLearningTarget(value.target))errors.push('ActivitySpec thiếu exact target card/skill/source revision.');
   if(value.plannedAt<0)errors.push('ActivitySpec plannedAt không hợp lệ.');
@@ -247,15 +402,26 @@ export function validateActivitySpec(input,{allowIncompleteTarget=false}={}){
 export function validateRun(input){
   const value=createRun(input);
   const errors=baseValidation(value,LEARNING_CONTRACT_KIND.run);
+  if(value.activitySpec&&value.schemaVersion!==targetContractVersion(value.activitySpec.target))errors.push('Run schemaVersion does not match target contract version.');
+  if(value.frozenBinding){
+    const frozen=validateFrozenRunBinding(value.frozenBinding);
+    if(frozen.valid){
+      if(frozen.value.runId!==value.id||frozen.value.activitySpecId!==value.activitySpecId||frozen.value.activitySpecDigest!==value.activitySpecDigest||!value.activitySpec||!sameTarget(frozen.value.target,value.activitySpec.target))errors.push('Run Frozen binding does not bind the exact Run, ActivitySpec and target.');
+      if(frozen.value.executor.state!=='bound'||frozen.value.executor.value!==value.activitySpec?.executor)errors.push('Run Frozen binding executor does not match the exact ActivitySpec executor.');
+      if(frozen.value.startIdempotencyKey!==value.activitySpec?.idempotencyKey)errors.push('Run Frozen binding start idempotency key does not match the exact ActivitySpec.');
+    }
+  }
   if(!value.activitySpecId||!value.activitySpecDigest)errors.push('Run thiếu ActivitySpec binding.');
   if(value.completedAt&&value.completedAt<value.startedAt)errors.push('Run completedAt trước startedAt.');
   if(value.activitySpec&&learningContractDigest(value.activitySpec)!==value.activitySpecDigest)errors.push('Run ActivitySpec digest mismatch.');
+  if(value.frozenBinding&&!validateFrozenRunBinding(value.frozenBinding).valid)errors.push('Run Frozen binding không hợp lệ.');
   return{valid:errors.length===0,errors,value};
 }
 
 export function validateAttempt(input,{allowIncompleteTarget=false}={}){
   const value=createAttempt(input);
   const errors=baseValidation(value,LEARNING_CONTRACT_KIND.attempt);
+  if(value.schemaVersion!==targetContractVersion(value.target))errors.push('Attempt schemaVersion does not match target contract version.');
   if(!value.runId)errors.push('Attempt thiếu runId.');
   if(!value.activitySpecId||!value.activityType||value.activityType==='unknown')errors.push('Attempt thiếu ActivitySpec binding.');
   if(!value.receiptId)errors.push('Attempt thiếu receiptId.');
@@ -272,6 +438,7 @@ export function validateAttempt(input,{allowIncompleteTarget=false}={}){
 export function validateReceipt(input,{allowIncompleteTarget=false}={}){
   const value=createReceipt(input);
   const errors=baseValidation(value,LEARNING_CONTRACT_KIND.receipt);
+  if(value.schemaVersion!==targetContractVersion(value.target))errors.push('Receipt schemaVersion does not match target contract version.');
   if(!value.runId||!value.attemptId||!value.activitySpecId)errors.push('Receipt thiếu run/attempt/activity binding.');
   if(!value.activitySpecDigest||!value.attemptDigest)errors.push('Receipt thiếu immutable digest binding.');
   if(!allowIncompleteTarget&&!isCompleteLearningTarget(value.target))errors.push('Receipt thiếu exact target.');

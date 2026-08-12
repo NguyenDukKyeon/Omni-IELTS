@@ -4,6 +4,7 @@ import { browserLaunchArguments, runBrowserSuite, waitForHttp, withBrowserHarnes
 
 const APP_URL='http://127.0.0.1:3000/#today';
 const DEBUG_PORT=9333;
+const PRIVATE_SOURCE_LIBRARY_ROUTE='#library';
 
 async function websocketText(data){
   if(typeof data==='string')return data;
@@ -87,17 +88,18 @@ async function main(){
     console.log(`Browser target committed: ${target.url} · ${target.title}`);
 
     cdp=new CdpClient(target.webSocketDebuggerUrl);await cdp.connect();
-    const runtimeErrors=[];
+    const runtimeErrors=[],networkRequests=[];
     cdp.on('Runtime.exceptionThrown',params=>runtimeErrors.push(params.exceptionDetails?.exception?.description||params.exceptionDetails?.text||'Runtime exception'));
     cdp.on('Runtime.consoleAPICalled',params=>{
       if(params.type!=='error')return;
       const text=(params.args||[]).map(arg=>arg.value??arg.description??'').join(' ');
       runtimeErrors.push(text||'console.error');
     });
-    await cdp.send('Page.enable');await cdp.send('Runtime.enable');await cdp.send('Log.enable');
+    cdp.on('Network.requestWillBeSent',params=>networkRequests.push(params.request?.url||''));
+    await cdp.send('Page.enable');await cdp.send('Runtime.enable');await cdp.send('Log.enable');await cdp.send('Network.enable');
 
     async function evaluate(expression){
-      const result=await cdp.send('Runtime.evaluate',{expression,returnByValue:true,userGesture:true});
+      const result=await cdp.send('Runtime.evaluate',{expression,returnByValue:true,userGesture:true,awaitPromise:true});
       if(result.exceptionDetails)throw new Error(result.exceptionDetails.exception?.description||result.exceptionDetails.text||'Runtime.evaluate failed');
       return result.result?.value;
     }
@@ -181,12 +183,39 @@ async function main(){
     await evaluate("document.querySelector('#wordDetailDialog [data-close-dialog]').click()");
     await waitFor("!document.getElementById('wordDetailDialog').open",'word detail close');
 
+    const privateTitle=`private-browser-${Date.now()}`,privateBody='Private browser body revision one.',privateBodyTwo='Private browser body revision two.';
+    const privateBefore=await evaluate(`(async()=>{const rows=async(database,stores)=>{const db=await new Promise((resolve,reject)=>{const request=indexedDB.open(database);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});try{const transaction=db.transaction(stores,'readonly'),result={};for(const store of stores)result[store]=await new Promise((resolve,reject)=>{const request=transaction.objectStore(store).getAll();request.onsuccess=()=>resolve(request.result.sort((a,b)=>String(a.id).localeCompare(String(b.id))));request.onerror=()=>reject(request.error);});return result;}finally{db.close();}};return JSON.stringify({cards:window.VocabMasterApp.getState().cards.length,v10:await rows('vocab-master-v10',['todayRuns','globalErrorRecords','resolverEvents','aiJobs','contentAssets']),ielts:await rows('vocab-master-ielts',['errorRecords'])});})()`);
+    const privateNetworkStart=networkRequests.length;
+    await evaluate(`(()=>{const form=document.querySelector('[data-private-source-form]');form.querySelector('[name=title]').value=${JSON.stringify(privateTitle)};form.querySelector('[name=text]').value=${JSON.stringify(privateBody)};form.querySelector('[data-private-source-preview]').click();})()`);
+    await waitFor("!document.querySelector('[data-private-source-preview-output]').hidden",'private source preview');
+    await waitFor("!document.querySelector('[data-private-source-form] [type=submit]').disabled",'private source save enabled after preview');
+    await evaluate("document.querySelector('[data-private-source-form]').requestSubmit()");
+    await waitFor(`document.querySelector('[data-private-source-results]').textContent.includes(${JSON.stringify(privateTitle)})`,'durable private source result');
+    const privateReloadOne=await evaluate('performance.timeOrigin');await cdp.send('Page.reload',{ignoreCache:true});await waitFor(`performance.timeOrigin!==${JSON.stringify(privateReloadOne)}&&document.querySelector('[data-view="library"]')?.classList.contains('active')&&document.querySelector('[data-private-source-results]')?.textContent.includes(${JSON.stringify(privateTitle)})`,'private source durable reload');
+    await evaluate("document.querySelector('[data-private-source-results] article').querySelectorAll('button')[0].click()");
+    await waitFor(`document.querySelector('[data-private-source-results]').textContent.includes('approved-private')`,'private approval');
+    const privateReloadTwo=await evaluate('performance.timeOrigin');await cdp.send('Page.reload',{ignoreCache:true});await waitFor(`performance.timeOrigin!==${JSON.stringify(privateReloadTwo)}&&document.querySelector('[data-private-source-results]')?.textContent.includes(${JSON.stringify(privateTitle)})&&document.querySelector('[data-private-source-results]')?.textContent.includes('approved-private')`,'approved private source reload');
+    await evaluate("document.querySelector('[data-private-source-results] article').querySelectorAll('button')[1].click()");
+    await waitFor(`document.querySelector('[data-private-source-form] [name=title]').value===${JSON.stringify(privateTitle)}`,'private source edit load');
+    await evaluate(`(()=>{const form=document.querySelector('[data-private-source-form]'),text=form.querySelector('[name=text]');text.value=${JSON.stringify(privateBodyTwo)};text.dispatchEvent(new Event('input',{bubbles:true}));form.querySelector('[data-private-source-preview]').click();form.requestSubmit();})()`);
+    await waitFor(`document.querySelector('[data-private-source-results]').textContent.includes(${JSON.stringify(privateTitle)})&&document.querySelector('[data-private-source-results]').textContent.includes('draft')`,'revision two stale approval');
+    const privateReloadThree=await evaluate('performance.timeOrigin');await cdp.send('Page.reload',{ignoreCache:true});await waitFor(`performance.timeOrigin!==${JSON.stringify(privateReloadThree)}&&document.querySelector('[data-private-source-results]')?.textContent.includes(${JSON.stringify(privateTitle)})&&document.querySelector('[data-private-source-results]')?.textContent.includes('draft')`,'revision two durable reload');
+    const privateRows=await evaluate(`(async()=>{const db=await new Promise((resolve,reject)=>{const request=indexedDB.open('vocab-master-v10');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});try{const transaction=db.transaction('privateSources','readonly'),request=transaction.objectStore('privateSources').getAll(),rows=await new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);}),owned=rows.filter(row=>row.kind==='private-source-head'&&row.currentRevisionId&&rows.some(revision=>revision.id===row.currentRevisionId&&revision.title===${JSON.stringify(privateTitle)}));const head=owned[0],records=rows.filter(row=>row.sourceId===head?.sourceId).sort((a,b)=>String(a.id).localeCompare(String(b.id)));return records;}finally{db.close();}})()`);assert.equal(privateRows.filter(row=>row.kind==='private-source-revision').length,2,'Private source did not retain exactly two revisions before delete.');assert.equal(privateRows.find(row=>row.kind==='private-source-head')?.revisionCount,2,'Private source head did not point to revision two.');assert.equal(privateRows.filter(row=>row.kind==='private-source-approval').length,1,'Private source approval lifecycle was not persisted exactly.');
+    await evaluate("(()=>{window.confirm=()=>true;document.querySelector('[data-private-source-results] article').querySelectorAll('button')[2].click();})()");
+    await waitFor(`!document.querySelector('[data-private-source-results]').textContent.includes(${JSON.stringify(privateTitle)})`,'private source delete');
+    const privateReloadFour=await evaluate('performance.timeOrigin');await cdp.send('Page.reload',{ignoreCache:true});await waitFor(`performance.timeOrigin!==${JSON.stringify(privateReloadFour)}&&document.querySelector('[data-view="library"]')?.classList.contains('active')&&!document.body.textContent.includes(${JSON.stringify(privateTitle)})&&!document.body.textContent.includes(${JSON.stringify(privateBody)})&&!document.body.textContent.includes(${JSON.stringify(privateBodyTwo)})`,'private tombstone reload privacy');
+    const privatePrivacy=await evaluate(`(async()=>{const db=await new Promise((resolve,reject)=>{const request=indexedDB.open('vocab-master-v10');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});try{const transaction=db.transaction('privateSources','readonly'),request=transaction.objectStore('privateSources').getAll(),rows=await new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);}),serialized=JSON.stringify(rows),storage=JSON.stringify({url:location.href,local:{...localStorage},session:{...sessionStorage}});return{rows,serialized,storage};}finally{db.close();}})()`);assert.equal(privatePrivacy.rows.filter(row=>row.sourceId===privateRows[0].sourceId).length,1,'Delete did not leave exactly one private tombstone.');assert.equal(privatePrivacy.rows.find(row=>row.sourceId===privateRows[0].sourceId)?.kind,'private-source-tombstone','Delete did not retain the canonical private tombstone.');for(const privateValue of [privateTitle,privateBody,privateBodyTwo]){assert.equal(privatePrivacy.serialized.includes(privateValue),false,'Private owner tombstone retained learner text.');assert.equal(privatePrivacy.storage.includes(privateValue),false,'Private learner text leaked into URL or browser storage.');}
+    const privateAfter=await evaluate(`(async()=>{const rows=async(database,stores)=>{const db=await new Promise((resolve,reject)=>{const request=indexedDB.open(database);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});try{const transaction=db.transaction(stores,'readonly'),result={};for(const store of stores)result[store]=await new Promise((resolve,reject)=>{const request=transaction.objectStore(store).getAll();request.onsuccess=()=>resolve(request.result.sort((a,b)=>String(a.id).localeCompare(String(b.id))));request.onerror=()=>reject(request.error);});return result;}finally{db.close();}};return JSON.stringify({cards:window.VocabMasterApp.getState().cards.length,v10:await rows('vocab-master-v10',['todayRuns','globalErrorRecords','resolverEvents','aiJobs','contentAssets']),ielts:await rows('vocab-master-ielts',['errorRecords'])});})()`);
+    assert.deepEqual(privateAfter,privateBefore,'Private source lifecycle mutated an evidence, Today, Error, AI/provider or public-content owner.');
+    assert.equal(networkRequests.slice(privateNetworkStart).some(url=>/(?:openai|gemini|provider|\/api\/ai)/i.test(url)),false,'Private source lifecycle made a provider request.');
+
     await evaluate("document.getElementById('topProfileButton').click()");
     await waitFor("document.getElementById('settingsDialog').open",'settings dialog');
     await evaluate(`(()=>{document.getElementById('settingMinutes').value='15';document.getElementById('settingsForm').requestSubmit();})()`);
     await waitFor("!document.getElementById('settingsDialog').open",'settings save and close');
     assert.equal(await evaluate("window.VocabMasterApp.getState().settings.minutes"),15,'Settings were not persisted to app state.');
 
+    await waitFor('window.VocabMasterTodayV2','Today runtime after private source reload');
     await evaluate(`(async()=>{const hashChanged=location.hash==='#today'?Promise.resolve():new Promise(resolve=>addEventListener('hashchange',resolve,{once:true}));document.querySelector('[data-route="today"]').click();await hashChanged;await window.VocabMasterTodayV2.refresh();})()`);
     await waitFor("document.querySelector('[data-view=\"today\"]')?.classList.contains('active')",'return to today');
     await waitFor("document.getElementById('v10TodayPlan')?.getAttribute('aria-busy')==='false'&&!document.getElementById('v10MorePractice')?.disabled",'settled Today refresh');

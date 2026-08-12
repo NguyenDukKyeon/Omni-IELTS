@@ -1,0 +1,56 @@
+{
+  "kind": "wave4-listening-matching-fixture",
+  "version": 1,
+  "scope": "CONTROLLED_LOCAL_TEST_ONLY",
+  "publication": false,
+  "productionCatalog": false,
+  "learnerEvidence": false,
+  "claims": {
+    "projectCreatedMathematicalWaveform": true,
+    "externalCopyrightedMedia": false,
+    "humanSpeech": false,
+    "realIeltsContentOrDifficulty": false,
+    "readinessEvidence": false,
+    "provider": null,
+    "model": null,
+    "tts": false,
+    "externalUrl": null,
+    "privateFilesystemPath": null
+  },
+  "audio": {
+    "path": "/tests/fixtures/wave2-listening-tone-fixture.wav",
+    "sha256": "41f90218a5ba4069c987d76352944b55773fe9f59ee53d011612ba047a1661c9",
+    "format": { "audioFormat": 1, "channels": 1, "bitsPerSample": 16, "sampleRate": 8000, "durationMs": 1800, "bytes": 28844 },
+    "frequencies": [440, 660, 440]
+  },
+  "transcript": {
+    "sourceId": "wave2-controlled-tone-source-v1",
+    "revisionId": "transcript-revision:wave2-controlled-tone-source-v1:fnv1a64:294:5291d0f11f83e0e3",
+    "contentDigest": "fnv1a64:294:5291d0f11f83e0e3",
+    "coverage": { "startMs": 0, "endMs": 1800, "coveredMs": 1800, "ratio": 1, "complete": true },
+    "segments": [
+      { "id": "transcript-segment:transcript-revision:wave2-controlled-tone-source-v1:fnv1a64:294:5291d0f11f83e0e3:fnv1a64:128:3a9acbf387c40251", "startMs": 0, "endMs": 600, "text": "low tone" },
+      { "id": "transcript-segment:transcript-revision:wave2-controlled-tone-source-v1:fnv1a64:294:5291d0f11f83e0e3:fnv1a64:129:a20c493a9624016e", "startMs": 600, "endMs": 1200, "text": "high tone" },
+      { "id": "transcript-segment:transcript-revision:wave2-controlled-tone-source-v1:fnv1a64:294:5291d0f11f83e0e3:fnv1a64:128:03f13593c15c09da", "startMs": 1200, "endMs": 1800, "text": "low tone" }
+    ]
+  },
+  "definitions": [
+    {
+      "id": "wave4-tone-matching-single-use",
+      "kind": "listening-matching",
+      "prompt": "Match each controlled tone position to its tone label.",
+      "reusePolicy": "SINGLE_USE",
+      "slots": [{ "id": "first", "label": "First tone", "acceptedOptionId": "low" }, { "id": "middle", "label": "Middle tone", "acceptedOptionId": "high" }],
+      "options": [{ "id": "low", "label": "Low tone" }, { "id": "high", "label": "High tone" }]
+    },
+    {
+      "id": "wave4-tone-matching-allow-reuse",
+      "kind": "listening-matching",
+      "prompt": "Match the first and final controlled tones.",
+      "reusePolicy": "ALLOW_REUSE",
+      "slots": [{ "id": "first", "label": "First tone", "acceptedOptionId": "low" }, { "id": "final", "label": "Final tone", "acceptedOptionId": "low" }],
+      "options": [{ "id": "low", "label": "Low tone" }, { "id": "high", "label": "High tone" }]
+    }
+  ],
+  "timestamps": { "createdAt": 1786320000000, "updatedAt": 1786320000000 }
+}

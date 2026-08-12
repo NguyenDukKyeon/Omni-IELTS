@@ -1,3 +1,5 @@
+import { normalizeLearningTarget } from './learning-contracts.js';
+
 export const EVIDENCE_POLICY_VERSION='phase0-evidence-v1';
 
 export const EVIDENCE_REASONS=Object.freeze({
@@ -25,6 +27,7 @@ export const EVIDENCE_REASONS=Object.freeze({
   spellingOnly:'spelling-is-not-listening-retrieval',
   unclassifiedListeningError:'listening-error-is-unclassified',
   invalidResult:'result-is-not-qualified'
+  ,unsupportedTarget:'unsupported-non-card-target'
 });
 
 const KNOWN_ACTIVITIES=new Set([
@@ -68,6 +71,11 @@ export function evidenceDigest(value=''){
 }
 
 export function normalizeEvidenceTarget(input={}){
+  const target=normalizeLearningTarget(input);
+  if(target?.schemaVersion===2)return target;
+  let v2Marker=false;
+  try{v2Marker=Boolean(input&&typeof input==='object'&&(Object.prototype.hasOwnProperty.call(input,'targetType')||Object.prototype.hasOwnProperty.call(input,'targetId')));}catch{}
+  if(v2Marker)return Object.freeze({schemaVersion:2,targetType:null,targetId:null,cardId:null,senseId:null,skill:null,sourceId:null,sourceRevision:null});
   return Object.freeze({
     cardId:cleanOrNull(input?.cardId,180),
     senseId:cleanOrNull(input?.senseId,180),
@@ -169,6 +177,7 @@ export function decideEvidence(input={}){
   if(!attempt.receiptId)return deny(EVIDENCE_REASONS.missingReceiptId);
   if(activity.type==='unknown'||attempt.activityType!==activity.type)return deny(EVIDENCE_REASONS.unknownActivity);
   if(attempt.activityId!==activity.id)return deny(EVIDENCE_REASONS.activityMismatch);
+  if(activity.target?.schemaVersion===2||attempt.target?.schemaVersion===2){if(activity.target?.schemaVersion!==2||attempt.target?.schemaVersion!==2||activity.target.targetType!==attempt.target.targetType||activity.target.targetId!==attempt.target.targetId)return deny(EVIDENCE_REASONS.unsupportedTarget);if(activity.target.targetType==='ielts-objective-item')return deny(EVIDENCE_REASONS.unsupportedTarget);if(activity.target.targetType!=='core-card')return deny(EVIDENCE_REASONS.unsupportedTarget);}
   if(!activity.target.cardId||!activity.target.skill||!activity.target.sourceId||!activity.target.sourceRevision||!attempt.target.cardId||!attempt.target.skill||!attempt.target.sourceId||!attempt.target.sourceRevision)return deny(EVIDENCE_REASONS.missingTarget);
   if(attempt.target.cardId!==activity.target.cardId)return deny(EVIDENCE_REASONS.targetMismatch);
   if(!sameNullable(attempt.target.senseId,activity.target.senseId))return deny(EVIDENCE_REASONS.targetMismatch);

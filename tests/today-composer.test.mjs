@@ -53,3 +53,12 @@ test('timezone day boundaries are stable and explicit',()=>{
   assert.equal(dateKeyInTimezone(later,'Asia/Saigon'),'2026-07-31');
   assert.equal(dateKeyInTimezone(later,'America/Los_Angeles'),'2026-07-30');
 });
+
+test('explicit objective-item candidates compose exactly without inventory discovery',()=>{
+  const target={schemaVersion:2,targetType:'ielts-objective-item',targetId:`ielts-objective:${'b'.repeat(64)}`,cardId:null,senseId:null,skill:'reading',sourceId:'reading-source:fixture',sourceRevision:'reading-source:fixture:1'};
+  const plan=composeTodayPlan({content:[{id:'objective-reading',type:'reading',target,executor:'qar-reading',estimatedSeconds:60}],now});
+  assert.equal(plan.activities.length,1);
+  assert.deepEqual(plan.activities[0].activitySpec.target,target);
+  assert.equal(plan.activities[0].activitySpec.schemaVersion,2);
+  assert.equal(composeTodayPlan({now}).activities.length,0);
+});
