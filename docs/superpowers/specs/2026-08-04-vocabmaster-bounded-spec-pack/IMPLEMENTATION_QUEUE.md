@@ -1,6 +1,6 @@
 # VocabMaster Implementation Queue by Delivery Wave
 
-Queue status: `PLANNING_ONLY / NO_IMPLEMENTATION_AUTHORIZATION`
+Queue status: `PLANNING_ONLY / NO_IMPLEMENTATION_AUTHORIZATION` (Superseded for Wave 6 P7-00/WKN-00 by candidate `W6-P7-00-WKN-AUTH-001`)
 
 This queue orders future decisions and bounded work. It does not authorize a
 branch, worktree, source write, dependency, package ratification, status change
