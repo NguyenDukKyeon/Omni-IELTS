@@ -80,3 +80,17 @@ test('heatmap and activity summary remain bounded and deterministic',()=>{
   assert.equal(summary.activeDaysLast7,2);
   assert.equal(summary.streak,2);
 });
+
+test('P7-00: summarizeReviewQuality exposes canonical metrics projection gap', () => {
+  const events = [
+    { rating: 'hard', skill: 'recall', evidenceType: 'independent_review', metadata: { eventId: 'ev-1' } }
+  ];
+  const quality = summarizeReviewQuality(events);
+  assert.ok('denominator' in quality, 'Canonical metrics must include denominator');
+  assert.ok('provenance' in quality, 'Canonical metrics must include source/provenance drill-down');
+});
+
+test('P7-00: summarizeReviewQuality explicit insufficient-data semantics', () => {
+  const quality = summarizeReviewQuality([]);
+  assert.equal(quality.status, 'INSUFFICIENT_DATA', 'Must explicitly report INSUFFICIENT_DATA for empty inputs');
+});
