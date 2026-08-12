@@ -76,7 +76,10 @@ export class ResolverJobRepository {
     return this.serial(async()=>{
       if(!cloudConsentIsAuthentic(record))throw resolverError('CONSENT_REQUIRED','Cloud consent receipt failed durable authority validation.');
       const subjectId=String(record.subjectId),current=this.cloudConsentCurrent.get(subjectId);
-      if(current&&Number(current.updatedAt)>Number(record.updatedAt))throw resolverError('CONSENT_REQUIRED','Stale cloud consent cannot replace the current durable decision.');
+      if(current){
+        if(Number(current.updatedAt)>Number(record.updatedAt))throw resolverError('CONSENT_REQUIRED','Stale cloud consent cannot replace the current durable decision.');
+        if(Number(current.updatedAt)===Number(record.updatedAt)&&current.receiptId!==record.receiptId&&this.cloudConsentHistory.has(record.receiptId))throw resolverError('CONSENT_REQUIRED','Stale cloud consent cannot replace the current durable decision.');
+      }
       this.cloudConsentCurrent.set(subjectId,clone(record));this.cloudConsentHistory.set(record.receiptId,clone(record));return clone(record);
     });
   }

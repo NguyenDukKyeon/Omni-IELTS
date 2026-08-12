@@ -46,3 +46,23 @@ test('durable consent authority rejects forged, withdrawn and stale receipts bef
     await assert.rejects(()=>repository.recordCloudConsent(accepted),error=>error.code==='CONSENT_REQUIRED');
   }finally{await rm(root,{recursive:true,force:true});}
 });
+
+test('server consent authority rejects same-millisecond stale replay',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'phase5-gemini-consent-replay-')),repository=new ResolverJobRepository({file:join(root,'jobs.json')}),subjectId='phase5-consent-subject:same-ms-fixture';
+  try{
+    const frozenTime = 4000;
+    const accepted=createCloudConsent({decision:'accepted',subjectId,acknowledgesDataTransfer:true,acknowledgesRetention:true,acknowledgesProviderCost:true},frozenTime);
+    await repository.recordCloudConsent(accepted);
+    const withdrawn=createCloudConsent({decision:'declined',subjectId},frozenTime);
+    await repository.recordCloudConsent(withdrawn);
+    
+    assert.equal(accepted.updatedAt,frozenTime);
+    assert.equal(withdrawn.updatedAt,frozenTime);
+    assert.notEqual(accepted.receiptId,withdrawn.receiptId);
+    
+    await assert.rejects(()=>repository.recordCloudConsent(accepted),error=>error.code==='CONSENT_REQUIRED');
+    const current = await repository.getCurrentCloudConsent(subjectId);
+    assert.equal(current.receiptId, withdrawn.receiptId);
+    await assert.rejects(()=>repository.assertCurrentCloudConsent({subjectId,receiptId:accepted.receiptId,consentVersion:CLOUD_CONSENT_VERSION}),error=>error.code==='CONSENT_REQUIRED');
+  }finally{await rm(root,{recursive:true,force:true});}
+});
