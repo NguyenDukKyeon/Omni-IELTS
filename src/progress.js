@@ -96,13 +96,27 @@ export function calculateKnowledgeStrength(cards=[],now=Date.now(),fsrsConfig=un
 export function summarizeReviewQuality(events=[]){
   const ratingName=value=>['again','hard','good','easy'].includes(value)?value:({1:'again',2:'hard',3:'good',4:'easy'})[Number(value)]||null;
   const eligible=events.filter(event=>!event.assisted&&isLearningEvidence(event)).map(event=>({...event,rating:ratingName(event.rating??event.fsrsRating)})).filter(event=>event.rating);
+  
+  if (eligible.length === 0) {
+    return { status: 'INSUFFICIENT_DATA' };
+  }
+  
   const successful=eligible.filter(event=>event.rating!=='again').length;
   const again=eligible.filter(event=>event.rating==='again').length;
   const bySkill=Object.fromEntries(FSRS_SKILLS.map(skill=>{
     const rows=eligible.filter(event=>event.skill===skill);
     return[skill,{reviews:rows.length,successRate:rows.length?Math.round(rows.filter(event=>event.rating!=='again').length/rows.length*100):0}];
   }));
-  return{reviews:eligible.length,successful,again,successRate:eligible.length?Math.round(successful/eligible.length*100):0,bySkill};
+  
+  return{
+    reviews:eligible.length,
+    successful,
+    again,
+    successRate:eligible.length?Math.round(successful/eligible.length*100):0,
+    bySkill,
+    denominator: eligible.length,
+    provenance: eligible.map(e => e.metadata?.eventId || e.eventId || 'unknown')
+  };
 }
 
 export function summarizeActivity(events=[],now=Date.now(),timeZone=undefined){
