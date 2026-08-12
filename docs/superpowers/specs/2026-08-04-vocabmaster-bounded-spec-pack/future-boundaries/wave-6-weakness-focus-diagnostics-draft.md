@@ -1,8 +1,8 @@
 # Wave 6 — Weakness, Focus and Diagnostics Boundary Draft
 
-Artifact status: `DRAFT_PENDING_CANONICAL_REBIND`
+Artifact status: `DRAFT_WKN_00_CANONICAL_REBIND_RESOLVED`
 
-Canonical owner: `UNASSIGNED — U-FD IS GROUPING_ONLY`
+Canonical owner: `WKN-00 rebound to P7-00; FCS/ASM/TD remain UNASSIGNED — U-FD IS GROUPING_ONLY`
 Implementation authorization: `NOT_GRANTED`
 
 ## Wave purpose

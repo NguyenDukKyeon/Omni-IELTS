@@ -126,7 +126,7 @@ productive practice is not a predecessor for safe source import.
 
 ## Wave 6 — Deterministic weakness, focus and assessment
 
-1. Resolve/port WeaknessProfile projection into the P7-00 metrics owner.
+1. Wave 6 WKN-00 canonical owner rebind is resolved to P7-00, but executable implementation remains separately authorization-gated.
 2. Port shared/canonical Focus semantics into Today/P7-04; due review remains
    first.
 3. Optionally ratify a visibly advisory Focus selector with no provider call on
