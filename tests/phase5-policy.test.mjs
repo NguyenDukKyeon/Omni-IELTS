@@ -53,6 +53,22 @@ test('cloud consent is explicit, versioned and durable without a credential',asy
   assert.equal(history.some(row=>row.receiptId===withdrawn.receiptId),true);
 });
 
+test('cloud consent replay is rejected even when accepted and withdrawn share the exact same timestamp',async()=>{
+  const originalNow=Date.now;
+  try{
+    const frozenTime=Date.now() + 100000;
+    Date.now=()=>frozenTime;
+    const accepted=await saveCloudConsent({decision:'accepted',acknowledgesDataTransfer:true,acknowledgesRetention:true,acknowledgesProviderCost:true});
+    const withdrawn=await saveCloudConsent({decision:'declined'});
+    assert.equal(accepted.updatedAt,frozenTime);
+    assert.equal(withdrawn.updatedAt,frozenTime);
+    assert.notEqual(accepted.receiptId,withdrawn.receiptId);
+    await assert.rejects(()=>saveCloudConsent(accepted),error=>error.code==='CONSENT_REQUIRED');
+  }finally{
+    Date.now=originalNow;
+  }
+});
+
 test('mobile never advertises a desktop companion capability',()=>{
   const mobile=capabilityMatrix({device:'mobile',online:true,companionAvailable:true,modelInstalled:true,cloudConfigured:true});
   assert.equal(mobile.localAsr.available,false);
