@@ -1,9 +1,9 @@
 # Wave 6 — Weakness, Focus and Diagnostics Boundary Draft
 
-Artifact status: `DRAFT_PENDING_CANONICAL_REBIND`
+Artifact status: `DRAFT_PENDING_CANONICAL_REBIND` (Superseded for WKN-00 by candidate `W6-P7-00-WKN-AUTH-001`)
 
-Canonical owner: `UNASSIGNED — U-FD IS GROUPING_ONLY`
-Implementation authorization: `NOT_GRANTED`
+Canonical owner: `UNASSIGNED — U-FD IS GROUPING_ONLY` (P7-00 canonicalized for WKN-00)
+Implementation authorization: `NOT_GRANTED` (WKN-00 authorization proposed in `W6-P7-00-WKN-AUTH-001`, pending exact-head independent ACCEPT)
 
 ## Wave purpose
 

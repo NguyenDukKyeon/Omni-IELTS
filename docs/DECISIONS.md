@@ -785,3 +785,19 @@ Activation: ADR-047 does not self-activate the substrate. The current PR #38 roo
 Consequences: PMA-12 can obtain the missing natural exact-command/measurement carrier without turning EWF-00 into a general workflow framework. All historical PR #37/PR #38 evidence and verdicts keep their original exact-head meaning. No product package status or acceptance changes.
 
 Rollback: removing a future accepted measurement substrate restores the manual EWF path without changing product source, product history, recorded evidence, package status or verdict history. ADR-046 then continues to govern all remaining workflow/automation behavior exactly as before this narrow exception.
+
+## ADR-048 — Phase 7 foundation unlocks P7-00 and absorbs WeaknessProfile
+
+Status: CONFIRMED
+
+Context: Phase 7 is designated as `BLOCKED` because its broader rollout requires clean events, outcomes, and content scale. Consequently, `P7-00` was labeled `PHASE_BLOCKED` in `docs/IMPLEMENTATION_STATUS.md`. However, `docs/ROADMAP.md` correctly specifies that `P7-00` (the canonical metrics reducer) only depends on `P1-02` and `P1-08`. Therefore, `P7-00` preparation can occur independently of the downstream rollout constraints. Additionally, Wave 6 planning requires a canonical owner for `WKN-00` (deterministic WeaknessProfile projection).
+
+Decision:
+1. `P7-00` is explicitly unblocked as a foundational measurement package. Because its required dependencies (`P1-02`, `P1-08`) are `ACCEPTED` and no stronger canonical gate forbids its preparation, it becomes the next independently authorized bounded package.
+2. Phase 7 overall rollout remains `BLOCKED`, meaning `P7-01` through `P7-05` remain `PHASE_BLOCKED`. `P7-04` (Workload recommender) is not unlocked.
+3. `WKN-00` is absorbed into `P7-00` as a deterministic projection boundary rather than becoming a second canonical package. `P7-00` remains the sole metrics/weakness reducer owner. The WeaknessProfile must rely purely on canonical event inputs (via `P1-02`/`P1-08`) and FSRS event logic, ensuring stable, reproducible, and verifiable outputs with explicit confidence bounds and insufficient-data behaviors.
+
+Consequences:
+`P7-00` can now be implemented as an isolated execution capsule without prematurely exposing the rest of Phase 7 or Wave 6. Migration, rollback, and evidence for the WeaknessProfile are bound to the `P7-00` lifecycle. No second scheduler or AI-driven canonical profile authority is created. `U-FD` remains a grouping umbrella, not a package owner.
+
+Revisit when: `P7-00` is `ACCEPTED` and Phase 7 requires downstream personalization or outcome calibration.

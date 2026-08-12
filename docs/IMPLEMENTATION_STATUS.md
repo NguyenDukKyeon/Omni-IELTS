@@ -531,7 +531,7 @@ rights, editorial and independent-review gates are satisfied.
 
 | Package | Branch | Dependency | Status |
 |---|---|---|---|
-| P7-00 Metrics reducer | codex/p7-00-metrics-reducer | P1-02, P1-08 | PHASE_BLOCKED |
+| P7-00 Metrics reducer | codex/p7-00-metrics-reducer | P1-02, P1-08 | NEXT |
 | P7-01 Honest Progress | codex/p7-01-honest-progress | P7-00 | PHASE_BLOCKED |
 | P7-02 GoalProfile | codex/p7-02-goal-profile | P7-00, P4-10, P2-06 | PHASE_BLOCKED |
 | P7-03 Outcomes/calibration | codex/p7-03-outcomes-calibration | P7-00, mature clean cohort | PHASE_BLOCKED |
