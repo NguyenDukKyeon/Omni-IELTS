@@ -785,3 +785,23 @@ Activation: ADR-047 does not self-activate the substrate. The current PR #38 roo
 Consequences: PMA-12 can obtain the missing natural exact-command/measurement carrier without turning EWF-00 into a general workflow framework. All historical PR #37/PR #38 evidence and verdicts keep their original exact-head meaning. No product package status or acceptance changes.
 
 Rollback: removing a future accepted measurement substrate restores the manual EWF path without changing product source, product history, recorded evidence, package status or verdict history. ADR-046 then continues to govern all remaining workflow/automation behavior exactly as before this narrow exception.
+
+## ADR-048 — Wave 6 WKN-00 canonical owner rebind to P7-00
+
+Status: CONFIRMED
+
+Decision:
+P7-00 is eligible to receive a separate bounded implementation authorization.
+P7-00 IS NOT implementation-authorized by this ADR.
+WKN-00 is canonically absorbed into P7-00.
+A future executable authorization must separately freeze an exact implementation predecessor under Protocol V1.
+
+Consequences: 
+The canonical evidence/errors to deterministic versioned WeaknessProfile projection boundary is established under P7-00.
+The WeaknessProfile contract requires the same canonical inputs, taxonomy version, and projector version to equal the same output. It explicitly requires denominator, sample size, reason codes, uncertainty, insufficient-data state, and provenance.
+Sparse/conflicting evidence must NOT become weak, mastered, ready, or band estimate.
+AI cannot write canonical WeaknessProfile.
+There is no second metrics truth, no second Error Repository, no second Today scheduler, and no FSRS tuning.
+
+Revisit when:
+A bounded execution authorization candidate with an exact implementation predecessor is created.
