@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { IDBFactory,IDBDatabase,IDBKeyRange } from 'fake-indexeddb';
+import { createPrivateSourceRef } from '../src/private-source-contracts.js';
+import { createPrivateSourceLibrary } from '../src/private-source-library.js';
 
 globalThis.indexedDB=new IDBFactory();
 globalThis.IDBKeyRange=IDBKeyRange;
@@ -11,23 +13,31 @@ const core=await import('../src/persistence.js');
 const coreContracts=await import('../src/persistence-core.js');
 const ielts=await import('../src/ielts-persistence.js');
 const { IELTS_STORE_NAMES }=await import('../src/ielts-domain.js');
+const inventory=await import('../src/ielts-profile-inventory.js');
+const { createSourceRevisionRef }=await import('../src/source-revision-ref.js');
 const v10=await import('../src/v10-persistence.js');
 const { V10_DB_NAME,V10_DB_VERSION,V10_STORES }=await import('../src/v10-contracts.js');
 const backup=await import('../src/ielts-backup.js');
 const backupBridge=await import('../src/ielts-backup-bridge.js');
 const registry=await import('../src/backup-registry.js');
 const storageSafety=await import('../src/storage-safety.js');
+const { PRODUCTIVE_PROMPT_REF }=await import('../src/productive-text-contracts.js');
+const { ProductivePractice }=await import('../src/productive-practice.js');
 
 let baselineEnvelope;
 let targetEnvelope;
+const inventoryRow=label=>inventory.createIeltsObjectiveInventoryItem({kind:'ielts-objective-inventory-item',schemaVersion:1,itemId:`inventory-${label}`,itemRevision:1,skill:'reading',profiles:['academic'],form:{id:'academic-form',revision:1},section:{id:'reading-section',revision:1,number:1},order:1,sourceRevisionRef:createSourceRevisionRef({schema:'SourceRevisionRef',version:1,kind:'private-pack',authority:'test-owner',sourceId:'source-test',revisionId:'revision-test',integrity:'a'.repeat(64),locator:{assetId:'asset-test'},provenance:{origin:'test',verification:'verified',rights:'allowed',privacy:'private'}}),questionBinding:{kind:'single-choice',schemaVersion:1,registryRevision:'qar-v1',questionId:'question-test',promptRevision:'prompt-v1',promptDigest:'fnv1a64:a',keyRevision:'key-v1',keyDigest:'fnv1a64:b',rubricRevision:'rubric-v1',rubricDigest:'fnv1a64:c',scorer:{id:'scorer-test',version:1},reviewPolicyRevision:'review-v1',requiredCapabilities:['keyboard']},questionPayload:{prompt:'Pick one',options:[{id:'a',text:'A'},{id:'b',text:'B'}]},status:'draft',rights:null,provenance:null,humanReview:null,createdAt:'2026-08-10T05:00:00.000Z',verifiedAt:null,retiredAt:null,retirementReason:null,extensions:{}});
 
 async function seedSentinels(label){
   for(const entry of registry.BACKUP_STORE_REGISTRY.filter(row=>row.backupRule!=='exclude')){
     const key=`${label}-${entry.owner}-${entry.store}`;
     if(entry.owner==='core')await core.__testing.putOne(entry.store,{[entry.keyPath]:key,label});
+    else if(entry.owner==='ielts'&&entry.store===IELTS_STORE_NAMES.objectiveInventory)await ielts.saveIeltsObjectiveInventoryItem(inventoryRow(label));
+    else if(entry.owner==='ielts'&&entry.store===IELTS_STORE_NAMES.learnerArtifacts)await ielts.autosaveLearnerTextArtifact({text:`${label} productive artifact`,at:Date.now()});
     else if(entry.owner==='ielts')await ielts.__testing.putOne(entry.store,{[entry.keyPath]:key,label});
     else if(entry.store===V10_STORES.transcriptCache)await v10.putV10Record(entry.store,{id:key,cacheKey:key,provider:'imported',segments:[{id:`${key}-segment`,startMs:0,endMs:1000,text:`${label} imported transcript`}]},'restore-fixture');
     else if(entry.store===V10_STORES.contentAssets)await v10.putV10Record(entry.store,{id:`personal:${key}`,lessonId:'personal-next-session',data:{label}},'restore-fixture');
+    else if(entry.store===V10_STORES.privateSources){const sourceId=`private-source:00000000-0000-4000-8000-${label==='before'?'000000000021':'000000000022'}`,text=`${label} private text`,revisionId=`${sourceId}:revision:1`;await v10.putV10Record(entry.store,{kind:'private-source-head',id:sourceId,sourceId,currentRevisionId:revisionId,revisionCount:1,state:'draft',currentApprovalId:null,createdAt:1,updatedAt:1},'restore-fixture');const revision={kind:'private-source-revision',id:revisionId,sourceId,revisionNumber:1,parentRevisionId:null,title:label,text,textDigest:`sha256:${registry.sha256Hex(text)}`,utf8Bytes:new TextEncoder().encode(text).length,sourceRevisionRef:null,createdAt:1};revision.sourceRevisionRef=createPrivateSourceRef(revision);await v10.putV10Record(entry.store,revision,'restore-fixture');}
     else await v10.putV10Record(entry.store,{[entry.keyPath]:key,label},'restore-fixture');
   }
 }
@@ -48,6 +58,46 @@ test('staged vNext restore commits, reopens, verifies and is idempotent',async()
   const result=await backup.restoreCombinedBackup(targetEnvelope);assert.equal(result.valid,true);assert.equal(result.durable,true);assert.equal(result.verified,true);assert.equal(result.status,'restored');assert.equal(result.payloadDigest,targetEnvelope.payloadDigest);
   assert.equal(await currentLogicalDigest(),logicalDigest(targetEnvelope));assert.equal(await core.readCoreRestoreJournal(),undefined);
   const duplicate=await backup.restoreCombinedBackup(targetEnvelope);assert.equal(duplicate.alreadyApplied,true);assert.equal(duplicate.status,'already-current');assert.equal(await currentLogicalDigest(),logicalDigest(targetEnvelope));
+});
+
+test('authentic Productive Stage A replay/conflict and Stage B stale restore lifecycle',async()=>{
+  await backup.restoreCombinedBackup(baselineEnvelope);const responses=[{criterionId:'purpose',status:'satisfied'},{criterionId:'support',status:'revisit'},{criterionId:'organization',status:'satisfied'},{criterionId:'clarity',status:'not-applicable'}],first=await ielts.autosaveLearnerTextArtifact({text:'A restore proof keeps private writing durable.',promptRef:PRODUCTIVE_PROMPT_REF,at:701}),input={artifactId:first.artifactId,artifactRevisionId:first.artifactRevisionId,responses,note:'Keep this private restore note.'},runtime=new ProductivePractice({now:()=>702}),result=await runtime.submitSelfReview({...input,now:702}),stageA=await currentEnvelope();await backup.restoreCombinedBackup(baselineEnvelope);await backup.restoreCombinedBackup(stageA);const replay=await new ProductivePractice({now:()=>799}).submitSelfReview({...input,now:799});assert.deepEqual(replay,result);await assert.rejects(()=>new ProductivePractice({now:()=>800}).submitSelfReview({...input,note:'changed',now:800}),error=>error.code==='PRODUCTIVE_TERMINAL_CONFLICT');
+  const beforeTamper=await currentEnvelope(),repack=value=>{value.payloadDigest=registry.canonicalBackupDigest(value.domains);const manifest=value.manifest.stores.find(entry=>entry.owner==='v10'&&entry.store===V10_STORES.todayRuns);manifest.contentDigest=`sha256:${registry.sha256Hex(JSON.stringify(value.domains.v10.stores[V10_STORES.todayRuns]))}`;return value;};
+  for(const mutate of [row=>{row.activityId='forged-activity';},row=>{row.evidenceDecision.eligible=!row.evidenceDecision.eligible;},row=>{row.terminal.digest='fnv1a64:0:0';}]){const forged=structuredClone(stageA),row=forged.domains.v10.stores[V10_STORES.todayRuns].find(value=>value.activitySpec?.target?.targetType==='productive-text-revision');assert.ok(row);mutate(row);repack(forged);assert.equal(backup.validateCombinedBackup(forged).valid,false);await assert.rejects(()=>backup.restoreCombinedBackup(forged),error=>error.code==='BACKUP_INVALID');assert.equal(await core.readCoreRestoreJournal(),undefined);assert.equal((await currentEnvelope()).payloadDigest,beforeTamper.payloadDigest);}
+  const second=await ielts.autosaveLearnerTextArtifact({artifactId:first.artifactId,expectedRevisionId:first.artifactRevisionId,promptRef:PRODUCTIVE_PROMPT_REF,text:'A restore proof keeps private writing durable after revision two.',at:803}),stageB=await currentEnvelope();await backup.restoreCombinedBackup(baselineEnvelope);await backup.restoreCombinedBackup(stageB);const reopened=await ielts.getLearnerTextArtifact(first.artifactId),feedback=await ielts.getProductiveFeedbackProjection(result.feedbackId);assert.equal(reopened.artifact.currentRevisionId,second.artifactRevisionId);assert.deepEqual(reopened.revisions.map(row=>row.text),['A restore proof keeps private writing durable.','A restore proof keeps private writing durable after revision two.']);assert.equal(feedback.freshness,'stale');await assert.rejects(()=>new ProductivePractice({now:()=>900}).submitSelfReview({...input,now:900}),error=>error.code==='PRODUCTIVE_STALE_REVISION');
+});
+
+test('private source backup restore reopens revisions, approval, tombstone privacy and an explicit older recovery',async()=>{
+  await backup.restoreCombinedBackup(baselineEnvelope);
+  const sourceId='private-source:00000000-0000-4000-8000-000000000888',library=createPrivateSourceLibrary();
+  const first=await library.create({sourceId,title:'Private restore title',text:'Private restore body revision one.',createdAt:810});
+  await library.approve({sourceId,expectedRevisionId:first.currentRevisionId,approvedAt:811});
+  const second=await library.edit({sourceId,title:'Private restore title two',text:'Private restore body revision two.',expectedRevisionId:first.currentRevisionId,updatedAt:812});
+  await library.approve({sourceId,expectedRevisionId:second.currentRevisionId,approvedAt:813});
+  const live=await currentEnvelope();
+  await backup.restoreCombinedBackup(baselineEnvelope);await backup.restoreCombinedBackup(live);await v10.reopenV10Database();
+  const reopened=createPrivateSourceLibrary(),loaded=await reopened.getById(sourceId),historical=await reopened.getById(sourceId,{revisionId:first.currentRevisionId});assert.equal(loaded.text,'Private restore body revision two.');assert.equal(loaded.state,'approved-private');assert.equal(historical.title,'Private restore title');assert.equal(historical.text,'Private restore body revision one.');assert.equal((await reopened.search('revision two'))[0].currentRevisionId,second.currentRevisionId);
+  await reopened.delete({sourceId,expectedRevisionId:second.currentRevisionId,deletedAt:814});const tombstone=await currentEnvelope(),serialized=JSON.stringify(tombstone);for(const privateValue of ['Private restore title','Private restore body revision one.','Private restore title two','Private restore body revision two.'])assert.equal(serialized.includes(privateValue),false);
+  await backup.restoreCombinedBackup(baselineEnvelope);await backup.restoreCombinedBackup(tombstone);await v10.reopenV10Database();const rows=await v10.listV10Records(V10_STORES.privateSources,{sortBy:'id'});assert.deepEqual(rows.filter(row=>row.sourceId===sourceId).map(row=>row.kind),['private-source-tombstone']);await assert.rejects(()=>createPrivateSourceLibrary().getById(sourceId),error=>error.code==='TOMBSTONED');
+  await backup.restoreCombinedBackup(live);await v10.reopenV10Database();const recovered=createPrivateSourceLibrary();assert.equal((await recovered.getById(sourceId)).text,'Private restore body revision two.');assert.equal((await recovered.getById(sourceId,{revisionId:first.currentRevisionId})).text,'Private restore body revision one.');
+});
+
+test('private source semantic tampering rejects before journal or current mutation after every outer digest is recomputed',async()=>{
+  await backup.restoreCombinedBackup(baselineEnvelope);const sourceId='private-source:00000000-0000-4000-8000-000000000889',library=createPrivateSourceLibrary(),first=await library.create({sourceId,title:'Tamper title',text:'Tamper body one',createdAt:820});await library.approve({sourceId,expectedRevisionId:first.currentRevisionId,approvedAt:821});const second=await library.edit({sourceId,title:'Tamper title two',text:'Tamper body two',expectedRevisionId:first.currentRevisionId,updatedAt:822});await library.quarantine({sourceId,expectedRevisionId:second.currentRevisionId,code:'policy-warning',createdAt:823});const live=await currentEnvelope();await library.delete({sourceId,expectedRevisionId:second.currentRevisionId,deletedAt:824});const tomb=await currentEnvelope();await backup.restoreCombinedBackup(live);
+  const repack=value=>{const rows=value.domains.v10.stores[V10_STORES.privateSources],manifest=value.manifest.stores.find(row=>row.owner==='v10'&&row.store===V10_STORES.privateSources);manifest.recordCount=rows.length;manifest.contentDigest=`sha256:${registry.sha256Hex(JSON.stringify(rows))}`;value.payloadDigest=registry.canonicalBackupDigest(value.domains);return value;};
+  const target=(rows,kind)=>rows.find(value=>value.sourceId===sourceId&&value.kind===kind),mutations=[
+    ['head',[live,row=>target(row,'private-source-head').revisionCount=99]],
+    ['ref',[live,row=>target(row,'private-source-revision').sourceRevisionRef.integrity='sha256:'+'0'.repeat(64)]],
+    ['approval',[live,row=>target(row,'private-source-approval').scope='public']],
+    ['finding',[live,row=>target(row,'private-source-finding').message='forged']],
+    ['tombstone',[tomb,row=>target(row,'private-source-tombstone').lastRevisionId='private-source:00000000-0000-4000-8000-000000000001:revision:1']],
+    ['lineage',[live,row=>row.push(structuredClone(target(row,'private-source-revision')))]],
+    ['quota',[live,row=>target(row,'private-source-revision').utf8Bytes+=1]],
+    ['extra-contiguous-revision',[live,row=>{const revision=target(row,'private-source-revision'),extra={...structuredClone(revision),id:`${sourceId}:revision:3`,revisionNumber:3,parentRevisionId:`${sourceId}:revision:2`,createdAt:823,sourceRevisionRef:null};extra.sourceRevisionRef=createPrivateSourceRef(extra);row.push(extra);}]],
+    ['approval-after-head',[live,row=>{target(row,'private-source-approval').approvedAt=999;}]],
+    ['finding-after-head',[live,row=>{target(row,'private-source-finding').createdAt=999;}]]
+  ];
+  for(const [name,[envelope,mutate]] of mutations){const invalid=repack(structuredClone(envelope));mutate(invalid.domains.v10.stores[V10_STORES.privateSources]);repack(invalid);const before=(await currentEnvelope()).payloadDigest;assert.equal(backup.validateCombinedBackup(invalid).valid,false,name);await assert.rejects(()=>backup.restoreCombinedBackup(invalid),error=>error.code==='BACKUP_INVALID');assert.equal(await core.readCoreRestoreJournal(),undefined);assert.equal((await currentEnvelope()).payloadDigest,before);}
 });
 
 test('ordinary cross-DB failure rolls back to the exact last-known-good digest',async()=>{
@@ -73,6 +123,15 @@ test('corrupt input is rejected before journal or durable mutation',async()=>{
   const before=await currentEnvelope();const corrupt=structuredClone(targetEnvelope);corrupt.domains.core.stores.cards[0].label='tampered-without-digest';
   await assert.rejects(()=>backup.restoreCombinedBackup(corrupt),error=>error.code==='BACKUP_INVALID');
   assert.equal(await core.readCoreRestoreJournal(),undefined);assert.equal((await currentEnvelope()).payloadDigest,before.payloadDigest);
+});
+
+test('future canonical inventory is rejected before restore journal even with recomputed manifest and payload digests',async()=>{
+  const before=await currentEnvelope(),invalid=structuredClone(targetEnvelope),rows=invalid.domains.ielts.stores[IELTS_STORE_NAMES.objectiveInventory];rows[0].schemaVersion=99;invalid.payloadDigest=registry.canonicalBackupDigest(invalid.domains);const manifest=invalid.manifest.stores.find(row=>row.owner==='ielts'&&row.store===IELTS_STORE_NAMES.objectiveInventory);manifest.contentDigest=`sha256:${registry.sha256Hex(JSON.stringify(rows))}`;
+  await assert.rejects(()=>backup.restoreCombinedBackup(invalid),error=>error.code==='BACKUP_INVALID');assert.equal(await core.readCoreRestoreJournal(),undefined);assert.equal((await currentEnvelope()).payloadDigest,before.payloadDigest);
+});
+
+test('objective inventory semantic tamper is rejected at construction, validation, and restore before mutation',async()=>{
+  const before=await currentEnvelope();for(const mutate of [row=>{row.schemaVersion=99;},row=>{row.questionPayload.prompt='attacker changed prompt';}]){const stores=structuredClone(targetEnvelope.domains);mutate(stores.ielts.stores[IELTS_STORE_NAMES.objectiveInventory][0]);assert.throws(()=>registry.buildFullBackupEnvelope({core:stores.core.stores,ielts:stores.ielts.stores,v10:stores.v10.stores}),error=>error.code==='BACKUP_PAYLOAD_UNSAFE');const invalid=structuredClone(targetEnvelope),rows=invalid.domains.ielts.stores[IELTS_STORE_NAMES.objectiveInventory];mutate(rows[0]);invalid.payloadDigest=registry.canonicalBackupDigest(invalid.domains);const manifest=invalid.manifest.stores.find(row=>row.owner==='ielts'&&row.store===IELTS_STORE_NAMES.objectiveInventory);manifest.recordCount=rows.length;manifest.contentDigest=`sha256:${registry.sha256Hex(JSON.stringify(rows))}`;assert.equal(registry.validateFullBackupEnvelope(invalid).valid,false);await assert.rejects(()=>backup.restoreCombinedBackup(invalid),error=>error.code==='BACKUP_INVALID');assert.equal(await core.readCoreRestoreJournal(),undefined);assert.equal((await currentEnvelope()).payloadDigest,before.payloadDigest);}
 });
 
 test('registry keyPath spoofing is rejected before journal or durable mutation',async()=>{
@@ -322,3 +381,16 @@ test('future IndexedDB versions preserve readable stores but fail writes instead
   await createFuture({moduleUrl:'../src/ielts-persistence.js',openName:'openIeltsDatabase',closeName:'reopenIeltsDatabase',databaseName:ielts.IELTS_DB_NAME,version:ielts.IELTS_DB_VERSION,stores:Object.values(IELTS_STORE_NAMES)});
   await createFuture({moduleUrl:'../src/v10-persistence.js',openName:'openV10Database',closeName:'reopenV10Database',databaseName:V10_DB_NAME,version:V10_DB_VERSION,stores:Object.values(V10_STORES)});
 });
+
+test('productive backups remain a reject-before-mutation boundary',async()=>{
+  const snapshot=await backup.buildCombinedBackup();const tampered=structuredClone(snapshot);tampered.domains.ielts.stores.learnerArtifacts.push({id:'forged',kind:'unknown'});tampered.payloadDigest=registry.canonicalBackupDigest(tampered.domains);assert.equal(backup.validateCombinedBackup(tampered).valid,false);
+});
+
+test('forged productive target is rejected before restore preparation',async()=>{
+  const before=structuredClone(targetEnvelope),tampered=structuredClone(before);tampered.domains.v10.stores[V10_STORES.todayRuns].push({id:'forged-productive-run',status:'completed',activitySpec:{id:'forged-productive-run',target:{schemaVersion:2,targetType:'productive-text-revision',targetId:'forged-revision',cardId:null,senseId:null,skill:'production',sourceId:'controlled-writing-self-review',sourceRevision:'controlled-writing-self-review-v1'}}});tampered.payloadDigest=registry.canonicalBackupDigest(tampered.domains);const manifest=tampered.manifest.stores.find(value=>value.owner==='v10'&&value.store===V10_STORES.todayRuns);manifest.recordCount=tampered.domains.v10.stores[V10_STORES.todayRuns].length;manifest.contentDigest=`sha256:${registry.sha256Hex(JSON.stringify(tampered.domains.v10.stores[V10_STORES.todayRuns]))}`;assert.equal(backup.validateCombinedBackup(tampered).valid,false);assert.equal(await core.readCoreRestoreJournal(),undefined);assert.notEqual(tampered.payloadDigest,before.payloadDigest);
+});
+
+test('restored Productive owner accepts canonical reordered PromptRef',()=>{
+  const reordered=Object.fromEntries(Object.entries(PRODUCTIVE_PROMPT_REF).reverse());assert.deepEqual(Object.keys(reordered).sort(),Object.keys(PRODUCTIVE_PROMPT_REF).sort());
+});
+test('private source storage remains a V10 restore participant',()=>assert.equal(V10_STORES.privateSources,'privateSources'));

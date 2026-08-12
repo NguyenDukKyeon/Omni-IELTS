@@ -48,6 +48,7 @@ import {
 import { audioManager, AUDIO_RATES } from './audio-manager.js';
 import { activateSettingsTab } from './settings-ui.js';
 import { commitCoreEvidence,coreSourceRevision } from './schedule-gateway.js';
+import { mountPrivateSourceLibrary } from './private-source-library-ui.js';
 
 const SESSION_KEY='vocab-master-gemini-key';
 const MAX_AUDIO_BYTES=2*1024*1024;
@@ -588,4 +589,5 @@ globalThis.addEventListener('vocab:external-change-error',()=>showToast('Không 
 globalThis.addEventListener('vocab:write-conflict',event=>{showToast(event.detail?.message||'Dữ liệu đã thay đổi ở tab khác. Ứng dụng sẽ tải lại để tránh ghi đè.');if(state.session)closeStudy();setTimeout(()=>location.reload(),250);});
 globalThis.addEventListener('vocab:metrics-reconciled',event=>{state.metrics={...state.metrics,...(event.detail||{})};renderToday();});
 resetDailyProgressWhenNeeded();renderAll();populateSettings();setRoute(state.route);
+mountPrivateSourceLibrary(document.querySelector('[data-private-source-library]'));
 globalThis.VocabMasterApp={startStudy,startPlannedActivity,openPractice,renderAll,openWordDetail,setRoute,getState:()=>structuredClone({cards:state.cards,settings:state.settings,fsrsConfig:state.fsrsConfig,metrics:state.metrics}),loadSampleDeck};

@@ -5,6 +5,7 @@ const isEmbedded=(()=>{try{return globalThis.self!==globalThis.top;}catch{return
 const isViteDevelopment=Boolean(import.meta.env?.DEV);
 const isLocalDevelopment=isViteDevelopment&&/^(localhost|127(?:\.\d+){3}|0\.0\.0\.0)$/i.test(hostname);
 const isBrowserSmokeSeed=isViteDevelopment&&import.meta.env?.VITE_BROWSER_SMOKE_SEED==='1';
+const isControlledListeningFixture=isViteDevelopment&&isBrowserSmokeSeed&&navigator.webdriver===true;
 const isAiStudioPreview=
   previewQuery==='ai-studio'||
   (/^ais-dev-/i.test(hostname)&&/\.run\.app$/i.test(hostname))||
@@ -110,6 +111,13 @@ function withTimeout(promise,timeoutMs,label){
   return Promise.race([promise,timeout]).finally(()=>clearTimeout(timer));
 }
 
+async function loadControlledListeningFixture(){
+  if(!isControlledListeningFixture)return null;
+  const [response,objectiveResponse,matchingResponse,spatialResponse]=await Promise.all([fetch('/tests/fixtures/wave2-listening-tone-fixture.json',{cache:'no-store'}),fetch('/tests/fixtures/wave4-listening-objective-text-fixture.json',{cache:'no-store'}),fetch('/tests/fixtures/wave4-listening-matching-fixture.json',{cache:'no-store'}),fetch('/tests/fixtures/wave4-listening-spatial-fixture.json',{cache:'no-store'})]);
+  if(!response.ok||!objectiveResponse.ok||!matchingResponse.ok||!spatialResponse.ok)throw Object.assign(new Error('Controlled Listening fixture is unavailable.'),{code:'LISTENING_FIXTURE_UNAVAILABLE'});
+  return{fixture:await response.json(),objectiveFixture:await objectiveResponse.json(),matchingFixture:await matchingResponse.json(),spatialFixture:await spatialResponse.json(),audioUrl:'/tests/fixtures/wave2-listening-tone-fixture.wav'};
+}
+
 async function clearDevelopmentPwaState(){
   if(!isViteDevelopment)return;
   const tasks=[];
@@ -167,7 +175,8 @@ try{
       const { mountIeltsRuntimeGuard } = await import('./ielts-runtime-guard.js');
       const { mountIeltsChoiceErrorBridge } = await import('./ielts-choice-error-bridge.js');
       const { mountV10Runtime } = await import('./v10-runtime.js');
-      await mountIeltsLab();
+      const controlledListening=await loadControlledListeningFixture();
+      await mountIeltsLab(controlledListening?{controlledListening}:{});
       mountIeltsBackupBridge();
       mountIeltsRuntimeGuard();
       mountIeltsChoiceErrorBridge();

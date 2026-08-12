@@ -58,6 +58,10 @@ const V10_MIGRATIONS=Object.freeze([
     mode:'upgrade',
     description:'Add durable signed-catalog, install journal, installed-pack, activation receipt, revocation and tombstone stores.'
   })
+  ,defineMigration({
+    id:'wave5-private-source-library-v8',digest:'v10-v8-private-source-library:2026-08-12',targetVersion:8,mode:'upgrade',
+    description:'Add the durable, local-only private source Library record store.'
+  })
 ]);
 
 const clone=value=>value==null?value:structuredClone(value);
@@ -97,6 +101,7 @@ function createIndexes(name,store){
   if(name===V10_STORES.packTombstones){store.createIndex('packId','packId',{unique:false});store.createIndex('deletedAt','deletedAt',{unique:false});}
   if(name===V10_STORES.aiJobs){store.createIndex('status','status',{unique:false});store.createIndex('jobType','jobType',{unique:false});store.createIndex('dueBefore','dueBefore',{unique:false});}
   if(name===V10_STORES.coachingStats){store.createIndex('category','category',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
+  if(name===V10_STORES.privateSources){store.createIndex('kind','kind',{unique:false});store.createIndex('sourceId','sourceId',{unique:false});store.createIndex('state','state',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
   if(name===V10_STORES.meta){store.createIndex('updatedAt','updatedAt',{unique:false});}
 }
 
@@ -154,12 +159,12 @@ export async function listV10Records(storeName,{index=null,query=null,sortBy='up
 export async function getV10Record(storeName,key){return withStore(assertStore(storeName),'readonly',async(store,map)=>map?clone(map.get(key)):requestResult(store.get(key)));}
 
 export async function putV10Record(storeName,value,reason='v10-record-saved',{restoreToken=null}={}){
-  const name=assertStore(storeName);const row={...clone(value),updatedAt:Number(value?.updatedAt||Date.now())};const key=name===V10_STORES.meta?row.key:row.id;if(!key)throw new Error(`${name} thiếu khóa.`);
+  const name=assertStore(storeName);const row=name===V10_STORES.privateSources?clone(value):{...clone(value),updatedAt:Number(value?.updatedAt||Date.now())};const key=name===V10_STORES.meta?row.key:row.id;if(!key)throw new Error(`${name} thiếu khóa.`);
   return enqueue(async()=>{await withStore(name,'readwrite',async(store,map)=>{if(map)map.set(key,clone(row));else store.put(clone(row));});broadcast(reason,[name]);return clone(row);},{restoreToken});
 }
 
 export async function putV10Records(storeName,values,reason='v10-records-saved'){
-  const name=assertStore(storeName);const rows=(Array.isArray(values)?values:[]).map(value=>({...clone(value),updatedAt:Number(value?.updatedAt||Date.now())}));
+  const name=assertStore(storeName);const rows=(Array.isArray(values)?values:[]).map(value=>name===V10_STORES.privateSources?clone(value):({...clone(value),updatedAt:Number(value?.updatedAt||Date.now())}));
   return enqueue(async()=>{await withStore(name,'readwrite',async(store,map)=>{for(const row of rows){const key=name===V10_STORES.meta?row.key:row.id;if(!key)throw new Error(`${name} thiếu khóa.`);if(map)map.set(key,clone(row));else store.put(clone(row));}});broadcast(reason,[name]);return clone(rows);});
 }
 
@@ -180,8 +185,8 @@ export async function clearV10Store(storeName,reason='v10-store-cleared'){
 
 export async function transactV10(storeNames,callback,reason='v10-transaction'){
   const names=[...new Set(storeNames.map(assertStore))];const database=await openV10Database();
-  if(!database){const adapters=Object.fromEntries(names.map(name=>[name,memory.get(name)]));const result=await callback({memory:adapters,stores:{}});broadcast(reason,names);return result;}
-  return enqueue(async()=>{const transaction=database.transaction(names,'readwrite');const stores=Object.fromEntries(names.map(name=>[name,transaction.objectStore(name)]));const result=await callback({transaction,stores,memory:null,requestResult});await transactionDone(transaction);broadcast(reason,names);return result;});
+  if(!database){const adapters=Object.fromEntries(names.map(name=>[name,memory.get(name)])),control={suppressBroadcast:false};const result=await callback({memory:adapters,stores:{},control});if(!control.suppressBroadcast)broadcast(reason,names);return result;}
+  return enqueue(async()=>{const transaction=database.transaction(names,'readwrite'),control={suppressBroadcast:false};const stores=Object.fromEntries(names.map(name=>[name,transaction.objectStore(name)]));const result=await callback({transaction,stores,memory:null,requestResult,control});await transactionDone(transaction);if(!control.suppressBroadcast)broadcast(reason,names);return result;});
 }
 
 export async function estimateV10Storage(){

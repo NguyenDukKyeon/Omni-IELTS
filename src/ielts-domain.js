@@ -1,7 +1,10 @@
 import { decideEvidence,evidenceDigest,normalizeAssistanceTrace } from './evidence-policy.js';
 import { createActivitySpec,createAttempt,createReceipt,createRun } from './learning-contracts.js';
+import { createSourceRevisionRef } from './source-revision-ref.js';
 
 export const IELTS_SCHEMA_VERSION=1;
+export const IELTS_READING_SOURCE_KIND='ielts-reading-source-revision';
+export const IELTS_READING_SOURCE_VERSION=1;
 export const IELTS_SESSION_MINUTES=Object.freeze([10,20,30]);
 export const ERROR_STATUSES=Object.freeze(['open','practicing','monitoring','resolved','ignored']);
 export const AI_ARTIFACT_STATUSES=Object.freeze(['draft','validated','verified','rejected']);
@@ -19,7 +22,9 @@ export const IELTS_STORE_NAMES=Object.freeze({
   transcriptSegments:'transcriptSegments',
   mediaAttempts:'mediaAttempts',
   mediaProgress:'mediaProgress',
-  settings:'settings'
+  settings:'settings',
+  objectiveInventory:'objectiveInventory',
+  learnerArtifacts:'learnerArtifacts'
 });
 
 const ERROR_CATEGORIES=new Set([
@@ -289,6 +294,27 @@ export function validateReadingPassage(input={}){
   }
   return{valid:errors.length===0,errors,value};
 }
+
+function readingSourceError(message){return Object.assign(new TypeError(message),{code:'IELTS_READING_SOURCE_INVALID'});}
+export const IELTS_READING_OBJECTIVE_TEXT_KINDS=Object.freeze(['reading-sentence-completion','reading-summary-completion','reading-note-completion','reading-table-completion','reading-flow-chart-completion','reading-short-answer','reading-diagram-label-completion']);
+export const IELTS_READING_MATCHING_KINDS=Object.freeze(['reading-matching-information','reading-matching-headings','reading-matching-features','reading-matching-sentence-endings']);
+function readingSourceData(value,path='reading source',seen=new Set()){
+  if(value===null||typeof value==='string'||typeof value==='boolean'||typeof value==='number'&&Number.isFinite(value))return;
+  if(!value||typeof value!=='object'||seen.has(value))throw readingSourceError(`${path} must be plain data.`);seen.add(value);
+  if(Array.isArray(value)){if(Object.getOwnPropertySymbols(value).length)throw readingSourceError(`${path} must not contain symbols.`);for(let index=0;index<value.length;index++){const descriptor=Object.getOwnPropertyDescriptor(value,String(index));if(!descriptor||descriptor.get||descriptor.set)throw readingSourceError(`${path} must contain data entries.`);readingSourceData(descriptor.value,`${path}[${index}]`,seen);}}
+  else {if(Object.getPrototypeOf(value)!==Object.prototype&&Object.getPrototypeOf(value)!==null||Object.getOwnPropertySymbols(value).length)throw readingSourceError(`${path} must be a plain object.`);for(const key of Object.keys(value)){const descriptor=Object.getOwnPropertyDescriptor(value,key);if(!descriptor||descriptor.get||descriptor.set)throw readingSourceError(`${path}.${key} must be data-only.`);readingSourceData(descriptor.value,`${path}.${key}`,seen);}}
+  seen.delete(value);
+}
+function readingSourceToken(value,label){if(typeof value!=='string'||!/^[a-z0-9][a-z0-9._:-]{2,159}$/.test(value))throw readingSourceError(`${label} must be a stable token.`);return value;}
+function sourceSealedOptions(items){
+  if(!Array.isArray(items)||items.length>32)throw readingSourceError('objectiveItems must be a bounded array.');const ids=new Set();return items.map(item=>{if(!item||typeof item!=='object'||Array.isArray(item))throw readingSourceError('objectiveItems must be exact.');const inventoryId=readingSourceToken(item.inventoryId,'objectiveItems.inventoryId');if(ids.has(inventoryId))throw readingSourceError('objectiveItems inventory IDs must be distinct.');ids.add(inventoryId);
+    if(Object.keys(item).every(key=>['inventoryId','kind','schemaVersion'].includes(key))){if(Object.keys(item).length!==3||![...IELTS_READING_OBJECTIVE_TEXT_KINDS,...IELTS_READING_MATCHING_KINDS].includes(item.kind)||item.schemaVersion!==1)throw readingSourceError('objectiveItems OTR or matching seal is invalid.');return{inventoryId,kind:item.kind,schemaVersion:1};}
+    if(Object.keys(item).some(key=>!['inventoryId','options'].includes(key)))throw readingSourceError('objectiveItems must be an exact choice, OTR, or matching seal.');if(!Array.isArray(item.options)||item.options.length<2||item.options.length>8||item.options.some(option=>!option||typeof option!=='object'||Array.isArray(option)||Object.keys(option).some(key=>!['id','text','correct','rationale'].includes(key))||typeof option.id!=='string'||!option.id.trim()||typeof option.text!=='string'||!option.text.trim()||typeof option.correct!=='boolean'||typeof option.rationale!=='string'||!option.rationale.trim()))throw readingSourceError('objectiveItems options are invalid.');if(item.options.filter(option=>option.correct).length!==1||new Set(item.options.map(option=>option.id)).size!==item.options.length)throw readingSourceError('objectiveItems must have exactly one distinct owner key.');return{inventoryId,options:item.options.map(option=>({id:option.id.trim(),text:option.text.trim(),correct:option.correct,rationale:option.rationale.trim()}))};});
+}
+export function createIeltsReadingSourceRevision(input={}){
+  try{readingSourceData(input);const allowed=['kind','schemaVersion','id','revision','profile','title','passage','objectiveItems','status','createdAt','updatedAt','sourceRevisionRef','extensions'];if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>!allowed.includes(key)))throw readingSourceError('Reading source contains unsupported fields.');const id=readingSourceToken(input.id,'id'),revision=Number(input.revision);if(!Number.isSafeInteger(revision)||revision<1)throw readingSourceError('revision must be positive.');const profile=['academic','general-training'].includes(input.profile)?input.profile:(()=>{throw readingSourceError('profile must be academic or general-training.');})();const title=typeof input.title==='string'&&input.title.trim()&&input.title.trim().length<=240?input.title.trim():(()=>{throw readingSourceError('title is required.');})();const passage=typeof input.passage==='string'&&input.passage.trim()&&input.passage.trim().length<=12_000?input.passage.trim():(()=>{throw readingSourceError('passage is required.');})();const objectiveItems=sourceSealedOptions(input.objectiveItems);const status=input.status==='verified'?'verified':(()=>{throw readingSourceError('Reading source must be verified before use.');})();const createdAt=Number(input.createdAt),updatedAt=Number(input.updatedAt);if(!Number.isFinite(createdAt)||!Number.isFinite(updatedAt)||updatedAt<createdAt)throw readingSourceError('Reading source timestamps are invalid.');const integrity=ieltsSourceRevision('ielts-reading-source-v1',{id,revision,profile,title,passage,objectiveItems});const sourceRevisionRef=createSourceRevisionRef({schema:'SourceRevisionRef',version:1,kind:'ielts-reading-passage',authority:'ielts-reading-owner',sourceId:`reading-source:${id}`,revisionId:`reading-source:${id}:${revision}`,integrity,locator:{passageId:id,revision},provenance:{origin:'ielts-reading-owner',verification:'verified',rights:'allowed',privacy:'private'}});if(input.sourceRevisionRef&&JSON.stringify(createSourceRevisionRef(input.sourceRevisionRef))!==JSON.stringify(sourceRevisionRef))throw readingSourceError('sourceRevisionRef must match immutable source content.');return Object.freeze({kind:IELTS_READING_SOURCE_KIND,schemaVersion:IELTS_READING_SOURCE_VERSION,id,revision,profile,title,passage,objectiveItems,status,createdAt,updatedAt,sourceRevisionRef,extensions:input.extensions||{}});}catch(error){if(error?.code==='IELTS_READING_SOURCE_INVALID')throw error;throw readingSourceError(error?.message||'Reading source is invalid.');}
+}
+export function validateIeltsReadingSourceRevision(input={}){try{return{valid:true,errors:[],value:createIeltsReadingSourceRevision(input)};}catch(error){return{valid:false,errors:[error.message],value:null};}}
 
 export function parseYouTubeUrl(value=''){
   const raw=cleanText(value,1200);

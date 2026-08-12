@@ -110,3 +110,39 @@ test('Practice hint and Dictation reveal traces are canonical and never schedule
   const unexposed=buildV10CoachingEnvelope({activityId:'dictation-unexposed',receiptId:'unexposed-receipt',activityType:'dictation',sentence:{id:'s',text:'A sentence.',verified:true},sourceId:'source',skill:'listening',result:'correct',learnerOutput:'A sentence.',assistance:{coaching:true}});
   assert.equal(unexposed.attempt.assistance.events.length,0,'generic builder must not invent UI exposure events');
 });
+
+test('objective-item targets are default-denied even with success-shaped verified inputs',()=>{
+  const target={schemaVersion:2,targetType:'ielts-objective-item',targetId:'ielts-objective:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',cardId:null,senseId:null,skill:'reading',sourceId:'reading-source:fixture',sourceRevision:'reading-source:fixture:1'};
+  const value=fixture({activity:{type:'reading',target},attempt:{activityType:'reading',target,result:'correct'}});
+  const decision=decideEvidence(value);
+  assert.equal(decision.eligible,false);
+  assert.equal(decision.reason,EVIDENCE_REASONS.unsupportedTarget);
+});
+
+test('exact v2 core-card target preserves qualified v1 core evidence semantics',()=>{
+  const v1=fixture();
+  const target={schemaVersion:2,targetType:'core-card',targetId:'card-1',cardId:'card-1',senseId:null,skill:'listening',sourceId:'media-1',sourceRevision:'sha256:abc'};
+  const v2=fixture({activity:{target},attempt:{target}});
+  const legacy=decideEvidence(v1),current=decideEvidence(v2);
+  assert.deepEqual(
+    {eligible:current.eligible,affectsSchedule:current.affectsSchedule,successful:current.successful,reason:current.reason,rating:current.rating,skill:current.skill},
+    {eligible:legacy.eligible,affectsSchedule:legacy.affectsSchedule,successful:legacy.successful,reason:legacy.reason,rating:legacy.rating,skill:legacy.skill}
+  );
+});
+
+test('forged v2 core-card target is default-denied before EvidencePolicy eligibility',()=>{
+  const target={schemaVersion:2,targetType:'core-card',targetId:'forged-card',cardId:'card-1',senseId:null,skill:'listening',sourceId:'media-1',sourceRevision:'sha256:abc'};
+  const value=fixture({activity:{target},attempt:{target}});
+  const decision=decideEvidence(value);
+  assert.equal(decision.eligible,false);
+  assert.equal(decision.affectsSchedule,false);
+  assert.equal(decision.reason,EVIDENCE_REASONS.unsupportedTarget);
+});
+
+test('oversized v2 core target is default-denied before EvidencePolicy can schedule',()=>{
+  const target={schemaVersion:2,targetType:'core-card',targetId:'c'.repeat(181),cardId:'c'.repeat(181),senseId:null,skill:'listening',sourceId:'media-1',sourceRevision:'sha256:abc'};
+  const decision=decideEvidence(fixture({activity:{target},attempt:{target}}));
+  assert.equal(decision.eligible,false);
+  assert.equal(decision.affectsSchedule,false);
+  assert.equal(decision.reason,EVIDENCE_REASONS.unsupportedTarget);
+});

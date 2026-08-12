@@ -59,7 +59,7 @@ test('IELTS backup restores all stores and warns about orphan transcript links',
   await persistence.saveMediaSource({id:'m1',url:'https://youtu.be/dQw4w9WgXcQ',title:'Video',durationMs:20_000});
   await persistence.replaceTranscriptSegments('m1',[{id:'s1',startMs:0,endMs:3000,text:'Environment matters.'}],{durationMs:20_000});
   await persistence.saveMediaProgress({mediaSourceId:'m1',lastSegmentId:'s1',sessionMinutes:20});
-  const backup=await persistence.buildIeltsBackup();assert.equal(backup.schemaVersion,1);assert.equal(backup.stores.errorRecords.length,1);assert.equal(backup.stores.transcriptSegments.length,1);
+  const backup=await persistence.buildIeltsBackup();assert.equal(backup.schemaVersion,3);assert.equal(backup.stores.errorRecords.length,1);assert.equal(backup.stores.transcriptSegments.length,1);assert.deepEqual(backup.stores.learnerArtifacts,[]);
   await reset();assert.equal((await persistence.listIeltsRecords(IELTS_STORE_NAMES.errors)).length,0);
   const restored=await persistence.restoreIeltsBackup(backup);assert.equal(restored.valid,true);assert.equal((await persistence.listIeltsRecords(IELTS_STORE_NAMES.errors))[0].expectedResponse,'environment');assert.equal((await persistence.listTranscriptSegments('m1'))[0].text,'Environment matters.');
   const orphan=structuredClone(backup);orphan.stores.mediaSources=[];const validation=persistence.validateIeltsBackup(orphan);assert.equal(validation.valid,true);assert.ok(validation.warnings.some(message=>message.includes('tham chiếu media source không tồn tại')));

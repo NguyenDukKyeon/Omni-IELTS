@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  V10_STORES,SENTENCE_STEPS,lemmaKey,senseKey,normalizeCaptureCandidate,
+  V10_DB_VERSION,V10_STORES,SENTENCE_STEPS,lemmaKey,senseKey,normalizeCaptureCandidate,
   normalizeSourceOccurrence,normalizeActivity,normalizeSentenceProgress,normalizeRetellStatus,buildV10CoachingEnvelope,
   normalizeContentManifest,validateContentManifest,validateSentenceSegments
 } from '../src/v10-contracts.js';
@@ -101,3 +101,4 @@ test('sentence validator rejects empty, reversed and overly long segments',()=>{
   assert.equal(result.valid,false);
   assert.ok(result.errors.length>=3);
 });
+test('V10 v8 reserves the private source owner store',()=>{assert.equal(V10_DB_VERSION,8);assert.equal(V10_STORES.privateSources,'privateSources');});
