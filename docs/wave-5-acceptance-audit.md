@@ -7,7 +7,7 @@
 An independent audit has been conducted on the current canonical execution wave (Wave 5), encompassing the Productive Text Core, Private Source Library, and the cross-cutting CR-2A packages (LI-00, SRC-00, ERR-00, QAR-00).
 
 The implementation codebase on GitHub `main` correctly reflects the strict requirements of these packages. 
-All tests, both product-wide and package-specific, have passed with full CI-level determinism.
+Canonical `npm test` is CI-backed. The 222/222 focused run is supporting/local evidence. Package acceptance does not convert a failed current PR workflow into green CI.
 
 **Verdict: ACCEPTED**
 The current execution wave (Wave 5) packages and the cross-cutting packages are independently verified and ACCEPTED at exact commit `5e9d9cd62cc16e921cfad0b6c7527fdfcf3c28e1`.
