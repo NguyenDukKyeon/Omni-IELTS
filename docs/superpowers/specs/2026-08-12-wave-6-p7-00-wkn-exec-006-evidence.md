@@ -1,0 +1,49 @@
+---
+schema_id: W6_P7_00_WKN_EXEC_EVIDENCE_V1
+authority_label: IMPLEMENTER_EVIDENCE / NOT_ACCEPTANCE
+authorization_id: W6-P7-00-WKN-AUTH-006
+execution_record_id: W6-P7-00-WKN-EXEC-006
+implementation_subject: P7-00 / WKN-00
+exact_predecessor: 6b992ac5b4032974fb7c5638759f0f073ca0d327
+baseline_ci_workflow: CI
+baseline_ci_run_number: 347
+baseline_ci_run_id: 31603172459
+commit_a_sha: 2587a4d33ebc81aba3e933b2bb76f9f1d4b1e3ea
+commit_a_parent: 6b992ac5b4032974fb7c5638759f0f073ca0d327
+commit_a_changed_paths: tests/progress.test.mjs
+commit_a_test_blob_sha256_or_git_blob_ids: 146710bd5f019624e353a690d279937d0fbd9739
+red_ci_workflow: CI
+red_ci_event: pull_request
+red_ci_head_sha: 2587a4d33ebc81aba3e933b2bb76f9f1d4b1e3ea
+red_ci_run_number: 354
+red_ci_run_id: 31618619682
+red_ci_job_id: 94187538147
+red_first_cause: AssertionError [ERR_ASSERTION]: Canonical metrics must include denominator
+red_eligible: VALID
+commit_b_sha: e82550390cee29de6758508ecbfb15dd0108f7eb
+commit_b_parent: 2587a4d33ebc81aba3e933b2bb76f9f1d4b1e3ea
+commit_b_changed_paths: src/progress.js, src/p7-00-metrics-reducer.js, src/weakness-profile.js
+immutable_test_blob_bindings_after_b: 146710bd5f019624e353a690d279937d0fbd9739
+green_ci_workflow: CI
+green_ci_event: pull_request
+green_ci_head_sha: e82550390cee29de6758508ecbfb15dd0108f7eb
+green_ci_run_number: 355
+green_ci_run_id: 31618807365
+green_ci_job_id: 94188162319
+green_ci_conclusion: SUCCESS
+canonical_fixture_identity: 1-independent-review-hard
+canonical_input_digest: 3565208884a2d6e8d33e3e5521873c73782e8385b022cb86abe6d83455bc2217
+metrics_output_digest: a6f366e8b20170b3192fe48b06b6aa0ca7c3605ae876af47565f00ba7ac655b9
+weakness_profile_output_digest: dc6d5ed5d25d0f463ca3ae3db4f4901cb1b8a0987a0fc6d9a67878b93acfe9c1
+deterministic_replay_result: PASS
+migration_result: IGNORED
+rollback_result: IGNORED
+source_blob_bindings: src/progress.js=72225b57a5b3c03e7aa24f80e89ce547c328c515, src/p7-00-metrics-reducer.js=0f0e1a68a920a5a6718f49fcac85779dd3c3c9e7, src/weakness-profile.js=f98a47c25f8fcb4888027ae317e68962bb509b0a
+unresolved_limitations: NONE
+commit_c_sha: SUPPLIED_AS_EXTERNAL_HANDOFF
+commit_c_parent: e82550390cee29de6758508ecbfb15dd0108f7eb
+commit_c_changed_paths: docs/superpowers/specs/2026-08-12-wave-6-p7-00-wkn-exec-006-evidence.md
+---
+
+# W6-P7-00-WKN-EXEC-006 IMPLEMENTER EVIDENCE
+Implementation executed according to authorized specification.
