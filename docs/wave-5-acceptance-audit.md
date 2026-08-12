@@ -48,9 +48,9 @@ The current execution wave (Wave 5) packages and the cross-cutting packages are 
 | --- | --- | --- |
 | Static Analysis (`npm run check`) | **PASS** | No violations. |
 | Production Build (`npm run build`) | **PASS** | `app.js` built successfully (~955.9kb). |
-| Full Test Suite (`npm test`) | **PASS** | 913/913 tests passing, 0 failures, 0 skipped. |
-| Focused Wave 5 Tests | **PASS** | 222/222 focused assertions passing in ~5.6s. |
+| Canonical Full Test Suite (`npm test`) | **PASS** | 913/913 tests passing, 0 failures, 0 skipped, plus successful browser/backup/restore gates. |
+| Focused Wave 5 Tests | **PASS** | 222/222 focused assertions passing in ~5.6s (supporting/local evidence). |
 
 ## Next Steps
-1. The `docs/IMPLEMENTATION_STATUS.md` file will be updated to transition these packages from `PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED` to **ACCEPTED**.
-2. The Wave 6 execution gate is now legally unblocked per the repository governance rules.
+1. The `docs/IMPLEMENTATION_STATUS.md` file has been updated in this PR to transition these packages from `PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED` to **ACCEPTED**.
+2. Wave 5 acceptance permits a separate Wave 6 readiness audit. It does not grant Wave 6 implementation authorization.

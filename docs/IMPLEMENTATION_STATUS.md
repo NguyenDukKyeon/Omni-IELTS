@@ -547,7 +547,7 @@ boundaries and their current acceptance evidence.
 | Package | Dependency | Status |
 |---|---|---|
 | LI-00 Canonical execution safety and Frozen Run | P1-01, P1-02, P1-07, P1-08, EvidencePolicy | ACCEPTED @ `5e9d9cd` |
-| SRC-00 Stable SourceRevisionRef seam | P1-01, P1-05, P3-06 | ACCEPTED @ `5e9d9cd` |
+| SRC-00 Stable SourceRevisionRef seam | P1-01, P1-05, P3-06; public-pack adapter additionally requires accepted P4 contracts | ACCEPTED @ `5e9d9cd` |
 | ERR-00 ErrorCandidate lifecycle | LI-00, P1-06 | ACCEPTED @ `5e9d9cd` |
 | QAR-00 Shared question activity contracts | LI-00, SRC-00 | ACCEPTED @ `5e9d9cd` |
 
