@@ -541,15 +541,29 @@ rights, editorial and independent-review gates are satisfied.
 ### Cross-cutting packages canonicalized by CR-2A
 
 The five U-* identifiers are portfolio grouping labels only and intentionally
-have no status rows. The four package rows below record canonical planning
-boundaries, not implementation authorization or acceptance evidence.
+have no status rows. The four package rows below are independently accepted at
+the exact current-main revision recorded by the post-migration Wave 5 audit.
 
 | Package | Dependency | Status |
 |---|---|---|
-| LI-00 Canonical execution safety and Frozen Run | P1-01, P1-02, P1-07, P1-08, EvidencePolicy | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
-| SRC-00 Stable SourceRevisionRef seam | P1-01, P1-05, P3-06; public-pack adapter additionally requires accepted P4 contracts | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
-| ERR-00 ErrorCandidate lifecycle | LI-00, P1-06 | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
-| QAR-00 Shared question activity contracts | LI-00, SRC-00 | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
+| LI-00 Canonical execution safety and Frozen Run | P1-01, P1-02, P1-07, P1-08, EvidencePolicy | ACCEPTED @ `6666617` / PR #51 comment `5281019570` |
+| SRC-00 Stable SourceRevisionRef seam | P1-01, P1-05, P3-06; public-pack adapter additionally requires accepted P4 contracts | ACCEPTED @ `6666617` / PR #51 comment `5281019570` |
+| ERR-00 ErrorCandidate lifecycle | LI-00, P1-06 | ACCEPTED @ `6666617` / PR #51 comment `5281019570` |
+| QAR-00 Shared question activity contracts | LI-00, SRC-00 | ACCEPTED @ `6666617` / PR #51 comment `5281019570` |
+
+### Current Execution Wave 5 — Productive Text & Private Source
+
+The implementation entered `main` through merged PR #51. A fresh post-migration
+independent audit then re-bound package acceptance to exact current `main`
+`66666172238668b1ea40d7ff596c82c209fcdfe5` in PR #51 comment `5281019570`.
+Historical PR #52 is a blocked stale governance/status candidate and is not a
+current authority source.
+
+| Package | Branch | Dependency | Status |
+|---|---|---|---|
+| Productive Text Contracts | main | CR-2A | ACCEPTED @ `6666617` / PR #51 comment `5281019570` |
+| Private Source Library | main | CR-2A | ACCEPTED @ `6666617` / PR #51 comment `5281019570` |
+| Productive Practice | main | CR-2A, Productive Text Contracts | ACCEPTED @ `6666617` / PR #51 comment `5281019570` |
 
 ### Cross-cutting Repository Engineering
 
