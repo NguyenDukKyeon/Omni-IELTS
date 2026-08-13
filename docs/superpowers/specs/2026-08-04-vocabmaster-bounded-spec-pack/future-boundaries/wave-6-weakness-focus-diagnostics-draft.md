@@ -1,6 +1,6 @@
 # Wave 6 — Weakness, Focus and Diagnostics Boundary Draft
 
-Artifact status: `CANONICAL_OWNER_REBIND_CANDIDATE_ADR_049`
+Artifact status: `CANONICAL_OWNER_REBIND_CANDIDATE`
 
 Canonical owner: `WKN-00→P7-00; FCS-00/FCS-01→P1-07 bounded Today seam; ASM-00→ASM-00; TD-00→TD-00; FCS-02 UNASSIGNED — U-FD IS GROUPING_ONLY`
 Implementation authorization: `NOT_GRANTED — requires independently accepted Wave Authorization Manifest`
