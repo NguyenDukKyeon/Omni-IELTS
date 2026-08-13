@@ -63,10 +63,9 @@
 - Post-verdict merge or deterministic reconciliation is permitted only when explicitly pre-authorized, after an `ACCEPT` verdict is posted and read back, accepted heads remain unchanged and required CI remains successful.
 - Every capsule fails closed on predecessor or head drift, branch race, ownership or file overlap, dependency violation, invalid or ambiguous RED, unexpected CI identity, missing artifacts or evidence ambiguity.
 
-
 ## Wave 6 recovery canonical addendum
 
-- For the exact Wave 6 recovery candidate rooted at `66666172238668b1ea40d7ff596c82c209fcdfe5`, `docs/WAVE6_RECOVERY_PLAN.md` is an additional canonical acceptance-criteria source only after the docs-only canonicalization PR containing this rule receives fresh independent exact-head `ACCEPT` and is merged.
+- For the exact Wave 6 recovery candidate rooted at `66666172238668b1ea40d7ff596c82c209fcdfe5`, `docs/WAVE6_RECOVERY_DECISION.md`, `docs/WAVE6_RECOVERY_PLAN.md`, and `docs/WAVE6_RECOVERY_STATUS.md` are bounded additional decision, acceptance-criteria, and status sources only after the docs-only canonicalization PR containing this rule receives fresh independent exact-head `ACCEPT` and is merged.
 - This addendum is limited to P7-00/WKN-00 successor recovery, FCS-00/FCS-01 Focus/Today, ASM-00 Frozen Assessment and TD-00 Targeted Diagnostic. FCS-02, P7-01+, readiness, band estimation, personalization and all other packages remain under the existing canonical plan.
 - The preserved dirty/local Wave 6 snapshot is recovery input only. It cannot supply retroactive authorization, RED/GREEN chronology, CI, acceptance or merge authority.
 - Every executable record from the recovery addendum still requires an independently accepted Protocol-V1 manifest, exact predecessor, immutable test-first A, natural behavioral RED, minimal source-only B, exact-head GREEN, evidence-only C and fresh independent acceptance.
