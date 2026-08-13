@@ -15,12 +15,12 @@ readiness/band claim.
 
 | Candidate | Approved disposition | Boundary preserved | Canonical owner/port target | Minimal pre-ratification gate |
 |---|---|---|---|---|
-| `WKN-00` | `MERGE_INTO_EXISTING` | Deterministic versioned WeaknessProfile projection from canonical errors/evidence with reason, denominator and uncertainty | Port into existing P7-00 metrics contract/reducer owner | P7-00 status/dependency conflict resolved separately; taxonomy/minimum evidence/recompute policy approved |
-| `FCS-00` | `MERGE_INTO_EXISTING` | FocusCandidate/reason/provenance/frozen selection/budget/executor-eligibility shape and one merge seam | P1-07 Today contracts plus P7-04 workload/policy adapter when implemented | Due precedence/reason vocabulary and accepted-executor registry approved |
-| `FCS-01` | `MERGE_INTO_EXISTING` | Canonical selector over qualified error/weakness evidence | P7-04/Today; no second scheduler | Weakness owner accepted; fairness/reproducibility/due precedence policy approved |
-| `FCS-02` | `RATIFY_WITH_BOUNDARY_CHANGE` | Clearly labeled coaching-only advisory selector over persisted AIA signals/candidates | New candidate only if independent boundary survives; consumes shared Today seam | Expiry/dedupe/uncertainty/slot cap approved; no provider call during composition |
-| `ASM-00` | `RATIFY_WITH_BOUNDARY_CHANGE` | Multi-item immutable AssessmentBlueprint/RunSnapshot with item/order/key/timer/scoring/evidence bindings on LI | New assessment contract candidate; consumes accepted QAR executors | Pause/resume/timer/accommodation/invalidation and partial-result semantics approved |
-| `TD-00` | `RATIFY_AS_IS` | Targeted Diagnostic sampling canonical weakness into a frozen, explicitly non-representative result | Future assessment/diagnostic owner | Minimum weakness evidence, target coverage and insufficient-data behavior approved |
+| `WKN-00` | `MERGE_INTO_EXISTING` | Deterministic versioned WeaknessProfile projection from canonical errors/evidence with reason, denominator and uncertainty | Existing `P7-00` metrics contract/reducer owner | P7-00 dependency/package state resolved; taxonomy/minimum evidence/recompute policy approved |
+| `FCS-00` | `MERGE_INTO_EXISTING` | FocusCandidate/reason/provenance/frozen selection/budget/executor-eligibility shape and one merge seam | Bounded `P1-07 Today Composer` seam; P7-04 may consume policy later but is not activated | Due precedence/reason vocabulary and accepted-executor registry approved |
+| `FCS-01` | `MERGE_INTO_EXISTING` | Canonical selector over qualified error/weakness evidence | Bounded `P1-07 Today Composer` seam; no second scheduler; P7-04 remains future workload owner | Weakness owner accepted; fairness/reproducibility/due precedence policy approved |
+| `FCS-02` | `RATIFY_WITH_BOUNDARY_CHANGE` | Clearly labeled coaching-only advisory selector over persisted AIA signals/candidates | `UNASSIGNED / DEFERRED`; consumes shared Today seam only after separate future canonicalization | Expiry/dedupe/uncertainty/slot cap approved; no provider call during composition |
+| `ASM-00` | `RATIFY_WITH_BOUNDARY_CHANGE` | Multi-item immutable AssessmentBlueprint/RunSnapshot with item/order/key/timer/scoring/evidence bindings on LI | Cross-cutting `ASM-00`; consumes accepted QAR executors | Pause/resume/timer/accommodation/invalidation and partial-result semantics approved |
+| `TD-00` | `RATIFY_AS_IS` | Targeted Diagnostic sampling canonical weakness into a frozen, explicitly non-representative result | Diagnostic adapter `TD-00`; consumes accepted WeaknessProfile + ASM-00 | Minimum weakness evidence, target coverage and insufficient-data behavior approved |
 
 ## Pipeline and authority
 
@@ -42,7 +42,8 @@ canonical WeaknessProfile by repetition or model agreement.
 
 ## Exit decision
 
-Resolve P7 ownership/status gates before porting WKN/FCS material. Canonicalize
-FCS-02/ASM-00/TD-00 only immediately before their own wave and only if no
-existing owner can absorb the exact independent boundary. Readiness remains a
-separate unowned gap after this wave; this draft does not invent it.
+This docs-only candidate prospectively binds the recovery owners above so their exact implementation
+boundaries can be independently authorized and rematerialized under Protocol V1. The binding itself grants
+no product implementation or merge authority. `FCS-02` remains unassigned/deferred, P7-04 remains
+phase-blocked under its existing dependencies, and readiness remains a separate unowned gap. The recovered
+local working tree remains non-canonical input and cannot provide retroactive authorization or acceptance.
