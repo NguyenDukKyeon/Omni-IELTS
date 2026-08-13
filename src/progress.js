@@ -1,4 +1,9 @@
 import { FSRS_SKILLS, getCardRetrievability, plannedSkillsForCard, skillHasReviews } from './fsrs-scheduler.js';
+import { reduceCanonicalLearningMetrics } from './p7-00-metrics-reducer.js';
+import { createWeaknessProfile } from './weakness-profile.js';
+
+export { reduceCanonicalLearningMetrics } from './p7-00-metrics-reducer.js';
+export { createWeaknessProfile } from './weakness-profile.js';
 
 function dayKey(timestamp,timeZone){
   const date=new Date(timestamp);
@@ -13,6 +18,14 @@ function dayKey(timestamp,timeZone){
 function isLearningEvidence(event={}){
   const type=event.evidenceType||event.metadata?.evidenceType;
   return type?['independent_review','self_assessed_production','ai_verified_production','transfer_check'].includes(type):!event.assisted;
+}
+
+function canonicalDecisionEvent(event={}){
+  return event?.kind==='canonical-learning-event'
+    && Number(event.schemaVersion)===1
+    && event.eventType==='evidence-decided'
+    && event.payload
+    && typeof event.payload==='object';
 }
 
 export function buildActivityMap(events=[],timeZone=undefined){
@@ -95,14 +108,31 @@ export function calculateKnowledgeStrength(cards=[],now=Date.now(),fsrsConfig=un
 
 export function summarizeReviewQuality(events=[]){
   const ratingName=value=>['again','hard','good','easy'].includes(value)?value:({1:'again',2:'hard',3:'good',4:'easy'})[Number(value)]||null;
-  const eligible=events.filter(event=>!event.assisted&&isLearningEvidence(event)).map(event=>({...event,rating:ratingName(event.rating??event.fsrsRating)})).filter(event=>event.rating);
-  const successful=eligible.filter(event=>event.rating!=='again').length;
+  const eligible=[];
+  for(const event of events){
+    if(canonicalDecisionEvent(event)){
+      if(event.payload.eligible!==true)continue;
+      const rating=ratingName(event.payload.rating);
+      if(!rating)continue;
+      eligible.push({rating,skill:event.payload.skill,successful:event.payload.successful===true,provenance:event.id||event.eventDigest||null});
+      continue;
+    }
+    if(event.assisted||!isLearningEvidence(event))continue;
+    const rating=ratingName(event.rating??event.fsrsRating);
+    if(!rating)continue;
+    eligible.push({rating,skill:event.skill,successful:rating!=='again',provenance:event.metadata?.eventId||event.eventId||null});
+  }
+  const successful=eligible.filter(event=>event.successful).length;
   const again=eligible.filter(event=>event.rating==='again').length;
   const bySkill=Object.fromEntries(FSRS_SKILLS.map(skill=>{
     const rows=eligible.filter(event=>event.skill===skill);
-    return[skill,{reviews:rows.length,successRate:rows.length?Math.round(rows.filter(event=>event.rating!=='again').length/rows.length*100):0}];
+    return[skill,{reviews:rows.length,successRate:rows.length?Math.round(rows.filter(event=>event.successful).length/rows.length*100):0}];
   }));
-  return{reviews:eligible.length,successful,again,successRate:eligible.length?Math.round(successful/eligible.length*100):0,bySkill};
+  return{reviews:eligible.length,successful,again,successRate:eligible.length?Math.round(successful/eligible.length*100):0,bySkill,denominator:eligible.length,provenance:eligible.map(event=>event.provenance).filter(Boolean)};
+}
+
+export function buildWeaknessProfile(events=[],options={}){
+  return createWeaknessProfile(reduceCanonicalLearningMetrics(events,options),options);
 }
 
 export function summarizeActivity(events=[],now=Date.now(),timeZone=undefined){
