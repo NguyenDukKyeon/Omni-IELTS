@@ -24,6 +24,17 @@ PR #66 package dependency:
 - final natural CI: #369 / run `31662048839` / SUCCESS;
 - merge authority: NOT_GRANTED.
 
+## Canonical recovery sources
+
+This manifest is subordinate to the docs-only canonicalization candidate and may activate only after that candidate receives independent exact-head ACCEPT and is merged. Its bounded recovery sources are:
+- decision: `docs/WAVE6_RECOVERY_DECISION.md`;
+- acceptance criteria: `docs/WAVE6_RECOVERY_PLAN.md`;
+- status: `docs/WAVE6_RECOVERY_STATUS.md`;
+- owner/dependency map: `docs/ROADMAP.md`;
+- execution invariants: `AGENTS.md`.
+
+These addenda do not replace the normal canonical documents outside this recovery and must be reconciled into the normal plan/status ledger before Stage 1 is governance-complete.
+
 ## Global rules
 
 - One writer at a time.
