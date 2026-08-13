@@ -7,7 +7,7 @@ Exact predecessor: `66666172238668b1ea40d7ff596c82c209fcdfe5`
 ## Purpose
 
 Prospectively authorize clean rematerialization of the preserved local Wave 6 implementation after the
-owner/boundary changes in ADR-049 are independently accepted. This manifest never retroactively
+owner/boundary changes in this docs-only canonicalization candidate are independently accepted and merged. This manifest never retroactively
 classifies the dirty local working tree as authorized implementation.
 
 Preserved recovery input:
@@ -53,7 +53,7 @@ Source B allowlist:
 - `src/weakness-profile.js`
 
 Required natural RED: a predecessor/accepted-PR66 behavioral contract must fail because the richer
-canonical WeaknessProfile projection required by ADR-049 is absent; missing-module/syntax/fixture/CI
+canonical WeaknessProfile projection required by the canonical recovery addendum is absent; missing-module/syntax/fixture/CI
 failures are invalid RED.
 
 GREEN: deterministic profile with exact canonical provenance, observations by skill, sparse/conflict
