@@ -149,7 +149,23 @@ phục vụ nhiều umbrella.
 | U-AI — Local-first Assistance and Durable Work | Local-first assistance, durable work và provider governance | Chưa có package owner mới trong CR-2A; capability hiện hữu giữ nguyên owner |
 | U-PCS — Personal Content Supply | Source intake, private revision, compilation và provenance | SRC-00 chỉ sở hữu source-reference seam; các boundary khác chưa được ratify |
 | U-4S — Four-skill Practice | Reading, Listening, Writing và Speaking practice | QAR-00 chỉ sở hữu shared question contracts; skill inventory/executor giữ owner riêng |
-| U-FD — Focus, Weakness and Diagnostics | Weakness, focus, assessment và readiness evidence | Chưa có package owner mới trong CR-2A; Today/metrics/assessment owner hiện hữu không đổi |
+| U-FD — Focus, Weakness and Diagnostics | Weakness, focus, assessment và readiness evidence | WKN-00→P7-00; FCS-00/FCS-01→P1-07 bounded Today seam; ASM-00→ASM-00; TD-00→TD-00; FCS-02/readiness remain unassigned |
+
+
+### Wave 6 recovery owner bindings
+
+These bindings are planning/ownership authority only. They do not authorize implementation or merge.
+Detailed recovery acceptance criteria are frozen in `docs/WAVE6_RECOVERY_PLAN.md` under the bounded addendum in `AGENTS.md`.
+
+| Recovery subject | Canonical owner | Dependency | Boundary |
+|---|---|---|---|
+| P7-00 / WKN-00 successor | P7-00 | package-accepted PR #66 P7-00/WKN-00 semantics; P1-02; P1-08 | deterministic richer WeaknessProfile projection only; no readiness/band/mastery |
+| FCS-00 / FCS-01 | P1-07 Today Composer bounded seam | accepted P7/WKN successor; P1-07; P1-08 | one deterministic evidence-backed Focus slot; due-first; no provider; no P7-04 activation |
+| ASM-00 | ASM-00 cross-cutting assessment owner | accepted LI-00 and QAR-00 semantics | immutable multi-item Frozen Assessment; authenticated QAR scoring; raw aggregate only |
+| TD-00 | TD-00 diagnostic adapter owner | accepted WeaknessProfile owner revision; accepted ASM-00 | weakness-biased non-representative diagnostic only; no evidence/schedule/readiness/band/mastery |
+| FCS-02 | UNASSIGNED | — | deferred advisory/AI Focus; not part of recovery |
+
+The preserved local Wave 6 working tree is non-canonical recovery input. Exact package execution must be rematerialized prospectively under Protocol V1.
 
 ### Minimum cross-cutting packages
 
