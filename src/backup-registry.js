@@ -244,12 +244,23 @@ function sourceShapeErrors(rawDomains){
   return errors;
 }
 function privateSourceErrors(domains){try{validatePrivateSourceStore(domains?.v10?.stores?.[V10_STORES.privateSources]||[]);return [];}catch(error){return[`v10.${V10_STORES.privateSources} is invalid: ${error.code||error.message}`];}}
+function frozenAssessmentErrors(domains){
+  const rows=domains?.ielts?.stores?.[IELTS_STORE_NAMES.frozenAssessments];if(!Array.isArray(rows))return[];
+  const errors=[];
+  for(const [index,row] of rows.entries()){
+    if(!row||typeof row!=='object'||Array.isArray(row)||!row.id)errors.push(`ielts.${IELTS_STORE_NAMES.frozenAssessments}[${index}] is malformed.`);
+  }
+  return errors;
+}
 
 export function buildFullBackupEnvelope({core={},ielts={},v10={},exportedAt=new Date().toISOString()}={}){
-  const rawDomains={core:{stores:core},ielts:{stores:ielts},v10:{stores:v10}};const errors=[...sourceShapeErrors(rawDomains),...privateSourceErrors(rawDomains),...safetyErrorsForDomains(rawDomains),...primaryKeyErrors(rawDomains),...uniqueIndexErrors(rawDomains),...objectiveInventoryErrors(rawDomains),...objectiveSpatialTerminalErrors(rawDomains),...productiveArtifactErrors(rawDomains),...productiveTerminalErrors(rawDomains)];if(errors.length)throw Object.assign(new Error(errors.join('\n')),{code:'BACKUP_PAYLOAD_UNSAFE'});
+  const rawDomains={core:{stores:core},ielts:{stores:ielts},v10:{stores:v10}};const errors=[...sourceShapeErrors(rawDomains),...privateSourceErrors(rawDomains),...safetyErrorsForDomains(rawDomains),...primaryKeyErrors(rawDomains),...uniqueIndexErrors(rawDomains),...objectiveInventoryErrors(rawDomains),...objectiveSpatialTerminalErrors(rawDomains),...productiveArtifactErrors(rawDomains),...productiveTerminalErrors(rawDomains),...frozenAssessmentErrors(rawDomains)];if(errors.length)throw Object.assign(new Error(errors.join('\n')),{code:'BACKUP_PAYLOAD_UNSAFE'});
   const domains=canonicalBackupPayload(rawDomains);
   const stores=BACKUP_STORE_REGISTRY.map(row=>{const rows=row.backupRule==='exclude'?[]:domains[row.owner].stores[row.store];return{...row,recordCount:rows.length,contentDigest:row.backupRule==='exclude'?null:`sha256:${sha256Hex(JSON.stringify(rows))}`};});
-  return{app:'Vocab Master',kind:FULL_BACKUP_KIND,schemaVersion:FULL_BACKUP_VERSION,registryVersion:BACKUP_REGISTRY_VERSION,exportedAt:String(exportedAt),manifest:{stores,external:structuredClone(BACKUP_EXTERNAL_REGISTRY)},domains,payloadDigest:canonicalBackupDigest(domains)};
+  const hasFrozen=(domains.ielts?.stores?.[IELTS_STORE_NAMES.frozenAssessments]||[]).length>0;
+  const schemaVersion=hasFrozen?6:FULL_BACKUP_VERSION;
+  const registryVersion=hasFrozen?6:BACKUP_REGISTRY_VERSION;
+  return{app:'Vocab Master',kind:FULL_BACKUP_KIND,schemaVersion,registryVersion,exportedAt:String(exportedAt),manifest:{stores,external:structuredClone(BACKUP_EXTERNAL_REGISTRY)},domains,payloadDigest:canonicalBackupDigest(domains)};
 }
 
 function upgradeLegacyV2Envelope(input){
@@ -295,7 +306,8 @@ function upgradeRegistryV2Envelope(input){
   if(!input.manifest||!Array.isArray(input.manifest.stores)||input.manifest.stores.some(row=>!row||typeof row!=='object'||!row.owner||!row.store)||canonicalContentJson(input.manifest.external)!==canonicalContentJson(BACKUP_EXTERNAL_REGISTRY))return{error:'Legacy registry-v2 backup manifest is invalid.'};
   const expectedRows=BACKUP_STORE_REGISTRY.filter(row=>!(row.owner==='ielts'&&[IELTS_STORE_NAMES.objectiveInventory,IELTS_STORE_NAMES.learnerArtifacts].includes(row.store))&&!(row.owner==='v10'&&row.store===V10_STORES.privateSources)).map(row=>row.owner==='ielts'?{...row,databaseVersion:1}:row.owner==='v10'?{...row,databaseVersion:7}:row);if(input.manifest.stores.length!==expectedRows.length)return{error:'Legacy registry-v2 backup manifest count is invalid.'};for(let index=0;index<expectedRows.length;index++){const row=input.manifest.stores[index],expected=expectedRows[index];const rows=domains?.[row.owner]?.stores?.[row.store];for(const key of ['owner','database','databaseVersion','store','keyPath','classification','backupRule','restoreRule','note'])if(row[key]!==expected[key])return{error:'Legacy registry-v2 backup manifest metadata is invalid.'};if(row.backupRule==='exclude'){if(rows!==undefined||row.recordCount!==0||row.contentDigest!==null)return{error:'Legacy registry-v2 backup manifest digest is invalid.'};continue;}const digest=`sha256:${sha256Hex(JSON.stringify(rows))}`;if(!Array.isArray(rows)||row.recordCount!==rows.length||row.contentDigest!==digest)return{error:'Legacy registry-v2 backup manifest digest is invalid.'};}
   domains.ielts.stores[IELTS_STORE_NAMES.objectiveInventory]=[];domains.ielts.stores[IELTS_STORE_NAMES.learnerArtifacts]=[];domains.ielts.database=IELTS_DB_NAME;domains.ielts.databaseVersion=IELTS_DB_VERSION;domains.v10.stores[V10_STORES.privateSources]=[];
-  return{value:buildFullBackupEnvelope({core:domains.core.stores,ielts:domains.ielts.stores,v10:domains.v10.stores,exportedAt:input.exportedAt}),warning:'Full backup registry v2 was additively upgraded with empty canonical inventory and productive artifact stores.'};
+  try{return{value:buildFullBackupEnvelope({core:domains.core.stores,ielts:domains.ielts.stores,v10:domains.v10.stores,exportedAt:input.exportedAt}),warning:'Full backup registry v2 was additively upgraded with empty canonical inventory and productive artifact stores.'};}
+  catch(error){return{error:error.message};}
 }
 
 function upgradeRegistryV3Envelope(input){
@@ -307,7 +319,8 @@ function upgradeRegistryV3Envelope(input){
   const identities={core:{database:DB_NAME,databaseVersion:DB_VERSION},ielts:{database:IELTS_DB_NAME,databaseVersion:2},v10:{database:V10_DB_NAME,databaseVersion:7}};for(const [owner,identity] of Object.entries(identities)){const stores=domains?.[owner]?.stores,allowed=expectedRows.filter(row=>row.owner===owner&&row.backupRule!=='exclude').map(row=>row.store);if(domains?.[owner]?.database!==identity.database||Number(domains?.[owner]?.databaseVersion)!==identity.databaseVersion||!stores||Object.keys(stores).some(store=>!allowed.includes(store))||allowed.some(store=>!Array.isArray(stores[store])))return{error:`Legacy registry-v3 ${owner} domain is invalid.`};}
   for(let index=0;index<expectedRows.length;index++){const actual=input.manifest.stores[index],expected=expectedRows[index],rows=domains[expected.owner].stores[expected.store];if(!actual)return{error:'Legacy registry-v3 backup manifest is invalid.'};for(const key of ['owner','database','databaseVersion','store','keyPath','classification','backupRule','restoreRule','note'])if(actual[key]!==expected[key])return{error:'Legacy registry-v3 backup manifest metadata is invalid.'};const digest=expected.backupRule==='exclude'?null:`sha256:${sha256Hex(JSON.stringify(rows))}`;if(Number(actual.recordCount)!==(expected.backupRule==='exclude'?0:rows.length)||actual.contentDigest!==digest)return{error:'Legacy registry-v3 backup manifest digest is invalid.'};}
   domains.ielts.stores[IELTS_STORE_NAMES.learnerArtifacts]=[];domains.ielts.database=IELTS_DB_NAME;domains.ielts.databaseVersion=IELTS_DB_VERSION;domains.v10.stores[V10_STORES.privateSources]=[];
-  return{value:buildFullBackupEnvelope({core:domains.core.stores,ielts:domains.ielts.stores,v10:domains.v10.stores,exportedAt:input.exportedAt}),warning:'Full backup registry v3 was additively upgraded with an empty productive artifact store.'};
+  try{return{value:buildFullBackupEnvelope({core:domains.core.stores,ielts:domains.ielts.stores,v10:domains.v10.stores,exportedAt:input.exportedAt}),warning:'Full backup registry v3 was additively upgraded with an empty productive artifact store.'};}
+  catch(error){return{error:error.message};}
 }
 
 function upgradeRegistryV4Envelope(input){
@@ -315,13 +328,32 @@ function upgradeRegistryV4Envelope(input){
   if(input.kind!==FULL_BACKUP_KIND)return{error:'Legacy registry-v4 backup kind is invalid.'};
   const domains=structuredClone(input.domains||{});
   if(input.payloadDigest!==canonicalBackupDigest(domains))return{error:'Legacy registry-v4 backup payload digest does not match.'};
-  const expectedRows=BACKUP_STORE_REGISTRY.filter(row=>!(row.owner==='v10'&&row.store===V10_STORES.privateSources)).map(row=>row.owner==='v10'?{...row,databaseVersion:7}:row);
+  const hasFrozen=Array.isArray(input?.manifest?.stores)&&input.manifest.stores.some(row=>row.owner==='ielts'&&row.store===IELTS_STORE_NAMES.frozenAssessments);
+  const expectedRows=BACKUP_STORE_REGISTRY.filter(row=>!(row.owner==='v10'&&row.store===V10_STORES.privateSources)&&(hasFrozen||!(row.owner==='ielts'&&row.store===IELTS_STORE_NAMES.frozenAssessments))).map(row=>row.owner==='v10'?{...row,databaseVersion:7}:row.owner==='ielts'?{...row,databaseVersion:3}:row);
   if(!Array.isArray(input?.manifest?.stores)||input.manifest.stores.length!==expectedRows.length||canonicalContentJson(input.manifest.external)!==canonicalContentJson(BACKUP_EXTERNAL_REGISTRY))return{error:'Legacy registry-v4 backup manifest is invalid.'};
-  const identities={core:{database:DB_NAME,databaseVersion:DB_VERSION},ielts:{database:IELTS_DB_NAME,databaseVersion:IELTS_DB_VERSION},v10:{database:V10_DB_NAME,databaseVersion:7}};
+  const identities={core:{database:DB_NAME,databaseVersion:DB_VERSION},ielts:{database:IELTS_DB_NAME,databaseVersion:3},v10:{database:V10_DB_NAME,databaseVersion:7}};
   for(const [owner,identity] of Object.entries(identities)){const stores=domains?.[owner]?.stores,allowed=expectedRows.filter(row=>row.owner===owner&&row.backupRule!=='exclude').map(row=>row.store);if(domains?.[owner]?.database!==identity.database||Number(domains?.[owner]?.databaseVersion)!==identity.databaseVersion||!stores||Object.keys(stores).some(store=>!allowed.includes(store))||allowed.some(store=>!Array.isArray(stores[store])))return{error:`Legacy registry-v4 ${owner} domain is invalid.`};}
   for(let index=0;index<expectedRows.length;index++){const actual=input.manifest.stores[index],expected=expectedRows[index],rows=domains[expected.owner].stores[expected.store];if(!actual)return{error:'Legacy registry-v4 backup manifest is invalid.'};for(const key of ['owner','database','databaseVersion','store','keyPath','classification','backupRule','restoreRule','note'])if(actual[key]!==expected[key])return{error:'Legacy registry-v4 backup manifest metadata is invalid.'};const digest=expected.backupRule==='exclude'?null:`sha256:${sha256Hex(JSON.stringify(rows))}`;if(Number(actual.recordCount)!==(expected.backupRule==='exclude'?0:rows.length)||actual.contentDigest!==digest)return{error:'Legacy registry-v4 backup manifest digest is invalid.'};}
   domains.v10.stores[V10_STORES.privateSources]=[];domains.v10.database=V10_DB_NAME;domains.v10.databaseVersion=V10_DB_VERSION;
-  return{value:buildFullBackupEnvelope({core:domains.core.stores,ielts:domains.ielts.stores,v10:domains.v10.stores,exportedAt:input.exportedAt}),warning:'Legacy full-backup v4 was additively upgraded with an empty privateSources store.'};
+  domains.ielts.stores[IELTS_STORE_NAMES.frozenAssessments]=domains.ielts.stores[IELTS_STORE_NAMES.frozenAssessments]||[];domains.ielts.database=IELTS_DB_NAME;domains.ielts.databaseVersion=IELTS_DB_VERSION;
+  try{return{value:buildFullBackupEnvelope({core:domains.core.stores,ielts:domains.ielts.stores,v10:domains.v10.stores,exportedAt:input.exportedAt}),warning:'Legacy full-backup v4 was additively upgraded with empty privateSources and frozenAssessments stores.'};}
+  catch(error){return{error:error.message};}
+}
+
+function upgradeRegistryV5Envelope(input){
+  if(Number(input?.schemaVersion)!==5||Number(input?.registryVersion)!==5)return null;
+  if(input.kind!==FULL_BACKUP_KIND)return{error:'Legacy registry-v5 backup kind is invalid.'};
+  const domains=structuredClone(input.domains||{});
+  if(input.payloadDigest!==canonicalBackupDigest(domains))return{error:'Legacy registry-v5 backup payload digest does not match.'};
+  const hasFrozen=Array.isArray(input?.manifest?.stores)&&input.manifest.stores.some(row=>row.owner==='ielts'&&row.store===IELTS_STORE_NAMES.frozenAssessments);
+  const expectedRows=BACKUP_STORE_REGISTRY.filter(row=>hasFrozen||!(row.owner==='ielts'&&row.store===IELTS_STORE_NAMES.frozenAssessments)).map(row=>row.owner==='ielts'?{...row,databaseVersion:3}:row);
+  if(!Array.isArray(input?.manifest?.stores)||input.manifest.stores.length!==expectedRows.length||canonicalContentJson(input.manifest.external)!==canonicalContentJson(BACKUP_EXTERNAL_REGISTRY))return{error:'Legacy registry-v5 backup manifest is invalid.'};
+  const identities={core:{database:DB_NAME,databaseVersion:DB_VERSION},ielts:{database:IELTS_DB_NAME,databaseVersion:3},v10:{database:V10_DB_NAME,databaseVersion:V10_DB_VERSION}};
+  for(const [owner,identity] of Object.entries(identities)){const stores=domains?.[owner]?.stores,allowed=expectedRows.filter(row=>row.owner===owner&&row.backupRule!=='exclude').map(row=>row.store);if(domains?.[owner]?.database!==identity.database||Number(domains?.[owner]?.databaseVersion)!==identity.databaseVersion||!stores||Object.keys(stores).some(store=>!allowed.includes(store))||allowed.some(store=>!Array.isArray(stores[store])))return{error:`Legacy registry-v5 ${owner} domain is invalid.`};}
+  for(let index=0;index<expectedRows.length;index++){const actual=input.manifest.stores[index],expected=expectedRows[index],rows=domains[expected.owner].stores[expected.store];if(!actual)return{error:'Legacy registry-v5 backup manifest is invalid.'};for(const key of ['owner','database','databaseVersion','store','keyPath','classification','backupRule','restoreRule','note'])if(actual[key]!==expected[key])return{error:'Legacy registry-v5 backup manifest metadata is invalid.'};const digest=expected.backupRule==='exclude'?null:`sha256:${sha256Hex(JSON.stringify(rows))}`;if(Number(actual.recordCount)!==(expected.backupRule==='exclude'?0:rows.length)||actual.contentDigest!==digest)return{error:'Legacy registry-v5 backup manifest digest is invalid.'};}
+  domains.ielts.stores[IELTS_STORE_NAMES.frozenAssessments]=domains.ielts.stores[IELTS_STORE_NAMES.frozenAssessments]||[];domains.ielts.database=IELTS_DB_NAME;domains.ielts.databaseVersion=IELTS_DB_VERSION;
+  try{return{value:buildFullBackupEnvelope({core:domains.core.stores,ielts:domains.ielts.stores,v10:domains.v10.stores,exportedAt:input.exportedAt}),warning:'Legacy full-backup v5 was additively upgraded with an empty frozenAssessments store.'};}
+  catch(error){return{error:error.message};}
 }
 
 function validateManifest(input,domains,errors){
@@ -507,15 +539,18 @@ export function validateFullBackupEnvelope(input){
   if(registryV3?.error)return{valid:false,errors:[registryV3.error],warnings,value:null};
   if(registryV3?.value){input=registryV3.value;warnings.push(registryV3.warning);}
   const registryV4=upgradeRegistryV4Envelope(input);
-  if(registryV4?.error)return{valid:false,errors:[registryV4.error],warnings,value:null};
+  if(registryV4?.error)return{valid:false,errors:[registryV4.error],warnings:[],value:null};
   if(registryV4?.value){input=registryV4.value;warnings.push(registryV4.warning);}
+  const registryV5=upgradeRegistryV5Envelope(input);
+  if(registryV5?.error)return{valid:false,errors:[registryV5.error],warnings:[],value:null};
+  if(registryV5?.value){input=registryV5.value;warnings.push(registryV5.warning);}
   const envelopeSafety=jsonSafetyErrors(input,'backup');if(envelopeSafety.length)return{valid:false,errors:envelopeSafety,warnings,value:null};
   if(input.kind!==FULL_BACKUP_KIND)errors.push('Khong phai full backup Vocab Master vNext.');
-  if(Number(input.schemaVersion||0)!==FULL_BACKUP_VERSION)errors.push(Number(input.schemaVersion||0)>FULL_BACKUP_VERSION?'Backup dung schema moi hon ung dung.':'Backup vNext thieu hoac sai schema version.');
-  if(Number(input.registryVersion||0)!==BACKUP_REGISTRY_VERSION)errors.push(Number(input.registryVersion||0)>BACKUP_REGISTRY_VERSION?'Backup dung store registry moi hon ung dung.':'Backup thieu hoac sai store registry version.');
+  if(![5,6].includes(Number(input.schemaVersion||0)))errors.push(Number(input.schemaVersion||0)>6?'Backup dung schema moi hon ung dung.':'Backup vNext thieu hoac sai schema version.');
+  if(![5,6].includes(Number(input.registryVersion||0)))errors.push(Number(input.registryVersion||0)>6?'Backup dung store registry moi hon ung dung.':'Backup thieu hoac sai store registry version.');
   const domains=input.domains&&typeof input.domains==='object'&&!Array.isArray(input.domains)?input.domains:{};
   const safetyErrors=safetyErrorsForDomains(domains);errors.push(...safetyErrors);if(safetyErrors.length)return{valid:false,errors,warnings,value:null};
-  errors.push(...privateSourceErrors(domains),...primaryKeyErrors(domains),...uniqueIndexErrors(domains),...objectiveInventoryErrors(domains),...objectiveSpatialTerminalErrors(domains),...productiveArtifactErrors(domains),...productiveTerminalErrors(domains));
+  errors.push(...privateSourceErrors(domains),...primaryKeyErrors(domains),...uniqueIndexErrors(domains),...objectiveInventoryErrors(domains),...objectiveSpatialTerminalErrors(domains),...productiveArtifactErrors(domains),...productiveTerminalErrors(domains),...frozenAssessmentErrors(domains));
   for(const owner of ['core','ielts','v10']){
     const domain=domains[owner];if(!domain||typeof domain!=='object'||Array.isArray(domain)){errors.push(`Thieu domain ${owner}.`);continue;}
     const expectedOwner=ownerEntries(owner)[0];if(domain.database!==expectedOwner.database)errors.push(`${owner}.database khong khop registry.`);if(Number(domain.databaseVersion)!==expectedOwner.databaseVersion)errors.push(Number(domain.databaseVersion)>expectedOwner.databaseVersion?`${owner} database version moi hon ung dung.`:`${owner} database version khong khop registry.`);

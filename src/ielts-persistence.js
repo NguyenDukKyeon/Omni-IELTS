@@ -79,6 +79,7 @@ function createIndexes(storeName,store){
   if(storeName===IELTS_STORE_NAMES.settings){store.createIndex('updatedAt','updatedAt',{unique:false});}
   if(storeName===IELTS_STORE_NAMES.objectiveInventory){store.createIndex('itemId','itemId',{unique:false});store.createIndex('skill','skill',{unique:false});store.createIndex('status','status',{unique:false});}
   if(storeName===IELTS_STORE_NAMES.learnerArtifacts){store.createIndex('kind','kind',{unique:false});store.createIndex('artifactId','artifactId',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
+  if(storeName===IELTS_STORE_NAMES.frozenAssessments){store.createIndex('kind','kind',{unique:false});store.createIndex('blueprintId','blueprintId',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
 }
 
 export function openIeltsDatabase(){
@@ -126,20 +127,20 @@ export async function initializeIeltsPersistence(){
 }
 
 export async function listIeltsRecords(storeName,{limit=0,sortBy='updatedAt',descending=true}={}){
-  if(storeName===IELTS_STORE_NAMES.objectiveInventory)throw Object.assign(new Error('Canonical IELTS objective inventory requires its dedicated owner API.'),{code:'IELTS_INVENTORY_DIRECT_WRITE_FORBIDDEN'});if(storeName===IELTS_STORE_NAMES.learnerArtifacts)throw Object.assign(new Error('Learner artifact storage requires its dedicated owner API.'),{code:'IELTS_OWNER_DIRECT_ACCESS_FORBIDDEN'});
+  if(storeName===IELTS_STORE_NAMES.objectiveInventory)throw Object.assign(new Error('Canonical IELTS objective inventory requires its dedicated owner API.'),{code:'IELTS_INVENTORY_DIRECT_WRITE_FORBIDDEN'});if(storeName===IELTS_STORE_NAMES.learnerArtifacts)throw Object.assign(new Error('Learner artifact storage requires its dedicated owner API.'),{code:'IELTS_OWNER_DIRECT_ACCESS_FORBIDDEN'});if(storeName===IELTS_STORE_NAMES.frozenAssessments)throw Object.assign(new Error('Frozen Assessment storage requires its dedicated owner API.'),{code:'IELTS_OWNER_DIRECT_ACCESS_FORBIDDEN'});
   const rows=await getAll(assertStore(storeName));rows.sort((a,b)=>{const av=Number(a?.[sortBy]||0),bv=Number(b?.[sortBy]||0);return descending?bv-av:av-bv;});return limit>0?rows.slice(0,limit):rows;
 }
 
-export async function getIeltsRecord(storeName,id){if(storeName===IELTS_STORE_NAMES.objectiveInventory)throw Object.assign(new Error('Canonical IELTS objective inventory requires its dedicated owner API.'),{code:'IELTS_INVENTORY_DIRECT_WRITE_FORBIDDEN'});if(storeName===IELTS_STORE_NAMES.learnerArtifacts)throw Object.assign(new Error('Learner artifact storage requires its dedicated owner API.'),{code:'IELTS_OWNER_DIRECT_ACCESS_FORBIDDEN'});return getOne(assertStore(storeName),id);}
+export async function getIeltsRecord(storeName,id){if(storeName===IELTS_STORE_NAMES.objectiveInventory)throw Object.assign(new Error('Canonical IELTS objective inventory requires its dedicated owner API.'),{code:'IELTS_INVENTORY_DIRECT_WRITE_FORBIDDEN'});if(storeName===IELTS_STORE_NAMES.learnerArtifacts)throw Object.assign(new Error('Learner artifact storage requires its dedicated owner API.'),{code:'IELTS_OWNER_DIRECT_ACCESS_FORBIDDEN'});if(storeName===IELTS_STORE_NAMES.frozenAssessments)throw Object.assign(new Error('Frozen Assessment storage requires its dedicated owner API.'),{code:'IELTS_OWNER_DIRECT_ACCESS_FORBIDDEN'});return getOne(assertStore(storeName),id);}
 
 export async function saveIeltsRecord(storeName,value,reason='ielts-record-saved'){
-  if(storeName===IELTS_STORE_NAMES.objectiveInventory)throw Object.assign(new Error('Canonical IELTS objective inventory requires its dedicated owner API.'),{code:'IELTS_INVENTORY_DIRECT_WRITE_FORBIDDEN'});if(storeName===IELTS_STORE_NAMES.learnerArtifacts)throw Object.assign(new Error('Learner artifact storage requires its dedicated owner API.'),{code:'IELTS_OWNER_DIRECT_ACCESS_FORBIDDEN'});
+  if(storeName===IELTS_STORE_NAMES.objectiveInventory)throw Object.assign(new Error('Canonical IELTS objective inventory requires its dedicated owner API.'),{code:'IELTS_INVENTORY_DIRECT_WRITE_FORBIDDEN'});if(storeName===IELTS_STORE_NAMES.learnerArtifacts)throw Object.assign(new Error('Learner artifact storage requires its dedicated owner API.'),{code:'IELTS_OWNER_DIRECT_ACCESS_FORBIDDEN'});if(storeName===IELTS_STORE_NAMES.frozenAssessments)throw Object.assign(new Error('Frozen Assessment storage requires its dedicated owner API.'),{code:'IELTS_OWNER_DIRECT_ACCESS_FORBIDDEN'});
   assertStore(storeName);const row={...clone(value),updatedAt:Number(value?.updatedAt||Date.now())};if(storeName===IELTS_STORE_NAMES.settings){if(!row.key)throw new Error('IELTS setting cần key.');}else if(!row.id)throw new Error(`${storeName} cần id.`);
   emit('saving',{storeName});const saved=await putOne(storeName,row);broadcast(reason,[storeName]);emit('saved',{storeName});return saved;
 }
 
 export async function deleteIeltsRecord(storeName,id,reason='ielts-record-deleted'){
-  if(storeName===IELTS_STORE_NAMES.objectiveInventory)throw Object.assign(new Error('Canonical IELTS objective inventory cannot be deleted through generic CRUD.'),{code:'IELTS_INVENTORY_DIRECT_WRITE_FORBIDDEN'});if(storeName===IELTS_STORE_NAMES.learnerArtifacts)throw Object.assign(new Error('Learner artifact storage cannot be deleted through generic CRUD.'),{code:'IELTS_OWNER_DIRECT_ACCESS_FORBIDDEN'});
+  if(storeName===IELTS_STORE_NAMES.objectiveInventory)throw Object.assign(new Error('Canonical IELTS objective inventory cannot be deleted through generic CRUD.'),{code:'IELTS_INVENTORY_DIRECT_WRITE_FORBIDDEN'});if(storeName===IELTS_STORE_NAMES.learnerArtifacts)throw Object.assign(new Error('Learner artifact storage cannot be deleted through generic CRUD.'),{code:'IELTS_OWNER_DIRECT_ACCESS_FORBIDDEN'});if(storeName===IELTS_STORE_NAMES.frozenAssessments)throw Object.assign(new Error('Frozen Assessment storage cannot be deleted through generic CRUD.'),{code:'IELTS_OWNER_DIRECT_ACCESS_FORBIDDEN'});
   await deleteOne(assertStore(storeName),id);broadcast(reason,[storeName]);return true;
 }
 
@@ -220,6 +221,50 @@ export async function getProductiveFeedbackByRun({artifactId,runId}={}){
 }
 export async function getProductiveFeedbackProjection(feedbackId){
   if(!exactProductiveId(feedbackId))return null;let database;try{database=await openIeltsDatabase();}catch(error){throw productiveError(PRODUCTIVE_ERROR_CODES.STORAGE,'Productive writing requires durable IndexedDB storage.',error);}if(!database)throw productiveError(PRODUCTIVE_ERROR_CODES.STORAGE,'Productive writing requires durable IndexedDB storage.');const transaction=database.transaction(IELTS_STORE_NAMES.learnerArtifacts,'readonly'),store=transaction.objectStore(IELTS_STORE_NAMES.learnerArtifacts),feedback=await requestResult(store.get(feedbackId));if(!feedback){await transactionDone(transaction);return null;}const checked=validateProductiveFeedback(feedback);if(!checked.valid)throw productiveError(PRODUCTIVE_ERROR_CODES.MISMATCH,'Stored productive feedback is malformed.');const rows=await productiveRowsByArtifact(checked.value.artifactId,store);await transactionDone(transaction);const lineage=validateStoredProductive(rows,checked.value.artifactId);return immutableProductive({feedbackId:checked.value.id,artifactId:checked.value.artifactId,artifactRevisionId:checked.value.artifactRevisionId,currentRevisionId:lineage.artifact.currentRevisionId,freshness:lineage.artifact.currentRevisionId===checked.value.artifactRevisionId?'current':'stale',feedback:checked.value});}
+
+export async function saveFrozenAssessmentRecord(record,reason='ielts-frozen-assessment-saved'){
+  if(!record||typeof record!=='object'||!record.id||!record.kind)throw new Error('Frozen Assessment record requires id and kind.');
+  const saved=await enqueueWrite(async()=>{
+    const database=await openIeltsDatabase();
+    if(!database){
+      const map=memory.get(IELTS_STORE_NAMES.frozenAssessments);
+      const copy=clone(record);
+      map.set(copy.id,copy);
+      return copy;
+    }
+    const transaction=database.transaction(IELTS_STORE_NAMES.frozenAssessments,'readwrite');
+    const store=transaction.objectStore(IELTS_STORE_NAMES.frozenAssessments);
+    store.put(clone(record));
+    await transactionDone(transaction);
+    return record;
+  });
+  broadcast(reason,[IELTS_STORE_NAMES.frozenAssessments]);
+  return clone(saved);
+}
+
+export async function getFrozenAssessmentRecord(id){
+  if(typeof id!=='string'||!id)return null;
+  const database=await openIeltsDatabase();
+  if(!database){
+    const map=memory.get(IELTS_STORE_NAMES.frozenAssessments);
+    const row=map.get(id);
+    return row?clone(row):null;
+  }
+  const transaction=database.transaction(IELTS_STORE_NAMES.frozenAssessments,'readonly');
+  const store=transaction.objectStore(IELTS_STORE_NAMES.frozenAssessments);
+  const row=await requestResult(store.get(id));
+  await transactionDone(transaction);
+  return row?clone(row):null;
+}
+
+export function createFrozenAssessmentOwnerAdapter(){
+  return Object.freeze({
+    async getBlueprint(id){return getFrozenAssessmentRecord(id);},
+    async saveBlueprint(blueprint){return saveFrozenAssessmentRecord(blueprint);},
+    async getRun(id){return getFrozenAssessmentRecord(id);},
+    async saveRun(run){return saveFrozenAssessmentRecord(run);}
+  });
+}
 
 function immutableSnapshot(value){
   const copy=clone(value);
@@ -457,25 +502,28 @@ export async function buildIeltsBackup({restoreToken=null}={}){
     if(unknown.length||missing.length)throw Object.assign(new Error(`IELTS store registry mismatch (missing: ${missing.join(',')||'none'}; unknown: ${unknown.join(',')||'none'}).`),{code:'BACKUP_STORE_REGISTRY_MISMATCH'});
     const transaction=database.transaction(STORE_LIST,'readonly');stores=Object.fromEntries(await Promise.all(STORE_LIST.map(async store=>[store,await requestResult(transaction.objectStore(store).getAll())])));await transactionDone(transaction);
   }
-  return{app:'Vocab Master IELTS Labs',schemaVersion:IELTS_BACKUP_VERSION,domainSchemaVersion:IELTS_SCHEMA_VERSION,exportedAt:new Date().toISOString(),stores};
+  const hasFrozen=(stores[IELTS_STORE_NAMES.frozenAssessments]||[]).length>0;
+  const schemaVersion=hasFrozen?4:IELTS_BACKUP_VERSION;
+  return{app:'Vocab Master IELTS Labs',schemaVersion,domainSchemaVersion:IELTS_SCHEMA_VERSION,exportedAt:new Date().toISOString(),stores};
 }
 
 function upgradeLegacyIeltsBackupV1(input){
-  if(![1,2].includes(Number(input?.schemaVersion)))return null;
+  if(![1,2,3].includes(Number(input?.schemaVersion)))return null;
   if(Number(input?.domainSchemaVersion)!==IELTS_SCHEMA_VERSION)return{error:'Legacy IELTS backup domain schema is invalid.'};
   const stores=input?.stores;if(!stores||typeof stores!=='object'||Array.isArray(stores))return{error:'Legacy IELTS backup stores are invalid.'};
-  const legacyStores=Number(input.schemaVersion)===1?STORE_LIST.filter(store=>![IELTS_STORE_NAMES.objectiveInventory,IELTS_STORE_NAMES.learnerArtifacts].includes(store)):STORE_LIST.filter(store=>store!==IELTS_STORE_NAMES.learnerArtifacts);
-  if(Object.keys(stores).some(store=>!legacyStores.includes(store)))return{error:'Legacy IELTS backup contains unknown or partial inventory storage.'};
-  if(legacyStores.some(store=>!Array.isArray(stores[store])))return{error:'Legacy IELTS backup is missing a required store.'};
-  return{value:{...clone(input),schemaVersion:IELTS_BACKUP_VERSION,stores:{...clone(stores),...(Number(input.schemaVersion)===1?{[IELTS_STORE_NAMES.objectiveInventory]:{}}:{}),[IELTS_STORE_NAMES.objectiveInventory]:stores[IELTS_STORE_NAMES.objectiveInventory]||[],[IELTS_STORE_NAMES.learnerArtifacts]:[]}},warning:`Legacy IELTS backup v${input.schemaVersion} was additively upgraded with empty productive artifact storage.`};
+  if(Object.keys(stores).some(store=>!STORE_LIST.includes(store)))return{error:'Legacy IELTS backup contains unknown or partial inventory storage.'};
+  const requiredStores=STORE_LIST.filter(store=>![IELTS_STORE_NAMES.objectiveInventory,IELTS_STORE_NAMES.learnerArtifacts,IELTS_STORE_NAMES.frozenAssessments].includes(store));
+  if(requiredStores.some(store=>!Array.isArray(stores[store])))return{error:'Legacy IELTS backup is missing a required store.'};
+  return{value:{...clone(input),schemaVersion:4,stores:{...clone(stores),[IELTS_STORE_NAMES.objectiveInventory]:stores[IELTS_STORE_NAMES.objectiveInventory]||[],[IELTS_STORE_NAMES.learnerArtifacts]:stores[IELTS_STORE_NAMES.learnerArtifacts]||[],[IELTS_STORE_NAMES.frozenAssessments]:stores[IELTS_STORE_NAMES.frozenAssessments]||[]}},warning:`Legacy IELTS backup v${input.schemaVersion} was additively upgraded with empty storage.`};
 }
 
 export function validateIeltsBackup(input){
   const legacy=upgradeLegacyIeltsBackupV1(input);if(legacy?.error)return{valid:false,errors:[legacy.error],warnings:[],value:null};if(legacy?.value)input=legacy.value;
   const errors=[];const warnings=[];if(!input||typeof input!=='object'||Array.isArray(input))return{valid:false,errors:['Backup IELTS phải là object.'],warnings,value:null};
-  if(Number(input.schemaVersion||0)!==IELTS_BACKUP_VERSION)errors.push(Number(input.schemaVersion||0)>IELTS_BACKUP_VERSION?'Backup IELTS dùng schema mới hơn ứng dụng.':'Backup IELTS thiếu hoặc sai schema version.');
+  if(![3,4].includes(Number(input.schemaVersion||0)))errors.push(Number(input.schemaVersion||0)>4?'Backup IELTS dùng schema mới hơn ứng dụng.':'Backup IELTS thiếu hoặc sai schema version.');
   if(Number(input.domainSchemaVersion||0)!==IELTS_SCHEMA_VERSION)errors.push(Number(input.domainSchemaVersion||0)>IELTS_SCHEMA_VERSION?'Backup IELTS dùng domain schema mới hơn ứng dụng.':'Backup IELTS thiếu hoặc sai domain schema version.');
-  const stores=input.stores&&typeof input.stores==='object'?input.stores:{};const value={app:'Vocab Master IELTS Labs',schemaVersion:IELTS_BACKUP_VERSION,domainSchemaVersion:IELTS_SCHEMA_VERSION,exportedAt:String(input.exportedAt||new Date().toISOString()),stores:{}};
+  const targetSchemaVersion=Number(input.schemaVersion||0)===4?4:3;
+  const stores=input.stores&&typeof input.stores==='object'?input.stores:{};const value={app:'Vocab Master IELTS Labs',schemaVersion:targetSchemaVersion,domainSchemaVersion:IELTS_SCHEMA_VERSION,exportedAt:String(input.exportedAt||new Date().toISOString()),stores:{}};
   for(const store of STORE_LIST){if(!Object.hasOwn(stores,store))errors.push(`Backup IELTS thiếu store ${store}.`);const rows=Array.isArray(stores[store])?stores[store]:[];if(!Array.isArray(stores[store])&&Object.hasOwn(stores,store))errors.push(`${store} phải là array.`);if(rows.length>MAX_RECORDS_PER_STORE)errors.push(`${store} vượt giới hạn ${MAX_RECORDS_PER_STORE}.`);value.stores[store]=clone(rows);}
   for(const store of Object.keys(stores))if(!STORE_LIST.includes(store))errors.push(`Backup IELTS có store không được hỗ trợ: ${store}.`);
   const ids=new Set();for(const store of STORE_LIST){for(const row of value.stores[store]){const id=String(row?.key??row?.id??'');if(!id){errors.push(`${store} có record thiếu id/key.`);continue;}const composite=`${store}:${id}`;if(ids.has(composite))errors.push(`${store} trùng id ${id}.`);ids.add(composite);}}
@@ -490,6 +538,7 @@ export function validateIeltsBackup(input){
   for(const artifact of productiveArtifacts){const lineage=validateArtifactLineage({artifact,revisions:productiveRevisions.filter(row=>row.artifactId===artifact.id),feedback:productiveFeedback.filter(row=>row.artifactId===artifact.id)});if(!lineage.valid)errors.push(...lineage.errors.map(error=>`learnerArtifacts/${artifact.id}: ${error}`));}
   for(const row of productiveRevisions)if(!productiveArtifacts.some(artifact=>artifact.id===row.artifactId))errors.push(`learnerArtifacts/${row.id||'unknown'} has no artifact owner.`);
   for(const row of productiveFeedback)if(!productiveArtifacts.some(artifact=>artifact.id===row.artifactId))errors.push(`learnerArtifacts/${row.id||'unknown'} has no artifact owner.`);
+  for(const row of value.stores[IELTS_STORE_NAMES.frozenAssessments]||[]){if(!row||typeof row!=='object'||!row.id)errors.push('frozenAssessments contains malformed record.');}
   const sourceIds=new Set(value.stores[IELTS_STORE_NAMES.mediaSources].map(row=>row.id));for(const segment of value.stores[IELTS_STORE_NAMES.transcriptSegments])if(!sourceIds.has(segment.mediaSourceId))warnings.push(`Segment ${segment.id} tham chiếu media source không tồn tại.`);
   return{valid:errors.length===0,errors,warnings,value};
 }
