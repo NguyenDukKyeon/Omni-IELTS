@@ -1,6 +1,6 @@
 # VocabMaster — Implementation Status
 
-Last updated: 2026-08-05
+Last updated: 2026-08-14
 
 Phase 0 accepted source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
@@ -651,3 +651,24 @@ Phase 4 remains `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED`; merge alone
 did not supply missing rights/human review or independent acceptance. Phase 5
 must also remain `IMPLEMENTED / INTERNAL_GREEN / REVIEW_REQUIRED` until
 exact-head CI and an independent focused review reproduce the handoff.
+
+## 10. Wave 6 Stage 1 canonical integration and closure
+
+- Canonical status: `STAGE_1_FULLY_CLOSED`
+- Technical packages accepted:
+  - R1 — P7/WKN successor (`W6-P7-00-WKN-SUCC-010`): `ACCEPT`
+  - R2 — Focus Today (`W6-FCS-00-01-012`): `ACCEPT`
+  - R3 — Frozen Assessment (`W6-ASM-00-014`): `ACCEPT`
+  - R4 — Targeted Diagnostic (`W6-TD-00-014`): `ACCEPT`
+- Accepted execution candidate head: `81428f28fac8a8e34ab35126a028d16659199def` (PR #78)
+- Corrected independent batch audit: comment `5290883787` on PR #78 (`STAGE1_TECHNICAL_ACCEPT`)
+- Integration authorization: `W6-STAGE1-INTEGRATION-AUTH-001` (PR #79 at head `dcde5295f70d3697e078b0ab4c5622348e6dbbd5`, independent ACCEPT comment `5291276461`)
+- Canonical integration merge: merged PR #78 into `main` at commit `b293b9d2a97a152785ce914f9ad4ab2181c93eab`
+- Integration closure record: comment `5291294824` on PR #78 (`W6_STAGE1_CANONICAL_INTEGRATION_CLOSED`)
+- Post-merge natural CI: Run `31784638335` (Job `94717717917`, `SUCCESS`, verification artifact `9213013159`, digest `sha256:49516801add760cb99e400145b95bfc538234f9de6ebe5ecca8103c22cb84f21`)
+- Status reconciliation: `STATUS_RECONCILIATION: COMPLETE`
+- Boundaries:
+  - `STAGE_1_5_NOT_AUTHORIZED`
+  - `STAGE_2_NOT_AUTHORIZED`
+  - Zero downstream execution, deployment, or release claims are granted by this status reconciliation.
+
