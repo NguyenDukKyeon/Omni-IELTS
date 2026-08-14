@@ -17,9 +17,11 @@ import { buildIeltsEvidenceEnvelope } from '../src/ielts-domain.js';
 import { buildV10CoachingEnvelope } from '../src/v10-contracts.js';
 import { buildLearningEventRecords, validateLearningEventRecord } from '../src/event-repository.js';
 import { learningContractDigest } from '../src/learning-contracts.js';
+import { validateWeaknessProfile } from '../src/weakness-profile.js';
 
 const DAY=86_400_000;
 const noonUtc=date=>Date.parse(`${date}T12:00:00Z`);
+const skillObservation=(profile,skill)=>profile.observations.bySkill.find(row=>row.skill===skill);
 
 function evidenceDecisionRecord(envelope){
   const record=buildLearningEventRecords(envelope).find(item=>item.eventType==='evidence-decided');
@@ -207,18 +209,19 @@ test('canonical progress projection reconciles authentic Core IELTS and V10 evid
   assert.equal(projection.metrics.provenance.filter(row=>row.included).length,3);
   assert.ok(projection.metrics.provenance.every(row=>row.eventId&&row.receiptId&&row.sourceId&&row.sourceRevision));
 
-  assert.equal(projection.weaknessProfile.kind,'canonical-weakness-profile');
+  assert.equal(validateWeaknessProfile(projection.weaknessProfile).valid,true,'Progress must expose the canonical P7/WKN WeaknessProfile without recasting it');
   assert.equal(projection.weaknessProfile.schemaVersion,1);
+  assert.equal(projection.weaknessProfile.profileVersion,'weakness-profile-v1');
   assert.equal(projection.weaknessProfile.denominator,3);
   assert.equal(projection.weaknessProfile.sampleSize,3);
   assert.equal(projection.weaknessProfile.insufficientData,false);
-  assert.equal(projection.weaknessProfile.observations.bySkill.recall.denominator,2);
-  assert.equal(projection.weaknessProfile.observations.bySkill.listening.denominator,1);
+  assert.equal(skillObservation(projection.weaknessProfile,'recall').denominator,2);
+  assert.equal(skillObservation(projection.weaknessProfile,'listening').denominator,1);
   assert.equal(projection.weaknessProfile.uncertainty,'high');
-  assert.ok(projection.weaknessProfile.reasonCodes.includes('CONFLICTING_EVIDENCE'));
+  assert.deepEqual(projection.weaknessProfile.reasonCodes,[],'mixed outcomes are observations, not a second canonical conflict vocabulary');
   assert.match(projection.weaknessProfile.inputDigest,/^fnv1a64:/);
   assert.match(projection.weaknessProfile.outputDigest,/^fnv1a64:/);
-  for(const forbidden of ['ready','readiness','bandScore','bandEstimate','mastery']){
+  for(const forbidden of ['kind','conflicts','ready','readiness','bandScore','bandEstimate','mastery']){
     assert.equal(Object.prototype.hasOwnProperty.call(projection.weaknessProfile,forbidden),false);
   }
 
@@ -226,28 +229,31 @@ test('canonical progress projection reconciles authentic Core IELTS and V10 evid
   assert.deepEqual(reordered,projection,'caller order must not change canonical projection');
 });
 
-test('canonical progress projection treats sparse evidence and colliding identities as uncertainty instead of readiness',()=>{
+test('canonical progress projection preserves canonical sparse/conflict semantics instead of inventing a second WeaknessProfile vocabulary',()=>{
   const core=coreCanonicalEvent('collision',{rating:'good',now:Date.parse('2026-08-03T12:00:00Z')}).record;
   const ielts=ieltsCanonicalEvent('sparse').record;
   const collision=identityCollision(core);
 
   const sparse=progress.buildCanonicalProgressProjection([ielts],{timeZone:'UTC'});
   assert.equal(sparse.metrics.denominator,1);
+  assert.equal(validateWeaknessProfile(sparse.weaknessProfile).valid,true);
   assert.equal(sparse.weaknessProfile.insufficientData,true);
   assert.equal(sparse.weaknessProfile.uncertainty,'high');
-  assert.ok(sparse.weaknessProfile.reasonCodes.includes('SPARSE_EVIDENCE'));
+  assert.ok(sparse.weaknessProfile.reasonCodes.includes('SINGLE_QUALIFIED_SAMPLE'));
 
   const conflicted=progress.buildCanonicalProgressProjection([core,collision,ielts],{timeZone:'UTC'});
   assert.equal(conflicted.metrics.conflicts.count,1);
   assert.equal(conflicted.metrics.denominator,1,'both rows sharing a colliding identity must be excluded from denominator');
+  assert.equal(validateWeaknessProfile(conflicted.weaknessProfile).valid,true);
   assert.equal(conflicted.weaknessProfile.uncertainty,'high');
-  assert.ok(conflicted.weaknessProfile.reasonCodes.includes('IDENTITY_CONFLICT'));
-  assert.equal(conflicted.weaknessProfile.conflicts.count,1);
+  assert.ok(conflicted.weaknessProfile.reasonCodes.includes('CONFLICTING_CANONICAL_EVENTS'));
+  assert.equal(Object.prototype.hasOwnProperty.call(conflicted.weaknessProfile,'conflicts'),false,'metrics owns conflict details; WeaknessProfile keeps only its canonical conflict reason');
 
   const empty=progress.buildCanonicalProgressProjection([],{timeZone:'UTC'});
   assert.equal(empty.metrics.status,'INSUFFICIENT_DATA');
   assert.equal(empty.metrics.denominator,0);
   assert.equal(empty.metrics.sampleSize,0);
+  assert.equal(validateWeaknessProfile(empty.weaknessProfile).valid,true);
   assert.equal(empty.weaknessProfile.insufficientData,true);
-  assert.ok(empty.weaknessProfile.reasonCodes.includes('NO_EVIDENCE'));
+  assert.ok(empty.weaknessProfile.reasonCodes.includes('NO_QUALIFIED_EVIDENCE'));
 });
