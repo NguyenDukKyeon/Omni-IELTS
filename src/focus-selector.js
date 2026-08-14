@@ -5,7 +5,7 @@ export const FOCUS_SELECTOR_VERSION='canonical-focus-selector-v1';
 export const FOCUS_REASON_CODE='observed-weakness-focus';
 export const FOCUS_SLOT_CAP=1;
 
-const PROFILE_FIELDS=['schemaVersion','profileVersion','taxonomyVersion','projectorVersion','canonicalInputRefs','denominator','sampleSize','timeframe','reasonCodes','uncertainty','uncertaintyReasons','insufficientData','conflictHandling','observations','provenance','inputDigest','kind','conflicts','outputDigest'];
+const PROFILE_FIELDS=['schemaVersion','profileVersion','taxonomyVersion','projectorVersion','canonicalInputRefs','denominator','sampleSize','timeframe','reasonCodes','uncertainty','uncertaintyReasons','insufficientData','conflictHandling','observations','provenance','inputDigest','outputDigest'];
 const OBSERVATION_FIELDS=['skill','qualifiedSuccesses','qualifiedFailures','denominator','failureRate','status','reasonCodes','sourceRefs'];
 const CANDIDATE_FIELDS=['id','type','target','executor','estimatedSeconds','category','originReasonCode'];
 const SELECTION_FIELDS=['candidate','weakness','candidateSet','candidateSetDigest','tieDigest','coreSelectionDigest'];
@@ -52,7 +52,7 @@ function validateCandidate(value){
 function validateObservation(value){
   if(!sameKeys(value,OBSERVATION_FIELDS)||!exactString(value.skill,80)||!Number.isSafeInteger(value.qualifiedSuccesses)||value.qualifiedSuccesses<0||!Number.isSafeInteger(value.qualifiedFailures)||value.qualifiedFailures<0||!Number.isSafeInteger(value.denominator)||value.denominator<0||typeof value.failureRate!=='number'||!Number.isFinite(value.failureRate)||value.failureRate<0||value.failureRate>1||!['OBSERVED','INSUFFICIENT_DATA'].includes(value.status)||!Array.isArray(value.reasonCodes)||!Array.isArray(value.sourceRefs))invalid();
   if(value.denominator!==value.qualifiedSuccesses+value.qualifiedFailures)invalid();
-  if(value.sourceRefs.length>10_000)invalid();
+  if(value.sourceRefs.length>100_000)invalid();
   return clone(value);
 }
 function canonicalRef(value,{evidenceOnly=false}={}){
@@ -64,14 +64,15 @@ function sortedUnique(rows,compare){return rows.every((row,index)=>index===0||co
 function profileProjection(profile){const {outputDigest,...projection}=profile;return projection;}
 function validateProfile(profile){
   const validTimeframe=plain(profile.timeframe)&&sameKeys(profile.timeframe,['kind','startAt','endAt','timeZone','calendarDays'])&&exactString(profile.timeframe.timeZone,120)&&((profile.timeframe.kind==='inclusive'&&Number.isSafeInteger(profile.timeframe.startAt)&&Number.isSafeInteger(profile.timeframe.endAt)&&profile.timeframe.startAt>=0&&profile.timeframe.endAt>=profile.timeframe.startAt&&Number.isSafeInteger(profile.timeframe.calendarDays)&&profile.timeframe.calendarDays>=1)||(profile.timeframe.kind==='empty'&&profile.timeframe.startAt===null&&profile.timeframe.endAt===null&&profile.timeframe.calendarDays===0));
-  if(!sameKeys(profile,PROFILE_FIELDS)||profile.schemaVersion!==1||profile.profileVersion!=='weakness-profile-v1'||profile.taxonomyVersion!=='wkn-taxonomy-v1'||profile.projectorVersion!=='weakness-projector-v1'||profile.kind!=='canonical-weakness-profile'||!plain(profile.conflicts)||!sameKeys(profile.conflicts,['count','identities','excludedEvents'])||!Number.isSafeInteger(profile.conflicts.count)||profile.conflicts.count<0||!Array.isArray(profile.conflicts.identities)||!Number.isSafeInteger(profile.conflicts.excludedEvents)||profile.conflicts.excludedEvents<0||!exactString(profile.outputDigest,180)||!Array.isArray(profile.canonicalInputRefs)||!Number.isSafeInteger(profile.denominator)||profile.denominator<0||!Number.isSafeInteger(profile.sampleSize)||profile.sampleSize!==profile.denominator||!validTimeframe||!Array.isArray(profile.reasonCodes)||!Array.isArray(profile.uncertaintyReasons)||profile.uncertainty!=='high'||typeof profile.insufficientData!=='boolean'||profile.conflictHandling!=='exclude-colliding-event-identities-and-mark-insufficient'||!plain(profile.observations)||!sameKeys(profile.observations,['bySkill'])||!plain(profile.observations.bySkill)||!plain(profile.provenance)||!sameKeys(profile.provenance,['source','metricsReducerVersion','metricsInputDigest','eligibilityAuthority'])||profile.provenance.source!=='canonical-p1-02-evidence-decided'||profile.provenance.metricsReducerVersion!=='p7-00-metrics-reducer-v1'||!exactString(profile.provenance.metricsInputDigest,180)||profile.provenance.eligibilityAuthority!=='EvidencePolicy'||!exactString(profile.inputDigest,180))invalid();
+  if(!sameKeys(profile,PROFILE_FIELDS)||profile.schemaVersion!==1||profile.profileVersion!=='weakness-profile-v1'||profile.taxonomyVersion!=='wkn-taxonomy-v1'||profile.projectorVersion!=='weakness-projector-v1'||!exactString(profile.outputDigest,180)||!Array.isArray(profile.canonicalInputRefs)||!Number.isSafeInteger(profile.denominator)||profile.denominator<0||!Number.isSafeInteger(profile.sampleSize)||profile.sampleSize!==profile.denominator||!validTimeframe||!Array.isArray(profile.reasonCodes)||!Array.isArray(profile.uncertaintyReasons)||profile.uncertainty!=='high'||typeof profile.insufficientData!=='boolean'||profile.conflictHandling!=='exclude-colliding-event-identities-and-mark-insufficient'||!plain(profile.observations)||!sameKeys(profile.observations,['bySkill'])||!Array.isArray(profile.observations.bySkill)||!plain(profile.provenance)||!sameKeys(profile.provenance,['source','metricsReducerVersion','metricsInputDigest','eligibilityAuthority'])||profile.provenance.source!=='canonical-p1-02-evidence-decided'||!exactString(profile.provenance.metricsReducerVersion,120)||!exactString(profile.provenance.metricsInputDigest,180)||profile.provenance.eligibilityAuthority!=='EvidencePolicy'||!exactString(profile.inputDigest,180))invalid();
   if(digest(profileProjection(profile))!==profile.outputDigest)invalid();
-  if(profile.canonicalInputRefs.length>10_000||!sortedUnique(profile.canonicalInputRefs,compareRefs))invalid();
+  if(profile.canonicalInputRefs.length>100_000||!sortedUnique(profile.canonicalInputRefs,compareRefs))invalid();
   const canonicalRefs=profile.canonicalInputRefs.map(canonicalRef);
-  const observations=Object.values(profile.observations.bySkill).map(validateObservation);
-  if(!sortedUnique(observations,(left,right)=>left.skill.localeCompare(right.skill))||observations.some(row=>row.sourceRefs.length>10_000||!sortedUnique(row.sourceRefs,compareRefs)))invalid();
-  let refCount=canonicalRefs.length;
-  for(const observation of observations){const refs=observation.sourceRefs.map(ref=>canonicalRef(ref,{evidenceOnly:true}));refCount+=refs.length;if(refCount>10_000)invalid();}
+  const observations=profile.observations.bySkill.map(validateObservation);
+  if(!sortedUnique(observations,(left,right)=>left.skill.localeCompare(right.skill))||observations.some(row=>row.sourceRefs.length>100_000||!sortedUnique(row.sourceRefs,compareRefs)))invalid();
+  for(const observation of observations){
+    observation.sourceRefs.map(ref=>canonicalRef(ref,{evidenceOnly:true}));
+  }
   return {profile:clone(profile),observations};
 }
 function validateInput(input){
@@ -91,7 +92,7 @@ function decisionBase({dayKey,inputDigest,status,reasonCode,selection=null}){ret
 export function selectCanonicalFocus(input){
   const normalized=validateInput(input);
   const inputDigest=canonicalInputDigest(normalized);
-  const profileHasIdentityConflict=Number(normalized.profile.profile.conflicts?.count||0)>0||normalized.profile.profile.reasonCodes.includes('IDENTITY_CONFLICT');
+  const profileHasIdentityConflict=normalized.profile.profile.reasonCodes.includes('CONFLICTING_CANONICAL_EVENTS');
   const eligibleObservations=normalized.profile.observations.filter(row=>row.status==='OBSERVED'&&row.denominator>=2&&!profileHasIdentityConflict&&!row.reasonCodes.includes('CONFLICTING_CANONICAL_EVENTS')&&row.sourceRefs.length>0);
   if(!eligibleObservations.length)return decisionBase({dayKey:normalized.dayKey,inputDigest,status:'NOT_SELECTED',reasonCode:'FOCUS_INSUFFICIENT_DATA'});
   const bySkill=new Map(eligibleObservations.map(row=>[row.skill,row]));
