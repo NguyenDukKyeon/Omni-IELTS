@@ -9,6 +9,9 @@ import { composeTodayPlan,dateKeyInTimezone } from './today-composer.js';
 import { composeRepairQueue,importLegacyErrorRecord } from './error-repository.js';
 import { cancelTodayRun,launchTodayActivity,listTodayRuns,registerTodayExecutor,skipTodayRun } from './today-runner.js';
 import { contentTodayInventory,openContentLesson } from './content-platform.js';
+import { loadCanonicalProgressProjection } from './progress.js';
+import { FOCUS_REASON_CODE,selectCanonicalFocus,validateFocusSelectionBinding } from './focus-selector.js';
+import { isCompleteLearningTarget,learningContractDigest } from './learning-contracts.js';
 
 const PLAN_VERSION='phase1-today-v2';
 const READY_EXECUTORS=new Set(['core-card','core-intro','ielts-error','repair','content','sentences']);
@@ -78,18 +81,100 @@ function activityId(date,type,sourceId='',cardIds=[]){
   return`today:${date}:${type}:${sourceId||cardIds.join(',')||'general'}`;
 }
 
+const FOCUS_PROJECTION_MAX_DEPTH=100;
+const FOCUS_PROJECTION_MAX_NODES=10_000;
+
+function ownDataValue(value,key){
+  try{
+    if(!value||typeof value!=='object'||Array.isArray(value))return{valid:false,present:false,value:undefined};
+    const descriptor=Object.getOwnPropertyDescriptor(value,key);
+    if(!descriptor)return{valid:true,present:false,value:undefined};
+    if(!Object.hasOwn(descriptor,'value'))return{valid:false,present:true,value:undefined};
+    return{valid:true,present:true,value:descriptor.value};
+  }catch{return{valid:false,present:false,value:undefined};}
+}
+
+function focusMarkerState(activity){
+  if(!activity||typeof activity!=='object'||Array.isArray(activity))return{valid:true,marked:false};
+  const top=ownDataValue(activity,'reasonCode');if(!top.valid)return{valid:false,marked:false};
+  let marked=top.value===FOCUS_REASON_CODE;
+  const payload=ownDataValue(activity,'payload');if(!payload.valid)return{valid:false,marked:false};
+  if(payload.present&&payload.value!=null){
+    const reason=ownDataValue(payload.value,'reasonCode'),selection=ownDataValue(payload.value,'focusSelection');
+    if(!reason.valid||!selection.valid)return{valid:false,marked:false};
+    marked||=reason.value===FOCUS_REASON_CODE||selection.present;
+  }
+  const spec=ownDataValue(activity,'activitySpec');if(!spec.valid)return{valid:false,marked:false};
+  if(spec.present&&spec.value!=null){
+    const metadata=ownDataValue(spec.value,'metadata');if(!metadata.valid)return{valid:false,marked:false};
+    if(metadata.present&&metadata.value!=null){
+      const reason=ownDataValue(metadata.value,'reasonCode'),payload=ownDataValue(metadata.value,'payload');
+      if(!reason.valid||!payload.valid)return{valid:false,marked:false};
+      marked||=reason.value===FOCUS_REASON_CODE;
+      if(payload.present&&payload.value!=null){
+        const selection=ownDataValue(payload.value,'focusSelection');if(!selection.valid)return{valid:false,marked:false};
+        marked||=selection.present;
+      }
+    }
+  }
+  return{valid:true,marked};
+}
+
+function safeFocusProjectionData(value,{seen=new Set(),depth=0,count={value:0}}={}){
+  if(value===null||typeof value==='string'||typeof value==='boolean')return true;
+  if(typeof value==='number')return Number.isFinite(value)&&Math.abs(value)<=Number.MAX_SAFE_INTEGER;
+  if(typeof value!=='object'||depth>FOCUS_PROJECTION_MAX_DEPTH||++count.value>FOCUS_PROJECTION_MAX_NODES||seen.has(value))return false;
+  try{
+    if(Object.getOwnPropertySymbols(value).length)return false;
+    if(Array.isArray(value)){
+      const names=Object.getOwnPropertyNames(value);if(names.length!==value.length+1||!names.includes('length'))return false;
+      seen.add(value);
+      for(let index=0;index<value.length;index++){
+        const descriptor=Object.getOwnPropertyDescriptor(value,String(index));
+        if(!descriptor||!Object.hasOwn(descriptor,'value')||!safeFocusProjectionData(descriptor.value,{seen,depth:depth+1,count})){seen.delete(value);return false;}
+      }
+      seen.delete(value);return true;
+    }
+    const prototype=Object.getPrototypeOf(value);if(prototype!==Object.prototype&&prototype!==null)return false;
+    seen.add(value);
+    for(const key of Object.getOwnPropertyNames(value)){
+      const descriptor=Object.getOwnPropertyDescriptor(value,key);
+      if(!descriptor||!descriptor.enumerable||!Object.hasOwn(descriptor,'value')||!safeFocusProjectionData(descriptor.value,{seen,depth:depth+1,count})){seen.delete(value);return false;}
+    }
+    seen.delete(value);return true;
+  }catch{return false;}
+}
+
+function canonicalProjectionValue(value){
+  if(Array.isArray(value))return value.map(canonicalProjectionValue);
+  if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonicalProjectionValue(value[key])]));
+  return value;
+}
+
 function launchProjection(activity={}){
+  const marker=focusMarkerState(activity);
+  if(!marker.valid||(marker.marked&&!safeFocusProjectionData(activity)))return null;
+  const focus=marker.marked;
   return{
     id:activity.id,type:activity.type,sourceType:activity.sourceType,sourceId:activity.sourceId,
     cardIds:activity.cardIds||[],target:activity.target||null,execution:activity.execution||null,
-    payload:activity.payload||{},evidencePolicy:activity.evidencePolicy||{},planId:activity.planId||null,
+    payload:focus?canonicalProjectionValue(activity.payload||{}):activity.payload||{},evidencePolicy:activity.evidencePolicy||{},planId:activity.planId||null,
     planDate:activity.planDate||null,plannedAt:Number(activity.plannedAt||0),timezone:activity.timezone||'UTC',
-    reasonCode:activity.reasonCode||null,activitySpec:activity.activitySpec||null
+    reasonCode:activity.reasonCode||null,activitySpec:focus?canonicalProjectionValue(activity.activitySpec):activity.activitySpec||null
   };
 }
 
 export function activityLaunchBinding(activity={}){
   return evidenceDigest(JSON.stringify(launchProjection(activity)));
+}
+
+function projectFocusCandidates(activities=[]){
+  return activities
+    .filter(row=>(row.type==='error-correction'||!['card-review','new-card'].includes(row.type))&&row.execution?.status==='ready'&&isCompleteLearningTarget(row.target)&&row.target?.skill)
+    .map(row=>({
+      id:row.id,type:row.type,target:row.target,executor:row.execution?.kind,estimatedSeconds:row.estimatedSeconds,
+      category:row.type==='error-correction'?'repair':'content',originReasonCode:row.reasonCode||(row.type==='error-correction'?'error-repair':'available-content')
+    }));
 }
 
 function planResult(activities,budgetSeconds){
@@ -111,8 +196,11 @@ async function resumeTodayPlan(date,budgetSeconds){
     .filter(row=>row.planDate===date&&row.planId&&row.payload?.planVersion===PLAN_VERSION&&row.launchBinding);
   const groups=new Map();
   for(const row of rows){
+    const marker=focusMarkerState(row);
+    if(!marker.valid||(marker.marked&&!safeFocusProjectionData(row)))continue;
     const normalized=normalizeActivity(row);
     if(activityLaunchBinding(normalized)!==normalized.launchBinding)continue;
+    if(marker.marked&&!validateFocusSelectionBinding(normalized.payload?.focusSelection,{activity:normalized}).valid)continue;
     const group=groups.get(normalized.planId)||[];
     group.push(normalized);groups.set(normalized.planId,group);
   }
@@ -126,7 +214,8 @@ async function resumeTodayPlan(date,budgetSeconds){
 
 export async function buildTodayActivityPlan({minutes=null,maxActivities=18,force=false,now=Date.now()}={}){
   const state=core();
-  const date=localDateKey(now);
+  const timeZone=state.settings?.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';
+  const date=dateKeyInTimezone(now,timeZone);
   const budgetSeconds=Math.max(180,Number(minutes??state.settings?.minutes??10)*60);
   if(!force){
     const resumed=await resumeTodayPlan(date,budgetSeconds);
@@ -275,6 +364,14 @@ export async function buildTodayActivityPlan({minutes=null,maxActivities=18,forc
     id:row.id,type:row.type,target:row.target,executor:row.execution?.kind,
     estimatedSeconds:row.estimatedSeconds,priority:row.priority,dueAt:row.dueAt,sourceId:row.sourceId,payload:row.payload
   });
+  let focusDecision=null;
+  try{
+    const profile=await loadCanonicalProgressProjection({timeZone});
+    const candidates=projectFocusCandidates(activities);
+    focusDecision=selectCanonicalFocus({weaknessProfile:profile.weaknessProfile,candidates,acceptedExecutors:[...READY_EXECUTORS],dayKey:date});
+  }catch(cause){
+    if(cause?.code==='FOCUS_INVALID_INPUT')throw cause;
+  }
   const composed=composeTodayPlan({
     dueReviews:activities.filter(row=>row.type==='card-review').map(toComposerRow),
     repairs:activities.filter(row=>row.type==='error-correction').map(toComposerRow),
@@ -283,6 +380,7 @@ export async function buildTodayActivityPlan({minutes=null,maxActivities=18,forc
     minutes:Number(minutes??state.settings?.minutes??10),
     maxActivities,
     repairCap:3,
+    focusDecision,
     timezone:state.settings?.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC',
     now
   });
@@ -292,9 +390,10 @@ export async function buildTodayActivityPlan({minutes=null,maxActivities=18,forc
     const planned=normalizeActivity({
       ...row,planId:composed.planId,planDate:composed.planDate,plannedAt:Number(now),timezone:composed.timezone,
       reasonCode:plannedActivity.reasonCode,activitySpec:plannedActivity.activitySpec,
-      payload:{...row.payload,planVersion:PLAN_VERSION,planOrder:index,planCount:composed.activities.length,reasonCode:plannedActivity.reasonCode}
+      payload:{...row.payload,...plannedActivity.payload,planVersion:PLAN_VERSION,planOrder:index,planCount:composed.activities.length,reasonCode:plannedActivity.reasonCode}
     });
-    return normalizeActivity({...planned,launchBinding:activityLaunchBinding(planned)});
+    const durable=normalizeActivity(planned);
+    return {...durable,launchBinding:activityLaunchBinding(durable)};
   });
   if(finalized.length)await putV10Records(V10_STORES.activities,finalized,'today-plan-built');
   return planResult(finalized,budgetSeconds);
@@ -309,8 +408,12 @@ function launchError(code,message){
 }
 
 async function durableActivity(displayed){
-  const stored=normalizeActivity(await getV10Record(V10_STORES.activities,displayed.id));
+  const raw=await getV10Record(V10_STORES.activities,displayed.id);
+  const marker=focusMarkerState(raw);
+  if(!marker.valid||(marker.marked&&!safeFocusProjectionData(raw)))throw launchError('TODAY_FOCUS_BINDING_INVALID','Focus binding invalid; refresh the plan.');
+  const stored=normalizeActivity(raw);
   if(!stored.id||!stored.launchBinding)throw launchError('TODAY_PLAN_MISSING','Không tìm thấy durable Today activity.');
+  if(marker.marked&&!validateFocusSelectionBinding(stored.payload?.focusSelection,{activity:stored}).valid)throw launchError('TODAY_FOCUS_BINDING_INVALID','Focus binding invalid; refresh the plan.');
   if(stored.launchBinding!==displayed.launchBinding||activityLaunchBinding(stored)!==stored.launchBinding)throw launchError('TODAY_PLAN_BINDING_MISMATCH','Today activity đã thay đổi sau khi render; hãy làm mới kế hoạch.');
   if(stored.planDate!==localDateKey())throw launchError('TODAY_PLAN_STALE','Today activity thuộc ngày khác; hãy làm mới kế hoạch.');
   return stored;
@@ -431,7 +534,7 @@ async function renderPlan({force=false,degraded=false}={}){
   const plan=await buildTodayActivityPlan({force});
   const minutes=Math.max(1,Math.round(plan.estimatedSeconds/60));
   const firstReady=plan.activities.find(row=>row.execution?.status==='ready');
-  host.innerHTML=`<div class="v10-today-head"><div><p class="eyebrow">CANONICAL TODAY</p><h3>Phiên exact-target ${minutes} phút</h3><p>Mỗi launcher được bind vào durable activity, card/sense/skill/source revision; target stale sẽ fail closed.</p></div><div><button class="secondary-button" id="v10MorePractice">Luyện thêm</button><button class="secondary-button" id="v10RefreshPlan">Lập kế hoạch mới</button><button class="primary-button" id="v10StartPlan" ${firstReady?'':'disabled'}>Bắt đầu target khả dụng đầu tiên</button></div></div><div class="v10-activity-strip">${plan.activities.length?plan.activities.map((row,index)=>`<button data-v10-activity="${escape(row.id)}" data-today-execution="${escape(row.execution?.status||'blocked')}" ${row.execution?.status==='ready'?'':'disabled'}><span>${activityIcon(row.type)}</span><strong>${escape(row.payload?.label||row.type)}</strong><small>${Math.max(1,Math.round(row.estimatedSeconds/60))} phút · ${row.execution?.status==='ready'?(row.evidencePolicy?.affectsSchedule?'exact evidence target':'exact coaching target'):`blocked: ${escape(row.execution?.reason||'unsupported')}`}</small><em>${index+1}</em></button>`).join(''):'<p class="muted">Chưa có exact activity. Không mở phiên tổng hợp thay thế.</p>'}</div><p id="v10TodayStatus" aria-live="polite"></p><small class="v10-plan-coverage">${plan.coverage.cards} hoạt động gắn card · ${plan.coverage.errors} lỗi · ${plan.coverage.listening} nghe · ${plan.coverage.coaching} coaching · ${plan.coverage.content} content</small>`;
+  host.innerHTML=`<div class="v10-today-head"><div><p class="eyebrow">CANONICAL TODAY</p><h3>Phiên exact-target ${minutes} phút</h3><p>Mỗi launcher được bind vào durable activity, card/sense/skill/source revision; target stale sẽ fail closed.</p></div><div><button class="secondary-button" id="v10MorePractice">Luyện thêm</button><button class="secondary-button" id="v10RefreshPlan">Lập kế hoạch mới</button><button class="primary-button" id="v10StartPlan" ${firstReady?'':'disabled'}>Bắt đầu target khả dụng đầu tiên</button></div></div><div class="v10-activity-strip">${plan.activities.length?plan.activities.map((row,index)=>`<button data-v10-activity="${escape(row.id)}" data-focus-reason="${row.reasonCode===FOCUS_REASON_CODE?'observed-weakness-focus':''}" data-today-execution="${escape(row.execution?.status||'blocked')}" ${row.execution?.status==='ready'?'':'disabled'}><span>${activityIcon(row.type)}</span><strong>${escape(row.payload?.label||row.type)}</strong><small>${row.reasonCode===FOCUS_REASON_CODE?'Focus · ':''}${Math.max(1,Math.round(row.estimatedSeconds/60))} phút · ${row.execution?.status==='ready'?(row.evidencePolicy?.affectsSchedule?'exact evidence target':'exact coaching target'):`blocked: ${escape(row.execution?.reason||'unsupported')}`}</small><em>${index+1}</em></button>`).join(''):'<p class="muted">Chưa có exact activity. Không mở phiên tổng hợp thay thế.</p>'}</div><p id="v10TodayStatus" aria-live="polite"></p><small class="v10-plan-coverage">${plan.coverage.cards} hoạt động gắn card · ${plan.coverage.errors} lỗi · ${plan.coverage.listening} nghe · ${plan.coverage.coaching} coaching · ${plan.coverage.content} content</small>`;
   applyTodayStatus();
   host.dataset.activities=JSON.stringify(plan.activities.map(row=>row.id));
   const byId=new Map(plan.activities.map(row=>[row.id,row]));
@@ -486,4 +589,4 @@ export async function mountTodayPlannerV2({degraded=false}={}){
   return globalThis.VocabMasterTodayV2;
 }
 
-export const __testing=Object.freeze({assetRevision,cardTarget,errorRevision,launchProjection,resumeTodayPlan});
+export const __testing=Object.freeze({assetRevision,cardTarget,errorRevision,launchProjection,projectFocusCandidates,resumeTodayPlan,launchActivity});

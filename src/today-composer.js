@@ -1,8 +1,10 @@
 import { createActivitySpec,isCompleteLearningTarget,learningContractDigest,normalizeTimezone } from './learning-contracts.js';
+import { bindFocusSelectionBudget,FOCUS_REASON_CODE } from './focus-selector.js';
 
 export const TODAY_COMPOSER_VERSION=1;
 export const TODAY_REASON_CODES=Object.freeze({
   due:'overdue-maintenance',
+  focus:FOCUS_REASON_CODE,
   repair:'error-repair',
   content:'available-content',
   newCard:'new-card-introduction'
@@ -54,6 +56,7 @@ export function composeTodayPlan({
   minutes=10,
   maxActivities=18,
   repairCap=3,
+  focusDecision=null,
   timezone='UTC',
   now=Date.now()
 }={}){
@@ -63,6 +66,8 @@ export function composeTodayPlan({
   const excluded=[];
   const seen=new Set();
   let repairsUsed=0;
+  const selectedFocus=focusDecision?.status==='SELECTED'&&focusDecision?.reasonCode===FOCUS_REASON_CODE?focusDecision.selection?.candidate||null:null;
+  const sameFocusCandidate=row=>Boolean(selectedFocus&&row.id===selectedFocus.id&&row.type===selectedFocus.type&&row.executor===selectedFocus.executor&&row.estimatedSeconds===selectedFocus.estimatedSeconds&&learningContractDigest(row.target)===learningContractDigest(selectedFocus.target)&&[1,2].includes(row.bucket));
   const candidates=candidateRows({dueReviews,repairs,content,newCards})
     .map(normalizeCandidate)
     .filter(row=>{
@@ -73,13 +78,19 @@ export function composeTodayPlan({
       if(row.bucket===1)repairsUsed+=1;
       return true;
     })
-    .sort((left,right)=>left.bucket-right.bucket||Number(left.dueAt||Infinity)-Number(right.dueAt||Infinity)||right.priority-left.priority||left.id.localeCompare(right.id));
-  const seed=candidates.map(row=>({id:row.id,type:row.type,target:row.target,executor:row.executor,estimatedSeconds:row.estimatedSeconds,reasonCode:row.reasonCode}));
+    .map(row=>sameFocusCandidate(row)?{...row,focus:true}:row)
+    .sort((left,right)=>(left.focus?.5:left.bucket)-(right.focus?.5:right.bucket)||Number(left.dueAt||Infinity)-Number(right.dueAt||Infinity)||right.priority-left.priority||left.id.localeCompare(right.id));
+  const seed=candidates.map(row=>({id:row.id,type:row.type,target:row.target,executor:row.executor,estimatedSeconds:row.estimatedSeconds,reasonCode:row.focus?TODAY_REASON_CODES.focus:row.reasonCode,focusCoreSelectionDigest:row.focus?focusDecision.selection?.coreSelectionDigest:null}));
   const planId=`today-plan:${date}:${learningContractDigest({version:TODAY_COMPOSER_VERSION,date,timezone:normalizedTimezone,budgetSeconds,seed})}`;
   const selected=[];
   let used=0;
   for(const row of candidates){
     if(selected.length>=Math.max(1,Number(maxActivities||18)))break;
+    let focusedPayload=null;
+    if(row.focus){
+      try{focusedPayload=bindFocusSelectionBudget(focusDecision,{totalBudgetSeconds:budgetSeconds,remainingBudgetSeconds:budgetSeconds-used});}
+      catch{excluded.push({id:row.id,reason:'time-budget'});continue;}
+    }
     if(used+row.estimatedSeconds>budgetSeconds&&selected.length>0){excluded.push({id:row.id,reason:'time-budget'});continue;}
     const activitySpec=createActivitySpec({
       id:row.id,
@@ -90,9 +101,9 @@ export function composeTodayPlan({
       timezone:normalizedTimezone,
       policyVersion:'phase1-evidence-v1',
       executor:row.executor,
-      metadata:{reasonCode:row.reasonCode,estimatedSeconds:row.estimatedSeconds,sourceId:row.sourceId,payload:row.payload}
+      metadata:{reasonCode:row.focus?TODAY_REASON_CODES.focus:row.reasonCode,estimatedSeconds:row.estimatedSeconds,sourceId:row.sourceId,payload:row.focus?{...row.payload,focusSelection:focusedPayload}:{...row.payload}}
     });
-    selected.push({...row,planId,planDate:date,plannedAt:Number(now),timezone:normalizedTimezone,activitySpec});
+    selected.push({...row,reasonCode:row.focus?TODAY_REASON_CODES.focus:row.reasonCode,payload:row.focus?{...row.payload,focusSelection:focusedPayload}:{...row.payload},planId,planDate:date,plannedAt:Number(now),timezone:normalizedTimezone,activitySpec});
     used+=row.estimatedSeconds;
   }
   return Object.freeze({
