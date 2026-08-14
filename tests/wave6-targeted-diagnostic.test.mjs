@@ -28,6 +28,7 @@ const ITEM_SKILLS={
   w1:'writing',w2:'writing',
   s1:'speaking',s2:'speaking'
 };
+const shortQuestionId=id=>String(id||'').replace(/^qar:/,'');
 
 function makeMetrics({bySkill,denominator=10}={}){
   const canonicalInputRefs=[];
@@ -72,17 +73,17 @@ function harness(){
   ];
   const labOwner=createIeltsLabOwnerAdapter({readVerifiedItem:id=>labItems.find(row=>row.id===id)||null});
   const questions=labItems.map(it=>adaptIeltsLabItem(it,sourceRef,{ownerAdapter:labOwner}));
-  const questionMap=new Map(questions.map(q=>[q.questionId,q]));
+  const questionMap=new Map(questions.map(q=>[q.id,q]));
   const registry=createQuestionRegistry();
   registry.registerExecutor(questions[0].kind,questions[0].version,questions[0].requiredCapabilities);
   const ownerAdapter=createFrozenAssessmentOwnerAdapter();
-  const runtime=createFrozenAssessmentRuntime({
-    ownerAdapter,
-    questionRegistry:registry,
-    resolveQuestion:id=>questionMap.get(id)||null
-  });
-  return{questions,questionMap,labItems,registry,runtime,ownerAdapter};
+  const resolveQuestion=binding=>questionMap.get(typeof binding==='string'?binding:binding?.questionId)||null;
+  const runtime=createFrozenAssessmentRuntime({ownerAdapter,questionRegistry:registry,resolveQuestion});
+  return{questions,questionMap,labItems,registry,runtime,ownerAdapter,resolveQuestion};
 }
+
+const questionIds=questions=>questions.map(q=>q.id);
+const resolveSkill=id=>ITEM_SKILLS[shortQuestionId(id)]||'reading';
 
 test('prerequisite WeaknessProfile, QAR and Frozen Assessment are healthy before Targeted Diagnostic capability is required',async()=>{
   const {questions,registry,runtime}=harness();
@@ -114,11 +115,7 @@ test('Targeted Diagnostic adapter creates weakness-biased blueprint with at leas
   const {questions,questionMap,runtime}=harness();
   const {createTargetedDiagnosticAdapter}=tdModule||{};
   if(!createTargetedDiagnosticAdapter)return;
-  const adapter=createTargetedDiagnosticAdapter({
-    runtime,
-    resolveQuestion:id=>questionMap.get(id)||null,
-    resolveSkill:id=>ITEM_SKILLS[id]||'reading'
-  });
+  const adapter=createTargetedDiagnosticAdapter({runtime,resolveQuestion:id=>questionMap.get(id)||null,resolveSkill});
   const metrics=makeMetrics({
     bySkill:{
       reading:{successful:1,unsuccessful:3},
@@ -132,7 +129,7 @@ test('Targeted Diagnostic adapter creates weakness-biased blueprint with at leas
     id:'diag-bp-1',
     title:'Targeted Weakness Diagnostic',
     profile,
-    questionPool:questions.map(q=>q.questionId),
+    questionPool:questionIds(questions),
     at:100
   });
 
@@ -149,7 +146,7 @@ test('Targeted Diagnostic adapter creates weakness-biased blueprint with at leas
 
   const selectedSkills=new Set();
   for(const item of blueprint.items){
-    const skill=ITEM_SKILLS[item.questionId];
+    const skill=ITEM_SKILLS[shortQuestionId(item.questionId)];
     selectedSkills.add(skill);
   }
   assert.ok(selectedSkills.has('reading'),'Selected skills must include weak skill: reading');
@@ -161,11 +158,7 @@ test('Targeted Diagnostic completes run atomically and computes factual non-clai
   const {questions,questionMap,runtime}=harness();
   const {createTargetedDiagnosticAdapter}=tdModule||{};
   if(!createTargetedDiagnosticAdapter)return;
-  const adapter=createTargetedDiagnosticAdapter({
-    runtime,
-    resolveQuestion:id=>questionMap.get(id)||null,
-    resolveSkill:id=>ITEM_SKILLS[id]||'reading'
-  });
+  const adapter=createTargetedDiagnosticAdapter({runtime,resolveQuestion:id=>questionMap.get(id)||null,resolveSkill});
   const metrics=makeMetrics({
     bySkill:{
       reading:{successful:1,unsuccessful:3},
@@ -178,32 +171,24 @@ test('Targeted Diagnostic completes run atomically and computes factual non-clai
     id:'diag-bp-run',
     title:'Diagnostic Run',
     profile,
-    questionPool:questions.map(q=>q.questionId),
+    questionPool:questionIds(questions),
     at:200
   });
 
-  const run=await runtime.startRun({
-    id:'diag-run-1',
-    blueprintId:blueprint.id,
-    at:210
-  });
+  const run=await runtime.startRun({id:'diag-run-1',blueprintId:blueprint.id,at:210});
   assert.equal(run.id,'diag-run-1');
-  assert.equal(run.state,'ACTIVE');
+  assert.equal(run.status,'ACTIVE');
 
   const responses=blueprint.items.map((item,index)=>({
     ordinal:index+1,
     questionId:item.questionId,
-    response:{selectedOptionId:'a'},
+    response:{optionId:'a'},
     at:220+index
   }));
 
-  const completed=await runtime.completeRun({
-    runId:run.id,
-    responses,
-    at:250
-  });
+  const completed=await runtime.completeRun({runId:run.id,responses,at:250});
 
-  assert.equal(completed.state,'COMPLETED');
+  assert.equal(completed.status,'COMPLETED');
   assert.equal(completed.representative,false);
   assert.equal(completed.bandScore,null);
   assert.equal(completed.readiness,null);
@@ -216,43 +201,21 @@ test('Targeted Diagnostic completes run atomically and computes factual non-clai
   assert.equal(typeof completed.aggregate.denominator,'number');
 });
 
-test('Targeted Diagnostic rejects unbranded profiles, insufficient data, or hostile accessor inputs',async()=>{
+test('Targeted Diagnostic rejects invalid profiles, insufficient data, or hostile accessor inputs',async()=>{
   const {questions,questionMap,runtime}=harness();
   const {createTargetedDiagnosticAdapter}=tdModule||{};
   if(!createTargetedDiagnosticAdapter)return;
-  const adapter=createTargetedDiagnosticAdapter({
-    runtime,
-    resolveQuestion:id=>questionMap.get(id)||null,
-    resolveSkill:id=>ITEM_SKILLS[id]||'reading'
-  });
+  const adapter=createTargetedDiagnosticAdapter({runtime,resolveQuestion:id=>questionMap.get(id)||null,resolveSkill});
 
   await assert.rejects(
-    adapter.createDiagnosticBlueprint({
-      id:'fail-1',
-      title:'Fake Profile',
-      profile:{fake:true},
-      questionPool:questions.map(q=>q.questionId),
-      at:100
-    }),
+    adapter.createDiagnosticBlueprint({id:'fail-1',title:'Fake Profile',profile:{fake:true},questionPool:questionIds(questions),at:100}),
     error=>error.code==='INVALID_PROFILE'||error.code==='INVALID_INPUT'
   );
 
-  const insufficientMetrics=makeMetrics({
-    bySkill:{
-      reading:{successful:0,unsuccessful:1},
-      listening:{successful:0,unsuccessful:0}
-    },
-    denominator:1
-  });
+  const insufficientMetrics=makeMetrics({bySkill:{reading:{successful:0,unsuccessful:1},listening:{successful:0,unsuccessful:0}},denominator:1});
   const insufficientProfile=projectWeaknessProfile(insufficientMetrics);
   await assert.rejects(
-    adapter.createDiagnosticBlueprint({
-      id:'fail-2',
-      title:'Insufficient Profile',
-      profile:insufficientProfile,
-      questionPool:questions.map(q=>q.questionId),
-      at:100
-    }),
+    adapter.createDiagnosticBlueprint({id:'fail-2',title:'Insufficient Profile',profile:insufficientProfile,questionPool:questionIds(questions),at:100}),
     error=>error.code==='INSUFFICIENT_OBSERVATIONS'||error.code==='INVALID_PROFILE'||error.code==='INSUFFICIENT_DATA'
   );
 
@@ -260,18 +223,12 @@ test('Targeted Diagnostic rejects unbranded profiles, insufficient data, or host
   const hostileInput={
     id:'hostile-bp',
     title:'Hostile Input',
-    profile:projectWeaknessProfile(makeMetrics({
-      bySkill:{reading:{successful:1,unsuccessful:3},listening:{successful:0,unsuccessful:4}},
-      denominator:8
-    })),
-    questionPool:questions.map(q=>q.questionId),
+    profile:projectWeaknessProfile(makeMetrics({bySkill:{reading:{successful:1,unsuccessful:3},listening:{successful:0,unsuccessful:4}},denominator:8})),
+    questionPool:questionIds(questions),
     at:100,
     get clientSecret(){hostileInvoked=true;return'leaked-secret';}
   };
-  await assert.rejects(
-    adapter.createDiagnosticBlueprint(hostileInput),
-    error=>error.code==='INVALID_INPUT'||error.code==='SAFETY_ERROR'
-  );
+  await assert.rejects(adapter.createDiagnosticBlueprint(hostileInput),error=>error.code==='INVALID_INPUT'||error.code==='SAFETY_ERROR');
   assert.equal(hostileInvoked,false,'Hostile getters must not be invoked');
 });
 
@@ -279,30 +236,12 @@ test('Targeted Diagnostic persists additively through Frozen Assessment store an
   const {questions,questionMap,runtime}=harness();
   const {createTargetedDiagnosticAdapter}=tdModule||{};
   if(!createTargetedDiagnosticAdapter)return;
-  const adapter=createTargetedDiagnosticAdapter({
-    runtime,
-    resolveQuestion:id=>questionMap.get(id)||null,
-    resolveSkill:id=>ITEM_SKILLS[id]||'reading'
-  });
-  const profile=projectWeaknessProfile(makeMetrics({
-    bySkill:{reading:{successful:1,unsuccessful:3},listening:{successful:0,unsuccessful:4}},
-    denominator:8
-  }));
-  const blueprint=await adapter.createDiagnosticBlueprint({
-    id:'diag-bp-backup',
-    title:'Backup Diagnostic',
-    profile,
-    questionPool:questions.map(q=>q.questionId),
-    at:300
-  });
+  const adapter=createTargetedDiagnosticAdapter({runtime,resolveQuestion:id=>questionMap.get(id)||null,resolveSkill});
+  const profile=projectWeaknessProfile(makeMetrics({bySkill:{reading:{successful:1,unsuccessful:3},listening:{successful:0,unsuccessful:4}},denominator:8}));
+  const blueprint=await adapter.createDiagnosticBlueprint({id:'diag-bp-backup',title:'Backup Diagnostic',profile,questionPool:questionIds(questions),at:300});
 
   const run=await runtime.startRun({id:'diag-run-backup',blueprintId:blueprint.id,at:310});
-  const responses=blueprint.items.map((item,index)=>({
-    ordinal:index+1,
-    questionId:item.questionId,
-    response:{selectedOptionId:'a'},
-    at:320+index
-  }));
+  const responses=blueprint.items.map((item,index)=>({ordinal:index+1,questionId:item.questionId,response:{optionId:'a'},at:320+index}));
   const completed=await runtime.completeRun({runId:run.id,responses,at:330});
 
   const combined=await buildCombinedBackup();
