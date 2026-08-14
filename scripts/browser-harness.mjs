@@ -22,6 +22,8 @@ const INFRASTRUCTURE_ERROR_PATTERNS=[
   /browser target/i,/fetch failed/i,/ECONN(?:REFUSED|RESET|ABORTED)/i,/EPIPE/i,/network connection/i
 ];
 
+const DETERMINISTIC_YOUTUBE_HOST_RULE='--host-resolver-rules=MAP *.youtube.com ~NOTFOUND, MAP youtube.com ~NOTFOUND, MAP *.youtube-nocookie.com ~NOTFOUND, MAP youtube-nocookie.com ~NOTFOUND';
+
 export function classifyHarnessError(error){
   if(error?.failureKind)return error;
   const message=String(error?.message||error||'');
@@ -91,6 +93,7 @@ export function browserLaunchArguments({profileDir,debugPort,appUrl,extra=[]}){
     '--disable-extensions','--disable-component-extensions-with-background-pages','--disable-default-apps','--disable-component-update',
     '--disable-background-networking','--disable-background-timer-throttling','--disable-renderer-backgrounding','--disable-sync',
     '--disable-breakpad','--disable-crash-reporter','--metrics-recording-only','--no-first-run','--no-default-browser-check',
+    DETERMINISTIC_YOUTUBE_HOST_RULE,
     `--remote-debugging-port=${Number(debugPort)}`,`--user-data-dir=${profileDir}`,...extra,appUrl
   ];
 }
