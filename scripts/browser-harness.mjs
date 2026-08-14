@@ -88,6 +88,9 @@ export function resolveBrowserExecutable({
 
 export function browserLaunchArguments({profileDir,debugPort,appUrl,extra=[]}){
   if(!profileDir||!Number.isInteger(Number(debugPort))||!appUrl)throw new InfrastructureFailure('Browser launch requires an isolated profile, integer CDP port and application URL.',{code:'BROWSER_LAUNCH_INVALID'});
+  if(extra.some(argument=>String(argument)==='--host-resolver-rules'||String(argument).startsWith('--host-resolver-rules='))){
+    throw new InfrastructureFailure('Browser launch extras cannot override deterministic YouTube host isolation.',{code:'BROWSER_HOST_RESOLVER_OVERRIDE'});
+  }
   return [
     '--headless=new','--disable-gpu','--no-sandbox','--disable-dev-shm-usage',
     '--disable-extensions','--disable-component-extensions-with-background-pages','--disable-default-apps','--disable-component-update',

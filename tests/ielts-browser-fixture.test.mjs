@@ -44,9 +44,24 @@ test('CI407 reproduction: delayed player denial can replace transient Retell suc
   assert.equal(status,'Chủ video không cho phép nhúng.');
 });
 
-test('CI407 happy path blocks mutable YouTube hosts at the browser-process boundary',()=>{
-  const args=browserLaunchArguments({profileDir:'/tmp/ielts-ci407',debugPort:9344,appUrl:'http://127.0.0.1:3010/#today',extra:['--enable-automation']});
-  assert.ok(args.includes(youtubeResolverRule),'CI407 false-negative remains possible: the acceptance browser can still resolve mutable YouTube embed hosts');
+test('CI407 happy path has exactly one deterministic resolver switch for normal browser extras',()=>{
+  for(const extra of [[],['--enable-automation']]){
+    const args=browserLaunchArguments({profileDir:'/tmp/ielts-ci407',debugPort:9344,appUrl:'http://127.0.0.1:3010/#today',extra});
+    const resolverArgs=args.filter(argument=>String(argument).startsWith('--host-resolver-rules'));
+    assert.deepEqual(resolverArgs,[youtubeResolverRule],'CI407 browser launch must have exactly one deterministic YouTube resolver switch');
+  }
+});
+
+test('CI407 rejects caller resolver extras that could override deterministic YouTube isolation',()=>{
+  assert.throws(
+    ()=>browserLaunchArguments({
+      profileDir:'/tmp/ielts-ci407',
+      debugPort:9344,
+      appUrl:'http://127.0.0.1:3010/#today',
+      extra:['--host-resolver-rules=MAP *.youtube.com 127.0.0.1']
+    }),
+    error=>error?.name==='InfrastructureFailure'&&error?.code==='BROWSER_HOST_RESOLVER_OVERRIDE'
+  );
 });
 
 test('YouTube 101/150 product error mapping remains independently covered',async()=>{
