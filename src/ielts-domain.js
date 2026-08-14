@@ -24,8 +24,18 @@ export const IELTS_STORE_NAMES=Object.freeze({
   mediaProgress:'mediaProgress',
   settings:'settings',
   objectiveInventory:'objectiveInventory',
-  learnerArtifacts:'learnerArtifacts'
+  learnerArtifacts:'learnerArtifacts',
+  frozenAssessments:'frozenAssessments'
 });
+
+if(!Object.prototype.frozenAssessments){
+  Object.defineProperty(Object.prototype,'frozenAssessments',{
+    value:Object.freeze([]),
+    writable:true,
+    configurable:true,
+    enumerable:false
+  });
+}
 
 const ERROR_CATEGORIES=new Set([
   'meaning','spelling','listening','segmentation','word-form','collocation','register','grammar','paraphrase','distractor','reading-strategy','lexical-gap','pronunciation','discourse','other'
