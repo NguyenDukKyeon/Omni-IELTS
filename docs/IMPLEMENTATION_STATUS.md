@@ -542,14 +542,24 @@ rights, editorial and independent-review gates are satisfied.
 
 The five U-* identifiers are portfolio grouping labels only and intentionally
 have no status rows. The four package rows below record canonical planning
-boundaries, not implementation authorization or acceptance evidence.
+boundaries and their current acceptance evidence.
 
 | Package | Dependency | Status |
 |---|---|---|
-| LI-00 Canonical execution safety and Frozen Run | P1-01, P1-02, P1-07, P1-08, EvidencePolicy | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
-| SRC-00 Stable SourceRevisionRef seam | P1-01, P1-05, P3-06; public-pack adapter additionally requires accepted P4 contracts | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
-| ERR-00 ErrorCandidate lifecycle | LI-00, P1-06 | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
-| QAR-00 Shared question activity contracts | LI-00, SRC-00 | PLANNED / NOT_IMPLEMENTED / NOT_ACCEPTED |
+| LI-00 Canonical execution safety and Frozen Run | P1-01, P1-02, P1-07, P1-08, EvidencePolicy | ACCEPTED @ `5e9d9cd` |
+| SRC-00 Stable SourceRevisionRef seam | P1-01, P1-05, P3-06; public-pack adapter additionally requires accepted P4 contracts | ACCEPTED @ `5e9d9cd` |
+| ERR-00 ErrorCandidate lifecycle | LI-00, P1-06 | ACCEPTED @ `5e9d9cd` |
+| QAR-00 Shared question activity contracts | LI-00, SRC-00 | ACCEPTED @ `5e9d9cd` |
+
+### Current Execution Wave (Wave 5: Productive Text & Private Source)
+
+This section tracks the post-migration execution wave encompassing Productive Text Core, Productive Practice, and Private Source Library, independent of Phase 5 (ASR).
+
+| Package | Branch | Dependency | Status |
+|---|---|---|---|
+| Productive Text Contracts | main | CR-2A | ACCEPTED @ `5e9d9cd` |
+| Private Source Library | main | CR-2A | ACCEPTED @ `5e9d9cd` |
+| Productive Practice | main | CR-2A, Productive Text Contracts | ACCEPTED @ `5e9d9cd` |
 
 ### Cross-cutting Repository Engineering
 
