@@ -1,0 +1,123 @@
+name: EWF Measurement Substrate
+
+on:
+  pull_request:
+    branches: [main]
+    types:
+      - opened
+      - synchronize
+    paths:
+      - docs/superpowers/measurement-requests/**
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  measurement:
+    if: github.event.pull_request.draft == true
+    name: measurement-request
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Request checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+          path: request
+
+      - name: Set up exact Node runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.3'
+
+      - name: Bootstrap immutable request delta
+        id: request
+        env:
+          REQUEST_ROOT: ${{ github.workspace }}/request
+          REQUEST_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from 'node:fs';
+          import { readFile } from 'node:fs/promises';
+          import { execFileSync } from 'node:child_process';
+          import { join } from 'node:path';
+
+          const root = process.env.REQUEST_ROOT;
+          const head = process.env.REQUEST_HEAD;
+          if (!/^[0-9a-f]{40}$/.test(head ?? '')) throw new Error('request head is not exact 40-hex');
+          const parentLine = execFileSync('git', ['rev-list', '--parents', '-n', '1', head], { cwd: root, encoding: 'utf8' }).trim().split(/\s+/);
+          const parents = parentLine.slice(1);
+          if (parents.length !== 1) throw new Error('REQUEST_BOUNDARY_INVALID: request commit must have exactly one parent');
+          const changed = execFileSync('git', ['diff-tree', '--no-commit-id', '--name-only', '-r', `${parents[0]}..${head}`], { cwd: root, encoding: 'utf8' })
+            .trim().split(/\r?\n/).filter(Boolean);
+          if (changed.length !== 1 || !changed[0].startsWith('docs/superpowers/measurement-requests/')) {
+            throw new Error('REQUEST_BOUNDARY_INVALID: request commit must change exactly one request carrier');
+          }
+          const request = JSON.parse(await readFile(join(root, changed[0]), 'utf8'));
+          let tooling;
+          let product;
+          if (request.requestPurpose === 'SUBSTRATE_ACCEPTANCE_TEST') {
+            tooling = request.candidateToolingRevision;
+            product = request.syntheticOrDisposableProductSubject;
+          } else if (request.requestPurpose === 'PILOT_MEASUREMENT') {
+            tooling = request.acceptedMeasurementToolingRevision;
+            product = request.productSubject;
+          } else {
+            throw new Error('INVALID_REQUEST_PURPOSE');
+          }
+          for (const [name, value] of [['tooling', tooling], ['product', product]]) {
+            if (!/^[0-9a-f]{40}$/.test(value ?? '')) throw new Error(`${name} is not exact 40-hex`);
+          }
+          appendFileSync(process.env.GITHUB_OUTPUT, `request_path=${changed[0]}\n`);
+          appendFileSync(process.env.GITHUB_OUTPUT, `request_parent=${parents[0]}\n`);
+          appendFileSync(process.env.GITHUB_OUTPUT, `purpose=${request.requestPurpose}\n`);
+          appendFileSync(process.env.GITHUB_OUTPUT, `tooling=${tooling}\n`);
+          appendFileSync(process.env.GITHUB_OUTPUT, `product=${product}\n`);
+          NODE
+
+      - name: Tooling checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.request.outputs.tooling }}
+          fetch-depth: 2
+          persist-credentials: false
+          path: tooling
+
+      - name: Product checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.request.outputs.product }}
+          fetch-depth: 1
+          persist-credentials: false
+          path: product
+
+      - name: Execute bounded measurement request
+        working-directory: tooling
+        env:
+          EWF_REPOSITORY: ${{ github.repository }}
+          EWF_REQUEST_PATH: ${{ github.workspace }}/request/${{ steps.request.outputs.request_path }}
+          EWF_REQUEST_CHECKOUT: ${{ github.workspace }}/request
+          EWF_TOOLING_DIR: ${{ github.workspace }}/tooling
+          EWF_PRODUCT_DIR: ${{ github.workspace }}/product
+          EWF_REQUEST_PR: ${{ github.event.pull_request.number }}
+          EWF_REQUEST_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EWF_REQUEST_COMMIT: ${{ github.event.pull_request.head.sha }}
+          EWF_EVENT_ACTION: ${{ github.event.action }}
+          EWF_WORKFLOW_RUN_ID: ${{ github.run_id }}
+          EWF_WORKFLOW_RUN_ATTEMPT: ${{ github.run_attempt }}
+          EWF_JOB_NAME: measurement-request
+          EWF_OUTPUT_DIR: ${{ github.workspace }}/tooling/ewf-measurement-evidence
+          EWF_GITHUB_READ_TOKEN: ${{ github.token }}
+        run: node scripts/ewf-measurement-executor.mjs --run-request
+
+      - name: Upload immutable measurement evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ewf00-measure-exec-001-${{ steps.request.outputs.purpose }}-${{ github.event.pull_request.head.sha }}
+          path: tooling/ewf-measurement-evidence/
+          if-no-files-found: error
+          retention-days: 90
