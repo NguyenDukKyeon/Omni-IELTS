@@ -708,11 +708,29 @@ Writing, Speaking) product and technical strategy reconciliation candidate in
 
 - Strategy candidate document: `docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`
 - Owner decision record: ADR-050 in `docs/DECISIONS.md`
+- Strategy audit outcome: `ACCEPTED` (PR #87 independently audited and merged into `main` at commit `a755ae4949746a71ac86299b34766ad8fe3b6fb6`)
 - Current state markers:
-  - `STAGE2_STRATEGY_CANDIDATE_CREATED`
+  - `STAGE2_STRATEGY_ACCEPTED`
   - `STAGE2_IMPLEMENTATION_NOT_AUTHORIZED`
-  - `STAGE2_FIRST_WAVE_NOT_AUTHORIZED`
-- Wave sequence proposed: W0 (Architecture & Track Routing) $\to$ W1 (Objective Kernel) $\to$ W2 (Listening) / W3 (Reading) / W4 (Writing) / W5 (Speaking) $\to$ W6 (Full Mock & Exit Gate).
-- First Wave candidate recommended: `W0-IELTS-ARCH-001` (RECOMMENDATION ONLY; NOT AUTHORIZED).
-- Stage 2 implementation remains strictly NOT AUTHORIZED pending independent strategy audit and separate Wave authorization manifests.
+  - `STAGE2_FIRST_WAVE_RECOMMENDED`
+- Wave sequence ratified: W0 (Architecture & Track Routing) $\to$ W1 (Objective Kernel) $\to$ W2 (Listening) / W3 (Reading) / W4 (Writing) / W5 (Speaking) $\to$ W6 (Full Mock & Exit Gate).
+- First Wave candidate recommended: `W0-IELTS-ARCH-001`.
+
+## 14. Stage 2 Wave W0 Authorization Candidate
+
+Transaction `STAGE2-W0-IELTS-ARCH-AUTH-001` materialized the docs-only Wave
+Authorization Manifest for `W0-IELTS-ARCH-001` (IELTS Product Contracts & Track
+Architecture) in `docs/authorizations/STAGE2-W0-IELTS-ARCH-AUTH-001.md`.
+
+- Authorization manifest: `docs/authorizations/STAGE2-W0-IELTS-ARCH-AUTH-001.md`
+- Canonical base predecessor: `a755ae4949746a71ac86299b34766ad8fe3b6fb6`
+- Controlling strategy: `STAGE2-IELTS-STRATEGY-001` (`docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`, independently accepted in PR #87)
+- Current state markers:
+  - `W0_AUTHORIZATION_CANDIDATE_CREATED`
+  - `W0_AUTHORIZATION_PENDING_INDEPENDENT_AUDIT`
+  - `W0_IMPLEMENTATION_NOT_AUTHORIZED`
+  - `STAGE2_IMPLEMENTATION_NOT_STARTED`
+- Bounded scope: Academic vs General Training track routing contracts, `ielts-test-blueprint` & `ielts-section-blueprint` schemas, practice hierarchy definitions, session/interruption contracts (S15-F005), `ieltsTestBlueprints` and `ieltsTestRuns` store manifest, backup registry v6 registration, and minimal track selector UI proof.
+- Implementation authority: `NOT_GRANTED_UNTIL_INDEPENDENT_AUDIT`.
+
 
