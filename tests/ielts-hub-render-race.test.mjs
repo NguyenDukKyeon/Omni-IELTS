@@ -104,6 +104,18 @@ function setupMockDom() {
   const originalDocument = globalThis.document;
   globalThis.document = documentMock;
 
+  const originalLocksDescriptor = Object.getOwnPropertyDescriptor(globalThis.navigator, 'locks');
+  Object.defineProperty(globalThis.navigator, 'locks', {
+    value: {
+      request: async (name, options, callback) => {
+        const task = typeof options === 'function' ? options : callback;
+        return task();
+      }
+    },
+    configurable: true,
+    writable: true
+  });
+
   return {
     dialog: dialogNode,
     panel: panelNode,
@@ -112,6 +124,11 @@ function setupMockDom() {
         globalThis.document = originalDocument;
       } else {
         delete globalThis.document;
+      }
+      if (originalLocksDescriptor) {
+        Object.defineProperty(globalThis.navigator, 'locks', originalLocksDescriptor);
+      } else {
+        delete globalThis.navigator.locks;
       }
     }
   };
