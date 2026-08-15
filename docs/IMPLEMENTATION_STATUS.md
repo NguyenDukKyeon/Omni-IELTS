@@ -787,4 +787,37 @@ substrate to current canonical `main`.
 - Migration/rollback change: `NONE`
 - Dependency change: `NONE`
 
+## 17. W0 Test Allowlist Reconciliation
+
+Transaction `STAGE2-W0-IELTS-ARCH-TEST-ALLOWLIST-RECON-001` reconciles the W0 test write
+allowlist following the independent rejection of PR #95 (comment `5302835936`), authorizing
+the legitimate adaptation of `tests/migration-ledger.test.mjs` for the accepted IELTS v4
+migration while preserving clean recovery topology.
+
+- Reconciliation document: `docs/authorizations/STAGE2-W0-IELTS-ARCH-TEST-ALLOWLIST-RECON-001.md`
+- Controlling authorization: `STAGE2-W0-IELTS-ARCH-AUTH-001` (unchanged, canonical)
+- Predecessor reconciliation: `STAGE2-W0-IELTS-ARCH-BASE-RECON-001` (accepted in PR #93)
+- Trigger: Independent REJECT of PR #95 (comment `5302835936`)
+- Reconciliation base: `4130ef940b515224357548e029d0c34a857c82e5` (Merge PR #93)
+- Historical rejected candidates:
+  - PR #94 (`b0a5c35aaa8a3389e1c57bc34543cae69c289856`): `HISTORICAL_REJECTED_EXECUTION_CANDIDATE` (comment `5302730077`)
+  - PR #95 (`03e33a6f55db6ac746ede88d4f8c6593b180ebb5`): `HISTORICAL_REJECTED_CLEAN_EXECUTION_CANDIDATE` (comment `5302835936`)
+- Current state markers:
+  - `W0_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL`
+  - `W0_BASE_RECON`: `ACCEPTED_AND_CANONICAL`
+  - `W0_IMPLEMENTATION`: `NOT_ACCEPTED`
+  - `W0_TEST_ALLOWLIST_RECON`: `CANDIDATE_PENDING_INDEPENDENT_AUDIT`
+  - `EFFECTIVE_W0_RECOVERY_PREDECESSOR`: `PENDING_RECONCILIATION_MERGE_RESOLUTION`
+  - `W1_W6`: `NOT_AUTHORIZED`
+- Authorized test allowlist delta: `+ tests/migration-ledger.test.mjs`
+- Source allowlist delta: `NONE`
+- Product semantic change: `NONE`
+- Migration semantic change: `NONE` (`wave0-ielts-product-contracts-v4`, DB v3 → v4)
+- Migration mode: `upgrade` (atomic registration inside the IndexedDB `versionchange` transaction)
+- Migration atomicity: `SCHEMA_AND_LEDGER_SAME_VERSIONCHANGE_TRANSACTION`
+- Exact frozen migration digest: `wave0-ielts-product-contracts-store-v4:2026-08-15`
+- Dependency change: `NONE`
+- Recovery implementation status: `NOT_STARTED`
+
+
 
