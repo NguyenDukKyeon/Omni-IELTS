@@ -241,7 +241,7 @@ test('ledger keys stay in the durable metadata namespace',()=>{
 test('physical IELTS v1 upgrade preserves every legacy sentinel and additively creates objective inventory and learner artifacts',async()=>{
   const originalIndexedDb=globalThis.indexedDB, factory=new IDBFactory(), name='vocab-master-ielts';
   globalThis.indexedDB=factory;
-  const legacy=Object.values(IELTS_STORE_NAMES).filter(store=>![IELTS_STORE_NAMES.objectiveInventory,IELTS_STORE_NAMES.learnerArtifacts].includes(store));
+  const legacy=Object.values(IELTS_STORE_NAMES).filter(store=>![IELTS_STORE_NAMES.objectiveInventory,IELTS_STORE_NAMES.learnerArtifacts,IELTS_STORE_NAMES.frozenAssessments].includes(store));
   const indexed={errorRecords:[['normalizedKey',true],['status',false],['lastSeenAt',false]],lexicalSets:[['status',false],['updatedAt',false]],lexicalRelations:[['status',false],['updatedAt',false]],labItems:[['status',false],['updatedAt',false]],readingPassages:[['status',false],['updatedAt',false]],readingAttempts:[['passageId',false],['completedAt',false]],mediaSources:[['videoId',true],['updatedAt',false]],transcriptionJobs:[['mediaSourceId',false],['status',false],['cacheKey',true]],transcriptSegments:[['mediaSourceId',false],['order',false]],mediaAttempts:[['mediaSourceId',false],['segmentId',false],['completedAt',false]],mediaProgress:[['mediaSourceId',true],['updatedAt',false]],settings:[['updatedAt',false]]};
   try{
     const v1=await openNative(factory,name,1,database=>{for(const storeName of legacy){const store=database.createObjectStore(storeName,{keyPath:storeName==='settings'?'key':'id'});for(const [field,unique] of indexed[storeName])store.createIndex(field,field,{unique});}});
