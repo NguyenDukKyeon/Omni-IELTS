@@ -1,10 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  createErrorRecord,mergeErrorRecords,resolveIeltsEvidence,buildIeltsEvidenceEnvelope,ieltsSourceRevision,sanitizeMediaAttempt,validateLexicalSet,validateLabItem,validateReadingPassage,
-  parseYouTubeUrl,validateTranscriptSegments,splitTranscriptSegment,mergeTranscriptSegments,diffWords,planMediaSession,validateRetellFeedback
-} from '../src/ielts-domain.js';
+import { readFile } from 'node:fs/promises';
+import * as domain from '../src/ielts-domain.js';
 import { CURATED_LEXICAL_SETS,CURATED_PARAPHRASE_ITEMS,CURATED_READING_PASSAGES } from '../src/ielts-content.js';
+
+const {
+  createErrorRecord,mergeErrorRecords,resolveIeltsEvidence,buildIeltsEvidenceEnvelope,ieltsSourceRevision,sanitizeMediaAttempt,validateLexicalSet,validateLabItem,validateReadingPassage,
+  parseYouTubeUrl,validateTranscriptSegments,splitTranscriptSegment,mergeTranscriptSegments,diffWords,planMediaSession,validateRetellFeedback,
+  IELTS_TRACKS,validateIeltsTrack,normalizeIeltsTrack,IELTS_PRACTICE_HIERARCHY_LEVELS,
+  IELTS_TEST_BLUEPRINT_KIND,IELTS_TEST_BLUEPRINT_VERSION,IELTS_SECTION_BLUEPRINT_KIND,IELTS_SECTION_BLUEPRINT_VERSION,
+  createIeltsTestBlueprint,validateIeltsTestBlueprint,createIeltsSectionBlueprint,validateIeltsSectionBlueprint,ieltsBlueprintId,
+  IELTS_TEST_RUN_KIND,IELTS_TEST_RUN_VERSION,IELTS_RUN_STATUSES,createIeltsTestRun,validateIeltsTestRun
+} = domain;
 
 test('error records keep complete evidence and deterministic dedupe keys',()=>{
   const first=createErrorRecord({category:'collocation',prompt:'Choose a phrase',learnerResponse:'economy growth',expectedResponse:'economic growth',correction:'economic growth',explanation:'Use adjective + noun.',linkedCardIds:['economic-growth'],sourceRef:{type:'reading',sourceId:'p1',subId:'q1'},now:100});
@@ -134,4 +141,96 @@ test('media session defaults to twenty minutes and unlocks retell after comprehe
 test('retell feedback rejects synthetic IELTS band scores',()=>{
   const safe=validateRetellFeedback({feedback:'Bạn đã nêu ý chính.',mainIdeas:[],targetAssessments:[],lexicalGaps:[],errors:[]});assert.equal(safe.valid,true);
   const unsafe=validateRetellFeedback({feedback:'Estimated IELTS band 7.0',mainIdeas:[],targetAssessments:[],lexicalGaps:[],errors:[]});assert.equal(unsafe.valid,false);assert.match(unsafe.errors.join(' '),/band score/);
+});
+
+test('IELTS track domain defines academic and general-training and fails closed on invalid tracks',()=>{
+  assert.ok(Array.isArray(IELTS_TRACKS),'IELTS_TRACKS must be an array');
+  assert.deepEqual([...IELTS_TRACKS].sort(),['academic','general-training']);
+  assert.equal(validateIeltsTrack('academic').valid,true);
+  assert.equal(validateIeltsTrack('general-training').valid,true);
+  assert.equal(validateIeltsTrack('invalid-track').valid,false);
+  assert.equal(validateIeltsTrack('').valid,false);
+  assert.equal(validateIeltsTrack(null).valid,false);
+  assert.equal(normalizeIeltsTrack('academic'),'academic');
+  assert.equal(normalizeIeltsTrack('general-training'),'general-training');
+  assert.equal(normalizeIeltsTrack('other'),null);
+});
+
+test('IELTS practice hierarchy levels contain all 4 Stage 2 practice granularities',()=>{
+  assert.ok(Array.isArray(IELTS_PRACTICE_HIERARCHY_LEVELS),'IELTS_PRACTICE_HIERARCHY_LEVELS must be an array');
+  assert.deepEqual([...IELTS_PRACTICE_HIERARCHY_LEVELS],['TASK_FAMILY','PART_OR_SECTION','SKILL_TEST','FULL_MOCK']);
+});
+
+test('synthetic test blueprints validate against IELTS blueprint schema v1',async()=>{
+  const raw=await readFile(new URL('./fixtures/synthetic-ielts-blueprints.json',import.meta.url),'utf8');
+  const blueprints=JSON.parse(raw);
+  assert.ok(Array.isArray(blueprints));
+  assert.equal(blueprints.length,2);
+  for(const bp of blueprints){
+    const validation=validateIeltsTestBlueprint(bp);
+    assert.equal(validation.valid,true,validation.errors?.join('\n'));
+    assert.equal(bp.kind,IELTS_TEST_BLUEPRINT_KIND);
+    assert.equal(bp.schemaVersion,IELTS_TEST_BLUEPRINT_VERSION);
+    assert.ok(IELTS_TRACKS.includes(bp.track));
+    assert.ok(IELTS_PRACTICE_HIERARCHY_LEVELS.includes(bp.hierarchyLevel));
+    assert.ok(Array.isArray(bp.sections)&&bp.sections.length>0);
+    for(const section of bp.sections){
+      const secValidation=validateIeltsSectionBlueprint(section);
+      assert.equal(secValidation.valid,true,secValidation.errors?.join('\n'));
+      assert.equal(section.kind,IELTS_SECTION_BLUEPRINT_KIND);
+      assert.equal(section.schemaVersion,IELTS_SECTION_BLUEPRINT_VERSION);
+    }
+  }
+});
+
+test('IELTS test blueprint validation rejects invalid schema, track, hierarchy, or missing sections',()=>{
+  assert.equal(validateIeltsTestBlueprint(null).valid,false);
+  assert.equal(validateIeltsTestBlueprint({}).valid,false);
+  assert.equal(validateIeltsTestBlueprint({kind:'wrong-kind'}).valid,false);
+  assert.equal(validateIeltsTestBlueprint({kind:IELTS_TEST_BLUEPRINT_KIND,schemaVersion:99}).valid,false);
+  assert.equal(validateIeltsTestBlueprint({kind:IELTS_TEST_BLUEPRINT_KIND,schemaVersion:1,track:'invalid'}).valid,false);
+  assert.equal(validateIeltsTestBlueprint({kind:IELTS_TEST_BLUEPRINT_KIND,schemaVersion:1,track:'academic',hierarchyLevel:'INVALID'}).valid,false);
+  assert.equal(validateIeltsTestBlueprint({kind:IELTS_TEST_BLUEPRINT_KIND,schemaVersion:1,track:'academic',hierarchyLevel:'FULL_MOCK',sections:[]}).valid,false);
+});
+
+test('IELTS section blueprint validation rejects invalid skill, order, or sourceRevisionRef',()=>{
+  assert.equal(validateIeltsSectionBlueprint(null).valid,false);
+  assert.equal(validateIeltsSectionBlueprint({}).valid,false);
+  assert.equal(validateIeltsSectionBlueprint({kind:'wrong-kind'}).valid,false);
+  assert.equal(validateIeltsSectionBlueprint({kind:IELTS_SECTION_BLUEPRINT_KIND,schemaVersion:1,skill:'invalid-skill'}).valid,false);
+  assert.equal(validateIeltsSectionBlueprint({kind:IELTS_SECTION_BLUEPRINT_KIND,schemaVersion:1,skill:'reading',order:0}).valid,false);
+  assert.equal(validateIeltsSectionBlueprint({kind:IELTS_SECTION_BLUEPRINT_KIND,schemaVersion:1,skill:'reading',order:1,sourceRevisionRef:null}).valid,false);
+});
+
+test('IELTS test run lifecycle separates blueprint, run, checkpoint, and completed attempt with invariant affectsSchedule: false',()=>{
+  const run=createIeltsTestRun({
+    blueprintId:'ielts-blueprint:0000000000000000000000000000000000000000000000000000000000000001',
+    track:'academic',
+    hierarchyLevel:'FULL_MOCK',
+    status:'active'
+  });
+  assert.equal(run.kind,IELTS_TEST_RUN_KIND);
+  assert.equal(run.schemaVersion,IELTS_TEST_RUN_VERSION);
+  assert.equal(run.status,'active');
+  assert.equal(run.affectsSchedule,false,'Active test run must not affect schedule');
+  assert.equal(run.evidenceEligible,false,'Active test run must not be evidence eligible');
+  assert.ok(run.id.startsWith('ielts-run:'));
+  assert.ok(run.checkpoint!==undefined);
+  assert.equal(run.checkpoint.elapsedSeconds,0);
+
+  const validation=validateIeltsTestRun(run);
+  assert.equal(validation.valid,true,validation.errors?.join('\n'));
+
+  // Test run validation rejects schedule/evidence mutation on non-finalized runs
+  const illegalScheduleRun={...run,affectsSchedule:true};
+  assert.equal(validateIeltsTestRun(illegalScheduleRun).valid,false,'Active checkpoint must reject affectsSchedule: true');
+  const illegalEvidenceRun={...run,evidenceEligible:true};
+  assert.equal(validateIeltsTestRun(illegalEvidenceRun).valid,false,'Active checkpoint must reject evidenceEligible: true');
+});
+
+test('deterministic blueprint ID calculation produces consistent sha256 identifier',()=>{
+  const id1=ieltsBlueprintId({track:'academic',title:'Test Mock 1'});
+  const id2=ieltsBlueprintId({track:'academic',title:'Test Mock 1'});
+  assert.equal(id1,id2);
+  assert.match(id1,/^ielts-blueprint:[a-f0-9]{64}$/);
 });
