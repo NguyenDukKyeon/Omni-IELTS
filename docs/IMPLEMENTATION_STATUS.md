@@ -756,4 +756,35 @@ canonical recovery PR #91 (`IELTS-HUB-RENDER-RACE-RECOVERY-002`).
 - Evidence source: Repository text defines the canonical activation predicate; raw GitHub evidence (persisted verdict comment, merge record, natural post-merge CI run) resolves whether the predicate has become true. No follow-up administrative or status-only commit is required on `main` to restate the derived state.
 - Product authority: `NONE` (Docs/governance only; does not authorize product implementation or Stages 3–8).
 
+## 16. W0 Execution Predecessor Reconciliation
+
+Transaction `STAGE2-W0-IELTS-ARCH-BASE-RECON-001` reconciles the exact execution
+predecessor for `W0-IELTS-ARCH-001` from the historically accepted authorization
+substrate to current canonical `main`.
+
+- Reconciliation document: `docs/authorizations/STAGE2-W0-IELTS-ARCH-BASE-RECON-001.md`
+- Controlling authorization: `STAGE2-W0-IELTS-ARCH-AUTH-001` (unchanged, canonical)
+- Old execution predecessor: `a755ae4949746a71ac86299b34766ad8fe3b6fb6`
+- Reconciliation base: `f13804d062ded7c331a62d657144a5907163012e`
+- Effective W0 execution predecessor: `PENDING_RECONCILIATION_MERGE_RESOLUTION`
+- Resolution rule: exact merge SHA of independently accepted PR #93 + natural exact merge-SHA post-merge CI SUCCESS. The raw GitHub merge record resolves the exact SHA. No follow-up status-only commit is required.
+- Intervening transactions:
+  - PR #88: W0 authorization canonicalization (docs-only) — `ORTHOGONAL`
+  - PR #91: IELTS Hub render-race recovery (product defect fix) — `ORTHOGONAL_COMPATIBLE_SUBSTRATE`
+  - PR #92: Execution Prompt Protocol V2 (governance-only) — `ORTHOGONAL`
+- Current state markers:
+  - `W0_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL`
+  - `W0_EXECUTION_AUTHORITY`: `GRANTED_BUT_PREDECESSOR_RECONCILIATION_PENDING`
+  - `W0_BASE_RECON`: `CANDIDATE_PENDING_INDEPENDENT_AUDIT`
+  - `W0_IMPLEMENTATION`: `NOT_STARTED`
+  - `W1_W6`: `NOT_AUTHORIZED`
+- Derived state after reconciliation gates satisfied:
+  - `W0_BASE_RECON`: `ACCEPTED_AND_CANONICAL`
+  - `EFFECTIVE_W0_EXECUTION_PREDECESSOR`: `<PR93_EXACT_MERGE_SHA>`
+- Semantic authority change: `NONE`
+- Write allowlist change: `NONE`
+- RED/GREEN contract change: `NONE`
+- Migration/rollback change: `NONE`
+- Dependency change: `NONE`
+
 
