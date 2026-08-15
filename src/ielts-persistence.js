@@ -16,7 +16,11 @@ import {
   validateLexicalSet,
   validateLabItem,
   validateReadingPassage,
-  validateTranscriptSegments
+  validateTranscriptSegments,
+  validateIeltsTestBlueprint,
+  validateIeltsSectionBlueprint,
+  validateIeltsTestRun,
+  validateIeltsTrack
 } from './ielts-domain.js';
 import { PRODUCTIVE_PROMPT_REF,PRODUCTIVE_ERROR_CODES,createArtifactRevision,createLearnerArtifact,normalizeProductiveText,sameProductivePromptRef,validateArtifactLineage,validateLearnerArtifact,validateLearnerArtifactRevision,validateProductiveFeedback,validateProductivePromptRef } from './productive-text-contracts.js';
 import { createIeltsObjectiveInventoryItem, transitionIeltsObjectiveInventoryItem, validateIeltsObjectiveInventoryItem } from './ielts-profile-inventory.js';
@@ -26,7 +30,7 @@ import { assertActiveRestoreToken,withDurableWriteLock } from './storage-lock.js
 import { MIGRATION_LEDGER_PREFIX,defineMigration,openForwardCompatibleDatabase } from './migration-ledger.js';
 
 export const IELTS_DB_NAME='vocab-master-ielts';
-export const IELTS_DB_VERSION=3;
+export const IELTS_DB_VERSION=4;
 export const IELTS_BACKUP_VERSION=3;
 
 const STORE_LIST=Object.freeze(Object.values(IELTS_STORE_NAMES));
@@ -53,6 +57,13 @@ const IELTS_MIGRATIONS=Object.freeze([
     digest:'wave5-productive-text-artifacts-store-v3:2026-08-12',
     targetVersion:3,
     description:'Add the private immutable learner-artifact owner store for provider-off productive writing.'
+  }),
+  defineMigration({
+    id:'wave0-ielts-product-contracts-v4',
+    digest:'wave0-ielts-product-contracts-store-v4:2026-08-15',
+    targetVersion:4,
+    mode:'upgrade',
+    description:'Add durable IELTS test blueprint and test run stores for track architecture and full mock workflows.'
   })
 ]);
 
@@ -80,6 +91,8 @@ function createIndexes(storeName,store){
   if(storeName===IELTS_STORE_NAMES.objectiveInventory){store.createIndex('itemId','itemId',{unique:false});store.createIndex('skill','skill',{unique:false});store.createIndex('status','status',{unique:false});}
   if(storeName===IELTS_STORE_NAMES.learnerArtifacts){store.createIndex('kind','kind',{unique:false});store.createIndex('artifactId','artifactId',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
   if(storeName===IELTS_STORE_NAMES.frozenAssessments){store.createIndex('kind','kind',{unique:false});store.createIndex('blueprintId','blueprintId',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
+  if(storeName===IELTS_STORE_NAMES.testBlueprints){store.createIndex('track','track',{unique:false});store.createIndex('skill','skill',{unique:false});store.createIndex('status','status',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
+  if(storeName===IELTS_STORE_NAMES.testRuns){store.createIndex('blueprintId','blueprintId',{unique:false});store.createIndex('track','track',{unique:false});store.createIndex('status','status',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
 }
 
 export function openIeltsDatabase(){
@@ -493,6 +506,92 @@ export async function saveMediaProgress(input){
 
 export async function getMediaProgress(mediaSourceId){const rows=await getAll(IELTS_STORE_NAMES.mediaProgress);return rows.find(row=>row.mediaSourceId===mediaSourceId)||null;}
 
+export async function saveIeltsTestBlueprint(blueprint) {
+  let validation;
+  if (blueprint?.kind === 'ielts-section-blueprint') {
+    validation = validateIeltsSectionBlueprint(blueprint);
+  } else {
+    validation = validateIeltsTestBlueprint(blueprint);
+  }
+  if (!validation.valid) {
+    throw new Error(`Invalid IELTS blueprint: ${validation.errors.join(' ')}`);
+  }
+  const copy = {
+    ...clone(blueprint),
+    updatedAt: Number(blueprint.updatedAt || Date.now())
+  };
+  const saved = await putOne(IELTS_STORE_NAMES.testBlueprints, copy);
+  broadcast('ielts-test-blueprint-saved', [IELTS_STORE_NAMES.testBlueprints]);
+  return saved;
+}
+
+export async function getIeltsTestBlueprint(id) {
+  if (!id) return null;
+  return getOne(IELTS_STORE_NAMES.testBlueprints, id);
+}
+
+export async function listIeltsTestBlueprints({ track, skill, status, limit = 0 } = {}) {
+  const rows = await getAll(IELTS_STORE_NAMES.testBlueprints);
+  let filtered = rows;
+  if (track) filtered = filtered.filter(row => row.track === track);
+  if (skill) filtered = filtered.filter(row => row.skill === skill);
+  if (status) filtered = filtered.filter(row => row.status === status);
+  filtered.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
+  return limit > 0 ? filtered.slice(0, limit) : filtered;
+}
+
+export async function saveIeltsTestRun(run) {
+  const validation = validateIeltsTestRun(run);
+  if (!validation.valid) {
+    throw new Error(`Invalid IELTS test run: ${validation.errors.join(' ')}`);
+  }
+  const copy = {
+    ...clone(validation.value),
+    updatedAt: Number(run.updatedAt || Date.now())
+  };
+  const saved = await putOne(IELTS_STORE_NAMES.testRuns, copy);
+  broadcast('ielts-test-run-saved', [IELTS_STORE_NAMES.testRuns]);
+  return saved;
+}
+
+export async function getIeltsTestRun(id) {
+  if (!id) return null;
+  return getOne(IELTS_STORE_NAMES.testRuns, id);
+}
+
+export async function listIeltsTestRuns({ blueprintId, track, status, limit = 0 } = {}) {
+  const rows = await getAll(IELTS_STORE_NAMES.testRuns);
+  let filtered = rows;
+  if (blueprintId) filtered = filtered.filter(row => row.blueprintId === blueprintId);
+  if (track) filtered = filtered.filter(row => row.track === track);
+  if (status) filtered = filtered.filter(row => row.status === status);
+  filtered.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
+  return limit > 0 ? filtered.slice(0, limit) : filtered;
+}
+
+export async function getSelectedIeltsTrack() {
+  const record = await getOne(IELTS_STORE_NAMES.settings, 'selectedIeltsTrack');
+  if (record && record.value && validateIeltsTrack(record.value).valid) {
+    return record.value;
+  }
+  return null;
+}
+
+export async function setSelectedIeltsTrack(track) {
+  const validation = validateIeltsTrack(track);
+  if (!validation.valid) {
+    throw Object.assign(new Error('Invalid track: must be academic or general-training.'), { code: 'INVALID_IELTS_TRACK' });
+  }
+  const record = {
+    key: 'selectedIeltsTrack',
+    value: validation.track,
+    updatedAt: Date.now()
+  };
+  await putOne(IELTS_STORE_NAMES.settings, record);
+  broadcast('ielts-selected-track-changed', [IELTS_STORE_NAMES.settings]);
+  return validation.track;
+}
+
 export async function buildIeltsBackup({restoreToken=null}={}){
   if(!restoreToken)await writeQueue;else assertActiveRestoreToken(restoreToken);
   let stores={};const database=await openIeltsDatabase();
@@ -512,9 +611,9 @@ function upgradeLegacyIeltsBackupV1(input){
   if(Number(input?.domainSchemaVersion)!==IELTS_SCHEMA_VERSION)return{error:'Legacy IELTS backup domain schema is invalid.'};
   const stores=input?.stores;if(!stores||typeof stores!=='object'||Array.isArray(stores))return{error:'Legacy IELTS backup stores are invalid.'};
   if(Object.keys(stores).some(store=>!STORE_LIST.includes(store)))return{error:'Legacy IELTS backup contains unknown or partial inventory storage.'};
-  const requiredStores=STORE_LIST.filter(store=>![IELTS_STORE_NAMES.objectiveInventory,IELTS_STORE_NAMES.learnerArtifacts,IELTS_STORE_NAMES.frozenAssessments].includes(store));
+  const requiredStores=STORE_LIST.filter(store=>![IELTS_STORE_NAMES.objectiveInventory,IELTS_STORE_NAMES.learnerArtifacts,IELTS_STORE_NAMES.frozenAssessments,IELTS_STORE_NAMES.testBlueprints,IELTS_STORE_NAMES.testRuns].includes(store));
   if(requiredStores.some(store=>!Array.isArray(stores[store])))return{error:'Legacy IELTS backup is missing a required store.'};
-  return{value:{...clone(input),schemaVersion:4,stores:{...clone(stores),[IELTS_STORE_NAMES.objectiveInventory]:stores[IELTS_STORE_NAMES.objectiveInventory]||[],[IELTS_STORE_NAMES.learnerArtifacts]:stores[IELTS_STORE_NAMES.learnerArtifacts]||[],[IELTS_STORE_NAMES.frozenAssessments]:stores[IELTS_STORE_NAMES.frozenAssessments]||[]}},warning:`Legacy IELTS backup v${input.schemaVersion} was additively upgraded with empty storage.`};
+  return{value:{...clone(input),schemaVersion:4,stores:{...clone(stores),[IELTS_STORE_NAMES.objectiveInventory]:stores[IELTS_STORE_NAMES.objectiveInventory]||[],[IELTS_STORE_NAMES.learnerArtifacts]:stores[IELTS_STORE_NAMES.learnerArtifacts]||[],[IELTS_STORE_NAMES.frozenAssessments]:stores[IELTS_STORE_NAMES.frozenAssessments]||[],[IELTS_STORE_NAMES.testBlueprints]:stores[IELTS_STORE_NAMES.testBlueprints]||[],[IELTS_STORE_NAMES.testRuns]:stores[IELTS_STORE_NAMES.testRuns]||[]}},warning:`Legacy IELTS backup v${input.schemaVersion} was additively upgraded with empty storage.`};
 }
 
 export function validateIeltsBackup(input){
