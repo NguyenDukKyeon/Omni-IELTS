@@ -765,7 +765,9 @@ substrate to current canonical `main`.
 - Reconciliation document: `docs/authorizations/STAGE2-W0-IELTS-ARCH-BASE-RECON-001.md`
 - Controlling authorization: `STAGE2-W0-IELTS-ARCH-AUTH-001` (unchanged, canonical)
 - Old execution predecessor: `a755ae4949746a71ac86299b34766ad8fe3b6fb6`
-- New execution predecessor: `f13804d062ded7c331a62d657144a5907163012e`
+- Reconciliation base: `f13804d062ded7c331a62d657144a5907163012e`
+- Effective W0 execution predecessor: `PENDING_RECONCILIATION_MERGE_RESOLUTION`
+- Resolution rule: exact merge SHA of independently accepted PR #93 + natural exact merge-SHA post-merge CI SUCCESS. The raw GitHub merge record resolves the exact SHA. No follow-up status-only commit is required.
 - Intervening transactions:
   - PR #88: W0 authorization canonicalization (docs-only) — `ORTHOGONAL`
   - PR #91: IELTS Hub render-race recovery (product defect fix) — `ORTHOGONAL_COMPATIBLE_SUBSTRATE`
@@ -776,6 +778,9 @@ substrate to current canonical `main`.
   - `W0_BASE_RECON`: `CANDIDATE_PENDING_INDEPENDENT_AUDIT`
   - `W0_IMPLEMENTATION`: `NOT_STARTED`
   - `W1_W6`: `NOT_AUTHORIZED`
+- Derived state after reconciliation gates satisfied:
+  - `W0_BASE_RECON`: `ACCEPTED_AND_CANONICAL`
+  - `EFFECTIVE_W0_EXECUTION_PREDECESSOR`: `<PR93_EXACT_MERGE_SHA>`
 - Semantic authority change: `NONE`
 - Write allowlist change: `NONE`
 - RED/GREEN contract change: `NONE`

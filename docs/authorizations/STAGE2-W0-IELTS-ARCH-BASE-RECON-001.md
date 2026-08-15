@@ -52,7 +52,7 @@ This is the canonical predecessor recorded in the accepted W0 authorization
 manifest (§6, §10.1, §7.2) and the independent ACCEPT verdict (comment
 `5301830457`).
 
-## New Execution Predecessor
+## Reconciliation Base
 
 ```
 COMMIT:    f13804d062ded7c331a62d657144a5907163012e
@@ -60,6 +60,37 @@ IDENTITY:  Merge PR #92 / EXECUTION-PROMPT-PROTOCOL-V2-002
 PARENTS:   2812f639a5967e0389b77fdb71be1a0f97b928d4 (main^1)
            6e0dd0a4597566ff7976f471196eb9a01a0a0616 (candidate^2)
 ```
+
+This is the exact canonical `main` from which this reconciliation PR (#93) was
+materialized. It is the **RECONCILIATION_BASE**, not the effective W0 execution
+predecessor.
+
+## Effective W0 Execution Predecessor
+
+The effective W0 execution predecessor is resolved via a **self-resolving
+conditional binding**:
+
+$$\text{EFFECTIVE\_W0\_EXECUTION\_PREDECESSOR} = \text{EXACT\_PR93\_MERGE\_SHA}$$
+
+This SHA becomes known only after:
+
+1. Independent exact-head reconciliation audit yields formal `ACCEPT` verdict;
+2. `ACCEPT` verdict is persisted to PR #93 and fresh-read back;
+3. Accepted candidate head SHA remains unchanged;
+4. Exact accepted candidate head is merged via normal merge commit onto the
+   reconciliation base (`f13804d062ded7c331a62d657144a5907163012e`);
+5. Merge topology is verified (parent 1 = reconciliation base, parent 2 =
+   accepted candidate head);
+6. Natural post-merge push CI succeeds on the exact merge commit SHA.
+
+The raw GitHub merge record resolves the exact SHA. No follow-up status-only
+commit is required.
+
+Before these gates are satisfied: `EFFECTIVE_W0_EXECUTION_PREDECESSOR` is
+`PENDING_RECONCILIATION_MERGE_RESOLUTION`.
+
+After all gates are satisfied: `EFFECTIVE_W0_EXECUTION_PREDECESSOR` is the
+exact verified merge commit SHA.
 
 ---
 
@@ -245,21 +276,28 @@ specified in §6 of `STAGE2-W0-IELTS-ARCH-AUTH-001`:
 ### Updated Execution Topology
 
 ```
-f13804d062ded7c331a62d657144a5907163012e  (NEW canonical base)
-     │
-     ▼
+f13804d062ded7c331a62d657144a5907163012e  (RECONCILIATION_BASE)
+        \
+         → <PR93_MERGE_SHA>  (EFFECTIVE_W0_EXECUTION_PREDECESSOR)
+        /
+<ACCEPTED_PR93_HEAD>
+         │
+         ▼
 [COMMIT A: RED Tests Only] (Adds failing test assertions; zero src/** edits)
-     │
-     ├─▶ Verified expected failure predicates (Missing contracts/stores)
-     ├─▶ Zero syntax / compile / import breakages
-     │
-     ▼
+         │
+         ├─▶ Verified expected failure predicates (Missing contracts/stores)
+         ├─▶ Zero syntax / compile / import breakages
+         │
+         ▼
 [COMMIT B: GREEN Implementation] (Edits allowed src/** only; RED tests become immutable)
-     │
-     ├─▶ 100% Unit, Integration, and Backup tests pass
-     ├─▶ Minimal track selector browser smoke passes
-     └─▶ Exact-head remote CI succeeds
+         │
+         ├─▶ 100% Unit, Integration, and Backup tests pass
+         ├─▶ Minimal track selector browser smoke passes
+         └─▶ Exact-head remote CI succeeds
 ```
+
+Future W0 Commit A MUST use the resolved `<PR93_MERGE_SHA>` as its direct
+parent, NOT `f13804d062ded7c331a62d657144a5907163012e`.
 
 ### RED Contract Preservation
 
@@ -289,8 +327,8 @@ blobs remain strictly immutable per §6.2.
 
 ## Unchanged Migration/Rollback Contract
 
-The migration and rollback contracts from §7 of `STAGE2-W0-IELTS-ARCH-AUTH-001`
-remain **exactly unchanged:**
+The W0 migration and rollback **product contracts** from §7 of
+`STAGE2-W0-IELTS-ARCH-AUTH-001` remain **exactly unchanged:**
 
 - **Migration ID:** `wave0-ielts-product-contracts-v4`
 - **Database:** `vocab-master-ielts`
@@ -298,12 +336,13 @@ remain **exactly unchanged:**
 - **Migration Class:** `FORWARD_ONLY_ADDITIVE_IDB_MIGRATION`
 - **Rollback Class:** `ADDITIVE_READER_COMPATIBLE` + `ROUTE_DISABLED`
 
-The rollback contract reference to predecessor `a755ae4949746a71ac86299b34766ad8fe3b6fb6`
-in §7.2 is now understood as: reverting to any commit in the canonical lineage
-that lacks the W0 implementation leaves the database at version 4 with unknown
-additive stores safely ignored by the forward-compatible opener. The new
-predecessor `f13804d062ded7c331a62d657144a5907163012e` preserves this property
-identically because the DB version remains at 3 (no migration has occurred).
+The original §7.2 rollback properties remain valid: reverting the W0
+implementation codebase leaves the database at version 4 with unknown additive
+stores safely ignored by the forward-compatible opener. The resolved effective
+W0 execution predecessor (the exact PR #93 merge SHA) preserves this property
+because the DB version remains at 3 at that commit (no W0 migration has
+occurred). This predecessor rebinding changes only the Git execution substrate;
+it does not alter the W0 migration/rollback product contract.
 
 ---
 
@@ -322,25 +361,28 @@ by W0 execution (they are NOT in the W0 write allowlist):
 
 ## Stop Conditions
 
-The following stop conditions apply to both this reconciliation candidate and
-to future W0 execution using the reconciled predecessor:
+### During Reconciliation Candidate / Audit Phase
 
-1. `CANONICAL_BASE_DRIFT` — Canonical `main` is not `f13804d062ded7c331a62d657144a5907163012e`.
-2. `IMPLEMENTATION_BRANCH_COLLISION` — Branch `exec/stage2-w0-ielts-arch-001` already exists with conflicting commits.
-3. `W0_AUTHORITY_MISMATCH` — Proposed semantics conflict with `STAGE2-W0-IELTS-ARCH-AUTH-001`.
-4. `INTERVENING_LINEAGE_AMBIGUITY` — Unresolvable ambiguity in intervening canonical changes.
-5. `PR91_W0_SEMANTIC_OVERLAP` — PR #91 changes overlap with accepted W0 product predicates.
-6. `W0_RED_CONTRACT_RECONCILIATION_REQUIRED` — Accepted RED predicates no longer map to current substrate.
-7. `RED_CONTRACT_DRIFT` — Future executor discovers RED contract no longer produces natural deterministic failure.
-8. `ALLOWLIST_CHANGE_REQUIRED` — Implementation requires files outside accepted W0 allowlist.
-9. `W0_SEMANTIC_CHANGE_REQUIRED` — Implementation requires W0 product semantic modifications.
-10. `MIGRATION_CHANGE_REQUIRED` — Implementation requires non-additive or destructive migration changes.
-11. `DEPENDENCY_CHANGE_REQUIRED` — Implementation requires new npm packages or external services.
-12. `UNEXPECTED_NON_DOCS_CHANGE` — Unauthorized modifications in `src/**`, `tests/**`, or `package.json`.
+1. `RECONCILIATION_BASE_DRIFT` — Canonical `main` is not `f13804d062ded7c331a62d657144a5907163012e` before the accepted reconciliation is merged.
+2. `W0_AUTHORITY_MISMATCH` — Proposed semantics conflict with `STAGE2-W0-IELTS-ARCH-AUTH-001`.
+3. `INTERVENING_LINEAGE_AMBIGUITY` — Unresolvable ambiguity in intervening canonical changes.
+4. `PR91_W0_SEMANTIC_OVERLAP` — PR #91 changes overlap with accepted W0 product predicates.
+5. `W0_RED_CONTRACT_RECONCILIATION_REQUIRED` — Accepted RED predicates no longer map to current substrate.
+6. `UNEXPECTED_NON_DOCS_CHANGE` — Unauthorized modifications in `src/**`, `tests/**`, or `package.json`.
+
+### During Future W0 Execution Phase (After Reconciliation Merge)
+
+7. `W0_EXECUTION_BASE_DRIFT` — Canonical `main` is not the resolved effective W0 execution predecessor (exact PR #93 merge SHA) when future W0 Commit A is materialized. Do not silently rebind again.
+8. `IMPLEMENTATION_BRANCH_COLLISION` — Branch `exec/stage2-w0-ielts-arch-001` already exists with conflicting commits.
+9. `RED_CONTRACT_DRIFT` — Future executor discovers RED contract no longer produces natural deterministic failure.
+10. `ALLOWLIST_CHANGE_REQUIRED` — Implementation requires files outside accepted W0 allowlist.
+11. `W0_SEMANTIC_CHANGE_REQUIRED` — Implementation requires W0 product semantic modifications.
+12. `MIGRATION_CHANGE_REQUIRED` — Implementation requires non-additive or destructive migration changes.
+13. `DEPENDENCY_CHANGE_REQUIRED` — Implementation requires new npm packages or external services.
 
 ---
 
-## Independent Acceptance Requirement
+## Independent Acceptance and Effectiveness
 
 This reconciliation candidate **cannot be self-accepted** by the reconciliation
 implementer.
@@ -350,11 +392,27 @@ An independent auditor must verify:
 1. Canonical main is exactly `f13804d062ded7c331a62d657144a5907163012e`.
 2. All intervening transactions (PR #88, PR #91, PR #92) are correctly classified.
 3. PR #91 product changes are genuinely orthogonal to accepted W0 semantics.
-4. All accepted W0 predicates remain valid against the new predecessor.
+4. All accepted W0 predicates remain valid against the reconciliation base.
 5. No W0 semantic, allowlist, RED/GREEN, migration, or dependency change is introduced.
 6. The reconciliation document itself is docs-only with zero product code changes.
+7. The self-resolving predecessor binding correctly resolves to the exact merge SHA.
 
-Only after independent `ACCEPT` does this predecessor rebinding become effective.
+### Effectiveness Gate
+
+This supplementary predecessor reconciliation becomes **EFFECTIVE** only after:
+
+1. Independent exact-head reconciliation audit yields formal `ACCEPT`;
+2. `ACCEPT` verdict persisted and fresh-read back;
+3. Accepted candidate head unchanged;
+4. Exact accepted head merged via normal merge commit;
+5. Merge topology verified (parent 1 = `f13804d...`, parent 2 = accepted head);
+6. Natural post-merge push CI succeeds on the exact merge SHA.
+
+Before these gates: `NOT_EFFECTIVE`.
+After all gates: `EFFECTIVE_PREDECESSOR_BINDING_RESOLVED`.
+
+The resolved merge SHA becomes the effective W0 execution predecessor.
+No follow-up status-only commit is required.
 
 `STAGE2-W0-IELTS-ARCH-AUTH-001` remains the controlling W0 semantic authority.
 This reconciliation controls ONLY the exact execution predecessor binding and
