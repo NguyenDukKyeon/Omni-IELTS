@@ -59,7 +59,7 @@ Accepted strategies (e.g. `docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`), bounded
 
 ## 3. Centralized Repository Invariants
 
-Protocol V2 centralizes all mandatory repository invariants so transaction prompts reference them by canonical identity rather than pasting repetitive boilerplate:
+`AGENTS.md` remains mandatory repository governance. Protocol V2 centralizes reusable generic execution and prompting invariants so transaction prompts reference them by canonical identity; it does **not** replace, supersede, or exhaustively restate `AGENTS.md`, transaction-specific authorizations, product/domain invariants, or package-specific acceptance rules.
 
 ### 3.1 Authority Invariants
 - **Authority Separation**: Research $\neq$ Specification $\neq$ Authorization $\neq$ Implementation $\neq$ Evidence $\neq$ Independent Acceptance $\neq$ Merge Authority.
@@ -68,7 +68,7 @@ Protocol V2 centralizes all mandatory repository invariants so transaction promp
 
 ### 3.2 Git & Topology Invariants
 - **Exact Predecessor Binding**: Every candidate branch must branch directly from the exact canonical base commit SHA.
-- **Single-Writer Discipline**: Exactly one agent/session writes code or creates commits. Subagents and auditors are read-only.
+- **Single-Writer & Auditor Mutation Boundaries**: Exactly one agent/session writes code or creates implementation commits. Subagents and auditors are strictly read-only with respect to candidate repository files, implementation code, tests, candidate commits, and candidate branch content. An Independent Auditor may perform non-implementation platform and audit-record actions **ONLY** when explicitly authorized by controlling authority (e.g. posting formal PR verdict comments/reviews, performing Draft-to-Ready PR metadata transitions, executing exact-head merges, and inspecting post-merge CI). The Auditor must never remediate candidate code, create candidate implementation commits, change tests/source, or grant itself new authority.
 - **Immutable History**: No `git rebase`, no `git commit --amend`, no force-pushing (`git push --force`), no destructive resets, and no history rewriting.
 - **Fail-Closed on Drift**: Any unexpected commit on base or candidate head halts execution (`CANONICAL_BASE_DRIFT`).
 
@@ -93,17 +93,21 @@ Protocol V2 centralizes all mandatory repository invariants so transaction promp
 
 ### 3.7 Data Safety, Backup & Migration Invariants
 - **100% Store Backup Sentinel**: Every durable store (Core, IELTS, V10, drafts, outbox, settings) must be registered in the backup registry.
-- **Forward-Only Schema Migrations**: IndexedDB migrations are strictly additive and forward-compatible; no destructive downgrades.
+- **Forward-Only Schema Migrations**: IndexedDB migrations are strictly additive, idempotent, and forward-compatible; no destructive downgrades.
 - **Journaled Restore**: Restore follows stage $\to$ validate whole payload $\to$ journal $\to$ commit/reconcile $\to$ reopen/read-back/verify.
 
-### 3.8 Independent Audit Invariants
+### 3.8 Independent Audit Invariants & Verdict Taxonomy
 - **Absolute Role Separation**: The Implementer/Executor cannot independently audit or accept its own work.
 - **Fresh Independent Inspection**: Independent Auditors must fresh-read all diffs, CI runs, logs, and artifacts independently. Green CI $\neq$ ACCEPT.
-- **Verdict Persistence**: Formal verdict (`ACCEPT` or `REJECT`) must be persisted to the PR / discussion and read back before any subsequent action.
+- **Formal Verdict Taxonomy**:
+  - `ACCEPT`: Candidate satisfies all controlling authority, specification, and verification evidence.
+  - `REJECT`: Candidate itself has a substantive remediable defect.
+  - `BLOCKED`: Reliable independent determination cannot be completed because required authority, evidence, tools, or external state is unavailable or defective.
+- **Verdict Persistence & Read-Back**: Formal verdict (`ACCEPT`, `REJECT`, or `BLOCKED`) must be persisted to the PR / discussion and fresh read back before any subsequent action.
 
 ### 3.9 Conditional Merge Invariants
-- **Pre-Authorized Merge Execution**: An Independent Auditor may execute an exact-head merge in the same transaction **ONLY IF** the controlling authorization manifest explicitly pre-authorizes merge upon `ACCEPT`.
-- **Pre-Merge Conditions**: Verdict is persisted and read back, candidate head matches accepted SHA, base is unchanged, and mergeability is clean.
+- **Pre-Authorized Merge Execution**: An Independent Auditor may execute an exact-head merge in the same transaction **ONLY IF** the controlling authorization manifest or controlling transaction explicitly grants merge authority (`MERGE_AUTHORITY: EXPLICITLY_GRANTED`). If merge authority is `NOT_GRANTED`, the transaction halts at `ACCEPTED_PENDING_INTEGRATION`. The protocol or template itself **NEVER** creates or infers merge authority.
+- **Pre-Merge Conditions**: Verdict (`ACCEPT`) is persisted and read back, candidate head matches accepted SHA, base is unchanged, and mergeability is clean.
 
 ### 3.10 Fail-Closed Stop Conditions
 Execution halts immediately when any stop condition is triggered:
@@ -135,43 +139,54 @@ flowchart TD
 ```
 
 ### 4.1 CASE A — No Accepted Wave Authorization Exists
-Minimum normal floor: **4 user-level transactions**.
+Minimum normal happy-path floor: **4 user-level transactions**.
 1. **Transaction 1: `AUTHORIZATION_IMPLEMENTER`**  
    Materializes the Wave Authorization Manifest candidate in `docs/authorizations/`, registers the ADR, creates Draft PR, and verifies natural CI.
 2. **Transaction 2: `INDEPENDENT_AUTHORIZATION_AUDITOR`**  
-   Fresh-audits manifest, verifies strategy alignment, emits `ACCEPT`, marks PR ready, executes pre-authorized merge, and verifies post-merge CI.
+   Fresh-audits manifest, verifies strategy alignment, emits verdict, and executes post-accept actions only where explicitly authorized.
 3. **Transaction 3: `IMPLEMENTATION_EXECUTOR`**  
    Executes implementation capsule: produces test-first Commit A (RED), minimal Commit B (GREEN), pushes branch, opens Draft PR, and awaits natural CI.
 4. **Transaction 4: `INDEPENDENT_IMPLEMENTATION_AUDITOR`**  
-   Fresh-audits implementation, verifies RED/GREEN logs and artifacts, emits `ACCEPT`, marks PR ready, executes pre-authorized merge, and verifies post-merge CI.
+   Fresh-audits implementation, verifies RED/GREEN logs and artifacts, emits verdict, and executes post-accept actions only where explicitly authorized.
 
 ### 4.2 CASE B — Accepted Wave Authorization Already Exists (e.g. Wave W0)
-Minimum remaining floor: **2 user-level transactions**.
+Minimum remaining normal happy-path floor: **2 user-level transactions**.
 1. **Transaction 1: `IMPLEMENTATION_EXECUTOR`**  
    Executes implementation capsule against existing canonical authorization: Commit A (RED) $\to$ Commit B (GREEN) $\to$ Push $\to$ PR $\to$ CI wait.
 2. **Transaction 2: `INDEPENDENT_IMPLEMENTATION_AUDITOR`**  
-   Conducts independent implementation audit $\to$ `ACCEPT` $\to$ Pre-authorized merge $\to$ Post-merge CI verification $\to$ Deterministic closure.
+   Conducts independent implementation audit $\to$ Verdict persistence $\to$ Post-accept actions only where explicitly authorized $\to$ Deterministic closure.
 
 ---
 
-## 5. No Artificial Handoff Rule
+## 5. No Artificial Handoff Rule & Post-Merge Write Boundary
 
+### 5.1 Autonomous Mechanical Operations
 The following mechanical operations MUST be executed autonomously within the active owning transaction without pausing for user prompts:
 - Waiting for remote GitHub Actions CI completion / polling CI status;
 - Reading CI logs and failure diagnostics;
 - Downloading and inspecting CI verification artifacts;
 - Verifying artifact hashes, digests, and commit bindings;
 - Read-back of persisted evidence or verdicts;
-- Marking Draft PR as Ready for Review after independent `ACCEPT` (when pre-authorized);
-- Executing exact-head merge after independent `ACCEPT` (when pre-authorized);
+- Marking Draft PR as Ready for Review after independent `ACCEPT` (when explicitly authorized);
+- Executing exact-head merge after independent `ACCEPT` (when explicitly authorized);
 - Polling and verifying natural post-merge CI on `main`;
-- Updating status markers in `docs/IMPLEMENTATION_STATUS.md` upon verified merge.
+- Persisting deterministic transaction closure reports.
+
+### 5.2 Post-Merge Repository Write Boundary
+No repository-file mutation after merge is implicitly authorized merely because the auditor transaction owns closure. After verified merge and post-merge CI, persisted PR verdicts, merge records, CI evidence, and transaction final reports establish deterministic closure without modifying repository files on `main`.
+
+A post-merge repository status/docs write is allowed **ONLY IF**:
+1. Controlling authority explicitly grants that exact path and write;
+2. Git topology for that write is explicitly frozen; and
+3. Required CI/evidence semantics for the resulting new head are defined.
+
+Otherwise, do **NOT** create a status-only commit.
 
 ---
 
 ## 6. Prompt Template Architecture
 
-Future transaction prompts use concise, role-specific templates that supply transaction-specific parameters while referencing centralized Protocol V2 invariants.
+Future transaction prompts use concise, role-specific templates that supply transaction-specific parameters while referencing centralized Protocol V2 invariants and mandatory `AGENTS.md` rules.
 
 ### 6.1 Template 1: AUTHORIZATION_IMPLEMENTER
 ```markdown
@@ -190,7 +205,7 @@ EXACT_WRITE_ALLOWLIST:
 - docs/authorizations/<MANIFEST_FILE>.md
 - docs/DECISIONS.md
 - docs/IMPLEMENTATION_STATUS.md
-SPECIAL_INVARIANTS: Protocol V2 Centralized Invariants apply in full. Docs-only; no src/** or test/** modifications.
+SPECIAL_INVARIANTS: AGENTS.md and Protocol V2 Centralized Invariants apply in full. Docs-only; no src/** or test/** modifications.
 FINAL_STATE: Branch pushed, Draft PR opened, natural CI verified on candidate head SHA.
 ```
 
@@ -203,11 +218,15 @@ CANDIDATE_PR: <PR_NUMBER>
 EXPECTED_CANDIDATE_HEAD: <EXACT_GIT_SHA>
 EXPECTED_CANONICAL_BASE: <EXACT_GIT_SHA>
 CONTROLLING_AUTHORITIES:
+- docs/MASTER_ROADMAP.md
+- docs/ROADMAP.md
+- AGENTS.md
 - docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md (ADR-051)
 - <RELEVANT_STRATEGY_AND_GOVERNANCE_DOCS>
 AUDIT_SCOPE: Independent verification of manifest scope, allowlists, RED/GREEN contracts, migration rules, and CI evidence.
-PRE_AUTHORIZED_ACTIONS_ON_ACCEPT: Persist verdict -> Read back -> Mark Ready -> Exact-head merge -> Post-merge CI verify -> Update status.
-FINAL_STATE: Manifest merged into main, post-merge CI verified SUCCESS, status updated.
+MERGE_AUTHORITY: <EXPLICITLY_GRANTED | NOT_GRANTED>
+POST_ACCEPT_ACTIONS: <ONLY_ACTIONS_EXPLICITLY_GRANTED_BY_CONTROLLING_TRANSACTION>
+FINAL_STATE: Verdict persisted + read back. If MERGE_AUTHORITY is EXPLICITLY_GRANTED, exact-head merge and post-merge CI verified SUCCESS.
 ```
 
 ### 6.3 Template 3: IMPLEMENTATION_EXECUTOR
@@ -217,7 +236,11 @@ TRANSACTION_ID: <TRANSACTION_ID>
 SUBJECT: <WAVE_OR_PACKAGE_NAME> Implementation
 EXPECTED_CANONICAL_PREDECESSOR: <EXACT_GIT_SHA>
 CONTROLLING_AUTHORIZATION: docs/authorizations/<ACCEPTED_MANIFEST_FILE>.md
-CONTROLLING_GOVERNANCE: docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md (ADR-051)
+CONTROLLING_AUTHORITIES:
+- docs/MASTER_ROADMAP.md
+- docs/ROADMAP.md
+- AGENTS.md
+- docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md (ADR-051)
 EXACT_WRITE_ALLOWLIST: <EXACT_ALLOWLIST_FROM_MANIFEST>
 EXECUTION_SEQUENCE:
 1. Materialize Commit A (RED) exercising specified contracts test-first.
@@ -236,10 +259,15 @@ CANDIDATE_PR: <PR_NUMBER>
 EXPECTED_CANDIDATE_HEAD: <EXACT_GIT_SHA>
 EXPECTED_CANONICAL_BASE: <EXACT_GIT_SHA>
 CONTROLLING_AUTHORIZATION: docs/authorizations/<ACCEPTED_MANIFEST_FILE>.md
-CONTROLLING_GOVERNANCE: docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md (ADR-051)
+CONTROLLING_AUTHORITIES:
+- docs/MASTER_ROADMAP.md
+- docs/ROADMAP.md
+- AGENTS.md
+- docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md (ADR-051)
 AUDIT_SCOPE: Fresh independent audit of diffs, RED/GREEN commit pair, allowlist compliance, zero assertion weakening, CI logs, and artifact provenance.
-PRE_AUTHORIZED_ACTIONS_ON_ACCEPT: Persist verdict -> Read back -> Mark Ready -> Exact-head merge -> Post-merge CI verify -> Update status.
-FINAL_STATE: Implementation merged into main, post-merge CI verified SUCCESS, status updated.
+MERGE_AUTHORITY: <EXPLICITLY_GRANTED | NOT_GRANTED>
+POST_ACCEPT_ACTIONS: <ONLY_ACTIONS_EXPLICITLY_GRANTED_BY_CONTROLLING_TRANSACTION>
+FINAL_STATE: Verdict persisted + read back. If MERGE_AUTHORITY is EXPLICITLY_GRANTED, exact-head merge and post-merge CI verified SUCCESS.
 ```
 
 ---
@@ -281,7 +309,7 @@ FINAL_STATE: Implementation merged into main, post-merge CI verified SUCCESS, st
 
 1. Protocol V2 does **NOT** retroactively invalidate, modify, or reopen `STAGE2-W0-IELTS-ARCH-AUTH-001`.
 2. For all product, domain, schema, allowlist, RED/GREEN, and migration contracts of Wave W0, **`STAGE2-W0-IELTS-ARCH-AUTH-001` is the controlling semantic authority**.
-3. Protocol V2 governs only transaction prompting efficiency (minimum-handoff model: exactly 2 transactions remaining for W0).
+3. Protocol V2 governs only transaction prompting efficiency (minimum normal happy-path floor: exactly 2 transactions remaining for W0). Legitimate non-happy-path incidents (e.g. `REJECT`, `BLOCKED`, CI failure) legitimately introduce bounded recovery transactions.
 4. In any conflict between Protocol V2 generic guidelines and the accepted W0 manifest, **the accepted W0 manifest controls for W0**.
 
 ---
@@ -292,11 +320,11 @@ The protocol validates its design against the following comprehensive test matri
 
 | Test ID | Scenario | Expected Protocol Behavior | Pass / Fail Rule |
 |---|---|---|---|
-| **TEST-A** | New unauthorized Wave (e.g. Wave W1) | Executes via 4-transaction normal floor: T1 (Auth Impl) $\to$ T2 (Auth Audit) $\to$ T3 (Impl Exec) $\to$ T4 (Impl Audit). | PASS: Exactly 4 transactions; zero self-acceptance. |
-| **TEST-B** | Wave with existing canonical authorization (Wave W0) | Skips T1 and T2; executes remaining 2 transactions: T1 (Impl Exec) $\to$ T2 (Impl Audit). | PASS: Exactly 2 transactions to reach W0 COMPLETE. |
+| **TEST-A** | New unauthorized Wave (e.g. Wave W1) | Normal happy path executes via 4-transaction floor: T1 (Auth Impl) $\to$ T2 (Auth Audit) $\to$ T3 (Impl Exec) $\to$ T4 (Impl Audit). | PASS: Exactly 4 transactions on normal happy path; zero self-acceptance. |
+| **TEST-B** | Wave with existing canonical authorization (Wave W0) | Normal happy path executes via remaining 2-transaction floor: T1 (Impl Exec) $\to$ T2 (Impl Audit). | PASS: Exactly 2 transactions on normal happy path to reach W0 COMPLETE. |
 | **TEST-C** | Implementation Audit yields `REJECT` verdict | Execution halts; Auditor logs exact findings; bounded remediation transaction resolves specific defect; fresh audit follows. | PASS: Does not restart entire lifecycle from scratch. |
 | **TEST-D** | Remote PR CI is still in progress | Transaction waits / polls CI autonomously within active session; does not emit artificial handoff to user. | PASS: Single transaction handles CI polling and artifact inspection. |
-| **TEST-E** | Post-ACCEPT merge is explicitly pre-authorized | Auditor records `ACCEPT` verdict, reads back, marks PR ready, merges PR, and verifies post-merge CI in same transaction. | PASS: No separate merge or closure prompts needed. |
+| **TEST-E** | Post-ACCEPT merge is explicitly pre-authorized | Auditor records `ACCEPT` verdict, reads back, marks PR ready, merges PR, and verifies post-merge CI in same transaction. | PASS: Merge executed only when `MERGE_AUTHORITY` is `EXPLICITLY_GRANTED`. |
 | **TEST-F** | Architecture choice or allowlist is unfrozen/ambiguous | Executor encounters `AUTHORITY_EXPANSION` or `ARCHITECTURE_GAP` and halts immediately. Discretionary choice forbidden. | PASS: Fails closed; prompts user for governance/ADR decision. |
 | **TEST-G** | Future dependent Wave lacks exact predecessor | Authorization for dependent wave cannot be created without exact predecessor SHA. | PASS: Fails closed; no speculative batching. |
 | **TEST-H** | Exact-head CI incident unrelated to candidate content | Independent triage assesses substrate defect before any product remediation; halts if base is broken. | PASS: Fails closed; no blind retries or skips. |
@@ -310,6 +338,7 @@ The protocol validates its design against the following comprehensive test matri
 |---|---|---|---|
 | **Exact Predecessor Binding** | `AGENTS.md` / ADR-046 | Protocol V2 §3.2 (Git Invariants) | **PRESERVED** |
 | **One-Writer Discipline** | `AGENTS.md` / ADR-046 | Protocol V2 §3.2 (Git Invariants) | **PRESERVED** |
+| **Auditor Mutation Boundary** | `AGENTS.md` / ADR-046 | Protocol V2 §3.2 (Git Invariants) | **STRENGTHENED** (Read-only for candidate code; non-implementation actions explicitly bound) |
 | **Closed Write Allowlists** | `AGENTS.md` / ADR-046 | Protocol V2 §3.3 (Scope Invariants) | **PRESERVED** |
 | **Test-First Commit A (RED)** | `AGENTS.md` / ADR-046 | Protocol V2 §3.4 (RED $\to$ GREEN Invariants) | **PRESERVED** |
 | **Natural Product-Defect RED**| `AGENTS.md` / ADR-046 | Protocol V2 §3.4 (RED $\to$ GREEN Invariants) | **PRESERVED** |
@@ -321,10 +350,10 @@ The protocol validates its design against the following comprehensive test matri
 | **Evidence Gateway Integrity** | `AGENTS.md` / ADR-004 | Protocol V2 §3.6 (Evidence Invariants) | **PRESERVED** |
 | **Backup 100% Store Sentinel**| `AGENTS.md` / ADR-031 | Protocol V2 §3.7 (Data Invariants) | **PRESERVED** |
 | **Journaled Restore Safety** | `AGENTS.md` / ADR-032 | Protocol V2 §3.7 (Data Invariants) | **PRESERVED** |
-| **Forward-Only IDB Migrations**| `AGENTS.md` / ADR-008 | Protocol V2 §3.7 (Data Invariants) | **PRESERVED** |
-| **Independent Acceptance** | `AGENTS.md` / ADR-046 | Protocol V2 §3.8, §4 (Independence Floor) | **PRESERVED** |
+| **Additive, Idempotent, Forward-Only Migrations** | `AGENTS.md` / ADR-008 | Protocol V2 §3.7 (Data Invariants) | **PRESERVED** |
+| **Independent Acceptance & Verdict Taxonomy** | `AGENTS.md` / ADR-046 | Protocol V2 §3.8, §4 (Independence Floor) | **STRENGTHENED** (`ACCEPT`, `REJECT`, `BLOCKED` formally defined) |
 | **Zero Implementer Self-Accept** | `AGENTS.md` / ADR-046 | Protocol V2 §3.8, §4 (Independence Floor) | **PRESERVED** |
-| **Pre-Authorized Merge Safety**| ADR-046 | Protocol V2 §3.9 (Merge Invariants) | **PRESERVED** |
+| **Pre-Authorized Merge Safety**| ADR-046 | Protocol V2 §3.9 (Merge Invariants) | **STRENGTHENED** (Explicit merge authority field; never template-inferred) |
 | **Fail-Closed Stop Conditions** | `AGENTS.md` / ADR-046 | Protocol V2 §3.10 (Stop Conditions) | **PRESERVED** |
 | **Prompt Text Efficiency** | *New in V2* | Protocol V2 §6, §7 (Templates & Metrics) | **STRENGTHENED** (40–60% target reduction) |
 | **Autonomous Mechanical Gates**| *New in V2* | Protocol V2 §1.1, §5 (No Artificial Handoffs) | **STRENGTHENED** (Latency & friction minimized) |
@@ -345,8 +374,8 @@ To maintain strict governance boundaries, the following are explicitly declared 
 
 ### 14.1 Deterministic Activation Gate
 Protocol V2 candidate transitions from `CANDIDATE` to `PROTOCOL_V2_ACTIVE` when all three external canonical evidence gates are satisfied:
-1. **Independent Authorization Audit**: Exact-head audit of candidate PR yields a formal `ACCEPT` verdict.
-2. **Exact-Head Merge**: Candidate PR is merged into canonical `main`.
+1. **Independent Protocol Audit**: Exact-head audit of candidate PR yields a formal `ACCEPT` verdict, which is persisted to the pull request and fresh read back before any merge.
+2. **Exact-Head Merge**: Candidate PR is merged into canonical `main` at the exact accepted candidate head SHA.
 3. **Natural Post-Merge CI**: Push CI completes with `SUCCESS` on canonical `main`.
 
 No follow-up administrative or status-only commit is required to activate the protocol once these gates are satisfied.

@@ -907,7 +907,7 @@ Decision:
 - Absolute Role Separation: Implementer/Executor cannot self-audit or self-accept; Independent Auditor cannot write implementation code before verdict.
 - No Speculative Recovery: Do not pre-create speculative recovery transactions; materialize remediation only when an actual failure occurs.
 - Relationship to ADR-046: ADR-046 remains canonical Boundary & Capsule Authority. Protocol V2 governs prompting and handoff mechanics.
-- W0 Compatibility: `STAGE2-W0-IELTS-ARCH-AUTH-001` was accepted under Protocol V1 and remains valid, canonical, unmodified, and controlling for Wave W0. Wave W0 requires only 2 remaining transactions (Executor + Auditor) to reach completion.
+- W0 Compatibility: `STAGE2-W0-IELTS-ARCH-AUTH-001` was accepted under Protocol V1 and remains valid, canonical, unmodified, and controlling for Wave W0. Wave W0 normal remaining happy-path floor is 2 transactions (Executor + Auditor).
 - Supersession: Protocol V2 supersedes repetitive prompt and handoff conventions for new execution prompting transactions upon formal activation. Historical V1 manifests, verdicts, and evidence remain valid.
 
 Non-Goals:
