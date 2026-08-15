@@ -892,7 +892,7 @@ milestone.
 
 ## ADR-051 — Execution Prompt Protocol V2 minimizes handoffs and prompt duplication without gate reduction
 
-Status: PROPOSED / CANDIDATE
+Status: CONDITIONAL — CANDIDATE until Activation gates succeed; ACTIVE once all Activation gates are independently satisfied.
 
 Context: Under Protocol V1 (`BOUNDED_EXECUTION_CAPSULE_PROTOCOL_V1` / ADR-046), transaction prompts frequently duplicated hundreds of lines of generic governance boilerplate and created artificial manual user handoffs for transitions that were already deterministically bound by an accepted Wave Authorization Manifest (e.g. waiting for CI, downloading artifacts, marking PR ready, executing pre-authorized exact-head merge after independent `ACCEPT`, and verifying post-merge CI). A workflow refactor is needed to minimize user friction and latency while preserving all technical quality gates and independent authority boundaries.
 
@@ -918,7 +918,14 @@ Non-Goals:
 - Zero dependency additions in `package.json`.
 
 Activation:
-This protocol is `CANDIDATE / NOT_ACTIVE` until independently audited, accepted, merged into `main`, and verified via natural post-merge CI.
+This protocol is resolved via self-resolving conditional activation:
+1. Independent exact-head Protocol V2 audit yields formal `ACCEPT` verdict;
+2. `ACCEPT` verdict is persisted to PR and fresh read back;
+3. Candidate head SHA remains unchanged;
+4. Exact accepted candidate head is merged into canonical `main`;
+5. Natural post-merge push CI succeeds on canonical `main`.
+
+Derived state: `CANDIDATE` / `NOT_ACTIVE` before all gates are satisfied; `ACTIVE` for new execution prompting transactions once all gates are independently satisfied. No follow-up status commit on `main` is required.
 
 Rollback:
 Revert this decision and governance files; prompting returns to Protocol V1. Historical accepted work remains unaffected.

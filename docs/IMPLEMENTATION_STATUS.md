@@ -742,13 +742,18 @@ canonical recovery PR #91 (`IELTS-HUB-RENDER-RACE-RECOVERY-002`).
 
 - Protocol document: `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md`
 - Decision record: ADR-051 in `docs/DECISIONS.md`
-- Canonical base predecessor: `2812f639a5967e0389b77fdb71be1a0f97b928d4`
-- Mission: Minimize user handoffs and prompt duplication without reducing technical predicates, exact predecessor bindings, one-writer discipline, test-first RED $\to$ GREEN, RED immutability, natural CI, evidence provenance, migration/rollback safety, independent acceptance, and conditional merge safety.
-- Current state markers:
-  - `PROTOCOL_V2_CANDIDATE_CREATED`
-  - `PROTOCOL_V2_PENDING_INDEPENDENT_AUDIT`
-  - `PROTOCOL_V2_NOT_ACTIVE`
-  - `PROTOCOL_V1_REMAINS_ACTIVE`
-- Product authority: `NONE` (Docs/governance only; does not authorize product implementation).
+- Activation model: `SELF_RESOLVING_CONDITIONAL_ACTIVATION`
+- Activation rule: `CONDITIONAL_EXTERNAL_EVIDENCE_GATE`
+- Activation gates (all must be independently satisfied):
+  1. Independent exact-head Protocol V2 audit yields formal `ACCEPT` verdict;
+  2. `ACCEPT` verdict is persisted and fresh-read back;
+  3. Accepted candidate head SHA remains unchanged;
+  4. Exact accepted candidate head is merged into canonical `main`;
+  5. Natural post-merge push CI succeeds on the exact merge commit SHA.
+- Derived canonical state:
+  - **State before all gates satisfied**: `PROTOCOL_V2_CANDIDATE` / `PROTOCOL_V1_ACTIVE`
+  - **State after all gates satisfied**: `PROTOCOL_V2_ACTIVE_FOR_NEW_EXECUTION_PROMPTING_TRANSACTIONS` / `PROTOCOL_V1_RETAINED_AS_ADR046_BOUNDARY_CAPSULE_AUTHORITY_AND_HISTORICAL_COMPATIBILITY`
+- Evidence source: Repository text defines the canonical activation predicate; raw GitHub evidence (persisted verdict comment, merge record, natural post-merge CI run) resolves whether the predicate has become true. No follow-up administrative or status-only commit is required on `main` to restate the derived state.
+- Product authority: `NONE` (Docs/governance only; does not authorize product implementation or Stages 3–8).
 
 
