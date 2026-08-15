@@ -70,3 +70,65 @@ test('invalid verified content cannot be persisted through guarded APIs',async()
   await assert.rejects(()=>persistence.saveLabItem({id:'bad',status:'verified',provenance:{status:'verified'},prompt:'Pick',options:[{id:'a',text:'One',correct:true,rationale:''},{id:'b',text:'Two',correct:true,rationale:''}]}),/đúng một đáp án|thiếu giải thích/);
   await assert.rejects(()=>persistence.saveReadingPassage({id:'bad-reading',status:'verified',provenance:{status:'verified'},passage:'short',questions:[]}),/80–220|2–4/);
 });
+
+test('IELTS test blueprints and runs persist durably in v4 stores and resume checkpoints', async () => {
+  await reset();
+  const db = await persistence.openIeltsDatabase();
+  assert.equal(db.version, 4);
+  assert.ok(db.objectStoreNames.contains('ieltsTestBlueprints'));
+  assert.ok(db.objectStoreNames.contains('ieltsTestRuns'));
+
+  const blueprint = {
+    kind: 'ielts-test-blueprint',
+    schemaVersion: 1,
+    id: 'ielts-blueprint:mock-bp-1',
+    track: 'academic',
+    hierarchyLevel: 'FULL_MOCK',
+    title: 'Academic Mock 1',
+    status: 'verified',
+    timing: { mode: 'timed', totalMinutes: 160 },
+    sections: [],
+    createdAt: 100,
+    updatedAt: 100
+  };
+
+  const savedBp = await persistence.saveIeltsTestBlueprint(blueprint);
+  assert.equal(savedBp.id, blueprint.id);
+
+  const loadedBp = await persistence.getIeltsTestBlueprint(blueprint.id);
+  assert.deepEqual(loadedBp, savedBp);
+
+  const bpList = await persistence.listIeltsTestBlueprints({ track: 'academic' });
+  assert.equal(bpList.length, 1);
+  assert.equal(bpList[0].id, blueprint.id);
+
+  const run = {
+    id: 'ielts-run:run-1',
+    blueprintId: blueprint.id,
+    track: 'academic',
+    status: 'active',
+    startedAt: 200,
+    updatedAt: 250,
+    checkpoint: {
+      elapsedSeconds: 50,
+      currentSectionIndex: 0,
+      currentItemIndex: 3,
+      partialResponses: { 'q1': 'A', 'q2': 'B' },
+      updatedAt: 250
+    },
+    affectsSchedule: false,
+    evidenceEligible: false
+  };
+
+  const savedRun = await persistence.saveIeltsTestRun(run);
+  assert.equal(savedRun.id, run.id);
+  assert.equal(savedRun.affectsSchedule, false);
+
+  const loadedRun = await persistence.getIeltsTestRun(run.id);
+  assert.deepEqual(loadedRun, savedRun);
+  assert.equal(loadedRun.checkpoint.elapsedSeconds, 50);
+  assert.deepEqual(loadedRun.checkpoint.partialResponses, { 'q1': 'A', 'q2': 'B' });
+
+  const runList = await persistence.listIeltsTestRuns({ track: 'academic' });
+  assert.equal(runList.length, 1);
+});

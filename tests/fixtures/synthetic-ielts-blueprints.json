@@ -1,0 +1,258 @@
+{
+  "blueprints": [
+    {
+      "kind": "ielts-test-blueprint",
+      "schemaVersion": 1,
+      "id": "ielts-blueprint:academic-full-mock-v1",
+      "track": "academic",
+      "hierarchyLevel": "FULL_MOCK",
+      "title": "Academic Full Mock Test 1",
+      "status": "verified",
+      "timing": {
+        "mode": "timed",
+        "totalMinutes": 160,
+        "sections": {
+          "listening": { "minutes": 30, "transferMinutes": 10 },
+          "reading": { "minutes": 60 },
+          "writing": { "minutes": 60 },
+          "speaking": { "minutes": 15 }
+        }
+      },
+      "sections": [
+        {
+          "id": "section-listening-1",
+          "skill": "listening",
+          "track": "academic",
+          "hierarchyLevel": "SKILL_TEST",
+          "title": "Listening Full Test",
+          "itemCount": 40,
+          "sourceRevisionRef": {
+            "schema": "SourceRevisionRef",
+            "version": 1,
+            "kind": "synthetic-audio-pack",
+            "authority": "synthetic-authority",
+            "sourceId": "syn-listening-01",
+            "revisionId": "rev-01",
+            "integrity": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            "locator": { "assetId": "asset-listening-01" },
+            "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "public" }
+          }
+        },
+        {
+          "id": "section-reading-1",
+          "skill": "reading",
+          "track": "academic",
+          "hierarchyLevel": "SKILL_TEST",
+          "title": "Academic Reading Full Test",
+          "itemCount": 40,
+          "sourceRevisionRef": {
+            "schema": "SourceRevisionRef",
+            "version": 1,
+            "kind": "synthetic-reading-pack",
+            "authority": "synthetic-authority",
+            "sourceId": "syn-reading-acad-01",
+            "revisionId": "rev-01",
+            "integrity": "sha256:1123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            "locator": { "assetId": "asset-reading-acad-01" },
+            "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "public" }
+          }
+        },
+        {
+          "id": "section-writing-1",
+          "skill": "writing",
+          "track": "academic",
+          "hierarchyLevel": "SKILL_TEST",
+          "title": "Academic Writing Test",
+          "itemCount": 2,
+          "sourceRevisionRef": {
+            "schema": "SourceRevisionRef",
+            "version": 1,
+            "kind": "synthetic-writing-pack",
+            "authority": "synthetic-authority",
+            "sourceId": "syn-writing-acad-01",
+            "revisionId": "rev-01",
+            "integrity": "sha256:2123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            "locator": { "assetId": "asset-writing-acad-01" },
+            "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "public" }
+          }
+        },
+        {
+          "id": "section-speaking-1",
+          "skill": "speaking",
+          "track": "academic",
+          "hierarchyLevel": "SKILL_TEST",
+          "title": "Speaking Test",
+          "itemCount": 3,
+          "sourceRevisionRef": {
+            "schema": "SourceRevisionRef",
+            "version": 1,
+            "kind": "synthetic-speaking-pack",
+            "authority": "synthetic-authority",
+            "sourceId": "syn-speaking-01",
+            "revisionId": "rev-01",
+            "integrity": "sha256:3123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            "locator": { "assetId": "asset-speaking-01" },
+            "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "public" }
+          }
+        }
+      ],
+      "createdAt": "2026-08-15T00:00:00.000Z",
+      "updatedAt": "2026-08-15T00:00:00.000Z"
+    },
+    {
+      "kind": "ielts-test-blueprint",
+      "schemaVersion": 1,
+      "id": "ielts-blueprint:gt-full-mock-v1",
+      "track": "general-training",
+      "hierarchyLevel": "FULL_MOCK",
+      "title": "General Training Full Mock Test 1",
+      "status": "verified",
+      "timing": {
+        "mode": "timed",
+        "totalMinutes": 160,
+        "sections": {
+          "listening": { "minutes": 30, "transferMinutes": 10 },
+          "reading": { "minutes": 60 },
+          "writing": { "minutes": 60 },
+          "speaking": { "minutes": 15 }
+        }
+      },
+      "sections": [
+        {
+          "id": "section-listening-gt-1",
+          "skill": "listening",
+          "track": "general-training",
+          "hierarchyLevel": "SKILL_TEST",
+          "title": "Listening Full Test",
+          "itemCount": 40,
+          "sourceRevisionRef": {
+            "schema": "SourceRevisionRef",
+            "version": 1,
+            "kind": "synthetic-audio-pack",
+            "authority": "synthetic-authority",
+            "sourceId": "syn-listening-01",
+            "revisionId": "rev-01",
+            "integrity": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            "locator": { "assetId": "asset-listening-01" },
+            "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "public" }
+          }
+        },
+        {
+          "id": "section-reading-gt-1",
+          "skill": "reading",
+          "track": "general-training",
+          "hierarchyLevel": "SKILL_TEST",
+          "title": "GT Reading Full Test",
+          "itemCount": 40,
+          "sourceRevisionRef": {
+            "schema": "SourceRevisionRef",
+            "version": 1,
+            "kind": "synthetic-reading-pack",
+            "authority": "synthetic-authority",
+            "sourceId": "syn-reading-gt-01",
+            "revisionId": "rev-01",
+            "integrity": "sha256:4123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            "locator": { "assetId": "asset-reading-gt-01" },
+            "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "public" }
+          }
+        },
+        {
+          "id": "section-writing-gt-1",
+          "skill": "writing",
+          "track": "general-training",
+          "hierarchyLevel": "SKILL_TEST",
+          "title": "GT Writing Test",
+          "itemCount": 2,
+          "sourceRevisionRef": {
+            "schema": "SourceRevisionRef",
+            "version": 1,
+            "kind": "synthetic-writing-pack",
+            "authority": "synthetic-authority",
+            "sourceId": "syn-writing-gt-01",
+            "revisionId": "rev-01",
+            "integrity": "sha256:5123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            "locator": { "assetId": "asset-writing-gt-01" },
+            "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "public" }
+          }
+        },
+        {
+          "id": "section-speaking-gt-1",
+          "skill": "speaking",
+          "track": "general-training",
+          "hierarchyLevel": "SKILL_TEST",
+          "title": "Speaking Test",
+          "itemCount": 3,
+          "sourceRevisionRef": {
+            "schema": "SourceRevisionRef",
+            "version": 1,
+            "kind": "synthetic-speaking-pack",
+            "authority": "synthetic-authority",
+            "sourceId": "syn-speaking-01",
+            "revisionId": "rev-01",
+            "integrity": "sha256:3123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            "locator": { "assetId": "asset-speaking-01" },
+            "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "public" }
+          }
+        }
+      ],
+      "createdAt": "2026-08-15T00:00:00.000Z",
+      "updatedAt": "2026-08-15T00:00:00.000Z"
+    },
+    {
+      "kind": "ielts-section-blueprint",
+      "schemaVersion": 1,
+      "id": "ielts-blueprint:academic-reading-section-1",
+      "track": "academic",
+      "skill": "reading",
+      "hierarchyLevel": "PART_OR_SECTION",
+      "title": "Academic Reading Passage 1 Drill",
+      "status": "verified",
+      "timing": {
+        "mode": "timed",
+        "totalMinutes": 20
+      },
+      "itemCount": 13,
+      "sourceRevisionRef": {
+        "schema": "SourceRevisionRef",
+        "version": 1,
+        "kind": "synthetic-reading-passage",
+        "authority": "synthetic-authority",
+        "sourceId": "syn-passage-acad-01",
+        "revisionId": "rev-01",
+        "integrity": "sha256:6123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "locator": { "passageId": "acad-pass-1", "revision": 1 },
+        "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "public" }
+      },
+      "createdAt": "2026-08-15T00:00:00.000Z",
+      "updatedAt": "2026-08-15T00:00:00.000Z"
+    },
+    {
+      "kind": "ielts-section-blueprint",
+      "schemaVersion": 1,
+      "id": "ielts-blueprint:task-family-drill-1",
+      "track": "academic",
+      "skill": "reading",
+      "hierarchyLevel": "TASK_FAMILY",
+      "title": "True/False/Not Given Drill",
+      "status": "verified",
+      "timing": {
+        "mode": "practice",
+        "totalMinutes": 0
+      },
+      "itemCount": 5,
+      "sourceRevisionRef": {
+        "schema": "SourceRevisionRef",
+        "version": 1,
+        "kind": "synthetic-task-family",
+        "authority": "synthetic-authority",
+        "sourceId": "syn-tfng-01",
+        "revisionId": "rev-01",
+        "integrity": "sha256:7123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "locator": { "familyId": "tfng-family-1" },
+        "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "public" }
+      },
+      "createdAt": "2026-08-15T00:00:00.000Z",
+      "updatedAt": "2026-08-15T00:00:00.000Z"
+    }
+  ]
+}

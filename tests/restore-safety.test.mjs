@@ -34,6 +34,8 @@ async function seedSentinels(label){
     if(entry.owner==='core')await core.__testing.putOne(entry.store,{[entry.keyPath]:key,label});
     else if(entry.owner==='ielts'&&entry.store===IELTS_STORE_NAMES.objectiveInventory)await ielts.saveIeltsObjectiveInventoryItem(inventoryRow(label));
     else if(entry.owner==='ielts'&&entry.store===IELTS_STORE_NAMES.learnerArtifacts)await ielts.autosaveLearnerTextArtifact({text:`${label} productive artifact`,at:Date.now()});
+    else if(entry.owner==='ielts'&&entry.store===IELTS_STORE_NAMES.testBlueprints)await ielts.saveIeltsTestBlueprint({kind:'ielts-test-blueprint',schemaVersion:1,id:`ielts-blueprint:${label}-1`,track:'academic',hierarchyLevel:'FULL_MOCK',title:`${label} Mock`,status:'verified',timing:{mode:'timed',totalMinutes:160},sections:[],createdAt:10,updatedAt:10});
+    else if(entry.owner==='ielts'&&entry.store===IELTS_STORE_NAMES.testRuns)await ielts.saveIeltsTestRun({id:`ielts-run:${label}-1`,blueprintId:`ielts-blueprint:${label}-1`,track:'academic',status:'active',startedAt:10,updatedAt:10,checkpoint:{elapsedSeconds:0,currentSectionIndex:0,currentItemIndex:0,partialResponses:{},updatedAt:10},affectsSchedule:false,evidenceEligible:false});
     else if(entry.owner==='ielts')await ielts.__testing.putOne(entry.store,{[entry.keyPath]:key,label});
     else if(entry.store===V10_STORES.transcriptCache)await v10.putV10Record(entry.store,{id:key,cacheKey:key,provider:'imported',segments:[{id:`${key}-segment`,startMs:0,endMs:1000,text:`${label} imported transcript`}]},'restore-fixture');
     else if(entry.store===V10_STORES.contentAssets)await v10.putV10Record(entry.store,{id:`personal:${key}`,lessonId:'personal-next-session',data:{label}},'restore-fixture');
