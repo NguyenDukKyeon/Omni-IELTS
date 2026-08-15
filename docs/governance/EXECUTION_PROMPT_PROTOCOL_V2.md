@@ -68,7 +68,7 @@ Accepted strategies (e.g. `docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`), bounded
 
 ### 3.2 Git & Topology Invariants
 - **Exact Predecessor Binding**: Every candidate branch must branch directly from the exact canonical base commit SHA.
-- **Single-Writer & Auditor Mutation Boundaries**: Exactly one agent/session writes code or creates implementation commits. Subagents and auditors are strictly read-only with respect to candidate repository files, implementation code, tests, candidate commits, and candidate branch content. An Independent Auditor may perform non-implementation platform and audit-record actions **ONLY** when explicitly authorized by controlling authority (e.g. posting formal PR verdict comments/reviews, performing Draft-to-Ready PR metadata transitions, executing exact-head merges, and inspecting post-merge CI). The Auditor must never remediate candidate code, create candidate implementation commits, change tests/source, or grant itself new authority.
+- **Single-Writer Discipline Across All Repository Mutations**: Exactly ONE authorized writer/session may mutate candidate repository content or candidate Git history during a transaction. This rule applies universally across all repository mutations: source files, tests, documentation, governance files, fixtures, any other repository file, candidate commits, and candidate branch refs. Subagents and Independent Auditors remain strictly read-only with respect to candidate repository content and candidate history. An Independent Auditor may perform non-implementation platform and audit-record actions **ONLY** when explicitly authorized by controlling authority (e.g. posting formal PR verdict comments/reviews, performing Draft-to-Ready PR metadata transitions, executing exact-head merges, and inspecting post-merge CI). The Auditor must never remediate candidate code, create candidate commits, change repository files, or grant itself new authority.
 - **Immutable History**: No `git rebase`, no `git commit --amend`, no force-pushing (`git push --force`), no destructive resets, and no history rewriting.
 - **Fail-Closed on Drift**: Any unexpected commit on base or candidate head halts execution (`CANONICAL_BASE_DRIFT`).
 
@@ -188,6 +188,9 @@ Otherwise, do **NOT** create a status-only commit.
 
 Future transaction prompts use concise, role-specific templates that supply transaction-specific parameters while referencing centralized Protocol V2 invariants and mandatory `AGENTS.md` rules.
 
+> [!IMPORTANT]
+> **Templates Supply Structure Only, Zero Authority**: Protocol V2 templates do not create, infer, or expand write scope, dependency authority, merge authority, or verification requirements. All permissions, allowlists, and execution parameters must be explicitly granted by controlling transaction authority and fresh-resolved from canonical repository state.
+
 ### 6.1 Template 1: AUTHORIZATION_IMPLEMENTER
 ```markdown
 ROLE: AUTHORIZATION_IMPLEMENTER
@@ -202,9 +205,9 @@ CONTROLLING_AUTHORITIES:
 - docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md (ADR-051)
 SCOPE: Author Wave Authorization Manifest for <SUBJECT>
 EXACT_WRITE_ALLOWLIST:
-- docs/authorizations/<MANIFEST_FILE>.md
-- docs/DECISIONS.md
-- docs/IMPLEMENTATION_STATUS.md
+<EXACT_PATHS_EXPLICITLY_GRANTED_BY_CONTROLLING_TRANSACTION>
+OPTIONAL_GOVERNANCE_UPDATES:
+<ONLY_IF_EXPLICITLY_GRANTED_BY_CONTROLLING_TRANSACTION>
 SPECIAL_INVARIANTS: AGENTS.md and Protocol V2 Centralized Invariants apply in full. Docs-only; no src/** or test/** modifications.
 FINAL_STATE: Branch pushed, Draft PR opened, natural CI verified on candidate head SHA.
 ```
@@ -241,11 +244,13 @@ CONTROLLING_AUTHORITIES:
 - docs/ROADMAP.md
 - AGENTS.md
 - docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md (ADR-051)
-EXACT_WRITE_ALLOWLIST: <EXACT_ALLOWLIST_FROM_MANIFEST>
+EXACT_WRITE_ALLOWLIST: <EXACT_ALLOWLIST_FROM_CONTROLLING_AUTHORIZATION>
+VERIFICATION:
+<EXACT_COMMANDS_AND_GATES_FROM_CONTROLLING_AUTHORIZATION_AND_CURRENT_CANONICAL_REPO>
 EXECUTION_SEQUENCE:
 1. Materialize Commit A (RED) exercising specified contracts test-first.
 2. Materialize minimal Commit B (GREEN) satisfying RED tests.
-3. Verify local gates: npm test, npm run check, audit scripts, browser smoke.
+3. Run required local verification gates.
 4. Push branch, open Draft PR, await natural remote CI completion.
 FINAL_STATE: Candidate pushed, Draft PR created, natural CI verified SUCCESS on candidate head SHA.
 ```
@@ -283,9 +288,19 @@ FINAL_STATE: Verdict persisted + read back. If MERGE_AUTHORITY is EXPLICITLY_GRA
 
 1. **Single vs Multi-Record Manifests**:
    - A single Wave Authorization Manifest may contain multiple executable package records (as authorized under ADR-046) **ONLY IF** each package's predecessor, dependency order, allowlist, RED/GREEN predicates, and stop conditions are completely frozen without requiring future discretionary choices.
-2. **Inter-Wave Dependencies**:
+2. **Inter-Wave Dependencies & Stage 2 Canonical DAG**:
    - Dependent Waves cannot be bundled into a single authorization if downstream wave architecture depends on runtime findings or empirical design of an upstream wave.
-   - Stage 2 Waves ($W0 \to W1 \to W2 \to W3 \to W4 \to W5 \to W6$) execute sequentially with distinct, dedicated authorization manifests.
+   - Protocol V2 preserves the exact Stage 2 IELTS Completeness dependency DAG defined in `docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md` §10:
+     * **W0 (Architecture & Track Routing)**: Root prerequisite for all downstream Waves.
+     * **W1 (Objective Kernel)**: Depends on W0.
+     * **W2 (Listening)**: Depends on W0 + W1.
+     * **W3 (Reading)**: Depends on W0 + W1.
+     * **W4 (Writing)**: Depends on W0.
+     * **W5 (Speaking)**: Depends on W0.
+     * **W6 (Full Mock & Exit Gate)**: Depends on W0 + W1 + W2 + W3 + W4 + W5.
+   - Protocol V2 does **NOT** impose an artificial linear sequence on Stage 2.
+   - Under single-writer discipline, execution occurs in a valid topological order compatible with the accepted dependency DAG and file ownership constraints. Logical independence / parallelizability (e.g. W4/W5 relative to W1/W2/W3) does not authorize concurrent repository writers.
+   - Protocol V2 does not alter Stage 2 strategy and does not authorize W1–W6 implementation.
 
 ---
 
@@ -337,8 +352,8 @@ The protocol validates its design against the following comprehensive test matri
 | Quality / Safety Invariant | Source Authority | Location in Protocol V2 | Reconciliation Classification |
 |---|---|---|---|
 | **Exact Predecessor Binding** | `AGENTS.md` / ADR-046 | Protocol V2 §3.2 (Git Invariants) | **PRESERVED** |
-| **One-Writer Discipline** | `AGENTS.md` / ADR-046 | Protocol V2 §3.2 (Git Invariants) | **PRESERVED** |
-| **Auditor Mutation Boundary** | `AGENTS.md` / ADR-046 | Protocol V2 §3.2 (Git Invariants) | **STRENGTHENED** (Read-only for candidate code; non-implementation actions explicitly bound) |
+| **One-Writer Discipline** | `AGENTS.md` / ADR-046 | Protocol V2 §3.2 (Git Invariants) | **PRESERVED** (Universal across all repository mutations) |
+| **Auditor Mutation Boundary** | `AGENTS.md` / ADR-046 | Protocol V2 §3.2 (Git Invariants) | **STRENGTHENED** (Read-only for candidate code/files; non-implementation actions explicitly bound) |
 | **Closed Write Allowlists** | `AGENTS.md` / ADR-046 | Protocol V2 §3.3 (Scope Invariants) | **PRESERVED** |
 | **Test-First Commit A (RED)** | `AGENTS.md` / ADR-046 | Protocol V2 §3.4 (RED $\to$ GREEN Invariants) | **PRESERVED** |
 | **Natural Product-Defect RED**| `AGENTS.md` / ADR-046 | Protocol V2 §3.4 (RED $\to$ GREEN Invariants) | **PRESERVED** |
