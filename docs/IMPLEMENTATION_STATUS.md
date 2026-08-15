@@ -90,7 +90,8 @@ Scope of this update: Phase 0 remains accepted at exact source commit `d869eb4` 
 |---|---|---|
 | User-provided AGENTS.md | ACTIVE | Instructions in the current task are applied |
 | Repository AGENTS.md | ACTIVE | Invariant/test/migration/evidence/data/Git rules đã được codify trước source change |
-| docs/ROADMAP.md | CANONICAL | Nguồn chính thức cho Phase 0–7 và dependency |
+| docs/MASTER_ROADMAP.md | CANONICAL | Top-level Master Product Roadmap (Stage 1–8); Owner-ratified |
+| docs/ROADMAP.md | CANONICAL (Level 2) | Technical Package Taxonomy cho Phase 0–7 và dependency; KHÔNG phải top-level product roadmap |
 | Accepted Phase 0–7 roadmap | RECONCILED | ROADMAP, plan, status và decisions có vai trò không chồng lấn |
 | Current implementation baseline | VERIFIED | Exact commit above, clean before documentation edits |
 
@@ -672,3 +673,28 @@ exact-head CI and an independent focused review reproduce the handoff.
   - `STAGE_2_NOT_AUTHORIZED`
   - Zero downstream execution, deployment, or release claims are granted by this status reconciliation.
 
+## 11. Stage 1.5 Adversarial Product Jury closure
+
+- Canonical status: `STAGE1_5_COMPLETE`
+- Closure PR: #84 (clean rematerialization recovery)
+- Canonical main after closure: `1744d4d92ac0a7aa6ac42ce9b97b49263336908c`
+- Disposition markers:
+  - `STAGE1_5_REMEDIATION_ACCEPTED`
+  - `STAGE1_5_COMPLETE`
+  - `READY_FOR_STAGE_2_RECONCILIATION`
+  - `STAGE2_NOT_AUTHORIZED`
+- Stage 1.5 findings (F004, F005) retain their canonical disposition; this closure does not reinterpret them.
+- Stage 1.5 is an interstage governance gate, NOT one of the eight numbered product Stages.
+
+## 12. Master Roadmap Stage 1–8 canonicalization
+
+Transaction `MASTER-ROADMAP-CANON-001` materialized the Owner-ratified
+Stage 1–8 Master Product Roadmap as the top-level product authority in
+`docs/MASTER_ROADMAP.md`.
+
+- Stage/Phase/Wave/Package taxonomy is now explicitly distinguished.
+- `docs/ROADMAP.md` is reclassified as Level 2 Technical Package Taxonomy.
+- Phase numbers do NOT map 1:1 to Stage numbers.
+- Historical accepted package identities, evidence and architecture are preserved.
+- This canonicalization does NOT authorize Stage 2 implementation.
+- ADR-049 records the governance decision.

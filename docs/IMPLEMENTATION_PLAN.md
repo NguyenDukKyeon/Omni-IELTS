@@ -1,6 +1,6 @@
 # VocabMaster — Implementation Plan Phase 0–7
 
-Trạng thái tài liệu: implementation specification cho roadmap chính thức tại `docs/ROADMAP.md`.
+Trạng thái tài liệu: implementation specification cho Phase 0–7 technical package taxonomy tại `docs/ROADMAP.md`. Top-level product roadmap là `docs/MASTER_ROADMAP.md` (Stage 1–8).
 
 Historical code baseline được kiểm chứng tại commit 54691cfb5314b51762c4959c9d0cee2012fc2b4a trên main. Exact planning predecessor và kickoff baseline cho Phase 0 là 547e5d665adbf102c15b65ac39def185769e5626, ngày 2026-07-30.
 
@@ -8,7 +8,8 @@ Historical code baseline được kiểm chứng tại commit 54691cfb5314b51762
 
 Repository hiện có `AGENTS.md` và `docs/ROADMAP.md` được tạo trước source change Phase 0. Vai trò thẩm quyền:
 
-- `docs/ROADMAP.md` giữ roadmap Phase 0–7, package ID và dependency;
+- `docs/MASTER_ROADMAP.md` giữ top-level Master Product Roadmap (Stage 1–8);
+- `docs/ROADMAP.md` giữ Phase 0–7 technical package taxonomy, package ID và dependency;
 - tài liệu này giữ đặc tả implementation/acceptance chi tiết;
 - `docs/IMPLEMENTATION_STATUS.md` giữ trạng thái và evidence thực tế;
 - `docs/DECISIONS.md` giữ rationale/ADR; `AGENTS.md` giữ quy tắc thi hành;
