@@ -1,6 +1,7 @@
 import { decideEvidence,evidenceDigest,normalizeAssistanceTrace } from './evidence-policy.js';
 import { createActivitySpec,createAttempt,createReceipt,createRun } from './learning-contracts.js';
 import { createSourceRevisionRef } from './source-revision-ref.js';
+import { canonicalContentJson } from './content-contracts-v2.js';
 
 export const IELTS_SCHEMA_VERSION=1;
 export const IELTS_READING_SOURCE_KIND='ielts-reading-source-revision';
@@ -25,7 +26,9 @@ export const IELTS_STORE_NAMES=Object.freeze({
   settings:'settings',
   objectiveInventory:'objectiveInventory',
   learnerArtifacts:'learnerArtifacts',
-  frozenAssessments:'frozenAssessments'
+  frozenAssessments:'frozenAssessments',
+  testBlueprints:'ieltsTestBlueprints',
+  testRuns:'ieltsTestRuns'
 });
 
 
@@ -495,3 +498,150 @@ export function validateRetellFeedback(input={}){
   };
   return{valid:errors.length===0,errors,value};
 }
+
+export const IELTS_TRACKS = Object.freeze(['academic', 'general-training']);
+
+export function validateIeltsTrack(track) {
+  if (typeof track === 'string' && IELTS_TRACKS.includes(track)) {
+    return { valid: true, track };
+  }
+  return { valid: false, track: null, error: 'Invalid IELTS track: must be academic or general-training.' };
+}
+
+export function normalizeIeltsTrack(track) {
+  const result = validateIeltsTrack(track);
+  if (!result.valid) {
+    throw new Error('Invalid track: must be academic or general-training.');
+  }
+  return result.track;
+}
+
+export const IELTS_PRACTICE_HIERARCHY_LEVELS = Object.freeze([
+  'TASK_FAMILY',
+  'PART_OR_SECTION',
+  'SKILL_TEST',
+  'FULL_MOCK'
+]);
+
+export function validateIeltsPracticeHierarchyLevel(level) {
+  if (typeof level === 'string' && IELTS_PRACTICE_HIERARCHY_LEVELS.includes(level)) {
+    return { valid: true, level };
+  }
+  return { valid: false, level: null, error: 'Invalid practice hierarchy level.' };
+}
+
+export function resolveIeltsTrack({ launchOverride, savedPreference } = {}) {
+  if (launchOverride !== null && launchOverride !== undefined) {
+    const overrideResult = validateIeltsTrack(launchOverride);
+    if (overrideResult.valid) {
+      return { valid: true, track: overrideResult.track, source: 'launch-override' };
+    }
+    return { valid: false, track: null, error: 'Invalid launch track override provided.' };
+  }
+  if (savedPreference !== null && savedPreference !== undefined) {
+    const savedResult = validateIeltsTrack(savedPreference);
+    if (savedResult.valid) {
+      return { valid: true, track: savedResult.track, source: 'saved-preference' };
+    }
+    return { valid: false, track: null, error: 'Invalid saved track preference.' };
+  }
+  return { valid: false, track: null, error: 'Explicit track selection required: no silent default.' };
+}
+
+function sha256HexSync(value = '') {
+  const bytes = new TextEncoder().encode(String(value));
+  const words = [];
+  const bitLength = bytes.length * 8;
+  for (let i = 0; i < bytes.length; i++) words[i >> 2] = (words[i >> 2] || 0) | (bytes[i] << (24 - (i % 4) * 8));
+  words[bitLength >> 5] = (words[bitLength >> 5] || 0) | (0x80 << (24 - bitLength % 32));
+  words[(((bitLength + 64) >> 9) << 4) + 15] = bitLength;
+  const h = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+  const k = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
+  const rotate = (x, n) => (x >>> n) | (x << (32 - n));
+  for (let offset = 0; offset < words.length; offset += 16) {
+    const w = new Array(64);
+    for (let i = 0; i < 16; i++) w[i] = words[offset + i] | 0;
+    for (let i = 16; i < 64; i++) {
+      const a = w[i - 15], b = w[i - 2];
+      const s0 = rotate(a, 7) ^ rotate(a, 18) ^ (a >>> 3);
+      const s1 = rotate(b, 17) ^ rotate(b, 19) ^ (b >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+    }
+    let [a, b, c, d, e, f, g, hh] = h;
+    for (let i = 0; i < 64; i++) {
+      const s1 = rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25);
+      const ch = (e & f) ^ (~e & g);
+      const t1 = (hh + s1 + ch + k[i] + w[i]) | 0;
+      const s0 = rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const t2 = (s0 + maj) | 0;
+      hh = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+    }
+    h[0] = (h[0] + a) | 0; h[1] = (h[1] + b) | 0; h[2] = (h[2] + c) | 0; h[3] = (h[3] + d) | 0;
+    h[4] = (h[4] + e) | 0; h[5] = (h[5] + f) | 0; h[6] = (h[6] + g) | 0; h[7] = (h[7] + hh) | 0;
+  }
+  return h.map(word => (word >>> 0).toString(16).padStart(8, '0')).join('');
+}
+
+export function computeIeltsBlueprintId(blueprint = {}) {
+  const copy = { ...blueprint };
+  delete copy.id;
+  const canonicalJson = canonicalContentJson(copy);
+  return `ielts-blueprint:${sha256HexSync(canonicalJson)}`;
+}
+
+export function validateIeltsTestBlueprint(input = {}) {
+  const errors = [];
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return { valid: false, errors: ['Blueprint must be an object.'], value: null };
+  }
+  if (input.kind !== 'ielts-test-blueprint') errors.push('kind must be ielts-test-blueprint.');
+  if (Number(input.schemaVersion) !== 1) errors.push('schemaVersion must be 1.');
+  const trackRes = validateIeltsTrack(input.track);
+  if (!trackRes.valid) errors.push(trackRes.error);
+  const hierRes = validateIeltsPracticeHierarchyLevel(input.hierarchyLevel);
+  if (!hierRes.valid) errors.push(hierRes.error);
+  if (!input.title || typeof input.title !== 'string') errors.push('title is required.');
+  if (!input.timing || typeof input.timing !== 'object') errors.push('timing configuration is required.');
+  if (!Array.isArray(input.sections)) errors.push('sections must be an array.');
+  return { valid: errors.length === 0, errors, value: input };
+}
+
+export function validateIeltsSectionBlueprint(input = {}) {
+  const errors = [];
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return { valid: false, errors: ['Blueprint must be an object.'], value: null };
+  }
+  if (input.kind !== 'ielts-section-blueprint') errors.push('kind must be ielts-section-blueprint.');
+  if (Number(input.schemaVersion) !== 1) errors.push('schemaVersion must be 1.');
+  const trackRes = validateIeltsTrack(input.track);
+  if (!trackRes.valid) errors.push(trackRes.error);
+  const hierRes = validateIeltsPracticeHierarchyLevel(input.hierarchyLevel);
+  if (!hierRes.valid) errors.push(hierRes.error);
+  if (!input.title || typeof input.title !== 'string') errors.push('title is required.');
+  return { valid: errors.length === 0, errors, value: input };
+}
+
+export function validateIeltsTestRun(input = {}) {
+  const errors = [];
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return { valid: false, errors: ['Run must be an object.'], value: null };
+  }
+  if (!input.id || typeof input.id !== 'string') errors.push('id is required.');
+  if (!input.blueprintId || typeof input.blueprintId !== 'string') errors.push('blueprintId is required.');
+  const trackRes = validateIeltsTrack(input.track);
+  if (!trackRes.valid) errors.push(trackRes.error);
+  if (!['active', 'completed', 'abandoned', 'expired'].includes(input.status)) errors.push('status is invalid.');
+  if (input.affectsSchedule === true) errors.push('IELTS test run must never claim affectsSchedule.');
+  if (input.evidenceEligible === true) errors.push('IELTS test run must never claim evidenceEligible.');
+  return {
+    valid: errors.length === 0,
+    errors,
+    value: Object.freeze({
+      ...input,
+      affectsSchedule: false,
+      evidenceEligible: false
+    })
+  };
+}
+

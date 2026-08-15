@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import * as domain from '../src/ielts-domain.js';
 import {
   createErrorRecord,mergeErrorRecords,resolveIeltsEvidence,buildIeltsEvidenceEnvelope,ieltsSourceRevision,sanitizeMediaAttempt,validateLexicalSet,validateLabItem,validateReadingPassage,
   parseYouTubeUrl,validateTranscriptSegments,splitTranscriptSegment,mergeTranscriptSegments,diffWords,planMediaSession,validateRetellFeedback
@@ -110,7 +112,7 @@ test('YouTube URL parser normalizes supported forms and rejects lookalikes',()=>
 });
 
 test('transcript validator blocks invalid timelines and supports split merge',()=>{
-  const rows=[{id:'s1',mediaSourceId:'m1',startMs:0,endMs:5000,text:'This is the first sentence.',status:'verified'},{id:'s2',mediaSourceId:'m1',startMs:5000,endMs:10000,text:'This is the second sentence.',status:'verified'}];
+  const rows=[{id:'s1',mediaSourceId:'m1',startMs:0,endMs:5000,text:'This is the first sentence.',status:'verified'},{id:'s2',mediaSourceId:'m1',startMs:5000,endMs:10000,text:'This is the second sentence.',status:'needs-review'}];
   const result=validateTranscriptSegments(rows,{durationMs:12_000});assert.equal(result.valid,true,result.errors.join(' '));
   const [left,right]=splitTranscriptSegment(rows[0],2500);assert.equal(left.endMs,2500);assert.equal(right.startMs,2500);assert.ok(left.text&&right.text);
   const merged=mergeTranscriptSegments(left,right);assert.equal(merged.startMs,0);assert.equal(merged.endMs,5000);assert.match(merged.text,/first sentence/);
@@ -134,4 +136,92 @@ test('media session defaults to twenty minutes and unlocks retell after comprehe
 test('retell feedback rejects synthetic IELTS band scores',()=>{
   const safe=validateRetellFeedback({feedback:'Bạn đã nêu ý chính.',mainIdeas:[],targetAssessments:[],lexicalGaps:[],errors:[]});assert.equal(safe.valid,true);
   const unsafe=validateRetellFeedback({feedback:'Estimated IELTS band 7.0',mainIdeas:[],targetAssessments:[],lexicalGaps:[],errors:[]});assert.equal(unsafe.valid,false);assert.match(unsafe.errors.join(' '),/band score/);
+});
+
+test('IELTS track routing domain contracts define academic and general-training and fail closed', () => {
+  assert.ok(Array.isArray(domain.IELTS_TRACKS));
+  assert.deepEqual([...domain.IELTS_TRACKS].sort(), ['academic', 'general-training']);
+  assert.equal(Object.isFrozen(domain.IELTS_TRACKS), true);
+
+  assert.deepEqual(domain.validateIeltsTrack('academic'), { valid: true, track: 'academic' });
+  assert.deepEqual(domain.validateIeltsTrack('general-training'), { valid: true, track: 'general-training' });
+  assert.equal(domain.validateIeltsTrack('general').valid, false);
+  assert.equal(domain.validateIeltsTrack(null).valid, false);
+  assert.equal(domain.validateIeltsTrack(undefined).valid, false);
+
+  assert.equal(domain.normalizeIeltsTrack('academic'), 'academic');
+  assert.equal(domain.normalizeIeltsTrack('general-training'), 'general-training');
+  assert.throws(() => domain.normalizeIeltsTrack('invalid'), /invalid track/i);
+});
+
+test('IELTS practice hierarchy levels define canonical granularities', () => {
+  assert.ok(Array.isArray(domain.IELTS_PRACTICE_HIERARCHY_LEVELS));
+  assert.deepEqual(
+    [...domain.IELTS_PRACTICE_HIERARCHY_LEVELS],
+    ['TASK_FAMILY', 'PART_OR_SECTION', 'SKILL_TEST', 'FULL_MOCK']
+  );
+  assert.equal(Object.isFrozen(domain.IELTS_PRACTICE_HIERARCHY_LEVELS), true);
+
+  assert.deepEqual(domain.validateIeltsPracticeHierarchyLevel('FULL_MOCK'), { valid: true, level: 'FULL_MOCK' });
+  assert.deepEqual(domain.validateIeltsPracticeHierarchyLevel('PART_OR_SECTION'), { valid: true, level: 'PART_OR_SECTION' });
+  assert.equal(domain.validateIeltsPracticeHierarchyLevel('INVALID_LEVEL').valid, false);
+});
+
+test('synthetic test and section blueprints pass canonical validation and compute deterministic IDs', async () => {
+  const raw = await readFile(new URL('./fixtures/synthetic-ielts-blueprints.json', import.meta.url), 'utf8');
+  const { blueprints } = JSON.parse(raw);
+  assert.ok(blueprints.length >= 4);
+
+  for (const bp of blueprints) {
+    if (bp.kind === 'ielts-test-blueprint') {
+      const res = domain.validateIeltsTestBlueprint(bp);
+      assert.equal(res.valid, true, res.errors?.join(' '));
+    } else if (bp.kind === 'ielts-section-blueprint') {
+      const res = domain.validateIeltsSectionBlueprint(bp);
+      assert.equal(res.valid, true, res.errors?.join(' '));
+    }
+    const computedId = domain.computeIeltsBlueprintId(bp);
+    assert.match(computedId, /^ielts-blueprint:[0-9a-f]{64}$/);
+  }
+
+  // Determinism: same content with reordered keys produces identical ID
+  const bp0 = blueprints[0];
+  const reordered = Object.fromEntries(Object.entries(bp0).reverse());
+  assert.equal(domain.computeIeltsBlueprintId(bp0), domain.computeIeltsBlueprintId(reordered));
+
+  // Invalid blueprint fails validation
+  const invalidBp = { ...bp0, track: 'invalid-track' };
+  assert.equal(domain.validateIeltsTestBlueprint(invalidBp).valid, false);
+});
+
+test('IELTS test run and checkpoint lifecycle strictly preserves evidence and schedule invariants', () => {
+  const activeRun = {
+    id: 'ielts-run:test-run-1',
+    blueprintId: 'ielts-blueprint:academic-full-mock-v1',
+    track: 'academic',
+    status: 'active',
+    startedAt: 1000,
+    updatedAt: 1050,
+    checkpoint: {
+      elapsedSeconds: 50,
+      currentSectionIndex: 0,
+      currentItemIndex: 5,
+      partialResponses: { 'q1': 'answer1', 'q2': 'answer2' },
+      updatedAt: 1050
+    },
+    affectsSchedule: false,
+    evidenceEligible: false
+  };
+
+  const validation = domain.validateIeltsTestRun(activeRun);
+  assert.equal(validation.valid, true, validation.errors?.join(' '));
+  assert.equal(validation.value.affectsSchedule, false);
+  assert.equal(validation.value.evidenceEligible, false);
+
+  // Checkpoint must never claim affectsSchedule or evidenceEligible
+  const illegalRun = { ...activeRun, affectsSchedule: true };
+  assert.equal(domain.validateIeltsTestRun(illegalRun).valid, false);
+
+  const illegalEvidenceRun = { ...activeRun, evidenceEligible: true };
+  assert.equal(domain.validateIeltsTestRun(illegalEvidenceRun).valid, false);
 });
