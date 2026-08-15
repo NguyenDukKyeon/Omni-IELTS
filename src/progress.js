@@ -129,17 +129,7 @@ export function summarizeReviewQuality(events=[]){
 
 export function buildCanonicalProgressProjection(records,options={}){
   const metrics=reduceCanonicalLearningMetrics(records,options);
-  const canonicalProfile=projectWeaknessProfile(metrics);
-  const reasonCodes=[];
-  if(metrics.denominator===0)reasonCodes.push('NO_EVIDENCE');
-  else if(metrics.denominator<3)reasonCodes.push('SPARSE_EVIDENCE');
-  if(Number(metrics.conflicts?.count||0)>0)reasonCodes.push('IDENTITY_CONFLICT');
-  if(metrics.numerator>0&&metrics.numerator<metrics.denominator)reasonCodes.push('CONFLICTING_EVIDENCE');
-  if(!reasonCodes.length)reasonCodes.push('EVIDENCE_SUPPORTED');
-  const {outputDigest:ignoredOutputDigest,...profileBase}=canonicalProfile;
-  const observationMap=Object.fromEntries(canonicalProfile.observations.bySkill.map(row=>[row.skill,row]));
-  const weaknessBase={...profileBase,kind:'canonical-weakness-profile',reasonCodes:reasonCodes.sort(),conflicts:metrics.conflicts,observations:{bySkill:observationMap}};
-  const weaknessProfile=freeze({...weaknessBase,outputDigest:learningContractDigest(weaknessBase)});
+  const weaknessProfile=projectWeaknessProfile(metrics);
   return freeze({kind:'canonical-progress-projection',schemaVersion:1,metrics,weaknessProfile});
 }
 
