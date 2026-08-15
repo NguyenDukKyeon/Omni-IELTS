@@ -890,3 +890,35 @@ this product requirement.
 Revisit when: The Owner modifies product scope or ratifies a subsequent Stage
 milestone.
 
+## ADR-051 — Execution Prompt Protocol V2 minimizes handoffs and prompt duplication without gate reduction
+
+Status: PROPOSED / CANDIDATE
+
+Context: Under Protocol V1 (`BOUNDED_EXECUTION_CAPSULE_PROTOCOL_V1` / ADR-046), transaction prompts frequently duplicated hundreds of lines of generic governance boilerplate and created artificial manual user handoffs for transitions that were already deterministically bound by an accepted Wave Authorization Manifest (e.g. waiting for CI, downloading artifacts, marking PR ready, executing pre-authorized exact-head merge after independent `ACCEPT`, and verifying post-merge CI). A workflow refactor is needed to minimize user friction and latency while preserving all technical quality gates and independent authority boundaries.
+
+Decision:
+- Adopt `EXECUTION_PROMPT_PROTOCOL_V2` as the canonical repository execution prompting protocol, documented in `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md`.
+- Principle: `QUALITY_GATE_COUNT != USER_PROMPT_COUNT`. Pre-authorized, deterministic transitions execute autonomously within the active transaction without requiring artificial user handoffs.
+- Centralize generic repository invariants (Authority, Git & Topology, Scope, Test-First RED -> GREEN, Natural CI, Evidence, Data Safety, Independent Audit, Conditional Merge, and Stop Conditions) so transaction prompts reference them by canonical identity rather than repeating boilerplate.
+- Establish Minimum-Handoff Execution Floor:
+  - Unauthorized Wave: minimum normal floor = 4 user transactions (Authorization Implementer -> Independent Authorization Auditor -> Implementation Executor -> Independent Implementation Auditor).
+  - Already-Authorized Wave: minimum normal floor = 2 user transactions (Implementation Executor -> Independent Implementation Auditor).
+- Standardize concise canonical prompt templates for the four roles, targeting 40–60% reduction in duplicated prompt text without lossy compression of transaction-specific parameters.
+- Absolute Role Separation: Implementer/Executor cannot self-audit or self-accept; Independent Auditor cannot write implementation code before verdict.
+- No Speculative Recovery: Do not pre-create speculative recovery transactions; materialize remediation only when an actual failure occurs.
+- Relationship to ADR-046: ADR-046 remains canonical Boundary & Capsule Authority. Protocol V2 governs prompting and handoff mechanics.
+- W0 Compatibility: `STAGE2-W0-IELTS-ARCH-AUTH-001` was accepted under Protocol V1 and remains valid, canonical, unmodified, and controlling for Wave W0. Wave W0 requires only 2 remaining transactions (Executor + Auditor) to reach completion.
+- Supersession: Protocol V2 supersedes repetitive prompt and handoff conventions for new execution prompting transactions upon formal activation. Historical V1 manifests, verdicts, and evidence remain valid.
+
+Non-Goals:
+- Zero product scope or source code changes (`src/**`).
+- Zero weakening of test gates, evidence hierarchy, or independent acceptance.
+- Zero runtime daemons, DAG engines, schedulers, automated acceptance bots, or CI workflow changes.
+- Zero dependency additions in `package.json`.
+
+Activation:
+This protocol is `CANDIDATE / NOT_ACTIVE` until independently audited, accepted, merged into `main`, and verified via natural post-merge CI.
+
+Rollback:
+Revert this decision and governance files; prompting returns to Protocol V1. Historical accepted work remains unaffected.
+
