@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary & Purpose
 
-The **Execution Prompt Protocol V2** establishes a high-efficiency execution prompting and handoff model for repository governance and technical delivery. It minimizes user prompt count, prompt duplication, and artificial manual handoffs while preserving **100%** of the repository's mandatory quality gates, authority separation, and safety invariants.
+The **Execution Prompt Protocol V2** establishes a high-efficiency execution prompting and handoff model for repository governance and technical delivery across VocabMaster. It minimizes user prompt count, prompt duplication, and artificial manual handoffs while preserving **100%** of the repository's mandatory quality gates, authority separation, and safety invariants.
 
 ### 1.1 Core Principle
 $$\text{QUALITY\_GATE\_COUNT} \neq \text{USER\_PROMPT\_COUNT}$$
@@ -61,10 +61,11 @@ Accepted strategies (e.g. `docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`), bounded
 
 `AGENTS.md` remains mandatory repository governance. Protocol V2 centralizes reusable generic execution and prompting invariants so transaction prompts reference them by canonical identity; it does **not** replace, supersede, or exhaustively restate `AGENTS.md`, transaction-specific authorizations, product/domain invariants, or package-specific acceptance rules.
 
-### 3.1 Authority Invariants
+### 3.1 Universal Authority Invariants (All Transaction Classes)
 - **Authority Separation**: Research $\neq$ Specification $\neq$ Authorization $\neq$ Implementation $\neq$ Evidence $\neq$ Independent Acceptance $\neq$ Merge Authority.
 - **No Inferred Authority**: Authority cannot be inferred from roadmap placement, PR existence, green CI, or DOM state.
 - **Fail-Closed on Gaps**: Missing, stale, or ambiguous authority halts execution immediately.
+- **Zero Self-Acceptance**: An agent or session executing work cannot independently audit or accept its own output.
 
 ### 3.2 Git & Topology Invariants
 - **Exact Predecessor Binding**: Every candidate branch must branch directly from the exact canonical base commit SHA.
@@ -76,14 +77,16 @@ Accepted strategies (e.g. `docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`), bounded
 - **Closed Exact Allowlists**: Writes are limited to the exact closed allowlist granted by the controlling accepted authorization/capsule or other explicit canonical transaction authority.
 - **Zero Scope Expansion**: No unauthorized dependency modifications (`package.json`), workflow changes (`.github/**`), or unlisted file edits. No inferred write scope is permitted.
 
-### 3.4 RED $\to$ GREEN Invariants
-- **Test-First Commit A (RED)**: When required by the controlling authorization, Commit A introduces natural, deterministic test failures directly exercising the specified product defect or requirement.
+### 3.4 RED $\to$ GREEN Invariants (When Controlling Implementation Authority Requires)
+- **Test-First Commit A (RED)**: When required by the controlling implementation authorization, Commit A introduces natural, deterministic test failures directly exercising the specified product defect or requirement.
 - **RED Immutability**: RED test blobs are permanently immutable after valid Commit A. Tests cannot be altered, skipped, or quarantine-wrapped to make gates pass.
 - **Minimal Commit B (GREEN)**: Commit B contains only the minimal necessary implementation code to satisfy the RED tests.
 - **Zero Assertion Weakening**: No assertion edits, timeouts inflated to mask race conditions, or business-logic failures converted into harness skips.
+- **Non-Universal Scope**: Pure research, discovery, strategy, benchmarking, incident triage, or final audits do not require artificial RED/GREEN commits unless controlling authority specifically defines a test contract.
 
-### 3.5 Natural CI & Artifact Invariants
-- **Natural Exact-Head CI**: All CI evidence must come from natural pull request or push events running on the exact candidate head SHA. Synthetic triggers (`workflow_dispatch`, close/reopen tricks, rerun substitutions) are forbidden.
+### 3.5 Natural CI & Artifact Invariants (When Applicable)
+- **Natural Exact-Head CI**: All CI evidence must come from natural pull request or push events running on the exact candidate head SHA when repository mutations occur and canonical workflow requires it. Synthetic triggers (`workflow_dispatch`, close/reopen tricks, rerun substitutions) are forbidden.
+- **Read-Only Exemption**: Natural CI is not invented or required for pure read-only research/audit transactions where no candidate repository head exists.
 - **Dynamic Artifact Verification**: Where the active CI workflow emits verification artifacts, the audit must fresh-resolve the required artifact set from active CI configuration, verify exact SHA bindings, download and inspect logs, and verify hashes/provenance. Hard-coding stale artifact counts is forbidden.
 
 ### 3.6 Evidence & Learning Invariants
@@ -121,40 +124,65 @@ Execution halts immediately when any stop condition is triggered:
 
 ---
 
-## 4. Minimum Normal Happy-Path Model
+## 4. Applicability & Lifecycle Profiles
 
-The protocol defines the **Minimum Normal Happy-Path Execution Floor**. Additional transactions occur only when legitimate non-happy-path conditions arise (e.g. `REJECT`, `BLOCKED`, CI incident, authority gap).
+### 4.1 Repository-Wide Applicability
+`EXECUTION_PROMPT_PROTOCOL_V2` applies to new execution prompting transactions across all future VocabMaster repository work (including Stages 2–8) upon successful activation. It governs generic execution mechanics, handoff elimination, and authority safety.
+
+> [!WARNING]
+> **Non-Authorization of Future Stages**: Mention of future Stages in this protocol documents repository applicability only. Acknowledging future Stages does **NOT** authorize any future Stage work. Stages 3–8 remain **NOT AUTHORIZED** until separate controlling strategy, roadmap, and authorization artifacts are ratified by the repository owner:
+> - **Stage 3**: Learning / Product Deep Research
+> - **Stage 4**: UX / IA Remake
+> - **Stage 5**: AI / Technology Deep Research & Benchmark
+> - **Stage 6**: Final Product Remake / Implementation
+> - **Stage 7**: Production & Real-User Validation
+> - **Stage 8**: A$\to$Z Final Audit & Launch
+
+### 4.2 Lifecycle Profiles Are Transaction-Specific
+The controlling Stage and transaction authority defines the actual lifecycle. Protocol V2 does **NOT** force every class of work into an artificial implementation lifecycle.
+
+1. **Standard Implementation Lifecycle (4/2 Floor)**:
+   The 4-transaction normal floor (unauthorized Wave) and 2-transaction remaining floor (already-authorized Wave) apply specifically to the standard **`AUTHORIZATION -> IMPLEMENTATION`** package lifecycle.
+2. **Non-Implementation Transaction Classes**:
+   The protocol explicitly recognizes distinct transaction classes that may use different, authority-defined lifecycle profiles:
+   - `RESEARCH / DISCOVERY`
+   - `SPECIFICATION / STRATEGY`
+   - `BENCHMARK / TECHNOLOGY EVALUATION`
+   - `INCIDENT TRIAGE`
+   - `PRODUCTION / REAL-USER VALIDATION`
+   - `INDEPENDENT FINAL AUDIT / RELEASE`
+   
+   These transaction classes must NOT weaken applicable universal invariants (single-writer discipline, closed allowlists, role separation, fail-closed stop conditions) merely because their lifecycle differs from implementation.
+
+### 4.3 Illustrative Lifecycle Profiles (Non-Authoritative)
+The following workflows illustrate typical lifecycle profiles across transaction classes. They are marked `ILLUSTRATIVE_ONLY / NOT_AUTHORITY` and do not themselves grant authority:
 
 ```mermaid
 flowchart TD
-    subgraph CaseA [Case A: New Unauthorized Wave - 4 Transactions Normal Floor]
+    subgraph Impl4 [Standard Unauthorized Implementation Wave - 4 Transactions Normal Floor]
         T1[T1: AUTHORIZATION_IMPLEMENTER<br/>Author Manifest Candidate] --> T2[T2: INDEPENDENT_AUTHORIZATION_AUDITOR<br/>Audit + Pre-authorized Merge]
         T2 --> T3[T3: IMPLEMENTATION_EXECUTOR<br/>Commit A RED -> Commit B GREEN -> PR -> CI]
         T3 --> T4[T4: INDEPENDENT_IMPLEMENTATION_AUDITOR<br/>Audit + Pre-authorized Merge + Post-Merge CI]
     end
 
-    subgraph CaseB [Case B: Already-Authorized Wave e.g. W0 - 2 Transactions Remaining Floor]
+    subgraph Impl2 [Already-Authorized Implementation Wave e.g. W0 - 2 Transactions Remaining Floor]
         TB1[T1: IMPLEMENTATION_EXECUTOR<br/>Commit A RED -> Commit B GREEN -> PR -> CI] --> TB2[T2: INDEPENDENT_IMPLEMENTATION_AUDITOR<br/>Audit + Pre-authorized Merge + Post-Merge CI]
     end
+
+    subgraph Research [Research / Discovery Lifecycle - Illustrative]
+        R1[Research Authorization / Scope] --> R2[Independent Research Execution]
+        R2 --> R3[Independent Reconciliation / Owner Decision]
+    end
+
+    subgraph Benchmark [Benchmark / Evaluation Lifecycle - Illustrative]
+        B1[Benchmark Authority] --> B2[Benchmark Executor]
+        B2 --> B3[Independent Benchmark Reconciliation]
+    end
+
+    subgraph FinalAudit [Independent Final Audit / Release - Illustrative]
+        A1[Independent Final Auditor] --> A2[Pre-Authorized Deterministic Release Action if Granted]
+    end
 ```
-
-### 4.1 CASE A — No Accepted Wave Authorization Exists
-Minimum normal happy-path floor: **4 user-level transactions**.
-1. **Transaction 1: `AUTHORIZATION_IMPLEMENTER`**  
-   Materializes the Wave Authorization Manifest candidate in `docs/authorizations/`, registers the ADR, creates Draft PR, and verifies natural CI.
-2. **Transaction 2: `INDEPENDENT_AUTHORIZATION_AUDITOR`**  
-   Fresh-audits manifest, verifies strategy alignment, emits verdict, and executes post-accept actions only where explicitly authorized.
-3. **Transaction 3: `IMPLEMENTATION_EXECUTOR`**  
-   Executes implementation capsule: produces test-first Commit A (RED), minimal Commit B (GREEN), pushes branch, opens Draft PR, and awaits natural CI.
-4. **Transaction 4: `INDEPENDENT_IMPLEMENTATION_AUDITOR`**  
-   Fresh-audits implementation, verifies RED/GREEN logs and artifacts, emits verdict, and executes post-accept actions only where explicitly authorized.
-
-### 4.2 CASE B — Accepted Wave Authorization Already Exists (e.g. Wave W0)
-Minimum remaining normal happy-path floor: **2 user-level transactions**.
-1. **Transaction 1: `IMPLEMENTATION_EXECUTOR`**  
-   Executes implementation capsule against existing canonical authorization: Commit A (RED) $\to$ Commit B (GREEN) $\to$ Push $\to$ PR $\to$ CI wait.
-2. **Transaction 2: `INDEPENDENT_IMPLEMENTATION_AUDITOR`**  
-   Conducts independent implementation audit $\to$ Verdict persistence $\to$ Post-accept actions only where explicitly authorized $\to$ Deterministic closure.
 
 ---
 
@@ -275,6 +303,29 @@ POST_ACCEPT_ACTIONS: <ONLY_ACTIONS_EXPLICITLY_GRANTED_BY_CONTROLLING_TRANSACTION
 FINAL_STATE: Verdict persisted + read back. If MERGE_AUTHORITY is EXPLICITLY_GRANTED, exact-head merge and post-merge CI verified SUCCESS.
 ```
 
+### 6.5 Generic Transaction Prompt Contract (Non-Implementation Classes)
+For transaction classes outside the standard Authorization $\to$ Implementation lifecycle (e.g. Research, Strategy, Benchmarking, Triage, Final Audit), transaction prompts freeze parameters using the following lightweight contract without multiplying boilerplate:
+
+```markdown
+ROLE: <ROLE_NAME>
+TRANSACTION_ID: <TRANSACTION_ID>
+SUBJECT: <TRANSACTION_SUBJECT>
+EXPECTED_CANONICAL_PREDECESSOR: <EXACT_GIT_SHA_OR_NA_IF_READ_ONLY>
+CONTROLLING_AUTHORITIES:
+- docs/MASTER_ROADMAP.md
+- AGENTS.md
+- docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md (ADR-051)
+- <CONTROLLING_STRATEGY_OR_ADR>
+AUTHORITY: <EXACT_ROLE_AUTHORITY_BOUNDARIES>
+SCOPE: <EXACT_BOUNDED_TRANSACTION_SCOPE>
+WRITE_ALLOWLIST_IF_ANY: <EXACT_PATHS_OR_NONE_IF_READ_ONLY>
+EVIDENCE_REQUIREMENTS: <EXACT_EVIDENCE_SPECIFICATION>
+INDEPENDENCE_REQUIREMENTS: <ROLE_SEPARATION_AND_VERDICT_RULES>
+STOP_CONDITIONS: <EXPLICIT_FAIL_CLOSED_STOP_CONDITIONS>
+POST_VERDICT_AUTHORITY_IF_ANY: <EXPLICIT_PLATFORM_ACTIONS_OR_NONE>
+FINAL_STATE: <EXPECTED_TERMINAL_STATE>
+```
+
 ---
 
 ## 7. Prompt Efficiency Metric
@@ -344,6 +395,7 @@ The protocol validates its design against the following comprehensive test matri
 | **TEST-G** | Future dependent Wave lacks exact predecessor | Authorization for dependent wave cannot be created without exact predecessor SHA. | PASS: Fails closed; no speculative batching. |
 | **TEST-H** | Exact-head CI incident unrelated to candidate content | Independent triage assesses substrate defect before any product remediation; halts if base is broken. | PASS: Fails closed; no blind retries or skips. |
 | **TEST-I** | Historical candidate has invalid provenance/history | Clean rematerialization from current canonical base is executed; no force-pushes or history re-writing. | PASS: Historical PR remains frozen; new clean PR opened. |
+| **TEST-J** | Non-implementation transaction (Research / Benchmark / Audit) | Follows transaction-specific lifecycle without forced RED/GREEN or invented CI; preserves universal authority invariants. | PASS: Fails closed on authority gaps; executes valid profile. |
 
 ---
 
@@ -351,16 +403,17 @@ The protocol validates its design against the following comprehensive test matri
 
 | Quality / Safety Invariant | Source Authority | Location in Protocol V2 | Reconciliation Classification |
 |---|---|---|---|
+| **Repository-Wide Scope (Stages 2–8)** | `docs/MASTER_ROADMAP.md` | Protocol V2 §4.1 (Applicability) | **CLARIFIED** (Universal applicability; non-implementation classes recognized) |
 | **Exact Predecessor Binding** | `AGENTS.md` / ADR-046 | Protocol V2 §3.2 (Git Invariants) | **PRESERVED** |
 | **One-Writer Discipline** | `AGENTS.md` / ADR-046 | Protocol V2 §3.2 (Git Invariants) | **PRESERVED** (Universal across all repository mutations) |
 | **Auditor Mutation Boundary** | `AGENTS.md` / ADR-046 | Protocol V2 §3.2 (Git Invariants) | **STRENGTHENED** (Read-only for candidate code/files; non-implementation actions explicitly bound) |
 | **Closed Write Allowlists** | `AGENTS.md` / ADR-046 | Protocol V2 §3.3 (Scope Invariants) | **PRESERVED** |
-| **Test-First Commit A (RED)** | `AGENTS.md` / ADR-046 | Protocol V2 §3.4 (RED $\to$ GREEN Invariants) | **PRESERVED** |
+| **Test-First Commit A (RED)** | `AGENTS.md` / ADR-046 | Protocol V2 §3.4 (RED $\to$ GREEN Invariants) | **PRESERVED** (When required by implementation authority) |
 | **Natural Product-Defect RED**| `AGENTS.md` / ADR-046 | Protocol V2 §3.4 (RED $\to$ GREEN Invariants) | **PRESERVED** |
 | **RED Test Immutability** | `AGENTS.md` / ADR-046 | Protocol V2 §3.4 (RED $\to$ GREEN Invariants) | **PRESERVED** |
 | **Minimal Commit B (GREEN)** | `AGENTS.md` / ADR-046 | Protocol V2 §3.4 (RED $\to$ GREEN Invariants) | **PRESERVED** |
 | **Zero Assertion Weakening** | `AGENTS.md` / ADR-046 | Protocol V2 §3.4 (RED $\to$ GREEN Invariants) | **PRESERVED** |
-| **Natural Exact-Head CI** | `AGENTS.md` / ADR-046 | Protocol V2 §3.5 (CI Invariants) | **PRESERVED** |
+| **Natural Exact-Head CI** | `AGENTS.md` / ADR-046 | Protocol V2 §3.5 (CI Invariants) | **PRESERVED** (When mutations/workflow require) |
 | **Dynamic Verification Artifacts** | ADR-046 / CI Workflow | Protocol V2 §3.5 (CI Invariants) | **PROCEDURALLY REFACTORED** (No hard-coded count) |
 | **Evidence Gateway Integrity** | `AGENTS.md` / ADR-004 | Protocol V2 §3.6 (Evidence Invariants) | **PRESERVED** |
 | **Backup 100% Store Sentinel**| `AGENTS.md` / ADR-031 | Protocol V2 §3.7 (Data Invariants) | **PRESERVED** |
@@ -379,9 +432,10 @@ The protocol validates its design against the following comprehensive test matri
 
 To maintain strict governance boundaries, the following are explicitly declared as **NON-GOALS**:
 1. **Zero Product Source Changes**: No edits to application code in `src/**`.
-2. **Zero Runtime Automation Engines**: No daemons, background schedulers, DAG engines, auto-retry services, or automatic acceptance bots.
-3. **Zero CI Workflow Modifications**: No modifications to `.github/workflows/**`.
-4. **Zero Dependency Changes**: No additions or modifications to `package.json` dependencies.
+2. **Zero Authorization of Future Stages**: No authorization of Stage 3, 4, 5, 6, 7, or 8 work.
+3. **Zero Runtime Automation Engines**: No daemons, background schedulers, DAG engines, auto-retry services, or automatic acceptance bots.
+4. **Zero CI Workflow Modifications**: No modifications to `.github/workflows/**`.
+5. **Zero Dependency Changes**: No additions or modifications to `package.json` dependencies.
 
 ---
 

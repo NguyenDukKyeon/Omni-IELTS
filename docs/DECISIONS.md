@@ -909,6 +909,7 @@ Decision:
 - Relationship to ADR-046: ADR-046 remains canonical Boundary & Capsule Authority. Protocol V2 governs prompting and handoff mechanics.
 - W0 Compatibility: `STAGE2-W0-IELTS-ARCH-AUTH-001` was accepted under Protocol V1 and remains valid, canonical, unmodified, and controlling for Wave W0. Wave W0 normal remaining happy-path floor is 2 transactions (Executor + Auditor).
 - Supersession: Protocol V2 supersedes repetitive prompt and handoff conventions for new execution prompting transactions upon formal activation. Historical V1 manifests, verdicts, and evidence remain valid.
+- Scope & Applicability: Protocol V2 applies repository-wide across future VocabMaster Stages (Stages 2–8) upon activation. The 4/2 transaction floors apply specifically to the standard Authorization -> Implementation lifecycle; non-implementation classes (Research, Strategy, Benchmarking, Incident Triage, Validation, Final Audit) use authority-specific lifecycle profiles while preserving all universal Protocol V2 invariants. No future Stage (Stages 3–8) is thereby authorized.
 
 Non-Goals:
 - Zero product scope or source code changes (`src/**`).
