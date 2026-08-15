@@ -59,6 +59,7 @@
 ## Bounded execution capsules
 
 - Prompt count is not an acceptance gate. An independently accepted Wave Authorization Manifest may pre-authorize bounded conditional transitions for separately identified packages or research lanes.
+- For execution prompting, follow the currently active `EXECUTION_PROMPT_PROTOCOL_V2` (`docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md`). Historical independently accepted Protocol V1 manifests retain their exact authority and are not retroactively reinterpreted.
 - Exact predecessor, canonical owner, one writer, exact file allowlist, test-first Commit A, natural product-defect RED, minimal GREEN, exact-head CI, evidence provenance, migration/rollback obligations and stop conditions remain mandatory.
 - A bounded executor may materialize only the transitions frozen by the accepted manifest and cannot independently accept its own implementation or evidence. A fresh independent final audit remains mandatory.
 - Post-verdict merge or deterministic reconciliation is permitted only when explicitly pre-authorized, after an `ACCEPT` verdict is posted and read back, accepted heads remain unchanged and required CI remains successful.
