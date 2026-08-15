@@ -726,11 +726,15 @@ Architecture) in `docs/authorizations/STAGE2-W0-IELTS-ARCH-AUTH-001.md`.
 - Canonical base predecessor: `a755ae4949746a71ac86299b34766ad8fe3b6fb6`
 - Controlling strategy: `STAGE2-IELTS-STRATEGY-001` (`docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`)
 - Audit verdict: `ACCEPT` (PR #88 comment 5301830457 merged at commit `ee7d1b72c46a5e3e8e1411256ac4bd62360bbc54`)
-- Current state markers:
+- Historical candidate-time state:
   - `W0_AUTHORIZATION_ACCEPTED_AND_CANONICAL`
   - `W0_IMPLEMENTATION_AUTHORIZED`
   - `STAGE2_W1_TO_W6_NOT_AUTHORIZED`
   - `STAGE2_IMPLEMENTATION_NOT_STARTED`
+- Canonical resolved state:
+  - `W0_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL`
+  - `W0_IMPLEMENTATION`: `ACCEPTED_AND_CANONICAL` (Closed via PR #97)
+  - `STAGE2_W1_TO_W6_NOT_AUTHORIZED`
 - Bounded scope: Academic vs General Training track routing contracts, `ielts-test-blueprint` & `ielts-section-blueprint` schemas, practice hierarchy definitions, session/interruption contracts (S15-F005), `ieltsTestBlueprints` and `ieltsTestRuns` store manifest, backup registry v6 registration, and minimal track selector UI proof.
 
 ## 15. Execution Prompt Protocol V2 Candidate
@@ -758,29 +762,32 @@ canonical recovery PR #91 (`IELTS-HUB-RENDER-RACE-RECOVERY-002`).
 
 ## 16. W0 Execution Predecessor Reconciliation
 
-Transaction `STAGE2-W0-IELTS-ARCH-BASE-RECON-001` reconciles the exact execution
+Transaction `STAGE2-W0-IELTS-ARCH-BASE-RECON-001` reconciled the exact execution
 predecessor for `W0-IELTS-ARCH-001` from the historically accepted authorization
-substrate to current canonical `main`.
+substrate to canonical `main`.
 
 - Reconciliation document: `docs/authorizations/STAGE2-W0-IELTS-ARCH-BASE-RECON-001.md`
 - Controlling authorization: `STAGE2-W0-IELTS-ARCH-AUTH-001` (unchanged, canonical)
 - Old execution predecessor: `a755ae4949746a71ac86299b34766ad8fe3b6fb6`
 - Reconciliation base: `f13804d062ded7c331a62d657144a5907163012e`
-- Effective W0 execution predecessor: `PENDING_RECONCILIATION_MERGE_RESOLUTION`
-- Resolution rule: exact merge SHA of independently accepted PR #93 + natural exact merge-SHA post-merge CI SUCCESS. The raw GitHub merge record resolves the exact SHA. No follow-up status-only commit is required.
+- Effective W0 execution predecessor: `4130ef940b515224357548e029d0c34a857c82e5` (Merge PR #93)
+- Resolution rule: exact merge SHA of independently accepted PR #93 + natural exact merge-SHA post-merge CI SUCCESS.
+- Independent Audit Verdict: `ACCEPT` (PR #93 comment `5302557248`)
+- Merge SHA: `4130ef940b515224357548e029d0c34a857c82e5`
 - Intervening transactions:
   - PR #88: W0 authorization canonicalization (docs-only) — `ORTHOGONAL`
   - PR #91: IELTS Hub render-race recovery (product defect fix) — `ORTHOGONAL_COMPATIBLE_SUBSTRATE`
   - PR #92: Execution Prompt Protocol V2 (governance-only) — `ORTHOGONAL`
-- Current state markers:
+- Historical candidate-time state:
   - `W0_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL`
   - `W0_EXECUTION_AUTHORITY`: `GRANTED_BUT_PREDECESSOR_RECONCILIATION_PENDING`
   - `W0_BASE_RECON`: `CANDIDATE_PENDING_INDEPENDENT_AUDIT`
-  - `W0_IMPLEMENTATION`: `NOT_STARTED`
-  - `W1_W6`: `NOT_AUTHORIZED`
-- Derived state after reconciliation gates satisfied:
+  - `EFFECTIVE_W0_EXECUTION_PREDECESSOR`: `PENDING_RECONCILIATION_MERGE_RESOLUTION`
+- Canonical resolved state after PR #93:
+  - `W0_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL`
   - `W0_BASE_RECON`: `ACCEPTED_AND_CANONICAL`
-  - `EFFECTIVE_W0_EXECUTION_PREDECESSOR`: `<PR93_EXACT_MERGE_SHA>`
+  - `EFFECTIVE_W0_EXECUTION_PREDECESSOR`: `4130ef940b515224357548e029d0c34a857c82e5`
+  - `W1_W6`: `NOT_AUTHORIZED`
 - Semantic authority change: `NONE`
 - Write allowlist change: `NONE`
 - RED/GREEN contract change: `NONE`
@@ -789,7 +796,7 @@ substrate to current canonical `main`.
 
 ## 17. W0 Test Allowlist Reconciliation
 
-Transaction `STAGE2-W0-IELTS-ARCH-TEST-ALLOWLIST-RECON-001` reconciles the W0 test write
+Transaction `STAGE2-W0-IELTS-ARCH-TEST-ALLOWLIST-RECON-001` reconciled the W0 test write
 allowlist following the independent rejection of PR #95 (comment `5302835936`), authorizing
 the legitimate adaptation of `tests/migration-ledger.test.mjs` for the accepted IELTS v4
 migration while preserving clean recovery topology.
@@ -802,12 +809,20 @@ migration while preserving clean recovery topology.
 - Historical rejected candidates:
   - PR #94 (`b0a5c35aaa8a3389e1c57bc34543cae69c289856`): `HISTORICAL_REJECTED_EXECUTION_CANDIDATE` (comment `5302730077`)
   - PR #95 (`03e33a6f55db6ac746ede88d4f8c6593b180ebb5`): `HISTORICAL_REJECTED_CLEAN_EXECUTION_CANDIDATE` (comment `5302835936`)
-- Current state markers:
+- Historical candidate-time state:
   - `W0_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL`
   - `W0_BASE_RECON`: `ACCEPTED_AND_CANONICAL`
   - `W0_IMPLEMENTATION`: `NOT_ACCEPTED`
   - `W0_TEST_ALLOWLIST_RECON`: `CANDIDATE_PENDING_INDEPENDENT_AUDIT`
   - `EFFECTIVE_W0_RECOVERY_PREDECESSOR`: `PENDING_RECONCILIATION_MERGE_RESOLUTION`
+  - `W1_W6`: `NOT_AUTHORIZED`
+- Independent Audit Verdict: `ACCEPT` (PR #96 comment `5302986466` / review identity)
+- Merge SHA: `64c01c3983ad3db94ddbaa29f3fb19ea07c6dc19`
+- Canonical resolved state after PR #96:
+  - `W0_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL`
+  - `W0_BASE_RECON`: `ACCEPTED_AND_CANONICAL`
+  - `W0_TEST_ALLOWLIST_RECON`: `ACCEPTED_AND_CANONICAL`
+  - `EFFECTIVE_W0_RECOVERY_PREDECESSOR`: `64c01c3983ad3db94ddbaa29f3fb19ea07c6dc19`
   - `W1_W6`: `NOT_AUTHORIZED`
 - Authorized test allowlist delta: `+ tests/migration-ledger.test.mjs`
 - Source allowlist delta: `NONE`
@@ -817,7 +832,81 @@ migration while preserving clean recovery topology.
 - Migration atomicity: `SCHEMA_AND_LEDGER_SAME_VERSIONCHANGE_TRANSACTION`
 - Exact frozen migration digest: `wave0-ielts-product-contracts-store-v4:2026-08-15`
 - Dependency change: `NONE`
-- Recovery implementation status: `NOT_STARTED`
+
+## 18. Stage 2 Wave W0 Implementation Acceptance and Canonical Closure
+
+Transaction `STAGE2-W0-IELTS-ARCH-EXEC-003-RECOVERY` cleanly implemented and independently
+verified Stage 2 Wave W0 (`W0-IELTS-ARCH-001`: IELTS Product Contracts & Track Architecture)
+under the accepted Wave Authorization Manifest `STAGE2-W0-IELTS-ARCH-AUTH-001` and supplementary
+reconciliations `STAGE2-W0-IELTS-ARCH-BASE-RECON-001` and `STAGE2-W0-IELTS-ARCH-TEST-ALLOWLIST-RECON-001`.
+
+### Canonical W0 Execution Identity & Status
+- **Wave ID**: `W0-IELTS-ARCH-001`
+- **Wave Name**: IELTS Product Contracts & Track Architecture
+- **Transaction**: `STAGE2-W0-IELTS-ARCH-EXEC-003-RECOVERY`
+- **Canonical PR**: PR #97 (`https://github.com/NguyenDukKyeon/VocabMaster/pull/97`)
+- **Base Predecessor**: `64c01c3983ad3db94ddbaa29f3fb19ea07c6dc19` (Merge PR #96)
+- **Commit A (RED Tests)**: `8097b1b684272b9294bdecf419fe2c7c038b8d63`
+- **Accepted Implementation Head**: `cd098b1dc7a368a1498295bb3cc75f4812f9b816`
+- **Formal Independent Audit**: Review ID `4944347491` on PR #97 (`ACCEPT`)
+- **Merge SHA**: `44bd3f86ec151b0c9b797e5cba59ba77d57533e8` (Normal Merge Commit, Parents: `64c01c3983ad3db94ddbaa29f3fb19ea07c6dc19`, `cd098b1dc7a368a1498295bb3cc75f4812f9b816`)
+- **Post-Merge Push CI Evidence**:
+  - Run ID: `31898576707`
+  - Run Number: `451`
+  - Attempt: `1`
+  - Event: `push`
+  - Branch: `main`
+  - Exact Head: `44bd3f86ec151b0c9b797e5cba59ba77d57533e8`
+  - Conclusion: `SUCCESS`
+- **Post-Merge Artifact Provenance**:
+  - `verification-output`: ID `9250468814`, digest `sha256:dd2dfc7dfda5017c2558469fc00d13f0b8575e18b76e991d567ef432f82af09e`
+  - `browser-smoke-output`: ID `9250471221`, digest `sha256:44f8022b84c64ad546e4e8d6326a159d9fca0ac1c95c9acf07411fce3dd00919`
+  - `ielts-browser-output`: ID `9250474938`, digest `sha256:1c312f47a25f22012af3c98221c907e124adbb32f15c9dee9763110b7ff53d56`
+  - `v10-browser-output`: ID `9250479051`, digest `sha256:0722182efbf3710982a3d93a862a3376b11e8bbd63be70fa452f041ab7071760`
+  - `hardening-browser-output`: ID `9250479799`, digest `sha256:5fbea2273d54b3974f12599320138389b96fcde949c1aaf7e58bfc9c85912423`
+
+### Migration Status
+- **Migration ID**: `wave0-ielts-product-contracts-v4`
+- **Target Database Version**: `4`
+- **Migration Mode**: `upgrade`
+- **Migration Digest**: `wave0-ielts-product-contracts-store-v4:2026-08-15`
+- **Migration Atomicity**: `SCHEMA_AND_LEDGER_SAME_VERSIONCHANGE_TRANSACTION`
+
+### Historical Execution Candidates Ledger
+- **PR #94** (`b0a5c35aaa8a3389e1c57bc34543cae69c289856`): `HISTORICAL_REJECTED_EXECUTION_CANDIDATE` (comment `5302730077`)
+- **PR #95** (`03e33a6f55db6ac746ede88d4f8c6593b180ebb5`): `HISTORICAL_REJECTED_CLEAN_EXECUTION_CANDIDATE` (comment `5302835936`)
+- **PR #97** (`cd098b1dc7a368a1498295bb3cc75f4812f9b816`): `CANONICAL_ACCEPTED_RECOVERY_IMPLEMENTATION` (Review `4944347491`, Merge `44bd3f86ec151b0c9b797e5cba59ba77d57533e8`)
+
+### Resolved Wave State Summary
+- `W0_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL`
+- `W0_BASE_RECON`: `ACCEPTED_AND_CANONICAL`
+- `W0_TEST_ALLOWLIST_RECON`: `ACCEPTED_AND_CANONICAL`
+- `W0_IMPLEMENTATION`: `ACCEPTED_AND_CANONICAL`
+- `W0_IMPLEMENTATION_TRANSACTION`: `STAGE2-W0-IELTS-ARCH-EXEC-003-RECOVERY`
+- `W0_COMMIT_A`: `8097b1b684272b9294bdecf419fe2c7c038b8d63`
+- `W0_ACCEPTED_HEAD`: `cd098b1dc7a368a1498295bb3cc75f4812f9b816`
+- `W0_MERGE_SHA`: `44bd3f86ec151b0c9b797e5cba59ba77d57533e8`
+- `W0_INDEPENDENT_ACCEPT`: PR #97 review `4944347491`
+- `W0_POST_MERGE_CI`: Run `31898576707` / #451 / attempt 1 / push / SUCCESS / exact head `44bd3f86ec151b0c9b797e5cba59ba77d57533e8`
+- `W0_STATUS`: `CANONICALLY_CLOSED`
+
+### Downstream Scope & Authority Bounds
+- `W1`: `NOT_AUTHORIZED` (Next eligible for authorization under roadmap dependency, but `W1_EXECUTION_AUTHORITY: NOT_GRANTED`)
+- `W2`: `NOT_AUTHORIZED`
+- `W3`: `NOT_AUTHORIZED`
+- `W4`: `NOT_AUTHORIZED`
+- `W5`: `NOT_AUTHORIZED`
+- `W6`: `NOT_AUTHORIZED`
+- `W1_W6`: `NOT_AUTHORIZED`
+- `NEXT_STAGE2_PRODUCT_WAVE`: `REQUIRES_SEPARATE_AUTHORIZATION`
+- `PRODUCT_SEMANTIC_CHANGE`: `NONE`
+- `IMPLEMENTATION_CHANGE`: `NONE`
+- `TEST_CHANGE`: `NONE`
+- `SOURCE_CHANGE`: `NONE`
+- `AUTHORIZATION_CHANGE`: `NONE`
+- `DEPENDENCY_CHANGE`: `NONE`
+- `W1_W6_AUTHORITY_CHANGE`: `NONE`
+
 
 
 
