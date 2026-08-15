@@ -698,3 +698,21 @@ Stage 1–8 Master Product Roadmap as the top-level product authority in
 - Historical accepted package identities, evidence and architecture are preserved.
 - This canonicalization does NOT authorize Stage 2 implementation.
 - ADR-049 records the governance decision.
+
+## 13. Stage 2 Strategy Reconciliation
+
+Transaction `STAGE2-IELTS-STRATEGY-001` materialized the Owner-ratified Option B
+(Full IELTS Platform: Academic + General Training across Listening, Reading,
+Writing, Speaking) product and technical strategy reconciliation candidate in
+`docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`.
+
+- Strategy candidate document: `docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`
+- Owner decision record: ADR-050 in `docs/DECISIONS.md`
+- Current state markers:
+  - `STAGE2_STRATEGY_CANDIDATE_CREATED`
+  - `STAGE2_IMPLEMENTATION_NOT_AUTHORIZED`
+  - `STAGE2_FIRST_WAVE_NOT_AUTHORIZED`
+- Wave sequence proposed: W0 (Architecture & Track Routing) $\to$ W1 (Objective Kernel) $\to$ W2 (Listening) / W3 (Reading) / W4 (Writing) / W5 (Speaking) $\to$ W6 (Full Mock & Exit Gate).
+- First Wave candidate recommended: `W0-IELTS-ARCH-001` (RECOMMENDATION ONLY; NOT AUTHORIZED).
+- Stage 2 implementation remains strictly NOT AUTHORIZED pending independent strategy audit and separate Wave authorization manifests.
+
