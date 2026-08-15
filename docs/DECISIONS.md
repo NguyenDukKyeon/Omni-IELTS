@@ -845,3 +845,48 @@ identity from Phase number or vice versa.
 Revisit when: the Stage sequence, authority hierarchy or Stage/Phase
 relationship materially changes. Preserve the taxonomy distinction and
 historical acceptance validity.
+
+## ADR-050 — Stage 2 targets Full IELTS Platform (Academic + General Training)
+
+Status: CONFIRMED
+
+Context: The Owner explicitly selects Option B — Full IELTS Platform for Stage 2
+IELTS Completeness. A product and technical strategy reconciliation is required
+to define the official coverage matrix, gap register, reusable Stage 1
+substrate, target product contract (`IELTS_COMPLETENESS_V1`), Wave decomposition,
+dependency graph, and exit gate before any implementation may be authorized.
+
+Decision:
+- Stage 2 IELTS Completeness targets the FULL IELTS PLATFORM:
+  - IELTS Academic
+  - IELTS General Training
+  - Four skills: Listening, Reading, Writing, Speaking
+  - 100% official in-scope task families across both test types.
+- Listening and Speaking shared format and interaction semantics are reused
+  across Academic and General Training where official structure permits.
+- Reading and Writing Academic-specific vs General-Training-specific semantics
+  remain strictly distinct.
+- Reusable Stage 1 substrate (`ActivitySpec`, `Run`, `Attempt`, `Receipt`,
+  `EvidencePolicy`, `SourceRevisionRef`, `QAR`, `FrozenAssessment`,
+  `WeaknessProfile`, `ErrorRepository`, `TodayRunner`, `BackupRegistry`) is
+  reused directly; no duplicate authority systems, second attempt stores, or
+  parallel progress truths are permitted.
+- Scoring and evaluation semantics must remain truthful:
+  - Objective scoring is deterministic and raw-score bound.
+  - Writing and Speaking evaluation is rubric-aligned (4 official criteria) and
+    must be labeled "Practice Estimate" or "Practice Feedback".
+  - Zero claims of "Official Certified IELTS Band" or "Examiner Guaranteed Score".
+- Explicit exclusions: IELTS Life Skills, test booking/proctoring/admin, and
+  proprietary official question-bank replication are out of scope.
+- Strategy candidate is recorded in `docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`.
+- Implementation of Stage 2 and its Waves remains NOT AUTHORIZED until separate
+  bounded authorization manifests are independently accepted.
+
+Consequences: Scope is formally frozen as Option B (Full IELTS Platform).
+Implementers cannot narrow Stage 2 to Academic-only or expand it to Life Skills
+without explicit Owner authority. All subsequent Wave manifests must trace to
+this product requirement.
+
+Revisit when: The Owner modifies product scope or ratifies a subsequent Stage
+milestone.
+
