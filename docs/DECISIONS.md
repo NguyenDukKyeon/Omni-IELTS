@@ -890,3 +890,43 @@ this product requirement.
 Revisit when: The Owner modifies product scope or ratifies a subsequent Stage
 milestone.
 
+## ADR-051 — Execution Prompt Protocol V2 minimizes handoffs and prompt duplication without gate reduction
+
+Status: CONDITIONAL — CANDIDATE until Activation gates succeed; ACTIVE once all Activation gates are independently satisfied.
+
+Context: Under Protocol V1 (`BOUNDED_EXECUTION_CAPSULE_PROTOCOL_V1` / ADR-046), transaction prompts frequently duplicated hundreds of lines of generic governance boilerplate and created artificial manual user handoffs for transitions that were already deterministically bound by an accepted Wave Authorization Manifest (e.g. waiting for CI, downloading artifacts, marking PR ready, executing pre-authorized exact-head merge after independent `ACCEPT`, and verifying post-merge CI). A workflow refactor is needed to minimize user friction and latency while preserving all technical quality gates and independent authority boundaries.
+
+Decision:
+- Adopt `EXECUTION_PROMPT_PROTOCOL_V2` as the canonical repository execution prompting protocol, documented in `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md`.
+- Principle: `QUALITY_GATE_COUNT != USER_PROMPT_COUNT`. Pre-authorized, deterministic transitions execute autonomously within the active transaction without requiring artificial user handoffs.
+- Centralize generic repository invariants (Authority, Git & Topology, Scope, Test-First RED -> GREEN, Natural CI, Evidence, Data Safety, Independent Audit, Conditional Merge, and Stop Conditions) so transaction prompts reference them by canonical identity rather than repeating boilerplate.
+- Establish Minimum-Handoff Execution Floor:
+  - Unauthorized Wave: minimum normal floor = 4 user transactions (Authorization Implementer -> Independent Authorization Auditor -> Implementation Executor -> Independent Implementation Auditor).
+  - Already-Authorized Wave: minimum normal floor = 2 user transactions (Implementation Executor -> Independent Implementation Auditor).
+- Standardize concise canonical prompt templates for the four roles, targeting 40–60% reduction in duplicated prompt text without lossy compression of transaction-specific parameters.
+- Absolute Role Separation: Implementer/Executor cannot self-audit or self-accept; Independent Auditor cannot write implementation code before verdict.
+- No Speculative Recovery: Do not pre-create speculative recovery transactions; materialize remediation only when an actual failure occurs.
+- Relationship to ADR-046: ADR-046 remains canonical Boundary & Capsule Authority. Protocol V2 governs prompting and handoff mechanics.
+- W0 Compatibility: `STAGE2-W0-IELTS-ARCH-AUTH-001` was accepted under Protocol V1 and remains valid, canonical, unmodified, and controlling for Wave W0. Wave W0 normal remaining happy-path floor is 2 transactions (Executor + Auditor).
+- Supersession: Protocol V2 supersedes repetitive prompt and handoff conventions for new execution prompting transactions upon formal activation. Historical V1 manifests, verdicts, and evidence remain valid.
+- Scope & Applicability: Protocol V2 applies repository-wide across future VocabMaster Stages (Stages 2–8) upon activation. The 4/2 transaction floors apply specifically to the standard Authorization -> Implementation lifecycle; non-implementation classes (Research, Strategy, Benchmarking, Incident Triage, Validation, Final Audit) use authority-specific lifecycle profiles while preserving all universal Protocol V2 invariants. No future Stage (Stages 3–8) is thereby authorized.
+
+Non-Goals:
+- Zero product scope or source code changes (`src/**`).
+- Zero weakening of test gates, evidence hierarchy, or independent acceptance.
+- Zero runtime daemons, DAG engines, schedulers, automated acceptance bots, or CI workflow changes.
+- Zero dependency additions in `package.json`.
+
+Activation:
+This protocol is resolved via self-resolving conditional activation:
+1. Independent exact-head Protocol V2 audit yields formal `ACCEPT` verdict;
+2. `ACCEPT` verdict is persisted to PR and fresh read back;
+3. Candidate head SHA remains unchanged;
+4. Exact accepted candidate head is merged into canonical `main`;
+5. Natural post-merge push CI succeeds on canonical `main`.
+
+Derived state: `CANDIDATE` / `NOT_ACTIVE` before all gates are satisfied; `ACTIVE` for new execution prompting transactions once all gates are independently satisfied. No follow-up status commit on `main` is required.
+
+Rollback:
+Revert this decision and governance files; prompting returns to Protocol V1. Historical accepted work remains unaffected.
+

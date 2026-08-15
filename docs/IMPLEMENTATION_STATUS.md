@@ -716,21 +716,44 @@ Writing, Speaking) product and technical strategy reconciliation candidate in
 - Wave sequence ratified: W0 (Architecture & Track Routing) $\to$ W1 (Objective Kernel) $\to$ W2 (Listening) / W3 (Reading) / W4 (Writing) / W5 (Speaking) $\to$ W6 (Full Mock & Exit Gate).
 - First Wave candidate recommended: `W0-IELTS-ARCH-001`.
 
-## 14. Stage 2 Wave W0 Authorization Candidate
+## 14. Stage 2 Wave W0 Authorization
 
-Transaction `STAGE2-W0-IELTS-ARCH-AUTH-001` materialized the docs-only Wave
+Transaction `STAGE2-W0-IELTS-ARCH-AUTH-001` materialized and independently audited the Wave
 Authorization Manifest for `W0-IELTS-ARCH-001` (IELTS Product Contracts & Track
 Architecture) in `docs/authorizations/STAGE2-W0-IELTS-ARCH-AUTH-001.md`.
 
 - Authorization manifest: `docs/authorizations/STAGE2-W0-IELTS-ARCH-AUTH-001.md`
 - Canonical base predecessor: `a755ae4949746a71ac86299b34766ad8fe3b6fb6`
-- Controlling strategy: `STAGE2-IELTS-STRATEGY-001` (`docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`, independently accepted in PR #87)
+- Controlling strategy: `STAGE2-IELTS-STRATEGY-001` (`docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`)
+- Audit verdict: `ACCEPT` (PR #88 comment 5301830457 merged at commit `ee7d1b72c46a5e3e8e1411256ac4bd62360bbc54`)
 - Current state markers:
-  - `W0_AUTHORIZATION_CANDIDATE_CREATED`
-  - `W0_AUTHORIZATION_PENDING_INDEPENDENT_AUDIT`
-  - `W0_IMPLEMENTATION_NOT_AUTHORIZED`
+  - `W0_AUTHORIZATION_ACCEPTED_AND_CANONICAL`
+  - `W0_IMPLEMENTATION_AUTHORIZED`
+  - `STAGE2_W1_TO_W6_NOT_AUTHORIZED`
   - `STAGE2_IMPLEMENTATION_NOT_STARTED`
 - Bounded scope: Academic vs General Training track routing contracts, `ielts-test-blueprint` & `ielts-section-blueprint` schemas, practice hierarchy definitions, session/interruption contracts (S15-F005), `ieltsTestBlueprints` and `ieltsTestRuns` store manifest, backup registry v6 registration, and minimal track selector UI proof.
-- Implementation authority: `NOT_GRANTED_UNTIL_INDEPENDENT_AUDIT`.
+
+## 15. Execution Prompt Protocol V2 Candidate
+
+Transaction `EXECUTION-PROMPT-PROTOCOL-V2-002` cleanly rematerialized the repository-level
+Execution Prompt Protocol V2 candidate in `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md`
+after historical unmerged candidate PR #89 (`EXECUTION-PROMPT-PROTOCOL-V2-001`) and the subsequent
+canonical recovery PR #91 (`IELTS-HUB-RENDER-RACE-RECOVERY-002`).
+
+- Protocol document: `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md`
+- Decision record: ADR-051 in `docs/DECISIONS.md`
+- Activation model: `SELF_RESOLVING_CONDITIONAL_ACTIVATION`
+- Activation rule: `CONDITIONAL_EXTERNAL_EVIDENCE_GATE`
+- Activation gates (all must be independently satisfied):
+  1. Independent exact-head Protocol V2 audit yields formal `ACCEPT` verdict;
+  2. `ACCEPT` verdict is persisted and fresh-read back;
+  3. Accepted candidate head SHA remains unchanged;
+  4. Exact accepted candidate head is merged into canonical `main`;
+  5. Natural post-merge push CI succeeds on the exact merge commit SHA.
+- Derived canonical state:
+  - **State before all gates satisfied**: `PROTOCOL_V2_CANDIDATE` / `PROTOCOL_V1_ACTIVE`
+  - **State after all gates satisfied**: `PROTOCOL_V2_ACTIVE_FOR_NEW_EXECUTION_PROMPTING_TRANSACTIONS` / `PROTOCOL_V1_RETAINED_AS_ADR046_BOUNDARY_CAPSULE_AUTHORITY_AND_HISTORICAL_COMPATIBILITY`
+- Evidence source: Repository text defines the canonical activation predicate; raw GitHub evidence (persisted verdict comment, merge record, natural post-merge CI run) resolves whether the predicate has become true. No follow-up administrative or status-only commit is required on `main` to restate the derived state.
+- Product authority: `NONE` (Docs/governance only; does not authorize product implementation or Stages 3–8).
 
 
