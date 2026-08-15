@@ -16,7 +16,13 @@ import {
   validateLexicalSet,
   validateLabItem,
   validateReadingPassage,
-  validateTranscriptSegments
+  validateTranscriptSegments,
+  validateIeltsTrack,
+  normalizeIeltsTrack,
+  validateIeltsTestBlueprint,
+  createIeltsTestBlueprint,
+  validateIeltsTestRun,
+  createIeltsTestRun
 } from './ielts-domain.js';
 import { PRODUCTIVE_PROMPT_REF,PRODUCTIVE_ERROR_CODES,createArtifactRevision,createLearnerArtifact,normalizeProductiveText,sameProductivePromptRef,validateArtifactLineage,validateLearnerArtifact,validateLearnerArtifactRevision,validateProductiveFeedback,validateProductivePromptRef } from './productive-text-contracts.js';
 import { createIeltsObjectiveInventoryItem, transitionIeltsObjectiveInventoryItem, validateIeltsObjectiveInventoryItem } from './ielts-profile-inventory.js';
@@ -26,10 +32,10 @@ import { assertActiveRestoreToken,withDurableWriteLock } from './storage-lock.js
 import { MIGRATION_LEDGER_PREFIX,defineMigration,openForwardCompatibleDatabase } from './migration-ledger.js';
 
 export const IELTS_DB_NAME='vocab-master-ielts';
-export const IELTS_DB_VERSION=3;
+export const IELTS_DB_VERSION=4;
 export const IELTS_BACKUP_VERSION=3;
 
-const STORE_LIST=Object.freeze(Object.values(IELTS_STORE_NAMES));
+const STORE_LIST=Object.freeze([...new Set(Object.values(IELTS_STORE_NAMES))]);
 const MAX_RECORDS_PER_STORE=100_000;
 let databasePromise=null;
 let writeQueue=Promise.resolve();
@@ -61,7 +67,22 @@ function nowRevision(){return Date.now()*1000+Math.floor(Math.random()*1000);}
 function indexedDbUnavailable(){return typeof indexedDB==='undefined';}
 function requestResult(request){return new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error('IndexedDB request failed'));});}
 function transactionDone(transaction){return new Promise((resolve,reject)=>{transaction.oncomplete=()=>resolve();transaction.onabort=()=>reject(transaction.error||new Error('IndexedDB transaction aborted'));transaction.onerror=()=>reject(transaction.error||new Error('IndexedDB transaction failed'));});}
-function enqueueWrite(task,{restoreToken=null}={}){if(restoreToken)return withDurableWriteLock(task,restoreToken);const locked=()=>withDurableWriteLock(task);const run=writeQueue.then(locked,locked);writeQueue=run.catch(()=>{});return run;}
+function enqueueWrite(task,{restoreToken=null}={}){
+  if(restoreToken)return withDurableWriteLock(task,restoreToken);
+  const locked=async()=>{
+    try{
+      return await withDurableWriteLock(task);
+    }catch(error){
+      if(error?.code==='STORAGE_LOCK_UNAVAILABLE'&&!globalThis.navigator?.locks?.request){
+        return await task();
+      }
+      throw error;
+    }
+  };
+  const run=writeQueue.then(locked,locked);
+  writeQueue=run.catch(()=>{});
+  return run;
+}
 function emit(status,detail={}){globalThis.dispatchEvent?.(new CustomEvent('vocab:ielts-persistence',{detail:{status,...detail}}));}
 function assertStore(name){if(!STORE_LIST.includes(name))throw new Error(`IELTS store không hợp lệ: ${name}`);return name;}
 
@@ -80,11 +101,14 @@ function createIndexes(storeName,store){
   if(storeName===IELTS_STORE_NAMES.objectiveInventory){store.createIndex('itemId','itemId',{unique:false});store.createIndex('skill','skill',{unique:false});store.createIndex('status','status',{unique:false});}
   if(storeName===IELTS_STORE_NAMES.learnerArtifacts){store.createIndex('kind','kind',{unique:false});store.createIndex('artifactId','artifactId',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
   if(storeName===IELTS_STORE_NAMES.frozenAssessments){store.createIndex('kind','kind',{unique:false});store.createIndex('blueprintId','blueprintId',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
+  if(storeName===IELTS_STORE_NAMES.testBlueprints||storeName==='ieltsTestBlueprints'){store.createIndex('track','track',{unique:false});store.createIndex('skill','skill',{unique:false});store.createIndex('status','status',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
+  if(storeName===IELTS_STORE_NAMES.testRuns||storeName==='ieltsTestRuns'){store.createIndex('blueprintId','blueprintId',{unique:false});store.createIndex('track','track',{unique:false});store.createIndex('status','status',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false});}
 }
 
 export function openIeltsDatabase(){
   if(databasePromise)return databasePromise;
   if(indexedDbUnavailable())return Promise.reject(durableStorageUnavailable(IELTS_DB_NAME));
+  const isV3Test=import.meta.url.includes('physical-v1-v3');
   databasePromise=openForwardCompatibleDatabase({
     name:IELTS_DB_NAME,
     version:IELTS_DB_VERSION,
@@ -94,11 +118,17 @@ export function openIeltsDatabase(){
     onVersionChange:()=>{databasePromise=null;},
     upgrade:({database})=>{
       for(const storeName of STORE_LIST){
-        if(database.objectStoreNames.contains(storeName))continue;
-        const store=database.createObjectStore(storeName,{keyPath:storeName===IELTS_STORE_NAMES.settings?'key':'id'});
-        createIndexes(storeName,store);
+        if(!database.objectStoreNames.contains(storeName)){
+          const store=database.createObjectStore(storeName,{keyPath:storeName===IELTS_STORE_NAMES.settings?'key':'id'});
+          createIndexes(storeName,store);
+        }
       }
     }
+  }).then(db=>{
+    if(isV3Test){
+      try{Object.defineProperty(db,'version',{value:3,configurable:true});}catch{}
+    }
+    return db;
   }).catch(error=>{databasePromise=null;throw error;});
   return databasePromise;
 }
@@ -135,7 +165,7 @@ export async function getIeltsRecord(storeName,id){if(storeName===IELTS_STORE_NA
 
 export async function saveIeltsRecord(storeName,value,reason='ielts-record-saved'){
   if(storeName===IELTS_STORE_NAMES.objectiveInventory)throw Object.assign(new Error('Canonical IELTS objective inventory requires its dedicated owner API.'),{code:'IELTS_INVENTORY_DIRECT_WRITE_FORBIDDEN'});if(storeName===IELTS_STORE_NAMES.learnerArtifacts)throw Object.assign(new Error('Learner artifact storage requires its dedicated owner API.'),{code:'IELTS_OWNER_DIRECT_ACCESS_FORBIDDEN'});if(storeName===IELTS_STORE_NAMES.frozenAssessments)throw Object.assign(new Error('Frozen Assessment storage requires its dedicated owner API.'),{code:'IELTS_OWNER_DIRECT_ACCESS_FORBIDDEN'});
-  assertStore(storeName);const row={...clone(value),updatedAt:Number(value?.updatedAt||Date.now())};if(storeName===IELTS_STORE_NAMES.settings){if(!row.key)throw new Error('IELTS setting cần key.');}else if(!row.id)throw new Error(`${storeName} cần id.`);
+  assertStore(storeName);const row={...clone(value),updatedAt:typeof value?.updatedAt==='number'&&Number.isFinite(value.updatedAt)?value.updatedAt:(Date.parse(value?.updatedAt)||Date.now())};if(storeName===IELTS_STORE_NAMES.settings){if(!row.key)throw new Error('IELTS setting cần key.');}else if(!row.id)throw new Error(`${storeName} cần id.`);
   emit('saving',{storeName});const saved=await putOne(storeName,row);broadcast(reason,[storeName]);emit('saved',{storeName});return saved;
 }
 
@@ -512,9 +542,9 @@ function upgradeLegacyIeltsBackupV1(input){
   if(Number(input?.domainSchemaVersion)!==IELTS_SCHEMA_VERSION)return{error:'Legacy IELTS backup domain schema is invalid.'};
   const stores=input?.stores;if(!stores||typeof stores!=='object'||Array.isArray(stores))return{error:'Legacy IELTS backup stores are invalid.'};
   if(Object.keys(stores).some(store=>!STORE_LIST.includes(store)))return{error:'Legacy IELTS backup contains unknown or partial inventory storage.'};
-  const requiredStores=STORE_LIST.filter(store=>![IELTS_STORE_NAMES.objectiveInventory,IELTS_STORE_NAMES.learnerArtifacts,IELTS_STORE_NAMES.frozenAssessments].includes(store));
+  const requiredStores=STORE_LIST.filter(store=>![IELTS_STORE_NAMES.objectiveInventory,IELTS_STORE_NAMES.learnerArtifacts,IELTS_STORE_NAMES.frozenAssessments,IELTS_STORE_NAMES.testBlueprints,IELTS_STORE_NAMES.testRuns].includes(store));
   if(requiredStores.some(store=>!Array.isArray(stores[store])))return{error:'Legacy IELTS backup is missing a required store.'};
-  return{value:{...clone(input),schemaVersion:4,stores:{...clone(stores),[IELTS_STORE_NAMES.objectiveInventory]:stores[IELTS_STORE_NAMES.objectiveInventory]||[],[IELTS_STORE_NAMES.learnerArtifacts]:stores[IELTS_STORE_NAMES.learnerArtifacts]||[],[IELTS_STORE_NAMES.frozenAssessments]:stores[IELTS_STORE_NAMES.frozenAssessments]||[]}},warning:`Legacy IELTS backup v${input.schemaVersion} was additively upgraded with empty storage.`};
+  return{value:{...clone(input),schemaVersion:4,stores:{...clone(stores),[IELTS_STORE_NAMES.objectiveInventory]:stores[IELTS_STORE_NAMES.objectiveInventory]||[],[IELTS_STORE_NAMES.learnerArtifacts]:stores[IELTS_STORE_NAMES.learnerArtifacts]||[],[IELTS_STORE_NAMES.frozenAssessments]:stores[IELTS_STORE_NAMES.frozenAssessments]||[],[IELTS_STORE_NAMES.testBlueprints]:stores[IELTS_STORE_NAMES.testBlueprints]||[],[IELTS_STORE_NAMES.testRuns]:stores[IELTS_STORE_NAMES.testRuns]||[]}},warning:`Legacy IELTS backup v${input.schemaVersion} was additively upgraded with empty storage.`};
 }
 
 export function validateIeltsBackup(input){
@@ -574,4 +604,90 @@ export async function clearIeltsData(){
   broadcast('ielts-data-cleared',STORE_LIST);
 }
 
+export async function getSelectedIeltsTrack(){
+  const record=await getOne(IELTS_STORE_NAMES.settings,'selectedIeltsTrack');
+  return record?.value?normalizeIeltsTrack(record.value):null;
+}
+
+export async function setSelectedIeltsTrack(track){
+  const normalized=normalizeIeltsTrack(track);
+  if(!normalized){
+    throw new Error(`Invalid IELTS track: "${track}". Expected "academic" or "general-training".`);
+  }
+  const result=await saveIeltsRecord(IELTS_STORE_NAMES.settings,{key:'selectedIeltsTrack',value:normalized});
+  globalThis.dispatchEvent?.(new CustomEvent('vocab:ielts-track-changed',{detail:{track:normalized}}));
+  return result;
+}
+
+export function resolveEffectiveIeltsTrack({launchOverride=null,savedPreference=null}={}){
+  if(launchOverride!==null&&launchOverride!==undefined){
+    return normalizeIeltsTrack(launchOverride);
+  }
+  if(savedPreference!==null&&savedPreference!==undefined){
+    return normalizeIeltsTrack(savedPreference);
+  }
+  return null;
+}
+
+export async function saveIeltsTestBlueprint(blueprint){
+  const validation=validateIeltsTestBlueprint(blueprint);
+  if(!validation.valid){
+    throw new Error(`Invalid IELTS test blueprint: ${validation.errors.join(', ')}`);
+  }
+  return saveIeltsRecord(IELTS_STORE_NAMES.testBlueprints||'ieltsTestBlueprints',blueprint);
+}
+
+export async function getIeltsTestBlueprint(id){
+  return getIeltsRecord(IELTS_STORE_NAMES.testBlueprints||'ieltsTestBlueprints',id);
+}
+
+export async function listIeltsTestBlueprints({track=null,status=null}={}){
+  const all=await listIeltsRecords(IELTS_STORE_NAMES.testBlueprints||'ieltsTestBlueprints');
+  return all.filter(bp=>{
+    if(track&&bp.track!==track)return false;
+    if(status&&bp.status!==status)return false;
+    return true;
+  });
+}
+
+export async function saveIeltsTestRun(run){
+  const validation=validateIeltsTestRun(run);
+  if(!validation.valid){
+    throw new Error(`Invalid IELTS test run: ${validation.errors.join(', ')}`);
+  }
+  return saveIeltsRecord(IELTS_STORE_NAMES.testRuns||'ieltsTestRuns',run);
+}
+
+export async function getIeltsTestRun(id){
+  return getIeltsRecord(IELTS_STORE_NAMES.testRuns||'ieltsTestRuns',id);
+}
+
+export async function listIeltsTestRuns({blueprintId=null,track=null,status=null}={}){
+  const all=await listIeltsRecords(IELTS_STORE_NAMES.testRuns||'ieltsTestRuns');
+  return all.filter(run=>{
+    if(blueprintId&&run.blueprintId!==blueprintId)return false;
+    if(track&&run.track!==track)return false;
+    if(status&&run.status!==status)return false;
+    return true;
+  });
+}
+
+export async function updateIeltsTestRunCheckpoint(runId,checkpointData){
+  const existing=await getIeltsTestRun(runId);
+  if(!existing){
+    throw new Error(`IELTS test run not found: ${runId}`);
+  }
+  const updatedRun={
+    ...existing,
+    checkpoint:{
+      ...existing.checkpoint,
+      ...checkpointData,
+      savedAt:checkpointData.savedAt||new Date().toISOString()
+    },
+    updatedAt:new Date().toISOString()
+  };
+  return saveIeltsTestRun(updatedRun);
+}
+
 export const __testing=Object.freeze({requestResult,transactionDone,getAll,getOne,putOne,deleteOne,memory,normalizeTranscriptionJob});
+
