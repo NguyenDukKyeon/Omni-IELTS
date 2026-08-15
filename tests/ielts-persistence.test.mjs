@@ -70,3 +70,94 @@ test('invalid verified content cannot be persisted through guarded APIs',async()
   await assert.rejects(()=>persistence.saveLabItem({id:'bad',status:'verified',provenance:{status:'verified'},prompt:'Pick',options:[{id:'a',text:'One',correct:true,rationale:''},{id:'b',text:'Two',correct:true,rationale:''}]}),/đúng một đáp án|thiếu giải thích/);
   await assert.rejects(()=>persistence.saveReadingPassage({id:'bad-reading',status:'verified',provenance:{status:'verified'},passage:'short',questions:[]}),/80–220|2–4/);
 });
+
+test('IELTS DB v4 creates ieltsTestBlueprints and ieltsTestRuns stores with expected indexes',async()=>{
+  await reset();
+  const db=await persistence.openIeltsDatabase();
+  assert.equal(persistence.IELTS_DB_VERSION,4);
+  assert.ok(db.objectStoreNames.contains('ieltsTestBlueprints'),'ieltsTestBlueprints store must exist in DB v4');
+  assert.ok(db.objectStoreNames.contains('ieltsTestRuns'),'ieltsTestRuns store must exist in DB v4');
+});
+
+test('IELTS test blueprints persist durably and can be retrieved by id and filtered by track',async()=>{
+  await reset();
+  const blueprint={
+    kind:'ielts-test-blueprint',
+    schemaVersion:1,
+    id:'ielts-blueprint:synthetic-academic-1',
+    track:'academic',
+    hierarchyLevel:'FULL_MOCK',
+    title:'Academic Mock 1',
+    description:'Synthetic Academic Mock for test',
+    status:'verified',
+    timingPolicy:{mode:'exam',totalMinutes:160},
+    interruptionPolicy:{taskFamily:'RESTART_EXISTING_RUN',sectionMock:'CHECKPOINT_AND_RESUME'},
+    sections:[{
+      kind:'ielts-section-blueprint',
+      schemaVersion:1,
+      sectionId:'s-read-1',
+      skill:'reading',
+      order:1,
+      timeLimitMinutes:60,
+      partCount:3,
+      itemCount:40,
+      sourceRevisionRef:{schema:'SourceRevisionRef',version:1,kind:'private-pack',authority:'test',sourceId:'s1',revisionId:'r1',integrity:'0'.repeat(64),locator:{assetId:'a1'},provenance:{origin:'test',verification:'verified',rights:'allowed',privacy:'private'}}
+    }],
+    createdAt:'2026-08-15T00:00:00.000Z',
+    updatedAt:'2026-08-15T00:00:00.000Z'
+  };
+  const saved=await persistence.saveIeltsTestBlueprint(blueprint);
+  assert.equal(saved.id,blueprint.id);
+  const fetched=await persistence.getIeltsTestBlueprint(blueprint.id);
+  assert.equal(fetched.id,blueprint.id);
+  assert.equal(fetched.track,'academic');
+  const all=await persistence.listIeltsTestBlueprints({track:'academic'});
+  assert.equal(all.length,1);
+  assert.equal(all[0].id,blueprint.id);
+  const gtList=await persistence.listIeltsTestBlueprints({track:'general-training'});
+  assert.equal(gtList.length,0);
+});
+
+test('IELTS test runs persist active checkpoint state with affectsSchedule: false and evidenceEligible: false',async()=>{
+  await reset();
+  const testRun={
+    kind:'ielts-test-run',
+    schemaVersion:1,
+    id:'ielts-run:run-1',
+    blueprintId:'ielts-blueprint:synthetic-academic-1',
+    track:'academic',
+    hierarchyLevel:'FULL_MOCK',
+    status:'active',
+    affectsSchedule:false,
+    evidenceEligible:false,
+    checkpoint:{
+      currentSectionIndex:0,
+      elapsedSeconds:120,
+      answers:{'q1':'A','q2':'B'},
+      savedAt:'2026-08-15T00:02:00.000Z'
+    },
+    createdAt:'2026-08-15T00:00:00.000Z',
+    updatedAt:'2026-08-15T00:02:00.000Z'
+  };
+  const saved=await persistence.saveIeltsTestRun(testRun);
+  assert.equal(saved.id,testRun.id);
+  assert.equal(saved.affectsSchedule,false);
+  assert.equal(saved.evidenceEligible,false);
+
+  const fetched=await persistence.getIeltsTestRun(testRun.id);
+  assert.equal(fetched.id,testRun.id);
+  assert.equal(fetched.checkpoint.elapsedSeconds,120);
+  assert.deepEqual(fetched.checkpoint.answers,{'q1':'A','q2':'B'});
+
+  // Checkpoint update
+  const updated=await persistence.updateIeltsTestRunCheckpoint(testRun.id,{
+    currentSectionIndex:1,
+    elapsedSeconds:300,
+    answers:{'q1':'A','q2':'B','q3':'C'},
+    savedAt:'2026-08-15T00:05:00.000Z'
+  });
+  assert.equal(updated.checkpoint.elapsedSeconds,300);
+  assert.equal(updated.checkpoint.currentSectionIndex,1);
+  assert.equal(updated.affectsSchedule,false);
+  assert.equal(updated.evidenceEligible,false);
+});

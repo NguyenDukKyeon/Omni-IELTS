@@ -1,0 +1,216 @@
+[
+  {
+    "kind": "ielts-test-blueprint",
+    "schemaVersion": 1,
+    "id": "ielts-blueprint:0000000000000000000000000000000000000000000000000000000000000001",
+    "track": "academic",
+    "hierarchyLevel": "FULL_MOCK",
+    "title": "Synthetic IELTS Academic Full Mock 1",
+    "description": "Deterministic repository-owned synthetic Academic full mock blueprint for W0 verification.",
+    "status": "verified",
+    "timingPolicy": {
+      "mode": "exam",
+      "totalMinutes": 160,
+      "audioTransferMinutes": 10
+    },
+    "interruptionPolicy": {
+      "taskFamily": "RESTART_EXISTING_RUN",
+      "sectionMock": "CHECKPOINT_AND_RESUME"
+    },
+    "sections": [
+      {
+        "kind": "ielts-section-blueprint",
+        "schemaVersion": 1,
+        "sectionId": "section-listening-1",
+        "skill": "listening",
+        "order": 1,
+        "timeLimitMinutes": 30,
+        "partCount": 4,
+        "itemCount": 40,
+        "sourceRevisionRef": {
+          "schema": "SourceRevisionRef",
+          "version": 1,
+          "kind": "private-pack",
+          "authority": "synthetic-authority",
+          "sourceId": "listening-pack-1",
+          "revisionId": "rev-1",
+          "integrity": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+          "locator": { "assetId": "audio-synthetic-1" },
+          "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "private" }
+        }
+      },
+      {
+        "kind": "ielts-section-blueprint",
+        "schemaVersion": 1,
+        "sectionId": "section-reading-academic-1",
+        "skill": "reading",
+        "order": 2,
+        "timeLimitMinutes": 60,
+        "partCount": 3,
+        "itemCount": 40,
+        "sourceRevisionRef": {
+          "schema": "SourceRevisionRef",
+          "version": 1,
+          "kind": "private-pack",
+          "authority": "synthetic-authority",
+          "sourceId": "reading-academic-pack-1",
+          "revisionId": "rev-1",
+          "integrity": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
+          "locator": { "assetId": "passage-academic-1" },
+          "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "private" }
+        }
+      },
+      {
+        "kind": "ielts-section-blueprint",
+        "schemaVersion": 1,
+        "sectionId": "section-writing-academic-1",
+        "skill": "writing",
+        "order": 3,
+        "timeLimitMinutes": 60,
+        "partCount": 2,
+        "itemCount": 2,
+        "sourceRevisionRef": {
+          "schema": "SourceRevisionRef",
+          "version": 1,
+          "kind": "private-pack",
+          "authority": "synthetic-authority",
+          "sourceId": "writing-academic-pack-1",
+          "revisionId": "rev-1",
+          "integrity": "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+          "locator": { "assetId": "task-academic-1" },
+          "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "private" }
+        }
+      },
+      {
+        "kind": "ielts-section-blueprint",
+        "schemaVersion": 1,
+        "sectionId": "section-speaking-1",
+        "skill": "speaking",
+        "order": 4,
+        "timeLimitMinutes": 14,
+        "partCount": 3,
+        "itemCount": 3,
+        "sourceRevisionRef": {
+          "schema": "SourceRevisionRef",
+          "version": 1,
+          "kind": "private-pack",
+          "authority": "synthetic-authority",
+          "sourceId": "speaking-pack-1",
+          "revisionId": "rev-1",
+          "integrity": "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+          "locator": { "assetId": "speaking-cue-1" },
+          "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "private" }
+        }
+      }
+    ],
+    "createdAt": "2026-08-15T00:00:00.000Z",
+    "updatedAt": "2026-08-15T00:00:00.000Z"
+  },
+  {
+    "kind": "ielts-test-blueprint",
+    "schemaVersion": 1,
+    "id": "ielts-blueprint:0000000000000000000000000000000000000000000000000000000000000002",
+    "track": "general-training",
+    "hierarchyLevel": "FULL_MOCK",
+    "title": "Synthetic IELTS General Training Full Mock 1",
+    "description": "Deterministic repository-owned synthetic General Training full mock blueprint for W0 verification.",
+    "status": "verified",
+    "timingPolicy": {
+      "mode": "exam",
+      "totalMinutes": 160,
+      "audioTransferMinutes": 10
+    },
+    "interruptionPolicy": {
+      "taskFamily": "RESTART_EXISTING_RUN",
+      "sectionMock": "CHECKPOINT_AND_RESUME"
+    },
+    "sections": [
+      {
+        "kind": "ielts-section-blueprint",
+        "schemaVersion": 1,
+        "sectionId": "section-listening-gt-1",
+        "skill": "listening",
+        "order": 1,
+        "timeLimitMinutes": 30,
+        "partCount": 4,
+        "itemCount": 40,
+        "sourceRevisionRef": {
+          "schema": "SourceRevisionRef",
+          "version": 1,
+          "kind": "private-pack",
+          "authority": "synthetic-authority",
+          "sourceId": "listening-pack-1",
+          "revisionId": "rev-1",
+          "integrity": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+          "locator": { "assetId": "audio-synthetic-1" },
+          "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "private" }
+        }
+      },
+      {
+        "kind": "ielts-section-blueprint",
+        "schemaVersion": 1,
+        "sectionId": "section-reading-gt-1",
+        "skill": "reading",
+        "order": 2,
+        "timeLimitMinutes": 60,
+        "partCount": 3,
+        "itemCount": 40,
+        "sourceRevisionRef": {
+          "schema": "SourceRevisionRef",
+          "version": 1,
+          "kind": "private-pack",
+          "authority": "synthetic-authority",
+          "sourceId": "reading-gt-pack-1",
+          "revisionId": "rev-1",
+          "integrity": "11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff",
+          "locator": { "assetId": "passage-gt-1" },
+          "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "private" }
+        }
+      },
+      {
+        "kind": "ielts-section-blueprint",
+        "schemaVersion": 1,
+        "sectionId": "section-writing-gt-1",
+        "skill": "writing",
+        "order": 3,
+        "timeLimitMinutes": 60,
+        "partCount": 2,
+        "itemCount": 2,
+        "sourceRevisionRef": {
+          "schema": "SourceRevisionRef",
+          "version": 1,
+          "kind": "private-pack",
+          "authority": "synthetic-authority",
+          "sourceId": "writing-gt-pack-1",
+          "revisionId": "rev-1",
+          "integrity": "22334455667788990011aabbccddeeff22334455667788990011aabbccddeeff",
+          "locator": { "assetId": "task-gt-1" },
+          "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "private" }
+        }
+      },
+      {
+        "kind": "ielts-section-blueprint",
+        "schemaVersion": 1,
+        "sectionId": "section-speaking-gt-1",
+        "skill": "speaking",
+        "order": 4,
+        "timeLimitMinutes": 14,
+        "partCount": 3,
+        "itemCount": 3,
+        "sourceRevisionRef": {
+          "schema": "SourceRevisionRef",
+          "version": 1,
+          "kind": "private-pack",
+          "authority": "synthetic-authority",
+          "sourceId": "speaking-pack-1",
+          "revisionId": "rev-1",
+          "integrity": "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+          "locator": { "assetId": "speaking-cue-1" },
+          "provenance": { "origin": "synthetic", "verification": "verified", "rights": "allowed", "privacy": "private" }
+        }
+      }
+    ],
+    "createdAt": "2026-08-15T00:00:00.000Z",
+    "updatedAt": "2026-08-15T00:00:00.000Z"
+  }
+]
