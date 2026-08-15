@@ -10,6 +10,7 @@ export const IELTS_LISTENING_MATCHING_KINDS=Object.freeze(['listening-matching',
 export const IELTS_OBJECTIVE_INVENTORY_KIND='ielts-objective-inventory-item';
 export const IELTS_OBJECTIVE_INVENTORY_VERSION=1;
 export const IELTS_OBJECTIVE_PROFILES=Object.freeze(['academic','general-training']);
+export { IELTS_TRACKS } from './ielts-domain.js';
 export const IELTS_OBJECTIVE_SKILLS=Object.freeze(['reading','listening']);
 export const IELTS_OBJECTIVE_INVENTORY_STATUSES=Object.freeze(['draft','verified','retired']);
 
