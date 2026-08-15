@@ -3,7 +3,7 @@
 **Candidate Status**: `CANDIDATE_UNTIL_ACTIVATION_GATES_SATISFIED`  
 **Transaction Identity**: `EXECUTION-PROMPT-PROTOCOL-V2-002`  
 **Base Predecessor**: `2812f639a5967e0389b77fdb71be1a0f97b928d4` (Merge PR #91 / `IELTS-HUB-RENDER-RACE-RECOVERY-002`)  
-**Decision Record**: ADR-051 in [`docs/DECISIONS.md`](file:///d:/Workspace/EnlishMaster-W6/docs/DECISIONS.md)  
+**Decision Record**: ADR-051 in `docs/DECISIONS.md`  
 **Related Decision**: ADR-046 (`BOUNDED_EXECUTION_CAPSULE_PROTOCOL_V1`)
 
 ---
@@ -28,7 +28,7 @@ A deterministic, pre-authorized technical or administrative transition does **NO
 
 ---
 
-## 2. Relationship to Protocol V1 (ADR-046) & Authority Precedence
+## 2. Relationship to Protocol V1 (ADR-046) & Authority Architecture
 
 ### 2.1 Relationship to ADR-046
 - **ADR-046 (`BOUNDED_EXECUTION_CAPSULE_PROTOCOL_V1`)**: Serves as **BOUNDARY & CAPSULE AUTHORITY**. It governs execution capsule boundaries, authorization manifest schemas, allowlist rules, and independent acceptance mandates. ADR-046 remains canonical and is **NOT** repealed or weakened.
@@ -36,16 +36,24 @@ A deterministic, pre-authorized technical or administrative transition does **NO
 - Protocol V2 supersedes repetitive prompt and handoff conventions for new transactions upon formal activation.
 - Historical manifests authored under Protocol V1 (including `STAGE2-W0-IELTS-ARCH-AUTH-001`) remain **100% valid, canonical, and unmodified**. Protocol V2 does not retroactively reinterpret accepted authorization semantics.
 
-### 2.2 Reconciled Authority Precedence
-Precedence across repository documentation and governance is defined by direct authority relations:
-1. [`docs/MASTER_ROADMAP.md`](file:///d:/Workspace/EnlishMaster-W6/docs/MASTER_ROADMAP.md) — Top-level Master Product Roadmap (Stages 1–8).
-2. [`docs/ROADMAP.md`](file:///d:/Workspace/EnlishMaster-W6/docs/ROADMAP.md) — Subordinate Technical Package Taxonomy (Phases 0–7).
-3. [`AGENTS.md`](file:///d:/Workspace/EnlishMaster-W6/AGENTS.md) — Mandatory repository rules and invariant constraints.
-4. [`docs/DECISIONS.md`](file:///d:/Workspace/EnlishMaster-W6/docs/DECISIONS.md) — Architectural and product decision records (ADRs).
-5. **Accepted Strategy Documents** (e.g. [`docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`](file:///d:/Workspace/EnlishMaster-W6/docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md)).
-6. **Accepted Authorization Manifests** (e.g. [`docs/authorizations/STAGE2-W0-IELTS-ARCH-AUTH-001.md`](file:///d:/Workspace/EnlishMaster-W6/docs/authorizations/STAGE2-W0-IELTS-ARCH-AUTH-001.md)).
-7. **Independent Audit Verdicts & Verification Evidence**.
-8. **Implementer / Executor Artifacts & Proposed Changes** (strictly subordinate; zero status authority).
+### 2.2 Canonical Document Authority Hierarchy
+Repository governance preserves the exact canonical document authority hierarchy defined in `docs/MASTER_ROADMAP.md`:
+
+| Level | Document | Canonical Scope & Ownership |
+|---|---|---|
+| **Level 1 — Master Product Roadmap** | `docs/MASTER_ROADMAP.md` | Top-level Stage 1–8 product sequencing, Stage missions, ordering, completion state |
+| **Level 2 — Technical Package Taxonomy** | `docs/ROADMAP.md` | Phase 0–7 package IDs, technical dependency graph, architecture boundaries, cross-cutting packages |
+| **Level 3 — Implementation Specification** | `docs/IMPLEMENTATION_PLAN.md` | Package acceptance criteria, test/migration/rollback/stop conditions |
+| **Level 4 — Implementation Status** | `docs/IMPLEMENTATION_STATUS.md` | Actual execution status, evidence, exact commit bindings |
+| **Level 5 — Decision Records** | `docs/DECISIONS.md` | Architecture/product rationale and ADRs |
+| **Level 6 — Repository Rules** | `AGENTS.md` | Invariant execution rules, evidence policy, Git conventions |
+
+### 2.3 Execution Authority Taxonomy
+Execution authority operates across distinct, non-fungible roles governed by the controlling canonical documents:
+
+$$\text{RESEARCH} \neq \text{SPECIFICATION} \neq \text{AUTHORIZATION} \neq \text{IMPLEMENTATION} \neq \text{EVIDENCE} \neq \text{INDEPENDENT ACCEPTANCE} \neq \text{MERGE AUTHORITY}$$
+
+Accepted strategies (e.g. `docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`), bounded authorization manifests (e.g. `docs/authorizations/STAGE2-W0-IELTS-ARCH-AUTH-001.md`), implementation evidence, and independent verdicts are **NOT** additional invented roadmap hierarchy levels. They represent discrete execution roles and artifacts that derive authority from and remain strictly subordinate to the canonical document hierarchy above.
 
 ---
 
@@ -65,11 +73,11 @@ Protocol V2 centralizes all mandatory repository invariants so transaction promp
 - **Fail-Closed on Drift**: Any unexpected commit on base or candidate head halts execution (`CANONICAL_BASE_DRIFT`).
 
 ### 3.3 Write Scope Invariants
-- **Closed Exact Allowlists**: Only files explicitly listed in the controlling authorization manifest may be created or modified.
-- **Zero Scope Expansion**: No unauthorized dependency modifications (`package.json`), workflow changes (`.github/**`), or unlisted file edits.
+- **Closed Exact Allowlists**: Writes are limited to the exact closed allowlist granted by the controlling accepted authorization/capsule or other explicit canonical transaction authority.
+- **Zero Scope Expansion**: No unauthorized dependency modifications (`package.json`), workflow changes (`.github/**`), or unlisted file edits. No inferred write scope is permitted.
 
 ### 3.4 RED $\to$ GREEN Invariants
-- **Test-First Commit A (RED)**: When required by the authorization manifest, Commit A introduces natural, deterministic test failures directly exercising the specified product defect or requirement.
+- **Test-First Commit A (RED)**: When required by the controlling authorization, Commit A introduces natural, deterministic test failures directly exercising the specified product defect or requirement.
 - **RED Immutability**: RED test blobs are permanently immutable after valid Commit A. Tests cannot be altered, skipped, or quarantine-wrapped to make gates pass.
 - **Minimal Commit B (GREEN)**: Commit B contains only the minimal necessary implementation code to satisfy the RED tests.
 - **Zero Assertion Weakening**: No assertion edits, timeouts inflated to mask race conditions, or business-logic failures converted into harness skips.
