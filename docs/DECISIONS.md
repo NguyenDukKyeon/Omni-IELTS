@@ -805,3 +805,43 @@ There is no second metrics truth, no second Error Repository, no second Today sc
 
 Revisit when:
 A bounded execution authorization candidate with an exact implementation predecessor is created.
+
+## ADR-049 — Owner-ratified Stage 1–8 Master Roadmap is the top-level product authority
+
+Status: CONFIRMED
+
+Context: the Owner-ratified product roadmap defines eight numbered product
+Stages (1–8) with an interstage governance gate (Stage 1.5). The existing
+`docs/ROADMAP.md` describes Phase 0–7 technical packages and declares itself
+`CANONICAL`, creating ambiguity about whether it is the top-level product
+roadmap or a subordinate technical taxonomy. Future agents have confused
+Stage numbers with Phase numbers (e.g. treating Stage 2 as Phase 2).
+
+Decision:
+
+- `docs/MASTER_ROADMAP.md` is the Owner-ratified top-level Master Product
+  Roadmap (Stage 1–8). It owns Stage identities, missions, ordering and
+  completion state.
+- `docs/ROADMAP.md` is reclassified as Level 2 — Subordinate Technical
+  Package Taxonomy. It retains canonical authority over Phase 0–7 package
+  IDs, dependency graph, architecture boundaries and cross-cutting packages.
+  It is NOT the top-level Master Product Roadmap.
+- Stage numbers (1–8) do NOT map 1:1 to Phase numbers (0–7). Stage 2
+  (IELTS Completeness) is NOT Phase 2 (Caption-first Transcript Resolver).
+  Stage 1 Waves (W0–W6) are NOT Phase IDs.
+- Historical accepted package identities (P0-00 through P7-05, LI-00,
+  SRC-00, ERR-00, QAR-00, EWF-00), evidence, architecture boundaries and
+  acceptance verdicts remain valid unless separately superseded.
+- This authority change does NOT authorize Stage 2 implementation, wave
+  strategy, or any source/test change.
+
+Consequences: all governance documents (`AGENTS.md`, `IMPLEMENTATION_PLAN.md`,
+`IMPLEMENTATION_STATUS.md`) now reference `docs/MASTER_ROADMAP.md` as the
+top-level product authority. `docs/ROADMAP.md` retains its full Phase 0–7
+technical knowledge and package-level canonical authority. Future agents must
+distinguish Stage (product) from Phase (technical) and cannot infer Stage
+identity from Phase number or vice versa.
+
+Revisit when: the Stage sequence, authority hierarchy or Stage/Phase
+relationship materially changes. Preserve the taxonomy distinction and
+historical acceptance validity.

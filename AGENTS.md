@@ -2,7 +2,8 @@
 
 ## Nguồn thẩm quyền
 
-- `docs/ROADMAP.md` là nguồn chính thức cho phạm vi Phase 0–7, thứ tự phase và dependency giữa các work package.
+- `docs/MASTER_ROADMAP.md` là top-level Master Product Roadmap (Stage 1–8). Stage numbers KHÔNG map 1:1 sang Phase numbers.
+- `docs/ROADMAP.md` là nguồn chính thức cho phạm vi Phase 0–7, thứ tự phase và dependency giữa các work package. Đây là Level 2 Technical Package Taxonomy phục vụ Master Roadmap, KHÔNG phải top-level product roadmap.
 - `docs/IMPLEMENTATION_PLAN.md` là đặc tả chi tiết mục tiêu, test, migration/rollback, acceptance và stop condition của từng package.
 - `docs/IMPLEMENTATION_STATUS.md` là nguồn duy nhất cho trạng thái thực thi và evidence đã chạy trên commit cụ thể.
 - `docs/DECISIONS.md` lưu rationale và quyết định kiến trúc/sản phẩm. ADR đã `SUPERSEDED` không còn hiệu lực.

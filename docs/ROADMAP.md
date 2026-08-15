@@ -1,15 +1,25 @@
-# VocabMaster — Roadmap Phase 0–7
+# VocabMaster — Technical Package Taxonomy Phase 0–7
 
-Trạng thái: **CANONICAL**
+Trạng thái: **CANONICAL** cho Phase 0–7 package taxonomy
 Ngày hiệu lực: 2026-07-30
+
+> **Note**: Đây KHÔNG phải là top-level Master Product Roadmap. Top-level
+> product roadmap là `docs/MASTER_ROADMAP.md` (Stage 1–8). Tài liệu này là
+> Level 2 — Subordinate Technical Package Taxonomy phục vụ Master Roadmap.
+>
+> Phase numbers (0–7) KHÔNG map 1:1 sang Stage numbers (1–8). Ví dụ:
+> Stage 2 (IELTS Completeness) KHÔNG phải Phase 2 (Caption-first Transcript
+> Resolver). Historical accepted package identities và evidence vẫn có hiệu
+> lực trừ khi bị superseded bởi quyết định riêng.
 
 ## 1. Vai trò của tài liệu
 
-Đây là nguồn chính thức cho phạm vi Phase 0–7, package ID, phase gate và dependency. Chi tiết acceptance, test, migration/rollback và stop condition nằm trong `IMPLEMENTATION_PLAN.md`; trạng thái/evidence thực tế nằm trong `IMPLEMENTATION_STATUS.md`; rationale nằm trong `DECISIONS.md`; quy tắc thi hành nằm trong `AGENTS.md`.
+Đây là nguồn chính thức cho phạm vi Phase 0–7, package ID, phase gate và dependency. Chi tiết acceptance, test, migration/rollback và stop condition nằm trong `IMPLEMENTATION_PLAN.md`; trạng thái/evidence thực tế nằm trong `IMPLEMENTATION_STATUS.md`; rationale nằm trong `DECISIONS.md`; quy tắc thi hành nằm trong `AGENTS.md`. Top-level product sequencing nằm trong `MASTER_ROADMAP.md`.
 
 Khi thay đổi roadmap hoặc dependency, phải cập nhật file này trước, ghi quyết định tương ứng, rồi reconcile plan và status. Các báo cáo V9/IELTS/V10 cũ là evidence lịch sử, không phải roadmap hiện hành.
 
 Work package là đơn vị lập kế hoạch, kiểm chứng và commit; không tự động là một branch/PR. Riêng Phase 0 được thực hiện tuần tự trên `codex/phase-0-release-safety`, một commit nhỏ cho mỗi P0-00…P0-08 và một PR Phase 0.
+
 
 ## 2. Phase gates
 
