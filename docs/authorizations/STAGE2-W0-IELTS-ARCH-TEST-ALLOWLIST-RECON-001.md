@@ -138,15 +138,42 @@ All accepted W0 domain semantics from `STAGE2-W0-IELTS-ARCH-AUTH-001.md` remain 
 - **Old Version:** `3`
 - **New Version:** `4`
 - **Migration Class:** `FORWARD_ONLY_ADDITIVE_IDB_MIGRATION`
-- **Canonical Mode:** `'adopt'` (consistent with IELTS migration ledger convention)
+- **Migration Mode:** `upgrade` (atomic registration inside the IndexedDB `versionchange` transaction)
 
 ### 6.2 Exact Frozen Migration Digest
 To eliminate executor and auditor ambiguity, the exact migration digest is frozen:
 
 $$\text{MIGRATION\_DIGEST} = \textbf{\texttt{"wave0-ielts-product-contracts-store-v4:2026-08-15"}}$$
 
-### 6.3 Conformance Rule
-Setting `IELTS_DB_VERSION = 4` without registering `wave0-ielts-product-contracts-v4` with this exact digest in `IELTS_MIGRATIONS` is **STRICTLY NON-CONFORMING** and will be rejected.
+### 6.3 Atomicity Invariant
+$$\text{MIGRATION\_ATOMICITY} = \text{SCHEMA\_AND\_LEDGER\_SAME\_VERSIONCHANGE\_TRANSACTION}$$
+
+The schema evolution (store/index creation) and the durable migration ledger record write must succeed or abort atomically within the single IndexedDB `versionchange` transaction managed by `applyUpgradeMigrations()`.
+
+A state equivalent to:
+$$\text{DB version 4} + \text{stores created} + \text{wave0-ielts-product-contracts-v4 ledger row absent}$$
+is **STRICTLY NON-CONFORMING** and violates transaction boundaries.
+
+### 6.4 Implementation Shape
+The future W0 implementation registers the migration definition in `IELTS_MIGRATIONS` equivalent to:
+```javascript
+defineMigration({
+  id: 'wave0-ielts-product-contracts-v4',
+  digest: 'wave0-ielts-product-contracts-store-v4:2026-08-15',
+  targetVersion: 4,
+  mode: 'upgrade',
+  description: 'Add durable IELTS test blueprints and session runs object stores.'
+})
+```
+A dedicated `migration.apply` callback is not required if the existing database `upgrade` handler creates the stores in the versionchange transaction. The `mode: 'upgrade'` setting ensures `applyUpgradeMigrations()` writes the ledger row inside that same upgrade transaction.
+
+### 6.5 Strict Prohibition on Post-Upgrade Adoption
+The future W0 implementation **MUST NOT** satisfy the v4 migration contract by:
+1. Bumping `IELTS_DB_VERSION` to 4;
+2. Creating stores via generic upgrade;
+3. Then relying on `ensureLedger()` to lazily adopt the missing v4 ledger row afterward (`mode: 'adopt'`).
+
+Such a pattern risks split-brain if interrupted. `ensureLedger()` will throw `MIGRATION_LEDGER_ENTRY_MISSING` if any `mode: 'upgrade'` migration is absent from the ledger upon database open.
 
 ---
 
@@ -154,11 +181,16 @@ Setting `IELTS_DB_VERSION = 4` without registering `wave0-ielts-product-contract
 
 Authority to modify [`tests/migration-ledger.test.mjs`](file:///d:/Workspace/EnlishMaster-W6/tests/migration-ledger.test.mjs) is strictly bounded to the minimum changes required for IELTS v4 reconciliation:
 
-1. Update IELTS migration ledger expectations to include `wave0-ielts-product-contracts-v4` as the 4th entry with targetVersion 4 and digest `wave0-ielts-product-contracts-store-v4:2026-08-15`.
+1. Update IELTS migration ledger expectations to include `wave0-ielts-product-contracts-v4` as the 4th entry with:
+   - `migrationId`: `'wave0-ielts-product-contracts-v4'`
+   - `targetVersion`: `4`
+   - `digest`: `'wave0-ielts-product-contracts-store-v4:2026-08-15'`
+   - `mode`: `'upgrade'`
 2. Update double-open idempotency length assertions for IELTS from 3 to 4 (`second.map(rows => rows.length)` becomes `[2, 4, 8]`).
 3. Update the physical IELTS upgrade test to expect `upgraded.version === 4`.
 4. Update legacy store exclusions in the physical upgrade test to include `ieltsTestBlueprints` and `ieltsTestRuns`.
 5. Verify that `ieltsTestBlueprints` and `ieltsTestRuns` are created additively with their verified keyPaths and indexes.
+
 
 **Prohibition on Unrelated Scope:**
 - Core migration tests must remain unchanged.

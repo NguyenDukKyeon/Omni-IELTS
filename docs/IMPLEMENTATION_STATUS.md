@@ -813,8 +813,11 @@ migration while preserving clean recovery topology.
 - Source allowlist delta: `NONE`
 - Product semantic change: `NONE`
 - Migration semantic change: `NONE` (`wave0-ielts-product-contracts-v4`, DB v3 → v4)
+- Migration mode: `upgrade` (atomic registration inside the IndexedDB `versionchange` transaction)
+- Migration atomicity: `SCHEMA_AND_LEDGER_SAME_VERSIONCHANGE_TRANSACTION`
 - Exact frozen migration digest: `wave0-ielts-product-contracts-store-v4:2026-08-15`
 - Dependency change: `NONE`
 - Recovery implementation status: `NOT_STARTED`
+
 
 
