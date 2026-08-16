@@ -1021,13 +1021,13 @@ Transaction `W1-IELTS-OBJ-001` (Objective Question Kernel Completeness) cleanly 
   - Source changes strictly within `SOURCE_ALLOWLIST`: `src/ielts-listening-runner.js`, `src/ielts-media-player.js`, `src/ielts-domain.js`, `src/ielts-hub-v2.js`.
   - Natural GREEN CI Run ID: `31975164283` (Attempt 1, `success`).
 - **Independent Implementation Audit**: `ACCEPT` (Session `a34135da-6e76-41ef-967b-1612571c323b`, 0 findings).
-- **Implementation Merge SHA**: `3c90ebd883a48e7e1ebaf29497e682a472a1df64` (Normal Merge Commit).
+- **Implementation Merge SHA**: `3c90ebd10b9559c8ec2090a3226c7b8d11cd092f` (Normal Merge Commit).
 - **Post-Merge Push CI Evidence**:
   - Run ID: `31975390217`
   - Attempt: `1`
   - Event: `push`
   - Branch: `main`
-  - Exact Head: `3c90ebd883a48e7e1ebaf29497e682a472a1df64`
+  - Exact Head: `3c90ebd10b9559c8ec2090a3226c7b8d11cd092f`
   - Conclusion: `SUCCESS`
 
 ### Historical Rejected / Defective Candidates Ledger
@@ -1059,10 +1059,25 @@ Transaction `W1-IELTS-OBJ-001` (Objective Question Kernel Completeness) cleanly 
 - `W2_IMPLEMENTATION`: `ACCEPTED_AND_CANONICAL` (PR #125)
 - `W2_COMMIT_A`: `a6a6d8e9de97b1a6845111a5f930cfc50a4b4538` (Run `31974833396`)
 - `W2_ACCEPTED_HEAD`: `900405f39badaaf4fdfd0441ed9a05451ade34eb` (Run `31975164283`)
-- `W2_MERGE_SHA`: `3c90ebd883a48e7e1ebaf29497e682a472a1df64`
+- `W2_MERGE_SHA`: `3c90ebd10b9559c8ec2090a3226c7b8d11cd092f`
 - `W2_INDEPENDENT_ACCEPT`: PR #125 review (Session `a34135da-6e76-41ef-967b-1612571c323b`)
-- `W2_POST_MERGE_CI`: Run `31975390217` / attempt 1 / push / SUCCESS / exact head `3c90ebd883a48e7e1ebaf29497e682a472a1df64`
+- `W2_POST_MERGE_CI`: Run `31975390217` / attempt 1 / push / SUCCESS / exact head `3c90ebd10b9559c8ec2090a3226c7b8d11cd092f`
 - `W2_STATUS`: `CANONICALLY_CLOSED`
+
+### Downstream Scope & Authority Bounds
+- `W3`: `NOT_AUTHORIZED` (Next eligible for authorization under Stage 2 strategy, but `W3_EXECUTION_AUTHORITY: NOT_GRANTED`)
+- `W4`: `NOT_AUTHORIZED`
+- `W5`: `NOT_AUTHORIZED`
+- `W6`: `NOT_AUTHORIZED`
+- `W3_W6`: `NOT_AUTHORIZED`
+- `NEXT_STAGE2_PRODUCT_WAVE`: `REQUIRES_SEPARATE_AUTHORIZATION`
+- `PRODUCT_SEMANTIC_CHANGE`: `NONE`
+- `IMPLEMENTATION_CHANGE`: `NONE`
+- `TEST_CHANGE`: `NONE`
+- `SOURCE_CHANGE`: `NONE`
+- `AUTHORIZATION_CHANGE`: `NONE`
+- `DEPENDENCY_CHANGE`: `NONE`
+- `W3_W6_AUTHORITY_CHANGE`: `NONE`
 
 ## AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W2-IELTS-LIS-001
 
@@ -1074,8 +1089,9 @@ Transaction `W1-IELTS-OBJ-001` (Objective Question Kernel Completeness) cleanly 
 | Authorization Manifest Identity | `STAGE2-W2-IELTS-LIS-AUTH-002` |
 | Authorization Accepted Head | `1a00602e2550eb6aa77b9f05ecf7c0749f111fe9` |
 | Independent Authorization Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/122#pullrequestreview-PRR_kwDOTmjPCs8AAAABJuLYqQ` |
-| Authorization Merge SHA | `SELF_RESOLVE_ACTIVATION_MERGE_SHA` |
+| Authorization Merge SHA | `0d7acbf0c6f056c3f169e2200e58f785f8e2e3d9` |
 | Activation State | `AUTHORIZED / READY_FOR_EXECUTION` |
-| Effective Implementation Predecessor | `SELF_RESOLVE_ACTIVATION_MERGE_SHA` |
+| Effective Implementation Predecessor | `d278f2045b38299b056f16ec7d76fb81c0739541` |
+
 
 
