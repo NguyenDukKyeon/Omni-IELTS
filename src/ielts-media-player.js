@@ -44,3 +44,78 @@ export class YouTubeSegmentPlayer{
   getDuration(){return Number(this.duration||0);}
   destroy(){this.destroyed=true;clearInterval(this.pollTimer);clearInterval(this.listenTimer);this.pollTimer=null;this.listenTimer=null;globalThis.removeEventListener('message',this.messageHandler);this.pause();this.iframe?.remove();this.iframe=null;this.host?.replaceChildren();}
 }
+
+export class IeltsAudioController {
+  constructor({ host, media, is1PlayOnly = false, onTimeUpdate, onStateChange, onSectionEnd, onError } = {}) {
+    this.host = host;
+    this.media = media || {};
+    this.is1PlayOnly = Boolean(is1PlayOnly);
+    this.onTimeUpdate = onTimeUpdate;
+    this.onStateChange = onStateChange;
+    this.onSectionEnd = onSectionEnd;
+    this.onError = onError;
+    this.player = null;
+    this.currentTime = 0;
+    this.activeSection = 1;
+    this.playedSections = new Set();
+    this.isPlaying = false;
+  }
+
+  async mount({ section = 1, startSeconds = 0 } = {}) {
+    this.activeSection = section;
+    this.currentTime = Math.max(0, Number(startSeconds || 0));
+    if (this.host && this.media.videoId) {
+      this.player = new YouTubeSegmentPlayer({
+        host: this.host,
+        onTimeUpdate: (t) => {
+          this.currentTime = t;
+          this.onTimeUpdate?.(t);
+        },
+        onStateChange: (s) => {
+          if (s === 1 || s === 'playing') this.isPlaying = true;
+          else if (s === 2 || s === 0 || s === 'paused') this.isPlaying = false;
+          this.onStateChange?.(s);
+          if (s === 'segment-ended') {
+            this.playedSections.add(this.activeSection);
+            this.onSectionEnd?.(this.activeSection);
+          }
+        },
+        onError: this.onError
+      });
+      await this.player.mount(this.media.videoId, { startSeconds: this.currentTime, autoplay: false });
+    }
+    return this;
+  }
+
+  play() {
+    if (this.is1PlayOnly && this.playedSections.has(this.activeSection)) {
+      throw new Error(`Exam mode permits 1-play only. Section ${this.activeSection} has already been played.`);
+    }
+    this.isPlaying = true;
+    this.player?.play();
+  }
+
+  pause() {
+    this.isPlaying = false;
+    this.player?.pause();
+  }
+
+  seek(seconds) {
+    if (this.is1PlayOnly) {
+      throw new Error('Seeking is disabled in Exam Mode.');
+    }
+    this.currentTime = Math.max(0, Number(seconds || 0));
+    this.player?.seek(this.currentTime);
+  }
+
+  getCurrentTime() {
+    return this.player ? this.player.getCurrentTime() : this.currentTime;
+  }
+
+  destroy() {
+    this.player?.destroy();
+    this.player = null;
+    this.isPlaying = false;
+  }
+}
+
