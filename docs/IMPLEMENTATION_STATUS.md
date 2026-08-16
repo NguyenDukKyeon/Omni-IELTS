@@ -999,3 +999,17 @@ Transaction `W1-IELTS-OBJ-001` (Objective Question Kernel Completeness) cleanly 
 - `DEPENDENCY_CHANGE`: `NONE`
 - `W2_W6_AUTHORITY_CHANGE`: `NONE`
 
+## AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W2-IELTS-LIS-001
+
+| Field | Value |
+|---|---|
+| Activation Schema | `AGENT_CONTEXT_AUTH_ACTIVATION_V1` |
+| Transaction ID | `W2-IELTS-LIS-001` |
+| Authorization Manifest | `docs/authorizations/STAGE2-W2-IELTS-LIS-AUTH-001.md` |
+| Authorization Manifest Identity | `STAGE2-W2-IELTS-LIS-AUTH-001` |
+| Authorization Accepted Head | `882ece117301fdb3b885a46ac521e4e60fa292f2` |
+| Independent Authorization Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/119#pullrequestreview-PRR_kwDOTmjPCs8AAAABJuFKwQ` |
+| Authorization Merge SHA | `SELF_RESOLVE_ACTIVATION_MERGE_SHA` |
+| Activation State | `AUTHORIZED / READY_FOR_EXECUTION` |
+| Effective Implementation Predecessor | `SELF_RESOLVE_ACTIVATION_MERGE_SHA` |
+
