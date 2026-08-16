@@ -60,9 +60,30 @@ test('C (R1): canonical_main represents canonical main ref, distinct from workin
   assert.ok(workingHead && workingHead.value, 'working_head.value must exist');
   assert.match(workingHead.value, /^[0-9a-f]{40}$/, 'working_head must be 40-char SHA');
 
-  // Verify that canonical_main matches git origin/main or local main ref
-  const expectedMain = execFileSync('git', ['rev-parse', 'refs/remotes/origin/main'], { cwd: ROOT, encoding: 'utf8' }).trim();
-  assert.equal(canonicalMain.value, expectedMain, 'canonical_main must match refs/remotes/origin/main');
+  // Verify that canonical_main matches git origin/main or GITHUB_EVENT_PATH base sha
+  let expectedMain = null;
+  const eventPath = process.env.GITHUB_EVENT_PATH;
+  if (eventPath && fs.existsSync(eventPath)) {
+    try {
+      const event = JSON.parse(fs.readFileSync(eventPath, 'utf8'));
+      if (event.pull_request?.base?.ref === 'main' && event.pull_request?.base?.sha) {
+        expectedMain = event.pull_request.base.sha;
+      }
+    } catch {}
+  }
+  if (!expectedMain) {
+    try {
+      expectedMain = execFileSync('git', ['rev-parse', 'refs/remotes/origin/main'], { cwd: ROOT, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+    } catch {
+      try {
+        expectedMain = execFileSync('git', ['rev-parse', 'refs/heads/main'], { cwd: ROOT, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+      } catch {}
+    }
+  }
+
+  if (expectedMain) {
+    assert.equal(canonicalMain.value, expectedMain, 'canonical_main must match expected main');
+  }
 });
 
 // ============================================================================

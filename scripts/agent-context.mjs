@@ -73,6 +73,18 @@ function resolveCanonicalMain(rootDir) {
     return { value: localMain, source: 'refs/heads/main' };
   }
 
+  // 4. Shorthand origin/main fallback
+  const shortOriginMain = gitExec(['rev-parse', 'origin/main'], rootDir);
+  if (shortOriginMain && /^[0-9a-f]{40}$/.test(shortOriginMain)) {
+    return { value: shortOriginMain, source: 'refs/remotes/origin/main' };
+  }
+
+  // 5. Shorthand main fallback
+  const shortMain = gitExec(['rev-parse', 'main'], rootDir);
+  if (shortMain && /^[0-9a-f]{40}$/.test(shortMain)) {
+    return { value: shortMain, source: 'refs/heads/main' };
+  }
+
   return null;
 }
 
