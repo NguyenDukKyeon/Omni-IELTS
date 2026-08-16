@@ -1,70 +1,121 @@
-# VocabMaster Repository Rules
+# VocabMaster Agent Router
 
-## Nguồn thẩm quyền
+Compact routing entrypoint and global invariants for coding agents in `NguyenDukKyeon/VocabMaster`.
 
-- `docs/MASTER_ROADMAP.md` là top-level Master Product Roadmap (Stage 1–8). Stage numbers KHÔNG map 1:1 sang Phase numbers.
-- `docs/ROADMAP.md` là nguồn chính thức cho phạm vi Phase 0–7, thứ tự phase và dependency giữa các work package. Đây là Level 2 Technical Package Taxonomy phục vụ Master Roadmap, KHÔNG phải top-level product roadmap.
-- `docs/IMPLEMENTATION_PLAN.md` là đặc tả chi tiết mục tiêu, test, migration/rollback, acceptance và stop condition của từng package.
-- `docs/IMPLEMENTATION_STATUS.md` là nguồn duy nhất cho trạng thái thực thi và evidence đã chạy trên commit cụ thể.
-- `docs/DECISIONS.md` lưu rationale và quyết định kiến trúc/sản phẩm. ADR đã `SUPERSEDED` không còn hiệu lực.
-- File này là quy tắc bắt buộc khi thay đổi repository. Khi các tài liệu có vẻ mâu thuẫn, dừng sửa source, đối chiếu theo các vai trò trên và ghi ADR nếu quyết định làm thay đổi kiến trúc, dữ liệu, evidence hoặc release gate.
+---
 
-## Phạm vi và Git
+## 1. Fast Start
 
-- Phase 0 là hard gate. Không tạo hoặc triển khai bất kỳ package Phase 1 nào trước khi P0-08 được reviewer độc lập ghi `ACCEPTED` tại một commit chính xác.
-- Phase 0 dùng một branch `codex/phase-0-release-safety` và một pull request. P0-00 đến P0-08 là đơn vị plan, kiểm chứng và commit nội bộ; không mặc định là branch hoặc PR riêng.
-- Thực hiện tuần tự P0-00 → P0-08. Mỗi package phải có commit nhỏ, mục đích rõ, predecessor là commit package trước, diff được review và evidence test được ghi lại.
-- Chỉ một agent được ghi file/code. Subagent chỉ được đọc, phân tích hoặc review; không sửa file, commit, rebase, push hoặc mở PR.
-- Không stage/commit thay đổi ngoài phạm vi. Không sửa lịch sử Git, force-push, reset destructive hoặc ghi đè thay đổi của người dùng.
-- Không commit secret, browser profile người dùng, dữ liệu học thật, file debug, marker tạm, build artifact ngoài convention, test output tạm hoặc fixture chứa PII.
+Route according to your assigned role:
 
-## Invariant evidence và learning
+### Implementer
+1. **Identify Transaction**: Determine your assigned task / Wave ID (e.g. `W0-IELTS-ARCH-001`).
+2. **Compile Context**:
+   ```bash
+   npm run agent:context -- <TRANSACTION_ID>
+   ```
+   For machine-readable JSON: `npm run agent:context -- <TRANSACTION_ID> --json`
+   *(If compiler fails closed with `UNKNOWN_TRANSACTION` or unsupported format, open the controlling canonical document directly).*
+3. **Consume Primary Capsule**: Use the emitted Agent Context Capsule as your **PRIMARY BOUNDED OPERATIONAL CONTEXT**.
+4. **Verify State**: Confirm canonical base ref and working HEAD against Git state before editing.
+5. **On-Demand Escalation Only**: Do **NOT** reread the full governance corpus by default. Open canonical source documents only when an explicit escalation trigger arises or deep domain context is required.
 
-- `EvidencePolicy` là gateway duy nhất được phép biến `Attempt` thành review event hoặc FSRS/schedule mutation. Không tạo schedule write path mới đi vòng gateway.
-- Policy phải default-deny và luôn trả `eligible` cùng reason code. Caller không được tự khẳng định independent/verified nếu không có `AssistanceTrace` và provenance kiểm chứng được.
-- Reveal, hint, correction/answer đã lộ, transcript đã xem, retry sau lộ đáp án, unverified transcript/source, Shadowing, coaching, spelling-only, source error, Skip và Retell không có learner output/evaluator không được tạo positive independent evidence.
-- Failure, `Again`, skip và abstention hợp lệ vẫn được persist để chẩn đoán, nhưng không được giả success, unlock skill hoặc inflate mastery. Unlock chỉ dựa trên qualified successful independent evidence.
-- Planned target là bất biến từ plan đến receipt: activity/card/sense/skill/source revision phải khớp. Không suy target từ DOM, selected state hoặc mode name; stale/missing/mismatch phải fail closed.
-- Mọi review event mới phải truy được activity, target, attempt/receipt, assistance/provenance và EvidenceDecision reason. Duplicate receipt phải idempotent.
-- Không sửa assertion, bỏ test, thêm skip/quarantine hoặc biến lỗi nghiệp vụ Retell thành lỗi harness chỉ để gate xanh.
+### Independent Auditor
+1. **Fresh-Verify Raw Evidence**: Do **NOT** treat the compiler capsule or implementer claims as accepted evidence.
+2. **Independent Ground Truth**: Inspect raw GitHub state, PR diff, exact commit topology (`base`, `head`, `parents`), CI run/steps, and artifacts with digests.
+3. **Canonical Authority**: Fresh-read controlling canonical documents and acceptance criteria directly from repository sources.
+4. **Persist Verdict**: Post a formal independent audit verdict (`ACCEPT`, `REJECT`, or `BLOCKED`).
 
-## Invariant dữ liệu, backup và restore
+### Repository Governor
+1. **Canonical Authority**: Fresh-read controlling canonical roadmaps, ADRs, and protocols for any governance or status mutations.
+2. **State Ledger**: Update canonical status in [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) only upon verified independent audit acceptance.
 
-- Phân loại store thành `durable`, `reconstructable-cache` hoặc `ephemeral`. Durable gồm learner-authored data, Core, IELTS, V10, cards, settings/goals, drafts, attempts/receipts/evidence, review events/FSRS, errors, progress, user transcript revisions, migration/restore journals và unresolved outbox/sagas; tất cả phải có trong backup.
-- Cache tái dựng được không đi vào backup payload, nhưng stub/digest cần cho việc tái dựng phải được giữ. Ephemeral state không bao giờ được báo là đã lưu bền.
-- Backup phải deterministic/canonical, versioned, dual-read legacy khi đã cam kết, reject schema mới không hỗ trợ một cách rõ ràng, không silently bỏ record lỗi và không chứa secret.
-- Restore luôn theo chuỗi stage → validate toàn payload → journal → commit/reconcile → reopen/read-back/canonical verify. Không clear nguồn đích trước validate và không tuyên bố thành công trước durable commit + verify.
-- IndexedDB schema chỉ tiến về trước. Migration additive, idempotent, forward-compatible; rollback bằng compatible reader/feature flag/reconciler, không downgrade DB version và không xóa dữ liệu mới.
-- Không xóa durable source chỉ vì đã copy vào RAM. Với copy/migration giữa store/DB: ghi đích, commit, reopen/read-back và canonical verify trước khi xóa nguồn; retry phải an toàn sau interruption.
-- Khi IndexedDB/quota/versionchange/blocked lỗi, UI và API phải phân biệt durable success, temporary state và failure. RAM fallback không được masquerade là durable success.
+---
 
-## Invariant containment UI
+## 2. Global Non-Negotiable Invariants
 
-- Production chỉ có một entry point an toàn cho Today và một Inbox/Capture. Không “loại” implementation cũ chỉ bằng CSS; listener/route/mount production cũ phải bị disable hoặc gỡ rõ ràng.
-- Quick Capture chỉ reset form sau durable success; lỗi phải giữ input và có thông báo. Double submit phải idempotent và draft phải sống qua reload/degraded storage.
-- Today launcher phải thực thi exact planned target. Activity mà executor chưa hỗ trợ chính xác phải coaching-only hoặc fail closed, không schedule.
-- Retell giả phải được sửa thành flow có output/evaluator thật, hoặc vô hiệu hóa/ghi coaching-only rõ ràng; UI không được dùng ngôn ngữ “đã đánh giá” khi chưa đánh giá.
+Every agent must preserve these invariants at all times:
 
-## Test, harness và acceptance evidence
+1. **Authority Model**:
+   - `CANONICAL_DOCS = AUTHORITY`
+   - `CONTEXT_COMPILER = DERIVED_OPERATIONAL_CONTEXT`
+   - `CAPSULE ≠ AUTHORITY`
+   - If a capsule conflicts with a canonical document, **CANONICAL SOURCE WINS**. Stop and reconcile.
+2. **One-Writer Rule**: Only one agent writes/modifies files. Subagents analyze/review only; never commit, push, or open PRs.
+3. **Strict Allowlist Scope**: Write only to files declared in the transaction's allowlist. Zero out-of-scope modifications.
+4. **Evidence Gateway**: `EvidencePolicy` is the sole gateway transforming attempts into review events / FSRS mutations. Reveals, hints, coaching, transcript views, skips, and Retell without real output/evaluator **NEVER** generate positive independent evidence.
+5. **Durable Persistence**: Write, commit, reopen, and read-back before clearing source data. RAM fallbacks must not masquerade as durable storage. Forward-only additive schema migrations.
+6. **Containment UI**: Exactly one safe production entrypoint for Today and one Inbox/Capture. Old listeners/routes must be disabled or removed, not merely hidden with CSS.
+7. **Independent Audit Separation & Merge Authority**:
+   - Executors cannot self-accept. `CI GREEN ≠ ACCEPT`.
+   - `INDEPENDENT_ACCEPTANCE ≠ MERGE_AUTHORITY`. An independent `ACCEPT` verdict does NOT grant merge authority unless explicit merge authorization is separately granted for that transaction.
+8. **Git Safety**: No force-push, history rewrite, destructive reset, secret commit, or debug artifacts in commits.
 
-- Trước source change phải ghi baseline thực tế. Sau mỗi package chạy focused tests, test migration/rollback nếu chạm dữ liệu, review `git diff` và cập nhật status/decision khi cần.
-- Browser discovery dùng một policy deterministic cho Windows và CI, hỗ trợ override rõ ràng, kiểm executable thực sự tồn tại và không skip critical suite chỉ vì không tìm thấy Chromium. Không dùng browser profile của người dùng.
-- Fixture phải deterministic; mỗi suite dùng temp profile/port riêng, quản lý process tree, chờ readiness có timeout và dọn cả pass/fail. Sau cleanup phải xác minh port trống, process kết thúc và temp profile biến mất.
-- `EBUSY` cleanup phải retry có giới hạn với backoff, xác minh kết quả cuối và vẫn fail infrastructure nếu tài nguyên thực sự chưa dọn. Không retry mù product assertion.
-- Harness phải phân loại rõ `INFRASTRUCTURE_FAILURE` và `PRODUCT_FAILURE`; product failure như Retell sai vẫn đỏ và giữ chẩn đoán gốc.
-- Browser gate critical chạy ba lần liên tiếp tại P0-00 và full `phase0:gate` chạy ba lần tại P0-08. Không dùng source-string/DOM-presence assertion thay cho runtime/persistence/browser evidence.
-- Evidence cuối phải ghi OS, Node, browser/version, exact commit, từng lệnh, exit/result thực tế, migration/rollback fixture, durable read-back và artifact/digest khi gate yêu cầu.
-- Hierarchy evidence: runtime/persistence/browser trên fixture có kiểm soát > integration/unit/property/failure injection > build/static/schema > source-string/DOM presence > report/screenshot. Evidence yếu không được phủ nhận failure mạnh hơn.
+---
 
-## Bounded execution capsules
+## 3. Authority Hierarchy
 
-- Prompt count is not an acceptance gate. An independently accepted Wave Authorization Manifest may pre-authorize bounded conditional transitions for separately identified packages or research lanes.
-- When `EXECUTION_PROMPT_PROTOCOL_V2` (`docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md`) has satisfied its activation gates, new execution prompting transactions follow it to minimize prompt duplication and artificial handoffs while preserving all mandatory technical gates. Historical independently accepted Protocol V1 manifests retain their exact authority and are not retroactively reinterpreted.
-- Exact predecessor, canonical owner, one writer, exact file allowlist, test-first Commit A, natural product-defect RED, minimal GREEN, exact-head CI, evidence provenance, migration/rollback obligations and stop conditions remain mandatory.
-- A bounded executor may materialize only the transitions frozen by the accepted manifest and cannot independently accept its own implementation or evidence. A fresh independent final audit remains mandatory.
-- Post-verdict merge or deterministic reconciliation is permitted only when explicitly pre-authorized, after an `ACCEPT` verdict is posted and read back, accepted heads remain unchanged and required CI remains successful.
-- Every capsule fails closed on predecessor or head drift, branch race, ownership or file overlap, dependency violation, invalid or ambiguous RED, unexpected CI identity, missing artifacts or evidence ambiguity.
+When resolving governance, scope, or design questions, consult in this strict canonical order:
 
-## Phase 0 hard gate
+1. [`docs/MASTER_ROADMAP.md`](docs/MASTER_ROADMAP.md) — Master Product Roadmap (Stage 1–8).
+2. [`docs/ROADMAP.md`](docs/ROADMAP.md) — Technical Package Taxonomy & Phase Dependencies (Phase 0–7).
+3. [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) — Package Specifications, Test Plans & Acceptance Criteria.
+4. [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) — Execution Ledger & Canonical Status Source of Truth.
+5. [`docs/DECISIONS.md`](docs/DECISIONS.md) — Architecture Decision Records (ADRs).
+6. [`AGENTS.md`](AGENTS.md) — Repository Router & Global Invariants.
 
-P0-08 chỉ `ACCEPTED` khi cùng một exact commit thỏa toàn bộ checklist trong `docs/IMPLEMENTATION_STATUS.md`, gồm evidence matrix không false schedule; backup sentinel 100% mọi durable store Core/IELTS/V10/drafts/outbox; restore/rollback an toàn; Quick Capture reload/degraded; một Today và một Inbox; Retell trung thực; browser/fixture/cleanup ổn định; unit, integration, static, build và browser gates pass; không debug/marker/skip/assertion yếu; reviewer độc lập không còn finding P0/P1.
+### Task-Specific Authorizations
+Accepted Wave Authorization Manifests in `docs/authorizations/` control bounded execution for their specific authorized transactions under [`EXECUTION_PROMPT_PROTOCOL_V2.md`](docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md). They provide task-specific boundary authority where effective, but do not alter the permanent global authority hierarchy above. If no effective authorization exists, no task execution authority is granted.
+
+---
+
+## 4. Role Router
+
+| Role | Core Responsibilities | Boundaries & Constraints |
+|---|---|---|
+| **Implementer** | Reads capsule, runs RED baseline, writes minimal GREEN code, verifies locally, pushes Draft PR, awaits CI. | Cannot self-accept, merge, authorize waves, or expand write scope. |
+| **Independent Auditor** | Fresh-audits PR head, falsifies claims against raw GitHub/repo evidence, checks regressions, posts formal verdict. | Cannot author PR, implement fixes, or merge without explicit merge authority. |
+| **Repository Governor** | Maintains canonical roadmaps, ADRs, authorization manifests, and governance protocols. | Updates canonical status only upon verified audit acceptance; cannot expand authority unilaterally. |
+
+---
+
+## 5. Work-Type Router
+
+| Work Domain | Primary Documents & Pointers | Key Invariants |
+|---|---|---|
+| **Product & Features** | Capsule allowlist, [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) | Minimal correct change; preserve domain boundaries. |
+| **Tests, Harness & CI** | `tests/`, `.github/workflows/ci.yml` | Deterministic fixtures; ephemeral port/profile cleanup; zero assertion weakening. |
+| **Persistence & Backup** | `src/*persistence*.js`, `src/backup-registry.js`, [`docs/DECISIONS.md`](docs/DECISIONS.md) | Additive forward migrations; deterministic backup/restore journals; 100% store coverage. |
+| **IELTS & V10 Modules** | `src/ielts-*`, `src/v10-*`, `scripts/audit-ielts.mjs`, `scripts/audit-v10.mjs` | Multi-track isolation; speech/caption safety; Schedule gateway enforcement. |
+| **Wave Governance** | [`EXECUTION_PROMPT_PROTOCOL_V2.md`](docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md), `docs/authorizations/` | Exact predecessor linkage; test-first RED/GREEN; frozen candidate history. |
+
+---
+
+## 6. Escalation & On-Demand Triggers
+
+The coding agent should open canonical documents **only** when encountering these triggers:
+
+| Trigger Code | Cause | Action / Resolution Rule |
+|---|---|---|
+| `AUTHORITY_AMBIGUITY` | Contradictory requirements between documents | Compare controlling sources using the canonical Authority Hierarchy (higher-tier sources take precedence). If unresolved, STOP fail-closed. |
+| `CANONICAL_CONTRADICTION` | Capsule operational facts conflict with repository state | Inspect [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) ledger. Canonical source wins; STOP and reconcile. |
+| `UNSUPPORTED_OPERATION` | Requested change exceeds capsule scope | Inspect controlling manifest in `docs/authorizations/` or [`docs/ROADMAP.md`](docs/ROADMAP.md); do not expand scope. |
+| `CAPSULE_FIELD_UNKNOWN` | Capsule missing needed operational detail | Inspect raw manifest in `docs/authorizations/`. |
+| `PROVENANCE_VERIFICATION_REQUEST` | Audit requires verifying source blob SHA | Cross-reference blob SHAs with Git objects. |
+| `TASK_REQUIRES_DEEPER_DOMAIN_CONTEXT` | Complex domain logic needs background rationale | Read relevant ADR in [`docs/DECISIONS.md`](docs/DECISIONS.md) or package spec in [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md). |
+
+---
+
+## 7. Execution Stop Conditions
+
+The following are **GLOBAL ROUTER STOP CONDITIONS**. They supplement, and do **NOT** replace, transaction-specific, manifest-specific, plan-specific, or capsule stop conditions. Both global and transaction-specific stop conditions are strictly binding.
+
+Fail closed and **STOP** immediately if any of the following occur:
+
+- `CANONICAL_BASE_DRIFT`: Working branch base ref diverges from canonical `origin/main`.
+- `SCOPE_VIOLATION`: Required change touches files outside the authorized allowlist.
+- `RED_REGRESSION`: Pre-existing tests fail or unexpected non-candidate failures appear.
+- `METRIC_INCONSISTENCY`: Capsule byte metric or machine-work counts fail self-consistency.
+- `CAPSULE_CONFLICT`: Capsule operational facts contradict canonical source documents.
+- `UNAUTHORIZED_MERGE`: Attempting merge without BOTH an independent audit `ACCEPT` verdict AND explicit merge authorization for that transaction.
+- `TRANSACTION_STOP_TRIGGERED`: Any transaction-specific stop condition from the controlling authorization manifest or implementation plan is triggered.
