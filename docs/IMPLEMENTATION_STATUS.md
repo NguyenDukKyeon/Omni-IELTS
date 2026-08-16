@@ -907,6 +907,16 @@ reconciliations `STAGE2-W0-IELTS-ARCH-BASE-RECON-001` and `STAGE2-W0-IELTS-ARCH-
 - `DEPENDENCY_CHANGE`: `NONE`
 - `W1_W6_AUTHORITY_CHANGE`: `NONE`
 
+## AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W1-IELTS-OBJ-001
 
-
-
+| Field | Value |
+|---|---|
+| Activation Schema | `AGENT_CONTEXT_AUTH_ACTIVATION_V1` |
+| Transaction ID | `W1-IELTS-OBJ-001` |
+| Authorization Manifest | `docs/authorizations/STAGE2-W1-IELTS-OBJ-AUTH-002.md` |
+| Authorization Manifest Identity | `STAGE2-W1-IELTS-OBJ-AUTH-002` |
+| Authorization Accepted Head | `f0c267aadc091eea8431dd90a1596edd801421be` |
+| Independent Authorization Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/114#issuecomment-5308873833` |
+| Authorization Merge SHA | `SELF_RESOLVE_ACTIVATION_MERGE_SHA` |
+| Activation State | `AUTHORIZED / READY_FOR_EXECUTION` |
+| Effective Implementation Predecessor | `SELF_RESOLVE_ACTIVATION_MERGE_SHA` |
