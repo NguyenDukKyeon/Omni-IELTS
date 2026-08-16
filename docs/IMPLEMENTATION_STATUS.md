@@ -917,6 +917,85 @@ reconciliations `STAGE2-W0-IELTS-ARCH-BASE-RECON-001` and `STAGE2-W0-IELTS-ARCH-
 | Authorization Manifest Identity | `STAGE2-W1-IELTS-OBJ-AUTH-002` |
 | Authorization Accepted Head | `f0c267aadc091eea8431dd90a1596edd801421be` |
 | Independent Authorization Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/114#issuecomment-5308873833` |
-| Authorization Merge SHA | `SELF_RESOLVE_ACTIVATION_MERGE_SHA` |
+| Authorization Merge SHA | `0c5edf00206685760d179e831eb983765aedb95b` |
 | Activation State | `AUTHORIZED / READY_FOR_EXECUTION` |
-| Effective Implementation Predecessor | `SELF_RESOLVE_ACTIVATION_MERGE_SHA` |
+| Effective Implementation Predecessor | `fdce91045039512a5199514b6be3f68d9dcef185` |
+
+## 19. Stage 2 Wave W1 Implementation Acceptance and Canonical Closure
+
+Transaction `W1-IELTS-OBJ-001` (Objective Question Kernel Completeness) cleanly implemented, independently audited, and verified Stage 2 Wave W1 under the accepted Wave Authorization Manifest `STAGE2-W1-IELTS-OBJ-AUTH-002` and canonical activation `AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W1-IELTS-OBJ-001`.
+
+### Canonical W1 Execution Identity & Status
+- **Wave ID**: `W1-IELTS-OBJ-001`
+- **Wave Name**: Objective Question Kernel Completeness
+- **Controlling Authorization Manifest**: `docs/authorizations/STAGE2-W1-IELTS-OBJ-AUTH-002.md` (`STAGE2-W1-IELTS-OBJ-AUTH-002`)
+- **Authorization Accepted Head**: `f0c267aadc091eea8431dd90a1596edd801421be` (PR #114, review comment `5308873833`)
+- **Authorization Merge SHA**: `0c5edf00206685760d179e831eb983765aedb95b` (PR #114)
+- **Canonical Activation Record**: `docs/IMPLEMENTATION_STATUS.md` §`AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W1-IELTS-OBJ-001` (PR #115, head `ff11baee4ba1adc6c955114c94b8cba2ea6f5c03`, merge SHA `fdce91045039512a5199514b6be3f68d9dcef185`)
+- **Effective Implementation Predecessor (Base)**: `fdce91045039512a5199514b6be3f68d9dcef185` (Merge PR #115)
+- **Historical Implementation Candidate**:
+  - **PR #116** (`eba5510717d731006847769f8caf67caef7c9863`): `HISTORICAL_REJECTED_FROZEN` (audit comment `5309025062`, rejected for missing natural Commit A RED CI run and reflog amend)
+- **Canonical Clean Recovery PR**: PR #117 (`https://github.com/NguyenDukKyeon/VocabMaster/pull/117`)
+- **Branch**: `exec/stage2-w1-ielts-obj-002`
+- **Commit A (RED Tests)**: `0b3740da4887b619d6175a45c5f370327238d1e2`
+  - Modifies ONLY `TEST_ALLOWLIST` (3 test suites)
+  - Natural `pull_request` CI run: Run ID `31965149181` / attempt 1 / conclusion `failure` (986 pass / 4 fail on declared product RED assertions)
+- **Commit B (GREEN Implementation / Head)**: `9bf815c4b4c3b4c2a57ca4698eb746eeb631e9b8`
+  - Modifies ONLY `SOURCE_ALLOWLIST` (3 source modules)
+  - RED Immutability: Commit A test blobs are byte-identical at Commit B (zero test edits)
+  - Natural `pull_request` CI run: Run ID `31965531407` / attempt 1 / conclusion `SUCCESS` (990 pass / 0 fail)
+- **Formal Independent Implementation Audit**:
+  - Primary Independent Audit: Session `32b40bd4-de96-4306-8ff2-64585aa80dff` (`ACCEPT`, 0 findings)
+  - Shadow Independent Audit: Session `e984d2d1-4676-49d5-8ac0-44882485318f` (`ACCEPT`, 0 findings)
+- **Implementation Merge SHA**: `225d5926dd9b68d1e39541c70caf505528f289be` (Normal Merge Commit, Parents: `fdce91045039512a5199514b6be3f68d9dcef185`, `9bf815c4b4c3b4c2a57ca4698eb746eeb631e9b8`)
+- **Post-Merge Push CI Evidence**:
+  - Run ID: `31966731979`
+  - Attempt: `1`
+  - Event: `push`
+  - Branch: `main`
+  - Exact Head: `225d5926dd9b68d1e39541c70caf505528f289be`
+  - Conclusion: `SUCCESS`
+- **Post-Merge Artifact Provenance**:
+  - `verification-output`: ID `9268691893`, digest `sha256:79b649296b27a9037100cbde1f2aadea3e9ee0e110c9a26ac64d5e90bf24a874`
+  - `browser-smoke-output`: ID `9268697211`, digest `sha256:dbb4669e12ee11757c9441c12998c083ea4c1b77f4e241412a334ca24700e2f2`
+  - `ielts-browser-output`: ID `9268702895`, digest `sha256:4181f965fd9fac892ff152e13106ad2919f5225d51d15724676ccd893db1adc2`
+  - `v10-browser-output`: ID `9268708275`, digest `sha256:98227432c816cb04c4f256d9d4c6bdc5a6aae514a698edfeecee05c245a1d269`
+  - `hardening-browser-output`: ID `9268709580`, digest `sha256:02cf90c0c4d72ef56c35d772e6e7c6f64c5367f0c7113d7387794884cd61ea97`
+
+### Persistence, Schema & Product Semantics
+- **Database Version**: Unchanged (`IELTS_DB_VERSION = 4`)
+- **Persistence Stores**: Unchanged (0 new stores; objective questions use transient execution with existing `objectiveInventory`)
+- **Product Semantics Delivered**:
+  - GAP-02: `multiple-choice-multiple` ($N$-of-$M$ multi-select QAR primitive with strict cardinality validation, duplicate rejection, and deterministic partial credit scoring)
+  - GAP-03: `summary-completion-box` (Option-pool matching primitive for summary blanks with `SINGLE_USE` and `ALLOW_REUSE` policy support)
+  - Task Family / Item Kind Completeness: 100% coverage across all 26 official task families (11 Listening + 15 Reading) and 27 QAR item kinds (11 Listening + 16 Reading) via `getQuestionCoverageReport()`
+  - Answer Key Privacy: `KEY_LEAK_BEFORE_SUBMIT === 0` strictly enforced across DOM, ARIA, and public item projections
+  - Evidence & Schedule Invariant: `affectsSchedule: false`, `evidenceEligible: false` default-deny enforced via `EvidencePolicy`
+
+### Resolved Wave State Summary
+- `W1_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL` (`STAGE2-W1-IELTS-OBJ-AUTH-002`)
+- `W1_ACTIVATION`: `ACCEPTED_AND_CANONICAL` (`fdce91045039512a5199514b6be3f68d9dcef185`)
+- `W1_IMPLEMENTATION`: `ACCEPTED_AND_CANONICAL` (PR #117)
+- `W1_COMMIT_A`: `0b3740da4887b619d6175a45c5f370327238d1e2` (Run `31965149181`)
+- `W1_ACCEPTED_HEAD`: `9bf815c4b4c3b4c2a57ca4698eb746eeb631e9b8` (Run `31965531407`)
+- `W1_MERGE_SHA`: `225d5926dd9b68d1e39541c70caf505528f289be`
+- `W1_INDEPENDENT_ACCEPT`: PR #117 primary review (Session `32b40bd4-de96-4306-8ff2-64585aa80dff`) & shadow review (Session `e984d2d1-4676-49d5-8ac0-44882485318f`)
+- `W1_POST_MERGE_CI`: Run `31966731979` / attempt 1 / push / SUCCESS / exact head `225d5926dd9b68d1e39541c70caf505528f289be`
+- `W1_STATUS`: `CANONICALLY_CLOSED`
+
+### Downstream Scope & Authority Bounds
+- `W2`: `NOT_AUTHORIZED` (Next eligible for authorization under Stage 2 strategy, but `W2_EXECUTION_AUTHORITY: NOT_GRANTED`)
+- `W3`: `NOT_AUTHORIZED`
+- `W4`: `NOT_AUTHORIZED`
+- `W5`: `NOT_AUTHORIZED`
+- `W6`: `NOT_AUTHORIZED`
+- `W2_W6`: `NOT_AUTHORIZED`
+- `NEXT_STAGE2_PRODUCT_WAVE`: `REQUIRES_SEPARATE_AUTHORIZATION`
+- `PRODUCT_SEMANTIC_CHANGE`: `NONE`
+- `IMPLEMENTATION_CHANGE`: `NONE`
+- `TEST_CHANGE`: `NONE`
+- `SOURCE_CHANGE`: `NONE`
+- `AUTHORIZATION_CHANGE`: `NONE`
+- `DEPENDENCY_CHANGE`: `NONE`
+- `W2_W6_AUTHORITY_CHANGE`: `NONE`
+
