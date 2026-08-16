@@ -26,6 +26,9 @@ const SUPPORTED_PROTOCOLS = Object.freeze([
 // ---------------------------------------------------------------------------
 // Fail-closed error codes
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Fail-closed error codes
+// ---------------------------------------------------------------------------
 export const ERRORS = Object.freeze({
   UNKNOWN_TRANSACTION: 'UNKNOWN_TRANSACTION',
   AMBIGUOUS_AUTHORITY: 'AMBIGUOUS_AUTHORITY',
@@ -34,6 +37,10 @@ export const ERRORS = Object.freeze({
   CANONICAL_CONTRADICTION: 'CANONICAL_CONTRADICTION',
   REPOSITORY_STATE_UNAVAILABLE: 'REPOSITORY_STATE_UNAVAILABLE',
   UNSUPPORTED_AUTHORITY_FORMAT: 'UNSUPPORTED_AUTHORITY_FORMAT',
+  ACTIVATION_RECORD_AMBIGUOUS: 'ACTIVATION_RECORD_AMBIGUOUS',
+  ACTIVATION_RECORD_INVALID: 'ACTIVATION_RECORD_INVALID',
+  ACTIVATION_MANIFEST_MISMATCH: 'ACTIVATION_MANIFEST_MISMATCH',
+  ACTIVATION_PREDECESSOR_STALE: 'ACTIVATION_PREDECESSOR_STALE',
 });
 
 // ---------------------------------------------------------------------------
@@ -47,14 +54,24 @@ function gitExec(args, cwd) {
   }
 }
 
+function gitShow(refAndPath, cwd) {
+  try {
+    return execFileSync('git', ['show', refAndPath], { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+  } catch {
+    return null;
+  }
+}
+
 function resolveCanonicalMain(rootDir) {
-  // 1. In GitHub Actions PR context, resolve from GITHUB_EVENT_PATH
+  // 1. In GitHub Actions PR context, resolve from GITHUB_EVENT_PATH (only for root repository, not temp test fixtures)
+  const isDefaultRoot = !rootDir || path.resolve(rootDir) === path.resolve(process.cwd());
   const eventPath = process.env.GITHUB_EVENT_PATH;
-  if (eventPath && fs.existsSync(eventPath)) {
+  if (isDefaultRoot && eventPath && fs.existsSync(eventPath)) {
     try {
       const event = JSON.parse(fs.readFileSync(eventPath, 'utf8'));
-      if (event.pull_request?.base?.ref === 'main' && event.pull_request?.base?.sha) {
-        return { value: event.pull_request.base.sha, source: 'GITHUB_EVENT_PATH' };
+      const eventSha = event.pull_request?.base?.sha;
+      if (event.pull_request?.base?.ref === 'main' && eventSha && /^[0-9a-f]{40}$/.test(eventSha)) {
+        return { value: eventSha, source: 'GITHUB_EVENT_PATH' };
       }
     } catch {
       // Fall through to Git refs if event file parse fails
@@ -99,6 +116,67 @@ function resolveWorkingHead(rootDir) {
 function gitBlobSha(filePath, cwd) {
   const sha = gitExec(['hash-object', filePath], cwd);
   return sha && /^[0-9a-f]{40}$/.test(sha) ? sha : '';
+}
+
+// ---------------------------------------------------------------------------
+// V1 Activation Record Parser
+// ---------------------------------------------------------------------------
+function parseV1ActivationSections(content, transactionId) {
+  const sections = content.split(/^##\s+/m);
+  const matching = [];
+
+  for (let i = 1; i < sections.length; i++) {
+    const s = sections[i];
+    const firstLineEnd = s.indexOf('\n');
+    const title = firstLineEnd >= 0 ? s.slice(0, firstLineEnd).trim() : s.trim();
+
+    if (title.startsWith('AGENT_CONTEXT_AUTH_ACTIVATION_V1') && s.includes(transactionId)) {
+      matching.push({ title: `## ${title}`, text: s });
+    }
+  }
+
+  return matching;
+}
+
+function parseV1TableFields(sectionText) {
+  const fields = {};
+  const lines = sectionText.split('\n');
+  for (const line of lines) {
+    if (!line.trim().startsWith('|')) continue;
+    const cells = line.split('|').map(c => c.trim()).filter(c => c.length > 0);
+    if (cells.length >= 2) {
+      const rawKey = cells[0].replace(/^`|`$/g, '').trim();
+      const rawVal = cells[1].replace(/^`|`$/g, '').trim();
+      if (rawKey && rawVal && !rawKey.includes('---')) {
+        fields[rawKey] = rawVal;
+      }
+    }
+  }
+  return fields;
+}
+
+function findV1ActivationIntroductionCommit(canonicalMainSha, statusRelPath, transactionId, rootDir) {
+  const logOutput = gitExec(['rev-list', '--first-parent', canonicalMainSha], rootDir);
+  if (!logOutput) return null;
+  const commits = logOutput.split('\n').map(c => c.trim()).filter(Boolean);
+
+  let earliestWithActivation = null;
+
+  for (const commit of commits) {
+    const statusAtCommit = gitShow(`${commit}:${statusRelPath}`, rootDir);
+    if (statusAtCommit) {
+      const v1Sections = parseV1ActivationSections(statusAtCommit, transactionId);
+      if (v1Sections.length > 0) {
+        earliestWithActivation = commit;
+      } else {
+        break;
+      }
+    } else {
+      break;
+    }
+  }
+
+  return earliestWithActivation;
 }
 
 // ---------------------------------------------------------------------------
@@ -242,6 +320,10 @@ function reconcileExecutionStatus(statusContent, transactionId, manifestStatus) 
     const section = sections[i];
     const firstLineEnd = section.indexOf('\n');
     const title = firstLineEnd >= 0 ? section.slice(0, firstLineEnd).trim() : section.trim();
+    // V1 activation records are handled exclusively by canonical Git snapshot V1 resolution
+    if (title.startsWith('AGENT_CONTEXT_AUTH_ACTIVATION_V1')) {
+      continue;
+    }
     if (section.includes(transactionId)) {
       matchingSections.push({ title: `## ${title}`, text: section });
     }
@@ -343,57 +425,200 @@ export async function compileContext(transactionId, options = {}) {
     };
   }
 
-  // 2. Discover authorization sources matching the transaction ID
-  let authFiles;
-  try {
-    authFiles = fs.readdirSync(authDir).filter(f => f.endsWith('.md')).sort();
-  } catch {
+  // Check canonical IMPLEMENTATION_STATUS.md at canonicalMain.value for V1 activation
+  let canonicalStatusContent = null;
+  if (canonicalMain.value) {
+    canonicalStatusContent = gitShow(`${canonicalMain.value}:docs/IMPLEMENTATION_STATUS.md`, rootDir);
+  }
+
+  const v1CanonicalSections = canonicalStatusContent
+    ? parseV1ActivationSections(canonicalStatusContent, transactionId)
+    : [];
+
+  if (v1CanonicalSections.length > 1) {
     return {
       ok: false,
-      error: ERRORS.REPOSITORY_STATE_UNAVAILABLE,
-      message: `Cannot read authorization directory: ${authDir}`,
+      error: ERRORS.ACTIVATION_RECORD_AMBIGUOUS,
+      message: `Multiple V1 activation records found in canonical IMPLEMENTATION_STATUS.md for transaction: ${transactionId}`,
     };
   }
 
+  let isV1 = false;
+  let authContent = '';
+  let authRelPath = '';
+  let authBlobSha = '';
+  let authorityBytesParsed = 0;
   let discoveryBytesRead = 0;
-  const matchingSources = [];
-  const sourceContents = new Map();
+  let authFilesCount = 0;
+  let matchingSourcesCount = 0;
+  let v1IntroductionCommit = null;
+  let v1Fields = null;
 
-  for (const file of authFiles) {
-    const filePath = path.join(authDir, file);
-    const content = fs.readFileSync(filePath, 'utf8');
-    discoveryBytesRead += Buffer.byteLength(content, 'utf8');
-    const waveId = extractHeaderField(content, 'Wave ID');
-    if (waveId === transactionId) {
-      matchingSources.push(filePath);
-      sourceContents.set(filePath, content);
+  if (v1CanonicalSections.length === 1) {
+    const v1Section = v1CanonicalSections[0];
+    const fields = parseV1TableFields(v1Section.text);
+
+    const requiredV1Fields = [
+      'Activation Schema',
+      'Transaction ID',
+      'Authorization Manifest',
+      'Authorization Manifest Identity',
+      'Authorization Accepted Head',
+      'Independent Authorization Review',
+      'Activation State',
+    ];
+
+    const missingV1 = requiredV1Fields.filter(f => !fields[f]);
+    if (missingV1.length > 0 || fields['Activation Schema'] !== 'AGENT_CONTEXT_AUTH_ACTIVATION_V1' || fields['Transaction ID'] !== transactionId) {
+      return {
+        ok: false,
+        error: ERRORS.ACTIVATION_RECORD_INVALID,
+        message: `Invalid or incomplete V1 activation record for ${transactionId}: missing ${missingV1.join(', ')}`,
+      };
     }
-  }
 
-  // 3. Fail-closed: unknown transaction
-  if (matchingSources.length === 0) {
-    return {
-      ok: false,
-      error: ERRORS.UNKNOWN_TRANSACTION,
-      message: `No authorization source found for transaction: ${transactionId}`,
-    };
-  }
+    v1IntroductionCommit = findV1ActivationIntroductionCommit(
+      canonicalMain.value,
+      'docs/IMPLEMENTATION_STATUS.md',
+      transactionId,
+      rootDir
+    );
 
-  // 4. Fail-closed: ambiguous authority
-  if (matchingSources.length > 1) {
-    return {
-      ok: false,
-      error: ERRORS.AMBIGUOUS_AUTHORITY,
-      message: `Multiple authorization sources found for transaction: ${transactionId}: ${matchingSources.map(p => path.basename(p)).join(', ')}`,
-    };
-  }
+    if (!v1IntroductionCommit) {
+      return {
+        ok: false,
+        error: ERRORS.ACTIVATION_RECORD_INVALID,
+        message: `Cannot determine activation introduction commit for ${transactionId}`,
+      };
+    }
 
-  // 5. Parse the single authority source
-  const authPath = matchingSources[0];
-  const authContent = sourceContents.get(authPath);
-  const authRelPath = path.relative(rootDir, authPath).replace(/\\/g, '/');
-  const authBlobSha = gitBlobSha(authPath, rootDir);
-  const authorityBytesParsed = Buffer.byteLength(authContent, 'utf8');
+    if (canonicalMain.value !== v1IntroductionCommit) {
+      return {
+        ok: false,
+        error: ERRORS.ACTIVATION_PREDECESSOR_STALE,
+        message: `Canonical main (${canonicalMain.value}) has advanced past activation commit (${v1IntroductionCommit}) for transaction ${transactionId}`,
+      };
+    }
+
+    const manifestRel = fields['Authorization Manifest'].replace(/\\/g, '/');
+    const canonicalAuthAtM = gitShow(`${v1IntroductionCommit}:${manifestRel}`, rootDir);
+    if (!canonicalAuthAtM) {
+      return {
+        ok: false,
+        error: ERRORS.ACTIVATION_MANIFEST_MISMATCH,
+        message: `Canonical authorization manifest not found at ${v1IntroductionCommit}:${manifestRel}`,
+      };
+    }
+
+    const mId = extractHeaderField(canonicalAuthAtM, 'Manifest Identity');
+    const wId = extractHeaderField(canonicalAuthAtM, 'Wave ID');
+    if (mId !== fields['Authorization Manifest Identity'] || wId !== transactionId) {
+      return {
+        ok: false,
+        error: ERRORS.ACTIVATION_MANIFEST_MISMATCH,
+        message: `Canonical authorization manifest identity (${mId}/${wId}) does not match activation record (${fields['Authorization Manifest Identity']}/${transactionId})`,
+      };
+    }
+
+    const acceptedHead = fields['Authorization Accepted Head'];
+    if (!/^[0-9a-f]{40}$/.test(acceptedHead)) {
+      return {
+        ok: false,
+        error: ERRORS.ACTIVATION_MANIFEST_MISMATCH,
+        message: `Invalid Authorization Accepted Head SHA: ${acceptedHead}`,
+      };
+    }
+
+    const catCheck = gitExec(['cat-file', '-e', `${acceptedHead}^{commit}`], rootDir);
+    if (catCheck === null) {
+      return {
+        ok: false,
+        error: ERRORS.ACTIVATION_MANIFEST_MISMATCH,
+        message: `Authorization Accepted Head commit does not exist: ${acceptedHead}`,
+      };
+    }
+
+    const mergeBase = gitExec(['merge-base', acceptedHead, v1IntroductionCommit], rootDir);
+    if (mergeBase !== acceptedHead) {
+      return {
+        ok: false,
+        error: ERRORS.ACTIVATION_MANIFEST_MISMATCH,
+        message: `Authorization Accepted Head (${acceptedHead}) is not an ancestor of activation commit (${v1IntroductionCommit})`,
+      };
+    }
+
+    const acceptedAuthContent = gitShow(`${acceptedHead}:${manifestRel}`, rootDir);
+    if (acceptedAuthContent === null || acceptedAuthContent !== canonicalAuthAtM) {
+      return {
+        ok: false,
+        error: ERRORS.ACTIVATION_MANIFEST_MISMATCH,
+        message: `Authorization manifest blob at accepted head (${acceptedHead}) does not match canonical manifest blob at activation commit (${v1IntroductionCommit})`,
+      };
+    }
+
+    isV1 = true;
+    v1Fields = fields;
+    authContent = canonicalAuthAtM;
+    authRelPath = manifestRel;
+    authBlobSha = gitBlobSha(path.join(rootDir, manifestRel), rootDir) || (gitExec(['hash-object', path.join(rootDir, manifestRel)], rootDir) || '');
+    authorityBytesParsed = Buffer.byteLength(canonicalAuthAtM, 'utf8');
+    discoveryBytesRead = authorityBytesParsed;
+    authFilesCount = 1;
+    matchingSourcesCount = 1;
+  } else {
+    // 2. Discover authorization sources matching the transaction ID
+    let authFiles;
+    try {
+      authFiles = fs.readdirSync(authDir).filter(f => f.endsWith('.md')).sort();
+    } catch {
+      return {
+        ok: false,
+        error: ERRORS.REPOSITORY_STATE_UNAVAILABLE,
+        message: `Cannot read authorization directory: ${authDir}`,
+      };
+    }
+
+    authFilesCount = authFiles.length;
+    const matchingSources = [];
+    const sourceContents = new Map();
+
+    for (const file of authFiles) {
+      const filePath = path.join(authDir, file);
+      const content = fs.readFileSync(filePath, 'utf8');
+      discoveryBytesRead += Buffer.byteLength(content, 'utf8');
+      const waveId = extractHeaderField(content, 'Wave ID');
+      if (waveId === transactionId) {
+        matchingSources.push(filePath);
+        sourceContents.set(filePath, content);
+      }
+    }
+
+    // 3. Fail-closed: unknown transaction
+    if (matchingSources.length === 0) {
+      return {
+        ok: false,
+        error: ERRORS.UNKNOWN_TRANSACTION,
+        message: `No authorization source found for transaction: ${transactionId}`,
+      };
+    }
+
+    // 4. Fail-closed: ambiguous authority
+    if (matchingSources.length > 1) {
+      return {
+        ok: false,
+        error: ERRORS.AMBIGUOUS_AUTHORITY,
+        message: `Multiple authorization sources found for transaction: ${transactionId}: ${matchingSources.map(p => path.basename(p)).join(', ')}`,
+      };
+    }
+
+    // 5. Parse the single authority source
+    matchingSourcesCount = 1;
+    const authPath = matchingSources[0];
+    authContent = sourceContents.get(authPath);
+    authRelPath = path.relative(rootDir, authPath).replace(/\\/g, '/');
+    authBlobSha = gitBlobSha(authPath, rootDir);
+    authorityBytesParsed = Buffer.byteLength(authContent, 'utf8');
+  }
 
   function makeAuthProvenance(anchor) {
     return {
@@ -505,14 +730,36 @@ export async function compileContext(transactionId, options = {}) {
     };
   }
 
-  const reconciliation = reconcileExecutionStatus(statusContent, transactionId, manifestStatus);
-  if (!reconciliation.ok) {
-    return {
-      ok: false,
-      error: reconciliation.error,
-      message: reconciliation.message,
-    };
+  let executionStatusValue = '';
+  let executionStatusAnchor = '';
+
+  if (isV1) {
+    executionStatusValue = v1Fields['Activation State'] || 'AUTHORIZED / READY_FOR_EXECUTION';
+    executionStatusAnchor = `AGENT_CONTEXT_AUTH_ACTIVATION_V1 — ${transactionId}`;
+  } else {
+    const reconciliation = reconcileExecutionStatus(statusContent, transactionId, manifestStatus);
+    if (!reconciliation.ok) {
+      return {
+        ok: false,
+        error: reconciliation.error,
+        message: reconciliation.message,
+      };
+    }
+    executionStatusValue = reconciliation.executionStatus;
+    executionStatusAnchor = reconciliation.anchor;
   }
+
+  const predecessorValue = isV1
+    ? v1IntroductionCommit
+    : predecessor;
+
+  const predecessorProvenance = isV1
+    ? {
+        source_path: statusRelPath,
+        source_blob_sha: statusBlobSha,
+        anchor: `AGENT_CONTEXT_AUTH_ACTIVATION_V1 — ${transactionId}: Effective Implementation Predecessor`,
+      }
+    : makeAuthProvenance('Header field: Canonical Predecessor (Base)');
 
   // 9. Calculate Machine & Estimated Context Metrics
   const totalMachineBytesRead = discoveryBytesRead + statusBytesRead;
@@ -585,11 +832,11 @@ export async function compileContext(transactionId, options = {}) {
     },
 
     current_execution_status: {
-      value: reconciliation.executionStatus,
+      value: executionStatusValue,
       provenance: {
         source_path: statusRelPath,
         source_blob_sha: statusBlobSha,
-        anchor: reconciliation.anchor,
+        anchor: executionStatusAnchor,
       },
     },
 
@@ -606,15 +853,15 @@ export async function compileContext(transactionId, options = {}) {
         source_path: statusRelPath,
         source_blob_sha: statusBlobSha,
         role: 'CANONICAL_IMPLEMENTATION_STATUS_LEDGER',
-        anchor: reconciliation.anchor,
+        anchor: executionStatusAnchor,
       },
     ],
 
     consult_on_demand_references: onDemandGovernanceFiles.filter(d => fs.existsSync(path.join(rootDir, d.path))),
 
     transaction_predecessor: {
-      value: predecessor,
-      provenance: makeAuthProvenance('Header field: Canonical Predecessor (Base)'),
+      value: predecessorValue,
+      provenance: predecessorProvenance,
     },
 
     allowed_writes: {
@@ -655,7 +902,7 @@ export async function compileContext(transactionId, options = {}) {
     warnings,
 
     metrics: {
-      authorization_discovery_files_read: authFiles.length,
+      authorization_discovery_files_read: authFilesCount,
       authorization_discovery_bytes_read: discoveryBytesRead,
       authority_bytes_parsed: authorityBytesParsed,
       status_bytes_read: statusBytesRead,
@@ -666,7 +913,7 @@ export async function compileContext(transactionId, options = {}) {
       machine_read_to_capsule_ratio: 0,
       estimated_full_agent_context_bytes: estimatedFullAgentContextBytes,
       estimated_agent_context_reduction_ratio: 0,
-      authority_source_count: matchingSources.length,
+      authority_source_count: matchingSourcesCount,
       on_demand_reference_count: onDemandGovernanceFiles.filter(d => fs.existsSync(path.join(rootDir, d.path))).length + 2,
     },
   };
