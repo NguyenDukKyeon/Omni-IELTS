@@ -184,3 +184,72 @@ test('QAR OTR preflight fences source, frozen binding, registry and capability f
   const unregistered=qar.createQuestionRegistry(),unregisteredActivity=objectiveActivity(question,{id:'otr-fences-unregistered'});await noObjectiveTodayRow(unregisteredActivity,()=>qar.executeQuestionActivity({activity:unregisteredActivity,question,response:objectivePayload,sourceRegistry,questionRegistry:unregistered,now:204_002}));
   const wrongCaps=qar.createQuestionRegistry();assert.throws(()=>wrongCaps.registerExecutor(question.kind,question.version,['keyboard']),error=>error.code==='QUESTION_ACTIVITY_CAPABILITY_MISMATCH');
 });
+
+test('all 14 objective text response families enforce word limits, whitespace normalization, and deterministic scoring',()=>{
+  const listeningOtrKinds=[
+    'listening-form-completion',
+    'listening-note-completion',
+    'listening-table-completion',
+    'listening-flow-chart-completion',
+    'listening-summary-completion',
+    'listening-sentence-completion',
+    'listening-short-answer'
+  ];
+  const readingOtrKinds=[
+    'reading-sentence-completion',
+    'reading-summary-completion',
+    'reading-note-completion',
+    'reading-table-completion',
+    'reading-flow-chart-completion',
+    'reading-diagram-label-completion',
+    'reading-short-answer'
+  ];
+
+  assert.equal(listeningOtrKinds.length+readingOtrKinds.length,14);
+
+  for(const kind of [...listeningOtrKinds,...readingOtrKinds]){
+    const isSpatial=kind==='reading-diagram-label-completion';
+    const isListening=kind.startsWith('listening-');
+    const skill=isListening?'listening':'reading';
+    const itemTarget={...target,skill};
+    const spatialPrompt=isSpatial?{
+      schema:'objective-spatial-prompt',
+      version:1,
+      mode:'diagram',
+      title:'Diagram',
+      description:'A complete diagram description.',
+      width:100,
+      height:100,
+      elements:[{id:'line-1',kind:'line',x1:0,y1:0,x2:10,y2:10}],
+      anchors:[{slotId:'slot-1',x:5,y:5,label:'Part 1'}]
+    }:null;
+
+    const itemDef=Object.freeze({
+      id:`item-${kind}`,
+      kind,
+      prompt:`Complete the ${kind} task.`,
+      slots:[{id:'slot-1',label:'Answer 1',wordLimit:2,acceptedAnswers:['solar power','wind energy']}],
+      ...(isSpatial?{spatialPrompt}:{}),
+      target:itemTarget,
+      sourceRevisionRef:source,
+      createdAt:10,
+      updatedAt:20
+    });
+
+    const question=otr.createObjectiveTextResponseQuestion(itemDef,{ownerAdapter:ownerFor(itemDef)});
+    assert.equal(question.kind,kind);
+    assert.equal(JSON.stringify(question).includes('solar power'),false);
+
+    const correctScore=otr.scoreObjectiveTextResponse(question,{slots:[{slotId:'slot-1',text:'  SOLAR   power  '}]});
+    assert.equal(correctScore.valid,true);
+    assert.equal(correctScore.disposition,'correct');
+    assert.equal(correctScore.numerator,1);
+    assert.equal(correctScore.denominator,1);
+
+    const exceededScore=otr.scoreObjectiveTextResponse(question,{slots:[{slotId:'slot-1',text:'clean renewable solar power'}]});
+    assert.equal(exceededScore.valid,true);
+    assert.equal(exceededScore.disposition,'wrong');
+    assert.equal(exceededScore.slots[0].reason,'WORD_LIMIT_EXCEEDED');
+  }
+});
+
