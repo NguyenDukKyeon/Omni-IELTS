@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { IDBFactory } from 'fake-indexeddb';
 import { composeTodayPlan } from '../src/today-composer.js';
-import { createCoreCardSourceAdapter,createSourceRevisionRegistry,validateSourceRevisionForExecution,createTranscriptSourceAdapter } from '../src/source-revision-ref.js';
+import { learningContractDigest } from '../src/learning-contracts.js';
+import { createCoreCardSourceAdapter,createSourceRevisionRegistry,validateSourceRevisionForExecution,createTranscriptSourceAdapter,createSourceRevisionRef } from '../src/source-revision-ref.js';
 import { createTranscriptAggregate } from '../src/transcript-aggregate.js';
 import { buildCombinedBackup,restoreCombinedBackup } from '../src/ielts-backup.js';
 import { getV10Record,listV10Records,reopenV10Database } from '../src/v10-persistence.js';
@@ -310,4 +311,191 @@ test('QAR Listening durable terminal feedback survives combined backup restore a
 test('QAR Listening active child makes historical feedback stale without mutating persisted terminal binding',async()=>{
   const harness=await listeningHarness();const activity=listeningActivity(harness.question,'qar-listening-child-stale');const result=await qar.executeQuestionActivity({activity,question:harness.question,response:{optionId:'a'},sourceRegistry:harness.sourceRegistry,questionRegistry:harness.registry,now:99_000});const before=JSON.stringify(await getV10Record(V10_STORES.todayRuns,result.run.id));const child={...harness.aggregate,source:{...harness.aggregate.source,activeRevisionId:'child-revision'}};const owner=qar.createListeningQuestionOwnerAdapter({readVerifiedItem:async()=>harness.item,getTranscriptAggregate:async()=>child});const freshness=await qar.assessListeningFeedbackFreshness(result.feedback,{ownerAdapter:owner});assert.equal(freshness.stale,true);assert.equal(freshness.staleReason,'SOURCE_ACTIVE_REVISION_CHANGED');assert.equal(JSON.stringify(await getV10Record(V10_STORES.todayRuns,result.run.id)),before);
   const report=qar.getQuestionCoverageReport();const listening=report.kinds.find(row=>row.kind===qar.LISTENING_MULTIPLE_CHOICE_KIND);assert.equal(listening.coverage,'PARTIAL');assert.equal(listening.dimensions.uiInventory,'GAP');assert.match(listening.limitations,/not full Listening, readiness, or UI coverage/);
+});
+
+test('QAR Multi-Select MCQ validates N-of-M selections, deterministic partial scoring, and enforces sealed key privacy',async()=>{
+  const readingMultiItem=Object.freeze({
+    id:'reading-mcq-multi-1',
+    kind:'reading-multiple-choice-multiple',
+    prompt:'Which TWO factors contribute to climate resilience?',
+    expectedCount:2,
+    options:[
+      {id:'opt-a',text:'Biodiversity',correct:true,rationale:'Correct factor A.'},
+      {id:'opt-b',text:'Deforestation',correct:false,rationale:'Negative factor.'},
+      {id:'opt-c',text:'Wetland protection',correct:true,rationale:'Correct factor C.'},
+      {id:'opt-d',text:'Urban sprawl',correct:false,rationale:'Negative factor.'},
+      {id:'opt-e',text:'Monoculture',correct:false,rationale:'Negative factor.'}
+    ],
+    target:{skill:'reading',profile:'academic',sourceId:'reading-source:passage-multi',sourceRevision:'rev-1'},
+    createdAt:1000,
+    updatedAt:2000
+  });
+
+  const readingSourceRef=createSourceRevisionRef({
+    schema:'SourceRevisionRef',
+    version:1,
+    kind:'ielts-reading-passage',
+    authority:'ielts-reading-owner',
+    sourceId:'reading-source:passage-multi',
+    revisionId:'rev-1',
+    integrity:'sha256:passage-multi-digest',
+    locator:{passageId:'passage-multi',revision:1},
+    provenance:{origin:'fixture',verification:'verified',rights:'allowed',privacy:'private'},
+    tombstone:null,
+    extensions:{},
+    display:null
+  });
+
+  const readingPublicItem={
+    id:readingMultiItem.id,
+    kind:'reading-multiple-choice-multiple',
+    prompt:readingMultiItem.prompt,
+    expectedCount:2,
+    options:readingMultiItem.options.map(o=>({id:o.id,text:o.text})),
+    target:readingMultiItem.target,
+    createdAt:1000,
+    updatedAt:2000
+  };
+  const readingKeyDigest=learningContractDigest(readingMultiItem.options.map(o=>({id:o.id,correct:o.correct})));
+  const readingPromptDigest=learningContractDigest({item:readingPublicItem,sourceRevisionRef:readingSourceRef});
+  const readingRubricDigest=learningContractDigest({rationales:readingMultiItem.options.map(o=>({id:o.id,rationale:o.rationale})),reviewPolicy:'objective-reading-review-v1'});
+
+  const readingOwner=qar.createIeltsReadingQuestionOwnerAdapter({
+    readVerifiedInventory:async()=>({
+      id:readingMultiItem.id,
+      skill:'reading',
+      status:'verified',
+      profiles:['academic'],
+      sourceRevisionRef:readingSourceRef,
+      questionBinding:{
+        kind:'reading-multiple-choice-multiple',
+        schemaVersion:1,
+        registryRevision:qar.READING_MULTI_SELECT_REGISTRY_REVISION,
+        questionId:readingMultiItem.id,
+        promptRevision:'reading-multi:2000',
+        promptDigest:readingPromptDigest,
+        keyRevision:'reading-multi-key:2000',
+        keyDigest:readingKeyDigest,
+        rubricRevision:'reading-multi-rubric:2000',
+        rubricDigest:readingRubricDigest,
+        scorer:{id:qar.OBJECTIVE_MULTI_SELECT_SCORER_VERSION,version:1},
+        reviewPolicyRevision:'objective-reading-review-v1',
+        requiredCapabilities:['keyboard','focus','screen-reader']
+      },
+      questionPayload:readingPublicItem
+    }),
+    readVerifiedSource:async()=>({
+      id:'passage-multi',
+      revision:1,
+      profile:'academic',
+      status:'verified',
+      sourceRevisionRef:readingSourceRef,
+      objectiveItems:[{
+        inventoryId:readingMultiItem.id,
+        kind:'reading-multiple-choice-multiple',
+        options:readingMultiItem.options
+      }]
+    })
+  });
+
+  const readingQuestion=await qar.adaptIeltsReadingObjectiveItem(
+    {
+      id:readingMultiItem.id,
+      skill:'reading',
+      status:'verified',
+      profiles:['academic'],
+      sourceRevisionRef:readingSourceRef,
+      questionBinding:{
+        kind:'reading-multiple-choice-multiple',
+        schemaVersion:1,
+        registryRevision:qar.READING_MULTI_SELECT_REGISTRY_REVISION,
+        questionId:readingMultiItem.id,
+        promptRevision:'reading-multi:2000',
+        promptDigest:readingPromptDigest,
+        keyRevision:'reading-multi-key:2000',
+        keyDigest:readingKeyDigest,
+        rubricRevision:'reading-multi-rubric:2000',
+        rubricDigest:readingRubricDigest,
+        scorer:{id:qar.OBJECTIVE_MULTI_SELECT_SCORER_VERSION,version:1},
+        reviewPolicyRevision:'objective-reading-review-v1',
+        requiredCapabilities:['keyboard','focus','screen-reader']
+      },
+      questionPayload:readingPublicItem
+    },
+    readingSourceRef,
+    {ownerAdapter:readingOwner}
+  );
+
+  assert.equal(readingQuestion.kind,'reading-multiple-choice-multiple');
+  assert.equal(JSON.stringify(readingQuestion).includes('correct'),false);
+  assert.equal(JSON.stringify(readingQuestion).includes('rationale'),false);
+
+  const fullScore=qar.scoreQuestionActivity(readingQuestion,{optionIds:['opt-a','opt-c']});
+  assert.equal(fullScore.valid,true);
+  assert.equal(fullScore.disposition,'correct');
+  assert.equal(fullScore.numerator,2);
+  assert.equal(fullScore.denominator,2);
+
+  const partialScore=qar.scoreQuestionActivity(readingQuestion,{optionIds:['opt-a','opt-b']});
+  assert.equal(partialScore.valid,true);
+  assert.equal(partialScore.disposition,'partial');
+  assert.equal(partialScore.numerator,1);
+  assert.equal(partialScore.denominator,2);
+
+  const zeroScore=qar.scoreQuestionActivity(readingQuestion,{optionIds:['opt-b','opt-d']});
+  assert.equal(zeroScore.valid,true);
+  assert.equal(zeroScore.disposition,'wrong');
+  assert.equal(zeroScore.numerator,0);
+  assert.equal(zeroScore.denominator,2);
+
+  assert.equal(qar.scoreQuestionActivity(readingQuestion,{optionIds:['opt-a']}).valid,false);
+  assert.equal(qar.scoreQuestionActivity(readingQuestion,{optionIds:['opt-a','opt-a']}).valid,false);
+  assert.equal(qar.scoreQuestionActivity(readingQuestion,{optionIds:['opt-a','opt-unknown']}).valid,false);
+});
+
+test('QAR Coverage Report includes all 26 official task families / 27 item kinds',()=>{
+  const report=qar.getQuestionCoverageReport();
+  assert.ok(report);
+  assert.ok(Array.isArray(report.kinds));
+  assert.equal(report.kinds.length>=27,true);
+
+  const officialListeningKinds=[
+    'listening-multiple-choice',
+    'listening-multiple-choice-multiple',
+    'listening-matching',
+    'listening-plan-map-diagram-labelling',
+    'listening-form-completion',
+    'listening-note-completion',
+    'listening-table-completion',
+    'listening-flow-chart-completion',
+    'listening-summary-completion',
+    'listening-sentence-completion',
+    'listening-short-answer'
+  ];
+
+  const officialReadingKinds=[
+    'reading-multiple-choice-single',
+    'reading-multiple-choice-multiple',
+    'reading-true-false-not-given',
+    'reading-yes-no-not-given',
+    'reading-matching-information',
+    'reading-matching-headings',
+    'reading-matching-features',
+    'reading-matching-sentence-endings',
+    'reading-sentence-completion',
+    'reading-summary-completion',
+    'reading-summary-completion-box',
+    'reading-note-completion',
+    'reading-table-completion',
+    'reading-flow-chart-completion',
+    'reading-diagram-label-completion',
+    'reading-short-answer'
+  ];
+
+  for(const kind of officialListeningKinds){
+    assert.ok(report.kinds.some(k=>k.kind===kind),`Missing official Listening kind: ${kind}`);
+  }
+  for(const kind of officialReadingKinds){
+    assert.ok(report.kinds.some(k=>k.kind===kind),`Missing official Reading kind: ${kind}`);
+  }
 });

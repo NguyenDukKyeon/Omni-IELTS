@@ -7,7 +7,7 @@ export const OBJECTIVE_SPATIAL_MATCHING_RESPONSE_REGISTRY_REVISION='qar-objectiv
 export const OBJECTIVE_MATCHING_RESPONSE_NORMALIZER=Object.freeze({id:'objective-matching-response-normalizer-v1',version:1});
 export const OBJECTIVE_MATCHING_RESPONSE_SCORER=Object.freeze({id:'objective-matching-response-scorer-v1',version:1});
 export const OBJECTIVE_MATCHING_RESPONSE_REVIEW_POLICY='objective-matching-response-review-v1';
-export const OBJECTIVE_MATCHING_RESPONSE_KINDS=Object.freeze(['reading-matching-information','reading-matching-headings','reading-matching-features','reading-matching-sentence-endings','listening-matching','listening-plan-map-diagram-labelling']);
+export const OBJECTIVE_MATCHING_RESPONSE_KINDS=Object.freeze(['reading-matching-information','reading-matching-headings','reading-matching-features','reading-matching-sentence-endings','reading-summary-completion-box','listening-matching','listening-plan-map-diagram-labelling']);
 const MAX_BYTES=80_000,MAX_OUTPUT=10_000,owners=new WeakSet(),readers=new WeakMap(),sealed=new WeakMap();
 const fail=(code,message)=>Object.assign(new Error(message),{code});
 const own=(v,k)=>Object.prototype.hasOwnProperty.call(v,k);

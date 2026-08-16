@@ -63,9 +63,9 @@ test('brands owner adapters, detects tamper and exposes the matching kernel thro
 });
 
 test('declares all bounded matching families and exact capability sets',()=>{
-  assert.deepEqual(matching.OBJECTIVE_MATCHING_RESPONSE_KINDS,['reading-matching-information','reading-matching-headings','reading-matching-features','reading-matching-sentence-endings','listening-matching','listening-plan-map-diagram-labelling']);
+  assert.deepEqual(matching.OBJECTIVE_MATCHING_RESPONSE_KINDS,['reading-matching-information','reading-matching-headings','reading-matching-features','reading-matching-sentence-endings','reading-summary-completion-box','listening-matching','listening-plan-map-diagram-labelling']);
   for(const kind of matching.OBJECTIVE_MATCHING_RESPONSE_KINDS){const entry=matching.objectiveMatchingResponseRegistryEntry(kind);assert.deepEqual(entry.capabilities,kind.startsWith('listening-')?['audio-playback','keyboard','focus','screen-reader']:['keyboard','focus','screen-reader']);assert.equal(entry.coverage,'PARTIAL');}
-  assert.equal(qar.getQuestionCoverageReport().kinds.filter(row=>matching.OBJECTIVE_MATCHING_RESPONSE_KINDS.includes(row.kind)).length,6);
+  assert.equal(qar.getQuestionCoverageReport().kinds.filter(row=>matching.OBJECTIVE_MATCHING_RESPONSE_KINDS.includes(row.kind)).length,7);
 });
 
 test('spatial matching composes the prompt into public and private bindings',()=>{
@@ -79,4 +79,39 @@ test('executes one grouped matching response through Activity Run Attempt Receip
   const aggregate=createTranscriptAggregate({source:{id:'matching-transcript',status:'verified',complete:true},segments:[{startMs:0,endMs:1000,text:'controlled',status:'verified',aligned:true}],provenance:{origin:'fixture',verification:'verified',rights:'allowed',privacy:'private'},createdAt:1}),adapter=createTranscriptSourceAdapter({getTranscriptAggregate:async()=>aggregate}),ref=adapter.createRef(aggregate),listeningTarget={schemaVersion:2,targetType:'ielts-objective-item',targetId:`ielts-objective:${'b'.repeat(64)}`,cardId:null,senseId:null,skill:'listening',sourceId:ref.sourceId,sourceRevision:ref.revisionId},listeningDef={...definition,id:'matching-listening',kind:'listening-matching',target:listeningTarget,sourceRevisionRef:ref};let current=structuredClone(listeningDef);const question=qar.createObjectiveMatchingResponseQuestion(listeningDef,{ownerAdapter:qar.createObjectiveMatchingResponseOwnerAdapter({readVerifiedQuestion:()=>current})}),payload={slots:[{slotId:'slot-a',optionId:'option-1'},{slotId:'slot-b',optionId:null}]},score=qar.scoreQuestionActivity(question,payload),plan=composeTodayPlan({dueReviews:[{id:'matching-exec',type:'listening',target:listeningTarget,executor:'matching',estimatedSeconds:60}],now:500000,minutes:5}),activity={...plan.activities[0],execution:{kind:'matching',status:'ready'},launchBinding:'objective-matching-response',assistanceCollectionMode:qar.LISTENING_ASSISTANCE_COLLECTION_MODE,launch:{promptRevision:question.promptRevision,configRevision:question.registryRevision,configDigest:question.promptDigest},evaluationBinding:{applicable:true,revision:question.registryRevision,keyRevision:question.keyRevision,keyDigest:score.keyDigest,rubricRevision:question.rubricRevision,rubricDigest:question.rubricDigest,scoringPolicyRevision:question.scorer.id,reviewPolicyRevision:question.reviewPolicyRevision}},registry=qar.createQuestionRegistry();registry.registerExecutor(question.kind,question.version,['audio-playback','keyboard','focus','screen-reader']);const sourceRegistry=createSourceRevisionRegistry({adapters:[adapter]}),first=await qar.executeQuestionActivity({activity,question,response:payload,sourceRegistry,questionRegistry:registry,now:500001});
   assert.equal(first.run.status,'completed');assert.equal(first.score.disposition,'partial');assert.equal(first.decision.eligible,false);assert.equal(first.score.affectsSchedule,false);const serial=JSON.stringify(first.run);assert.equal(serial.includes('acceptedOptionId'),false);assert.equal(serial.includes('answerBindingDigest'),true);assert.equal(serial.includes('controlled'),false);const backup=await buildCombinedBackup(),backupRow=backup.domains.v10.stores.todayRuns.find(row=>row.id===first.run.id);assert.equal(backupRow.envelope.attempt.metadata.objectiveMatchingResponse.answerBindingDigest,first.score.answerBindingDigest);assert.equal(JSON.stringify(backup).includes('acceptedOptionId'),false);await deleteV10Record(V10_STORES.todayRuns,first.run.id,'matching-r1-backup');await restoreCombinedBackup(backup);await reopenV10Database();const restored=await getV10Record(V10_STORES.todayRuns,first.run.id);assert.equal(restored.envelope.receipt.metadata.objectiveMatchingResponse.answerBindingDigest,first.score.answerBindingDigest);const replay=await qar.executeQuestionActivity({activity,question,response:{slots:[{optionId:'option-1',slotId:'slot-a'},{optionId:null,slotId:'slot-b'}]},sourceRegistry,questionRegistry:registry,now:500002});assert.equal(replay.run.receiptId,first.run.receiptId);await assert.rejects(qar.executeQuestionActivity({activity,question,response:{slots:[{slotId:'slot-a',optionId:'option-1'},{slotId:'slot-b',optionId:'option-2'}]},sourceRegistry,questionRegistry:registry,now:500003}),error=>error.code==='QUESTION_ACTIVITY_TERMINAL_RESPONSE_CONFLICT');
   current={...current,prompt:'changed'};const other={...activity,id:`${activity.id}:changed`,activitySpec:{...activity.activitySpec,id:`${activity.activitySpec.id}:changed`}};await assert.rejects(qar.executeQuestionActivity({activity:other,question,response:payload,sourceRegistry,questionRegistry:registry,now:500004}),error=>error.code==='QUESTION_ACTIVITY_OWNER_CHANGED');
+});
+
+test('reading-summary-completion-box validates option pool, single-use/allow-reuse policies, seals answer keys and scores deterministically',()=>{
+  const boxDefinition=Object.freeze({id:'summary-box-1',kind:'reading-summary-completion-box',prompt:'Complete the summary using the box options.',slots:[{id:'slot-1',label:'Blank 1',acceptedOptionId:'opt-a'},{id:'slot-2',label:'Blank 2',acceptedOptionId:'opt-c'}],options:[{id:'opt-a',label:'biodiversity'},{id:'opt-b',label:'ecosystem'},{id:'opt-c',label:'sustainability'},{id:'opt-d',label:'conservation'}],reusePolicy:'SINGLE_USE',target,sourceRevisionRef:source,createdAt:100,updatedAt:200});
+  const question=matching.createObjectiveMatchingResponseQuestion(boxDefinition,{ownerAdapter:ownerFor(boxDefinition)});
+  assert.equal(question.kind,'reading-summary-completion-box');
+  assert.equal(question.registryRevision,matching.OBJECTIVE_MATCHING_RESPONSE_REGISTRY_REVISION);
+  assert.equal(JSON.stringify(question).includes('acceptedOptionId'),false);
+  assert.equal(JSON.stringify(question).includes('opt-a'),true);
+
+  const correct=matching.scoreObjectiveMatchingResponse(question,{slots:[{slotId:'slot-1',optionId:'opt-a'},{slotId:'slot-2',optionId:'opt-c'}]});
+  assert.equal(correct.valid,true);
+  assert.equal(correct.disposition,'correct');
+  assert.equal(correct.numerator,2);
+  assert.equal(correct.denominator,2);
+
+  const partial=matching.scoreObjectiveMatchingResponse(question,{slots:[{slotId:'slot-1',optionId:'opt-a'},{slotId:'slot-2',optionId:'opt-b'}]});
+  assert.equal(partial.valid,true);
+  assert.equal(partial.disposition,'partial');
+  assert.equal(partial.numerator,1);
+  assert.equal(partial.denominator,2);
+
+  const wrong=matching.scoreObjectiveMatchingResponse(question,{slots:[{slotId:'slot-1',optionId:'opt-d'},{slotId:'slot-2',optionId:'opt-b'}]});
+  assert.equal(wrong.valid,true);
+  assert.equal(wrong.disposition,'wrong');
+  assert.equal(wrong.numerator,0);
+  assert.equal(wrong.denominator,2);
+
+  // Single-use violation in response
+  const duplicateUse=matching.scoreObjectiveMatchingResponse(question,{slots:[{slotId:'slot-1',optionId:'opt-a'},{slotId:'slot-2',optionId:'opt-a'}]});
+  assert.equal(duplicateUse.valid,false);
+
+  // Unknown option ID in response
+  const unknownOpt=matching.scoreObjectiveMatchingResponse(question,{slots:[{slotId:'slot-1',optionId:'opt-unknown'},{slotId:'slot-2',optionId:'opt-c'}]});
+  assert.equal(unknownOpt.valid,false);
 });
