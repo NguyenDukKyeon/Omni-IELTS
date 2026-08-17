@@ -1091,13 +1091,12 @@ Transaction `W1-IELTS-OBJ-001` (Objective Question Kernel Completeness) cleanly 
 - `W2_STATUS`: `CANONICALLY_CLOSED`
 
 ### 7. Downstream Scope & Authority Bounds
-- `W3`: `AUTHORIZED_AND_ACTIVE` (`STAGE2-W3-IELTS-RDG-AUTH-001`, PR [#133](https://github.com/NguyenDukKyeon/VocabMaster/pull/133) merge `a64e2d4d9f2a492428cc7f83b6d3c3f00edaac2c`)
-- `W3_EXECUTION_AUTHORITY`: `CONDITIONALLY_GRANTED` (under `STAGE2-W3-IELTS-RDG-AUTH-001`)
-- `W4`: `NOT_AUTHORIZED`
+- `W3`: `CANONICALLY_CLOSED` (`STAGE2-W3-IELTS-RDG-AUTH-001`, PR [#135](https://github.com/NguyenDukKyeon/VocabMaster/pull/135) merge `3e7b950ea30281330f306b1b5217967b06b49737`)
+- `W4`: `NOT_AUTHORIZED (Next eligible for authorization under Stage 2 strategy, W4_EXECUTION_AUTHORITY: NOT_GRANTED)`
 - `W5`: `NOT_AUTHORIZED`
 - `W6`: `NOT_AUTHORIZED`
 - `W4_W6`: `NOT_AUTHORIZED`
-- `NEXT_STAGE2_PRODUCT_WAVE`: `Wave W3 (Reading Platform Completeness)`
+- `NEXT_STAGE2_PRODUCT_WAVE`: `Wave W4 (Writing Platform Completeness)`
 - `PRODUCT_SEMANTIC_CHANGE`: `NONE`
 - `IMPLEMENTATION_CHANGE`: `NONE`
 - `TEST_CHANGE`: `NONE`
@@ -1133,8 +1132,45 @@ Transaction `W1-IELTS-OBJ-001` (Objective Question Kernel Completeness) cleanly 
 | Independent Authorization Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/133#pullrequestreview-4949157766` |
 | Authorization Merge Commit | `a64e2d4d9f2a492428cc7f83b6d3c3f00edaac2c` |
 | Push CI Run on Merge Commit | `32004143044` (`success`) |
-| Activation State | `AUTHORIZED / READY_FOR_EXECUTION` |
-| Effective Implementation Predecessor | `PENDING_POST_ACTIVATION_MERGE` |
+| Activation State | `CANONICALLY_CLOSED` |
+| Effective Implementation Predecessor | `c499ae51cb7dd0e5d4cdb24df32f9dfd007ae334` |
+| Implementation Candidate Head | `87934644414a017c05532249d08cb72142a8c61c` |
+| Independent Implementation Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/135#pullrequestreview-4949345565` |
+| Implementation Merge Commit | `3e7b950ea30281330f306b1b5217967b06b49737` |
+| Push CI Run on Implementation Merge | `32006215126` (`success`) |
+
+## Stage 2 Wave W3 Reconciliation: Reading Platform Completeness (W3-IELTS-RDG-001)
+
+### 1. Executive Summary & Verification Ledger
+Stage 2 Wave W3 (`Reading Platform Completeness`, `W3-IELTS-RDG-001`) has successfully completed its full lifecycle under `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md`, `docs/MASTER_ROADMAP.md`, `docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`, and `AGENTS.md`. All bounded transactions (T1 Authorization, T2 Activation, T3 Implementation) have achieved independent audit acceptance, natural CI verification, and canonical integration into `main`.
+
+### 2. Transactional Ledger
+| Transaction | ID / Subject | Candidate HEAD | Review ID | Merge Commit | CI Run | Verdict |
+|---|---|---|---|---|---|---|
+| **T1 (Authorization)** | `STAGE2-W3-IELTS-RDG-AUTH-001` (PR [#133](https://github.com/NguyenDukKyeon/VocabMaster/pull/133)) | `df2dbf1fbec15a4a8daa10c3c92681ecf463efdc` | `4949157766` | `a64e2d4d9f2a492428cc7f83b6d3c3f00edaac2c` | `32003589972` (PR) / `32004143044` (push) | `ACCEPT` (0 findings) |
+| **T2 (Activation)** | `AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W3-IELTS-RDG-001` (PR [#134](https://github.com/NguyenDukKyeon/VocabMaster/pull/134)) | `09f57816bf4013ce0f8dbcf81c4286fb105a9abd` | `4949235428` | `c499ae51cb7dd0e5d4cdb24df32f9dfd007ae334` | `32004476045` (PR) / `32004934247` (push) | `ACCEPT` (0 findings) |
+| **T3 (Implementation)** | `W3-IELTS-RDG-001` (PR [#135](https://github.com/NguyenDukKyeon/VocabMaster/pull/135)) | Commit A `ae6fe7bdda048a4a77a2ad5edf253febf4e8c5e9`<br/>Commit B `87934644414a017c05532249d08cb72142a8c61c` | `4949345565` | `3e7b950ea30281330f306b1b5217967b06b49737` | RED `32005280574` (failure)<br/>GREEN `32005684256` (success)<br/>Push `32006215126` (success) | `ACCEPT` (0 findings) |
+
+### 3. Delivered Product Capabilities
+- **3-Passage Academic & 3-Section General Training Orchestration**: Full 40-item reading runner (`IeltsReadingRunner`) supporting authentic Academic 3-passage research texts and General Training 3-section workplace/social texts.
+- **Split-Pane Layout & Text Navigation**: Synchronized split-pane interface (`.ielts-reading-split-pane`, `.ielts-reading-passage-pane`, `.ielts-reading-questions-pane`), 1–40 matrix navigator buttons, and passage tabs.
+- **60-Minute Timing & Autosave Recovery**: Official 60-minute countdown timer with automatic submission on expiry, exam mode 1-play constraint, and robust autosave checkpoint recovery (`IELTS_READING_CHECKPOINT_V1`).
+- **Deterministic 41-Point Raw-to-Band Scoring**: Separate conversion tables for Academic (`convertIeltsAcademicReadingRawToBand`) and General Training (`convertIeltsGeneralReadingRawToBand`) with strict boundary validation and honesty label `"Estimated Band Score — Practice Reference"`.
+- **15 Reading Task Families**: Support for all reading item types (TFNG, YNNG, Multiple Choice, Matching Headings/Info/Features/Endings, Sentence/Summary/Note/Table/Flow-chart/Diagram completion, Short Answer).
+- **Error Candidate Emission & Zero Schedule Impact**: Emits error candidates into `ErrorRepository` with category `'reading'`, strictly preserving `affectsSchedule: false`, `evidenceEligible: false`, and `KEY_LEAK_BEFORE_SUBMIT === 0`.
+- **IELTS Hub Integration**: Mounts IELTS Reading test launcher in `src/ielts-hub-v2.js` alongside Listening.
+
+### 4. Resolved Wave State Summary
+- `W3_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL` (`STAGE2-W3-IELTS-RDG-AUTH-001`, PR #133 merge `a64e2d4d9f2a492428cc7f83b6d3c3f00edaac2c`)
+- `W3_ACTIVATION`: `ACCEPTED_AND_CANONICAL` (PR #134 merge `c499ae51cb7dd0e5d4cdb24df32f9dfd007ae334`)
+- `W3_IMPLEMENTATION`: `ACCEPTED_AND_CANONICAL` (PR #135 merge `3e7b950ea30281330f306b1b5217967b06b49737`)
+- `W3_STATUS`: `CANONICALLY_CLOSED`
+- `W4`: `NOT_AUTHORIZED (Next eligible for authorization under Stage 2 strategy, W4_EXECUTION_AUTHORITY: NOT_GRANTED)`
+- `W4_ELIGIBILITY`: `ELIGIBLE_FOR_SEPARATE_AUTHORIZATION`
+- `W5`: `NOT_AUTHORIZED`
+- `W6`: `NOT_AUTHORIZED`
+- `W4_W6`: `NOT_AUTHORIZED`
+
 
 
 
