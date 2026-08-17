@@ -5,10 +5,15 @@ Stage ID: **STAGE 3 — Learning / Product Deep Research**
 Transaction ID: **STAGE3-RESEARCH-STRATEGY-AUTH-001**  
 Protocol: **BOUNDED_EXECUTION_CAPSULE_PROTOCOL_V1** (ADR-046) under **EXECUTION_PROMPT_PROTOCOL_V2** (ADR-051)  
 Date: **2026-08-17**  
-Status: **CANDIDATE / AUTHORIZATION_PENDING_INDEPENDENT_AUDIT / NOT_EFFECTIVE**  
+Status: **ACCEPTED / CANONICAL / EFFECTIVE**  
 Canonical Predecessor (Base): **`664ab14bb1415fec0995e80e99369164df28575c`**  
 Candidate Branch: **`strategy/stage3-research-strategy-auth-001`**  
-Merge Authority for Authorization Candidate: **EXPLICITLY_GRANTED** (to Independent Auditor upon formal `ACCEPT` verdict)  
+Authorization Candidate Head: **`066fc999361a105bb00464c6625920564b390d14`**  
+Independent Authorization Review: **`https://github.com/NguyenDukKyeon/VocabMaster/pull/150#pullrequestreview-4951122496`**  
+Authorization Merge Commit: **`ebea8aa01ceb61f13bae1b09b14486397f0d4a4d`**  
+Push CI Run on Merge: **`32025636999` (`success`)**  
+Effective Research Predecessor: **`ebea8aa01ceb61f13bae1b09b14486397f0d4a4d`**  
+Merge Authority for Authorization Candidate: **EXPLICITLY_GRANTED** (Executed via PR #150 merge)  
 
 ---
 
@@ -180,13 +185,18 @@ Must evaluate against all 14 dimensions in `docs/research/STAGE3_RESEARCH_CONSTR
 
 ### 5.3 Program Execution Phasing
 ```
-TRANSACTION 1: AUTHORIZATION CANDIDATE (Current Transaction)
+TRANSACTION 1: AUTHORIZATION CANDIDATE (COMPLETE)
 └── Author STAGE3_RESEARCH_STRATEGY.md, STAGE3_RESEARCH_CONSTRAINTS.md, STAGE3-RESEARCH-AUTH-001.md, ADR-053.
-└── Open Draft PR, verify natural exact-head CI.
+└── Open Draft PR #150, verified natural exact-head CI run 32024352788.
 
-TRANSACTION 2: INDEPENDENT AUTHORIZATION AUDIT & CANONICAL MERGE
-└── Independent audit of authorization candidate.
-└── Upon formal ACCEPT verdict, execute pre-authorized exact-head merge and post-merge CI verification.
+TRANSACTION 2: INDEPENDENT AUTHORIZATION AUDIT & CANONICAL MERGE (COMPLETE)
+└── Independent audit of authorization candidate (Review #4951122496, Verdict: ACCEPT).
+└── Pre-authorized exact-head merge to canonical main (Merge commit ebea8aa01ceb61f13bae1b09b14486397f0d4a4d).
+└── Post-merge push CI run 32025636999 verified SUCCESS.
+
+TRANSACTION 3: CANONICAL STATUS RECONCILIATION & ACTIVATION (Current Transaction)
+└── Reconcile canonical status across docs/STAGE3_RESEARCH_STRATEGY.md, docs/authorizations/STAGE3-RESEARCH-AUTH-001.md, and docs/IMPLEMENTATION_STATUS.md.
+└── Manifest state becomes CANONICALLY EFFECTIVE.
 
 FUTURE TRANSACTIONS: RESEARCH EXECUTION (R1, R2, R3) & R4 SYNTHESIS
 └── Separately executed research transactions or authorized parallel research sessions.
