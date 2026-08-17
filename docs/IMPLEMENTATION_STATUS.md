@@ -1091,20 +1091,20 @@ Transaction `W1-IELTS-OBJ-001` (Objective Question Kernel Completeness) cleanly 
 - `W2_STATUS`: `CANONICALLY_CLOSED`
 
 ### 7. Downstream Scope & Authority Bounds
-- `W3`: `NOT_AUTHORIZED` (Next eligible for authorization under Stage 2 strategy, but `W3_EXECUTION_AUTHORITY: NOT_GRANTED`)
-- `W3_ELIGIBILITY`: `ELIGIBLE_FOR_SEPARATE_AUTHORIZATION`
+- `W3`: `AUTHORIZED_AND_ACTIVE` (`STAGE2-W3-IELTS-RDG-AUTH-001`, PR [#133](https://github.com/NguyenDukKyeon/VocabMaster/pull/133) merge `a64e2d4d9f2a492428cc7f83b6d3c3f00edaac2c`)
+- `W3_EXECUTION_AUTHORITY`: `CONDITIONALLY_GRANTED` (under `STAGE2-W3-IELTS-RDG-AUTH-001`)
 - `W4`: `NOT_AUTHORIZED`
 - `W5`: `NOT_AUTHORIZED`
 - `W6`: `NOT_AUTHORIZED`
-- `W3_W6`: `NOT_AUTHORIZED`
-- `NEXT_STAGE2_PRODUCT_WAVE`: `REQUIRES_SEPARATE_AUTHORIZATION`
+- `W4_W6`: `NOT_AUTHORIZED`
+- `NEXT_STAGE2_PRODUCT_WAVE`: `Wave W3 (Reading Platform Completeness)`
 - `PRODUCT_SEMANTIC_CHANGE`: `NONE`
 - `IMPLEMENTATION_CHANGE`: `NONE`
 - `TEST_CHANGE`: `NONE`
 - `SOURCE_CHANGE`: `NONE`
 - `AUTHORIZATION_CHANGE`: `NONE`
 - `DEPENDENCY_CHANGE`: `NONE`
-- `W3_W6_AUTHORITY_CHANGE`: `NONE`
+- `W4_W6_AUTHORITY_CHANGE`: `NONE`
 
 ## AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W2-IELTS-LIS-001
 
@@ -1119,6 +1119,23 @@ Transaction `W1-IELTS-OBJ-001` (Objective Question Kernel Completeness) cleanly 
 | Authorization Merge SHA | `0d7acbf0c6f056c3f169e2200e58f785f8e2e3d9` |
 | Activation State | `AUTHORIZED / READY_FOR_EXECUTION` |
 | Effective Implementation Predecessor | `d278f2045b38299b056f16ec7d76fb81c0739541` |
+
+## AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W3-IELTS-RDG-001
+
+| Field | Value |
+|---|---|
+| Activation Schema | `AGENT_CONTEXT_AUTH_ACTIVATION_V1` |
+| Transaction ID | `W3-IELTS-RDG-001` |
+| Authorization Manifest | `docs/authorizations/STAGE2-W3-IELTS-RDG-AUTH-001.md` |
+| Authorization Manifest Identity | `STAGE2-W3-IELTS-RDG-AUTH-001` |
+| Authorization Subject PR | `#133` |
+| Authorization Candidate Head | `df2dbf1fbec15a4a8daa10c3c92681ecf463efdc` |
+| Independent Authorization Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/133#pullrequestreview-4949157766` |
+| Authorization Merge Commit | `a64e2d4d9f2a492428cc7f83b6d3c3f00edaac2c` |
+| Push CI Run on Merge Commit | `32004143044` (`success`) |
+| Activation State | `AUTHORIZED / READY_FOR_EXECUTION` |
+| Effective Implementation Predecessor | `PENDING_POST_ACTIVATION_MERGE` |
+
 
 
 
