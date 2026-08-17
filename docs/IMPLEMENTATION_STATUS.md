@@ -1212,10 +1212,28 @@ Stage 2 Wave W4 (`Productive Writing Platform`, `W4-IELTS-WRT-001`) has successf
 - `W4_ACTIVATION`: `ACCEPTED_AND_CANONICAL` (PR #138 merge `605f30a03bdc4565bd80e559fed6bda63b39fbb8`)
 - `W4_IMPLEMENTATION`: `ACCEPTED_AND_CANONICAL` (PR #139 merge `febcc3f42dca3a4443fdd9da7951baf32417c71f`)
 - `W4_STATUS`: `CANONICALLY_CLOSED`
-- `W5`: `NOT_AUTHORIZED (Next eligible for authorization under Stage 2 strategy, W5_EXECUTION_AUTHORITY: NOT_GRANTED)`
-- `W5_ELIGIBILITY`: `ELIGIBLE_FOR_SEPARATE_AUTHORIZATION`
+- `W5_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL` (`STAGE2-W5-IELTS-SPK-AUTH-001`, PR #141 merge `31e8ac2912706ab8014b7b6d88ce76ab6c1d1392`)
+- `W5_ACTIVATION`: `CANDIDATE_PENDING_INDEPENDENT_AUDIT`
+- `W5`: `AUTHORIZED / READY_FOR_ACTIVATION`
 - `W6`: `NOT_AUTHORIZED`
-- `W5_W6`: `NOT_AUTHORIZED`
+- `W6_AUTHORITY`: `NOT_GRANTED`
+
+## AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W5-IELTS-SPK-001
+
+| Field | Value |
+|---|---|
+| Activation Schema | `AGENT_CONTEXT_AUTH_ACTIVATION_V1` |
+| Transaction ID | `W5-IELTS-SPK-001` |
+| Authorization Manifest | `docs/authorizations/STAGE2-W5-IELTS-SPK-AUTH-001.md` |
+| Authorization Manifest Identity | `STAGE2-W5-IELTS-SPK-AUTH-001` |
+| Authorization Subject PR | `#141` |
+| Authorization Candidate Head | `e981c8cb5c3de6a0535c39161273f180c8ae3afa` |
+| Independent Authorization Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/141#pullrequestreview-4950135728` |
+| Authorization Merge Commit | `31e8ac2912706ab8014b7b6d88ce76ab6c1d1392` |
+| Push CI Run on Merge Commit | `32014588192` (`success`) |
+| Activation State | `AUTHORIZED / READY_FOR_EXECUTION` |
+| Effective Implementation Predecessor | `PENDING_POST_ACCEPT_ACTIVATION` |
+
 
 
 
