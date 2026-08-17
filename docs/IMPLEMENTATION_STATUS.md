@@ -1213,9 +1213,10 @@ Stage 2 Wave W4 (`Productive Writing Platform`, `W4-IELTS-WRT-001`) has successf
 - `W4_IMPLEMENTATION`: `ACCEPTED_AND_CANONICAL` (PR #139 merge `febcc3f42dca3a4443fdd9da7951baf32417c71f`)
 - `W4_STATUS`: `CANONICALLY_CLOSED`
 - `W5_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL` (`STAGE2-W5-IELTS-SPK-AUTH-001`, PR #141 merge `31e8ac2912706ab8014b7b6d88ce76ab6c1d1392`)
-- `W5_ACTIVATION`: `CANDIDATE_PENDING_INDEPENDENT_AUDIT`
-- `W5`: `AUTHORIZED / READY_FOR_ACTIVATION`
-- `W6`: `NOT_AUTHORIZED`
+- `W5_ACTIVATION`: `ACCEPTED_AND_CANONICAL` (PR #142 merge `d8c954022ce401676fcfe41d47f928e50fbd9f3f`)
+- `W5_IMPLEMENTATION`: `ACCEPTED_AND_CANONICAL` (PR #143 merge `cb0013ef6eadc6f961a774995aa41b84db2ecf9b`)
+- `W5_STATUS`: `CANONICALLY_CLOSED`
+- `W6`: `ELIGIBLE_FOR_SEPARATE_AUTHORIZATION`
 - `W6_AUTHORITY`: `NOT_GRANTED`
 
 ## AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W5-IELTS-SPK-001
@@ -1231,8 +1232,39 @@ Stage 2 Wave W4 (`Productive Writing Platform`, `W4-IELTS-WRT-001`) has successf
 | Independent Authorization Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/141#pullrequestreview-4950135728` |
 | Authorization Merge Commit | `31e8ac2912706ab8014b7b6d88ce76ab6c1d1392` |
 | Push CI Run on Merge Commit | `32014588192` (`success`) |
-| Activation State | `AUTHORIZED / READY_FOR_EXECUTION` |
-| Effective Implementation Predecessor | `PENDING_POST_ACCEPT_ACTIVATION` |
+| Activation State | `CANONICALLY_CLOSED` |
+| Effective Implementation Predecessor | `d8c954022ce401676fcfe41d47f928e50fbd9f3f` |
+| Implementation Candidate Head | `5a484541bc05298fbaff1091bf41930f7333676d` |
+| Independent Implementation Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/143#pullrequestreview-4950326874` |
+| Implementation Merge Commit | `cb0013ef6eadc6f961a774995aa41b84db2ecf9b` |
+| Push CI Run on Implementation Merge | `32016727461` (`success`) |
+
+## Stage 2 Wave W5 Reconciliation: Interactive Speaking Platform (W5-IELTS-SPK-001)
+
+### 1. Executive Summary & Verification Ledger
+Stage 2 Wave W5 (`Interactive Speaking Platform`, `W5-IELTS-SPK-001`) has successfully completed its full lifecycle under `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md`, `docs/MASTER_ROADMAP.md`, `docs/STAGE2_IELTS_COMPLETENESS_STRATEGY.md`, and `AGENTS.md`. All bounded transactions (T1 Authorization, T2 Activation, T3 Implementation) have achieved independent audit acceptance, natural CI verification, and canonical integration into `main`.
+
+### 2. Transactional Ledger
+| Transaction | ID / Subject | Candidate HEAD | Review ID | Merge Commit | CI Run | Verdict |
+|---|---|---|---|---|---|---|
+| **T1 (Authorization)** | `STAGE2-W5-IELTS-SPK-AUTH-001` (PR [#141](https://github.com/NguyenDukKyeon/VocabMaster/pull/141)) | `e981c8cb5c3de6a0535c39161273f180c8ae3afa` | `4950135728` | `31e8ac2912706ab8014b7b6d88ce76ab6c1d1392` | `32014034940` (PR) / `32014588192` (push) | `ACCEPT` (0 findings) |
+| **T2 (Activation)** | `AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W5-IELTS-SPK-001` (PR [#142](https://github.com/NguyenDukKyeon/VocabMaster/pull/142)) | `08bf62cf1bdd6aae90ac9c07bb94a5779e86e71b` | `4950218369` | `d8c954022ce401676fcfe41d47f928e50fbd9f3f` | `32014864282` (PR) / `32015535702` (push) | `ACCEPT` (0 findings) |
+| **T3 (Implementation)** | `W5-IELTS-SPK-001` (PR [#143](https://github.com/NguyenDukKyeon/VocabMaster/pull/143)) | Commit A `29d052faed545c8231c46149573b4ae6b3758af2`<br/>Commit B `5a484541bc05298fbaff1091bf41930f7333676d` | `4950326874` | `cb0013ef6eadc6f961a774995aa41b84db2ecf9b` | RED `32015896805` (failure)<br/>GREEN `32016271712` (success)<br/>Push `32016727461` (success) | `ACCEPT` (0 findings) |
+
+### 3. Delivered Product Capabilities
+- **3-Part Guided Speaking State Machine (`GAP-10`)**: Full 3-part speaking runner (`IeltsSpeakingRunner`) implementing Part 1 introduction & interview (4–6 questions on familiar topics, 4–5 mins), Part 2 individual long turn cue card with 1-min countdown prep timer (`SPEAKING_PART2_PREP_SECONDS = 60`), live scratchpad notes textarea, 2-min recording countdown timer (`SPEAKING_PART2_SPEAKING_SECONDS = 120`), 1–2 rounding questions (3–4 mins), and Part 3 two-way analytical discussion (4–6 abstract thematic questions, 4–5 mins).
+- **Audio Recording Capture & Playback Controller**: Full Web Audio / MediaRecorder API integration with deterministic mock fallback for headless and CI environments, enabling recording, pausing, stopping, and playback review of learner speaking responses.
+- **Autosave & Reload Recovery (`IELTS_SPEAKING_CHECKPOINT_V1`)**: Comprehensive checkpoint persistence and restoration for uninterrupted exam simulation.
+- **4-Dimension Rubric-Aligned Practice Evaluation (ADR-050)**: Standard evaluation across Fluency & Coherence (FC), Lexical Resource (LR), Grammatical Range & Accuracy (GRA), and Pronunciation (PR), with official IELTS half-band rounding and explicit honest practice disclaimer `"Estimated Band Score & Practice Feedback — Practice Reference"`. Zero claims of examiner certification.
+- **Error Candidate Emission & Schedule Isolation**: Emits speaking error candidates into `ErrorRepository` (categories: `speaking-fluency`, `speaking-lexical`, `speaking-grammar`, `speaking-pronunciation`) with `affectsSchedule: false` and `evidenceEligible: false`.
+- **Model Answer & Key Privacy Invariant**: Verified `KEY_LEAK_BEFORE_SUBMIT === 0` across client projections, DOM, and synthetic blueprints.
+- **IELTS Hub Integration**: Mounts IELTS Speaking test launcher in `src/ielts-hub-v2.js` alongside Listening, Reading, and Writing.
+
+### 4. Wave W6 Readiness
+- `W5_STATUS`: `CANONICALLY_CLOSED`
+- `W6_ELIGIBILITY`: `ELIGIBLE_FOR_SEPARATE_AUTHORIZATION`
+- `W6_AUTHORITY`: `NOT_GRANTED`
+
 
 
 
