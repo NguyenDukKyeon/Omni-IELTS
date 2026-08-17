@@ -1,10 +1,11 @@
 # VocabMaster — Stage 3 Learning / Product Deep Research Strategy
 
-Status: **CANDIDATE / NOT AUTHORIZED**  
-Authority: **STAGE 3 PRODUCT AND RESEARCH STRATEGY SPECIFICATION**  
+Status: **ACCEPTED / CANONICAL**  
+Authority: **STAGE 3 PRODUCT AND RESEARCH STRATEGY SPECIFICATION (RATIFIED UNDER ADR-053)**  
 Transaction ID: `STAGE3-RESEARCH-STRATEGY-001`  
 Date: **2026-08-17**  
 Canonical Predecessor: `664ab14bb1415fec0995e80e99369164df28575c`  
+Authorization Manifest: [`docs/authorizations/STAGE3-RESEARCH-AUTH-001.md`](docs/authorizations/STAGE3-RESEARCH-AUTH-001.md) (**ACCEPTED / CANONICAL / EFFECTIVE**)  
 
 ---
 
@@ -14,8 +15,8 @@ Canonical Predecessor: `664ab14bb1415fec0995e80e99369164df28575c`
 - **Stage 1 (Core Foundation)**: Independently `ACCEPTED` and `COMPLETE`.
 - **Stage 1.5 (Adversarial Product Jury)**: Independently `ACCEPTED` and `COMPLETE`.
 - **Stage 2 (IELTS Completeness)**: Independently `ACCEPTED` and `COMPLETE / CANONICALLY_CLOSED` under exit gate `IELTS_COMPLETENESS_V1` (18/18 dimensions verified across Listening, Reading, Writing, Speaking, and Full Mock Orchestration).
-- **Stage 3 (Learning / Product Deep Research)**: Reconciled as `NEXT` product milestone in `docs/MASTER_ROADMAP.md` via ADR-052.
-- **Execution Authority**: `NOT GRANTED` (Execution, research, and implementation authority require explicit bounded authorization).
+- **Stage 3 (Learning / Product Deep Research)**: Active research stage. Strategy independently `ACCEPTED` (PR #150 / Review #4951122496) and ratified via ADR-053; bounded research execution authorized under manifest `STAGE3-RESEARCH-AUTH-001`.
+- **Research Execution Authority**: `AUTHORIZED` (Bounded strictly to closed documentation allowlist across lanes R1–R4; zero implementation authority).
 
 ### 1.2 Mission Alignment with Master Roadmap
 This strategy specifies the broad learning, capability, and architectural research program owned by Stage 3 as defined in `docs/MASTER_ROADMAP.md` §3:
@@ -27,13 +28,14 @@ This strategy specifies the broad learning, capability, and architectural resear
 ### 1.3 Strict Non-Authority & Non-Absorption Boundaries
 > [!IMPORTANT]
 > **Explicit Non-Authority Notice**:
-> This document is a **STRATEGY CANDIDATE ONLY**.
-> - It does **NOT** authorize product code implementation.
+> This document is a **CANONICAL RESEARCH STRATEGY**.
+> - It authorizes **ONLY** bounded research execution under manifest `STAGE3-RESEARCH-AUTH-001`.
+> - It does **NOT** authorize product code implementation (`src/**`).
 > - It does **NOT** adopt any third-party library, package, or dependency in `package.json`.
-> - It does **NOT** select a final AI model, ASR engine, or hosted cloud provider.
+> - It does **NOT** select a final AI model, ASR engine, or hosted cloud provider (reserved for Stage 5).
 > - It does **NOT** authorize Stage 4 UX / Information Architecture work.
 > - It does **NOT** absorb or execute Stage 5's mission (AI / Technology Deep Research & Benchmark).
-> - It does **NOT** grant research execution authority; actual research execution requires separate bounded authorization under `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md`.
+> - All research recommendations, architectural proposals, and capability dispositions remain non-binding advice until separately ratified and authorized.
 
 ```mermaid
 flowchart LR

@@ -1317,7 +1317,7 @@ Transaction `STAGE2-STAGE3-TRANSITION-001` cleanly reconciled the top-level cano
 | **Stage 1 (Core Foundation)** | `COMPLETE` | Historical |
 | **Stage 1.5 (Adversarial Product Jury)** | `COMPLETE` | Historical |
 | **Stage 2 (IELTS Completeness)** | `COMPLETE / CANONICALLY_CLOSED` | Historical (`IELTS_COMPLETENESS_V1` verified 18/18) |
-| **Stage 3 (Learning / Product Deep Research)** | `NEXT` | `NOT_GRANTED` (Execution, Research, Implementation: `NOT_AUTHORIZED`) |
+| **Stage 3 (Learning / Product Deep Research)** | `NEXT` | Transition reconciled via ADR-052; Bounded authorization candidate authored |
 | **Stages 4–8** | `FUTURE` | `NOT_AUTHORIZED` |
 
 ### 4. Stage 3 Bounds & Invariants
@@ -1325,6 +1325,70 @@ Transaction `STAGE2-STAGE3-TRANSITION-001` cleanly reconciled the top-level cano
 - **Execution Authority**: `NOT_GRANTED`. No research or implementation work is authorized in this transaction.
 - **Provider & Dependency Stance**: Zero external dependencies or AI/ASR providers adopted.
 - **Next Eligible Action**: Bounded Stage 3 Research / Strategy Authorization Manifest (when proposed by Owner).
+
+## 25. Stage 3 Research Strategy & Bounded Authorization Activation
+
+Transaction `STAGE3-RESEARCH-STRATEGY-AUTH-001` (PR #150) established the Stage 3 Research Strategy and Bounded Authorization Manifest, was independently audited and `ACCEPTED` (Review #4951122496), and was merged into `main` at commit `ebea8aa01ceb61f13bae1b09b14486397f0d4a4d`.
+
+Transaction `STAGE3-RESEARCH-AUTH-ACTIVATION-001` reconciles canonical authority state and activates the manifest for bounded research execution.
+
+### 1. Provenance & Authority Lineage
+- **Transaction ID**: `STAGE3-RESEARCH-STRATEGY-AUTH-001`
+- **Subject**: Stage 3 Research Strategy & Bounded Authorization Activation
+- **Canonical Predecessor Base SHA**: `664ab14bb1415fec0995e80e99369164df28575c` (Merge PR #149 / Stage 2→3 Transition Reconciliation)
+- **Controlling Authority Hierarchy**: `docs/MASTER_ROADMAP.md` (§1, §3, §10), `docs/DECISIONS.md` (ADR-046, ADR-049, ADR-050, ADR-051, ADR-052, ADR-053), `AGENTS.md`, and `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md`.
+- **Ratified ADR**: ADR-053 (*Stage 3 Learning / Product Deep Research Strategy and Bounded Authorization Framework*).
+
+### 2. Authorization Activation Ledger
+| Field | Value |
+|---|---|
+| Activation Schema | `AGENT_CONTEXT_AUTH_ACTIVATION_V1` |
+| Transaction ID | `STAGE3-RESEARCH-STRATEGY-AUTH-001` |
+| Authorization Manifest | `docs/authorizations/STAGE3-RESEARCH-AUTH-001.md` |
+| Authorization Manifest Identity | `STAGE3-RESEARCH-AUTH-001` |
+| Authorization Subject PR | `#150` |
+| Authorization Candidate Head | `066fc999361a105bb00464c6625920564b390d14` |
+| Independent Authorization Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/150#pullrequestreview-4951122496` |
+| Authorization Merge Commit | `ebea8aa01ceb61f13bae1b09b14486397f0d4a4d` |
+| Push CI Run on Merge Commit | `32025636999` (`success`) |
+| Activation State | `EFFECTIVE / AUTHORIZED_FOR_RESEARCH_EXECUTION` |
+| Effective Research Predecessor | `ebea8aa01ceb61f13bae1b09b14486397f0d4a4d` |
+
+### 3. State & Authority Ledger
+| Dimension | Resolved Canonical State | Authority Status |
+|---|---|---|
+| **Stage 1 (Core Foundation)** | `COMPLETE` | Historical |
+| **Stage 1.5 (Adversarial Product Jury)** | `COMPLETE` | Historical |
+| **Stage 2 (IELTS Completeness)** | `COMPLETE / CANONICALLY_CLOSED` | Historical (`IELTS_COMPLETENESS_V1` verified 18/18) |
+| **Stage 3 (Learning / Product Deep Research)** | `IN_PROGRESS (RESEARCH_ACTIVE)` | `AUTHORIZED` (Bounded Research under `STAGE3-RESEARCH-AUTH-001`; Implementation: `NOT_AUTHORIZED`) |
+| **Stage 4 (UX / IA Remake)** | `FUTURE / BLOCKED_ON_STAGE3` | `NOT_AUTHORIZED` |
+| **Stage 5 (AI / Tech Deep Research)** | `FUTURE / BLOCKED_ON_STAGE3` | `NOT_AUTHORIZED` |
+| **Stage 6 (OmniIELTS Modular Foundation)** | `FUTURE / BLOCKED_ON_STAGE4_5` | `NOT_AUTHORIZED` |
+| **Stages 7–8** | `FUTURE` | `NOT_AUTHORIZED` |
+
+### 4. Stage 3 Authorized Scope & Boundaries
+- **Authorized Research Lanes**:
+  - **Lane R1**: Learning & Product Deep Research (`docs/research/R1_LEARNING_PRODUCT_RESEARCH.md`).
+  - **Lane R2**: OSS & Hosted Capability Research across 18 domains (`docs/research/R2_OSS_HOSTED_CAPABILITY_RESEARCH.md`).
+  - **Lane R3**: Transcript / Learning Pipeline & Architecture Research (`docs/research/R3_PIPELINE_ARCHITECTURE_RESEARCH.md`).
+  - **Lane R4**: Cross-Research Reconciliation & Synthesis (`docs/research/R4_CROSS_RESEARCH_RECONCILIATION.md`).
+- **Closed Write Allowlist**:
+  - `docs/STAGE3_RESEARCH_STRATEGY.md`
+  - `docs/authorizations/STAGE3-RESEARCH-AUTH-001.md`
+  - `docs/research/STAGE3_RESEARCH_CONSTRAINTS.md`
+  - `docs/research/R1_LEARNING_PRODUCT_RESEARCH.md`
+  - `docs/research/R2_OSS_HOSTED_CAPABILITY_RESEARCH.md`
+  - `docs/research/R3_PIPELINE_ARCHITECTURE_RESEARCH.md`
+  - `docs/research/R4_CROSS_RESEARCH_RECONCILIATION.md`
+  - `docs/DECISIONS.md`
+- **Invariants Strictly Preserved**:
+  - **Zero Implementation Authority**: Modifying `src/**`, `tests/**`, or `scripts/**` is strictly forbidden.
+  - **Zero Dependency Adoption**: Adding or changing dependencies in `package.json` is strictly forbidden.
+  - **Non-Absorption of Stage 4**: Wireframing, UI layout redesigns, and component remake belong to Stage 4.
+  - **Non-Absorption of Stage 5**: Final AI/ASR provider selection, model benchmarking, and technology adoption belong to Stage 5.
+  - **Single-Writer Discipline**: Exactly one authorized writer per transaction; subagents/auditors remain read-only.
+  - **Independent Research Audit Separation**: Independent audit required for every research deliverable.
+
 
 
 
