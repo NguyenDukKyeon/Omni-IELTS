@@ -56,6 +56,9 @@
     "test:phase5": "node --test tests/phase5-policy.test.mjs tests/phase5-local-companion.test.mjs tests/phase5-local-asr.test.mjs tests/phase5-resolver-fallback.test.mjs tests/phase5-gemini.test.mjs tests/phase5-import.test.mjs tests/phase5-ui.test.mjs tests/phase5-backup.test.mjs tests/ielts-api.test.mjs tests/caption-resolver-v2.test.mjs",
     "test:phase5-browser": "node scripts/phase5-browser-smoke.mjs",
     "phase5:verify": "node scripts/phase5-verify.mjs",
+    "test:mock": "node --test tests/ielts-mock-orchestrator.test.mjs tests/ielts-full-mock-browser.test.mjs",
+    "test:stage2-gate": "node --test tests/stage2-completeness-gate.test.mjs",
+    "stage2:gate": "node scripts/stage2-gate.mjs",
     "agent:context": "node scripts/agent-context.mjs"
   },
   "dependencies": {

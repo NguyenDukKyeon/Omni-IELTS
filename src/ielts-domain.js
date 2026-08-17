@@ -713,6 +713,19 @@ export function convertIeltsGeneralReadingRawToBand(rawScore) {
   return 0.0;
 }
 
+export function rawScoreToIeltsBand(rawScore, skill = 'listening', track = 'academic') {
+  const score = Math.max(0, Math.min(40, Math.round(Number(rawScore) || 0)));
+  if (skill === 'listening') {
+    return convertIeltsListeningRawToBand(score);
+  }
+  if (skill === 'reading') {
+    return track === 'general-training'
+      ? convertIeltsGeneralReadingRawToBand(score)
+      : convertIeltsAcademicReadingRawToBand(score);
+  }
+  return 0.0;
+}
+
 export function calculateWritingWordCount(text = '') {
   if (typeof text !== 'string') return 0;
   const trimmed = text.replace(/\r\n?/g, '\n').trim();
