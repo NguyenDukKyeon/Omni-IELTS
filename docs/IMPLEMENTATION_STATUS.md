@@ -1005,16 +1005,16 @@ Transaction `W1-IELTS-OBJ-001` (Objective Question Kernel Completeness) cleanly 
 - **Transaction ID**: `W2-IELTS-LIS-001`
 - **Wave Identity**: `Stage 2 Wave W2: IELTS Listening Platform Completeness`
 - **Controlling Specification**: `docs/authorizations/STAGE2-W2-IELTS-LIS-AUTH-002.md`
-- **Controlling Recovery Authorization**: `docs/authorizations/STAGE2-W2-IELTS-LIS-RECOVERY-AUTH-001.md`
-- **Prospective Revalidation Record**: `docs/authorizations/STAGE2-W2-IELTS-LIS-REVALIDATION-001.md`
+- **Controlling Provenance Recovery Authorization**: `docs/authorizations/STAGE2-W2-IELTS-LIS-PROVENANCE-RECOVERY-AUTH-001.md`
+- **Corrected Prospective Revalidation Record**: `docs/authorizations/STAGE2-W2-IELTS-LIS-REVALIDATION-002.md`
 
 ### 1. Valid Predecessor & Activation Lineage
-- **Successor Authorization Manifest**: `STAGE2-W2-IELTS-LIS-AUTH-002` (PR [#122](https://github.com/NguyenDukKyeon/VocabMaster/pull/122), accepted via review `PRR_kwDOTmjPCs8AAAABJuLYqQ`, merged at `0d7acbf0c6f056c3f169e2200e58f785f8e2e3d9`).
-- **Replacement Activation Record**: `AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W2-IELTS-LIS-001` (PR [#123](https://github.com/NguyenDukKyeon/VocabMaster/pull/123), accepted via review `PRR_kwDOTmjPCs8AAAABJuMQWA`, merged at `d278f2045b38299b056f16ec7d76fb81c0739541`).
+- **Successor Authorization Manifest**: `STAGE2-W2-IELTS-LIS-AUTH-002` (PR [#122](https://github.com/NguyenDukKyeon/VocabMaster/pull/122), accepted via review `4947368105`, merged at `0d7acbf0c6f056c3f169e2200e58f785f8e2e3d9`).
+- **Replacement Activation Record**: `AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W2-IELTS-LIS-001` (PR [#123](https://github.com/NguyenDukKyeon/VocabMaster/pull/123), accepted via review `4947382360`, merged at `d278f2045b38299b056f16ec7d76fb81c0739541`).
 
 ### 2. Historical Incident & Non-Compliant Merge Ledger
 - **Historical PR #125 (`exec/stage2-w2-ielts-lis-recovery-002`):**
-  - Actual Commit Topology: 3 substantive commits (`a6a6d8e -> 926a9ef -> 900405f`) violating AUTH-002 §6 two-commit requirement.
+  - Actual Commit Topology: 3 substantive commits (`a6a6d8e9de97b1a6845111a5f930cfc50a4b4538 -> 926a9ef7651d1f15367ad1f7d2c50d101b465443 -> 900405f39badaaf4fdfd0441ed9a05451ade34eb`) violating AUTH-002 §6 two-commit requirement.
   - Commit A (`a6a6d8e9de97b1a6845111a5f930cfc50a4b4538`): Natural RED CI `31974833396` (990 pass / 2 fail).
   - Commit B (`926a9ef7651d1f15367ad1f7d2c50d101b465443`): Natural CI `31975024526` failed on browser smoke assertion (`4 !== 3`).
   - Commit C (`900405f39badaaf4fdfd0441ed9a05451ade34eb`): Natural GREEN CI `31975164283` (`success`).
@@ -1027,21 +1027,40 @@ Transaction `W1-IELTS-OBJ-001` (Objective Question Kernel Completeness) cleanly 
   - **PR #121** (`3f83fa6f550e2f1252c579456f97ef3c0503192b`): `HISTORICAL_REJECTED_FROZEN` (superseded false accept).
   - **PR #124** (`0f363199179adb65d666d56edd26156ba07a2489`): `HISTORICAL_REJECTED_FROZEN` (defective Commit A import).
 
-### 3. Governed Post-Merge Recovery Transactions
-- **Recovery Authorization Manifest (PR [#127](https://github.com/NguyenDukKyeon/VocabMaster/pull/127)):**
+### 3. Historical First Recovery & Superseded Provenance Transactions
+- **First Recovery Authorization Manifest (PR [#127](https://github.com/NguyenDukKyeon/VocabMaster/pull/127)):**
   - Manifest Identity: `STAGE2-W2-IELTS-LIS-RECOVERY-AUTH-001`
   - Candidate Head: `4bcc4d8e54eba589bac930f8f4740c77a3a3378c`
   - Natural PR CI: Run `31989948907` (`success`)
   - Independent Authorization Review: `https://github.com/NguyenDukKyeon/VocabMaster/pull/127#pullrequestreview-4948153412` (`ACCEPT`, 0 findings)
-  - Merge Commit on `main`: `9b72843b0923d387349910c22faeb9f3152d06ea`
-- **Prospective Current-Code Revalidation (PR [#128](https://github.com/NguyenDukKyeon/VocabMaster/pull/128)):**
+  - Real Merge Commit on `main`: `9b728437a61a3ed5880d4c0863a213a5b6dd87bb`
+- **Superseded Revalidation Record (PR [#128](https://github.com/NguyenDukKyeon/VocabMaster/pull/128)):**
   - Record Identity: `STAGE2-W2-IELTS-LIS-REVALIDATION-001`
   - Candidate Head: `8e0fc3a0e8ebc5a5c22c7095901d4347225d0041`
-  - Natural PR CI: Run `31990417008` (`success`)
-  - Independent Revalidation Review: `https://github.com/NguyenDukKyeon/VocabMaster/pull/128#pullrequestreview-4948169973` (`ACCEPT`, 0 findings)
-  - Merge Commit on `main`: `26a56832dbb7dfdc0ca213e4b09e13d9643d994e`
+  - Review ID: `4948169973`
+  - Merge Commit on `main`: `26a568307b35d14e53570079276b20406f5daccf`
+  - Provenance Status: `SUPERSEDED_PROVENANCE_DEFECT` (candidate document recorded typographical non-existent predecessor SHA `9b72843b0923d387349910c22faeb9f3152d06ea`).
+- **Superseded Status Ledger (PR [#129](https://github.com/NguyenDukKyeon/VocabMaster/pull/129)):**
+  - Candidate Head: `5f3fa5aa2920b103d19011ac90101275cb817310`
+  - Review ID: `4948195979`
+  - Merge Commit on `main`: `2fc37a2ad3c61b99a88322199c5b1462522e5459`
+  - Provenance Status: `SUPERSEDED_PROVENANCE_DEFECT` (recorded typographical defective SHA references).
 
-### 4. Delivered Product Semantics & Ratified Decisions
+### 4. Governed Exact-SHA Provenance Recovery Transactions
+- **Provenance Recovery Authorization Manifest (PR [#130](https://github.com/NguyenDukKyeon/VocabMaster/pull/130)):**
+  - Manifest Identity: `STAGE2-W2-IELTS-LIS-PROVENANCE-RECOVERY-AUTH-001`
+  - Candidate Head: `d3d408a41ec6ddfaf4ca7fa960819f83ced2bc39`
+  - Natural PR CI: Run `31991753631` (`success`)
+  - Independent Authorization Review: `https://github.com/NguyenDukKyeon/VocabMaster/pull/130#pullrequestreview-4948240950` (`ACCEPT`, 0 findings)
+  - Real Merge Commit on `main`: `f76b8a1bf624c9571f462ad07dc2349dbfac735c`
+- **Corrected Prospective Current-Code Revalidation (PR [#131](https://github.com/NguyenDukKyeon/VocabMaster/pull/131)):**
+  - Record Identity: `STAGE2-W2-IELTS-LIS-REVALIDATION-002`
+  - Candidate Head: `1148132d44de585f4254ba0579f07e041239ebfd`
+  - Natural PR CI: Run `31992046227` (`success`)
+  - Independent Revalidation Review: `https://github.com/NguyenDukKyeon/VocabMaster/pull/131#pullrequestreview-4948261934` (`ACCEPT`, 0 findings)
+  - Real Merge Commit on `main`: `7652ae3a6efd4f1879913ff6736e1246e5e49f3e`
+
+### 5. Delivered Product Semantics & Ratified Decisions
 - **Ratified Decision D01 (Computer-Delivered Listening Model)**:
   - Computer-delivered exam model with answers entered directly in-app.
   - Exactly 2 minutes for final review (`REVIEW_MINUTES = 2`, `totalSeconds = 1920`). No 10-minute paper transfer time.
@@ -1060,18 +1079,18 @@ Transaction `W1-IELTS-OBJ-001` (Objective Question Kernel Completeness) cleanly 
   - Strict schedule isolation: `affectsSchedule: false`, `evidenceEligible: false`.
   - Error Candidate emission into `ErrorRepository` with category `'listening'`.
 
-### 5. Resolved Wave State Summary
-- `W2_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL` (`STAGE2-W2-IELTS-LIS-AUTH-002`, PR #122)
-- `W2_ACTIVATION`: `ACCEPTED_AND_CANONICAL` (`d278f2045b38299b056f16ec7d76fb81c0739541`, PR #123)
-- `W2_HISTORICAL_IMPLEMENTATION`: `MERGED_WITH_GOVERNANCE_VIOLATION` (PR #125, merge `3c90ebd10b9559c8ec2090a3226c7b8d11cd092f`)
-- `W2_HISTORICAL_STATUS_CLOSURE`: `PREMATURE_STATUS_CLOSURE` (PR #126, merge `4e83d38c4db8fdfda6cfaba6c176231942dabb12`)
-- `W2_RECOVERY_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL` (`STAGE2-W2-IELTS-LIS-RECOVERY-AUTH-001`, PR #127, merge `9b72843b0923d387349910c22faeb9f3152d06ea`)
-- `W2_PROSPECTIVE_REVALIDATION`: `ACCEPTED_AND_CANONICAL` (`STAGE2-W2-IELTS-LIS-REVALIDATION-001`, PR #128, merge `26a56832dbb7dfdc0ca213e4b09e13d9643d994e`)
+### 6. Resolved Wave State Summary
+- `W2_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL` (`STAGE2-W2-IELTS-LIS-AUTH-002`, PR #122 merge `0d7acbf0c6f056c3f169e2200e58f785f8e2e3d9`)
+- `W2_ACTIVATION`: `ACCEPTED_AND_CANONICAL` (PR #123 merge `d278f2045b38299b056f16ec7d76fb81c0739541`)
+- `W2_HISTORICAL_IMPLEMENTATION`: `MERGED_WITH_GOVERNANCE_VIOLATION` (PR #125 merge `3c90ebd10b9559c8ec2090a3226c7b8d11cd092f`)
+- `W2_HISTORICAL_STATUS_CLOSURE`: `PREMATURE_STATUS_CLOSURE` (PR #126 merge `4e83d38c4db8fdfda6cfaba6c176231942dabb12`)
+- `W2_PROVENANCE_RECOVERY_AUTH`: `ACCEPTED_AND_CANONICAL` (`STAGE2-W2-IELTS-LIS-PROVENANCE-RECOVERY-AUTH-001`, PR #130 merge `f76b8a1bf624c9571f462ad07dc2349dbfac735c`)
+- `W2_PROSPECTIVE_REVALIDATION`: `ACCEPTED_AND_CANONICAL` (`STAGE2-W2-IELTS-LIS-REVALIDATION-002`, PR #131 merge `7652ae3a6efd4f1879913ff6736e1246e5e49f3e`)
 - `W2_CODE_STATE`: `RETAINED_AND_PROSPECTIVELY_REVALIDATED`
-- `W2_CLOSURE_PATH`: `POST_MERGE_GOVERNANCE_RECOVERY + PROSPECTIVE_CURRENT_CODE_REVALIDATION`
+- `W2_CLOSURE_PATH`: `EXACT_SHA_PROVENANCE_RECOVERY + PROSPECTIVE_CURRENT_CODE_REVALIDATION`
 - `W2_STATUS`: `CANONICALLY_CLOSED`
 
-### 6. Downstream Scope & Authority Bounds
+### 7. Downstream Scope & Authority Bounds
 - `W3`: `NOT_AUTHORIZED` (Next eligible for authorization under Stage 2 strategy, but `W3_EXECUTION_AUTHORITY: NOT_GRANTED`)
 - `W3_ELIGIBILITY`: `ELIGIBLE_FOR_SEPARATE_AUTHORIZATION`
 - `W4`: `NOT_AUTHORIZED`
@@ -1100,6 +1119,7 @@ Transaction `W1-IELTS-OBJ-001` (Objective Question Kernel Completeness) cleanly 
 | Authorization Merge SHA | `0d7acbf0c6f056c3f169e2200e58f785f8e2e3d9` |
 | Activation State | `AUTHORIZED / READY_FOR_EXECUTION` |
 | Effective Implementation Predecessor | `d278f2045b38299b056f16ec7d76fb81c0739541` |
+
 
 
 
