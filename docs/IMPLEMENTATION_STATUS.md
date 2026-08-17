@@ -1262,16 +1262,26 @@ Stage 2 Wave W5 (`Interactive Speaking Platform`, `W5-IELTS-SPK-001`) has succes
 
 ### 4. Wave W6 Readiness
 - `W5_STATUS`: `CANONICALLY_CLOSED`
-- `W6_ELIGIBILITY`: `ELIGIBLE_FOR_SEPARATE_AUTHORIZATION`
-- `W6_AUTHORITY`: `NOT_GRANTED`
+- `W6_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL` (`STAGE2-W6-IELTS-MOCK-AUTH-001`, PR #145 merge `349aac323bd3e27ab8e97a480a57a58fc4746c33`)
+- `W6_ACTIVATION`: `PENDING_ACCEPTANCE`
+- `W6_AUTHORITY`: `PENDING_ACTIVATION`
 
+## AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W6-IELTS-MOCK-001
 
-
-
-
-
-
-
-
-
-
+| Field | Value |
+|---|---|
+| Activation Schema | `AGENT_CONTEXT_AUTH_ACTIVATION_V1` |
+| Transaction ID | `W6-IELTS-MOCK-001` |
+| Authorization Manifest | `docs/authorizations/STAGE2-W6-IELTS-MOCK-AUTH-001.md` |
+| Authorization Manifest Identity | `STAGE2-W6-IELTS-MOCK-AUTH-001` |
+| Authorization Subject PR | `#145` |
+| Authorization Candidate Head | `0d66c6ac3be5b0e281b5ad04222906078be810cb` |
+| Independent Authorization Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/145#pullrequestreview-4950577635` |
+| Authorization Merge Commit | `349aac323bd3e27ab8e97a480a57a58fc4746c33` |
+| Push CI Run on Merge Commit | `32019461876` (`success`) |
+| Activation State | `ACTIVE` |
+| Effective Implementation Predecessor | `349aac323bd3e27ab8e97a480a57a58fc4746c33` |
+| Implementation Candidate Head | `PENDING_IMPLEMENTATION_EXECUTION` |
+| Independent Implementation Review | `PENDING_IMPLEMENTATION_AUDIT` |
+| Implementation Merge Commit | `PENDING_IMPLEMENTATION_MERGE` |
+| Push CI Run on Implementation Merge | `PENDING_IMPLEMENTATION_PUSH_CI` |
