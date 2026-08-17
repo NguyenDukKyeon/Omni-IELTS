@@ -1165,11 +1165,29 @@ Stage 2 Wave W3 (`Reading Platform Completeness`, `W3-IELTS-RDG-001`) has succes
 - `W3_ACTIVATION`: `ACCEPTED_AND_CANONICAL` (PR #134 merge `c499ae51cb7dd0e5d4cdb24df32f9dfd007ae334`)
 - `W3_IMPLEMENTATION`: `ACCEPTED_AND_CANONICAL` (PR #135 merge `3e7b950ea30281330f306b1b5217967b06b49737`)
 - `W3_STATUS`: `CANONICALLY_CLOSED`
-- `W4`: `NOT_AUTHORIZED (Next eligible for authorization under Stage 2 strategy, W4_EXECUTION_AUTHORITY: NOT_GRANTED)`
-- `W4_ELIGIBILITY`: `ELIGIBLE_FOR_SEPARATE_AUTHORIZATION`
+- `W4_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL` (`STAGE2-W4-IELTS-WRT-AUTH-001`, PR #137 merge `b00f95d93bd8a00fbc9fea7371f894998d11aa15`)
+- `W4_ACTIVATION`: `CANDIDATE_PENDING_INDEPENDENT_AUDIT`
+- `W4`: `AUTHORIZED / READY_FOR_ACTIVATION`
 - `W5`: `NOT_AUTHORIZED`
 - `W6`: `NOT_AUTHORIZED`
-- `W4_W6`: `NOT_AUTHORIZED`
+- `W5_W6`: `NOT_AUTHORIZED`
+
+## AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W4-IELTS-WRT-001
+
+| Field | Value |
+|---|---|
+| Activation Schema | `AGENT_CONTEXT_AUTH_ACTIVATION_V1` |
+| Transaction ID | `W4-IELTS-WRT-001` |
+| Authorization Manifest | `docs/authorizations/STAGE2-W4-IELTS-WRT-AUTH-001.md` |
+| Authorization Manifest Identity | `STAGE2-W4-IELTS-WRT-AUTH-001` |
+| Authorization Subject PR | `#137` |
+| Authorization Candidate Head | `e842fc97fd2f83609c3b7b1fe916c05967e43494` |
+| Independent Authorization Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/137#pullrequestreview-4949756194` |
+| Authorization Merge Commit | `b00f95d93bd8a00fbc9fea7371f894998d11aa15` |
+| Push CI Run on Merge Commit | `32010742234` (`success`) |
+| Activation State | `AUTHORIZED / READY_FOR_EXECUTION` |
+| Effective Implementation Predecessor | `PENDING_POST_ACCEPT_ACTIVATION` |
+
 
 
 
