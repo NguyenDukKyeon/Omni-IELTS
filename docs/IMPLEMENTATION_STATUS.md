@@ -1300,12 +1300,18 @@ Stage 2 Wave W6 (`Section Practice, Full Mock Orchestration & Stage 2 Exit Verif
 
 Transaction `STAGE2-STAGE3-TRANSITION-001` cleanly reconciled the top-level canonical Stage state following the verified completion and independent acceptance of Stage 2 Wave W6 (PR #148 / commit `4b15bedbf1513d0eb6f463d6792f65012bbaf085`).
 
-### 1. Reconciled Canonical Documents
+### 1. Provenance & Authority Lineage
+- **Transaction ID**: `STAGE2-STAGE3-TRANSITION-001`
+- **Subject**: Stage 2 → Stage 3 Canonical Transition Reconciliation
+- **Canonical Predecessor Base SHA**: `4b15bedbf1513d0eb6f463d6792f65012bbaf085` (Merge PR #148 / Wave W6 Status Reconciliation)
+- **Controlling Authority Hierarchy**: `docs/MASTER_ROADMAP.md` (§10 Change-control rule), `docs/DECISIONS.md` (ADR-049, ADR-050, ADR-052), and `AGENTS.md`.
+
+### 2. Reconciled Canonical Documents
 - `docs/MASTER_ROADMAP.md`: Stage 2 updated to `COMPLETE / CANONICALLY_CLOSED`; Stage 3 updated to `NEXT`; summary table and Stage 2 Wave record (§7) updated.
 - `docs/DECISIONS.md`: Ratified ADR-052 documenting the transition rationale and Stage 3 non-authorization.
 - `docs/IMPLEMENTATION_STATUS.md`: Reconciled top-level stage status and transaction ledger.
 
-### 2. State & Authority Ledger
+### 3. State & Authority Ledger
 | Dimension | Resolved Canonical State | Authority Status |
 |---|---|---|
 | **Stage 1 (Core Foundation)** | `COMPLETE` | Historical |
@@ -1314,10 +1320,11 @@ Transaction `STAGE2-STAGE3-TRANSITION-001` cleanly reconciled the top-level cano
 | **Stage 3 (Learning / Product Deep Research)** | `NEXT` | `NOT_GRANTED` (Execution, Research, Implementation: `NOT_AUTHORIZED`) |
 | **Stages 4–8** | `FUTURE` | `NOT_AUTHORIZED` |
 
-### 3. Stage 3 Bounds & Invariants
+### 4. Stage 3 Bounds & Invariants
 - **Mission Preserved**: Product and Learning Deep Research, OSS capability research, transcript and learning pipeline research, architecture proposals.
 - **Execution Authority**: `NOT_GRANTED`. No research or implementation work is authorized in this transaction.
 - **Provider & Dependency Stance**: Zero external dependencies or AI/ASR providers adopted.
 - **Next Eligible Action**: Bounded Stage 3 Research / Strategy Authorization Manifest (when proposed by Owner).
+
 
 
