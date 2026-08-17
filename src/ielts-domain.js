@@ -34,7 +34,7 @@ export const IELTS_STORE_NAMES=Object.freeze({
 
 
 const ERROR_CATEGORIES=new Set([
-  'meaning','spelling','listening','segmentation','word-form','collocation','register','grammar','paraphrase','distractor','reading-strategy','lexical-gap','pronunciation','discourse','writing-grammar','writing-lexical','writing-cohesion','writing-task-response','other'
+  'meaning','spelling','listening','segmentation','word-form','collocation','register','grammar','paraphrase','distractor','reading-strategy','lexical-gap','pronunciation','discourse','writing-grammar','writing-lexical','writing-cohesion','writing-task-response','speaking-fluency','speaking-lexical','speaking-grammar','speaking-pronunciation','other'
 ]);
 const SOURCE_TYPES=new Set(['exercise','card','lexical-set','paraphrase','reading','media','shadowing','retell','manual']);
 const RELATIONS=new Set(['equivalent','contrast','confusable','not-equivalent']);
@@ -816,6 +816,78 @@ export function calculateOverallWritingBand(input = {}) {
     disclaimerPresent: true
   };
 }
+
+export const SPEAKING_RUBRIC_LABEL = 'Estimated Band Score & Practice Feedback — Practice Reference';
+
+export function validateIeltsSpeakingPrompt(prompt = {}) {
+  if (!prompt || typeof prompt !== 'object') {
+    return { valid: false, errors: ['Prompt must be an object.'], value: null };
+  }
+  const errors = [];
+  if (prompt.kind !== 'ielts-speaking-prompt') {
+    errors.push(`kind must be 'ielts-speaking-prompt', got '${prompt.kind}'.`);
+  }
+  const part = Number(prompt.part);
+  if (![1, 2, 3].includes(part)) {
+    errors.push(`part must be 1, 2, or 3, got '${prompt.part}'.`);
+  }
+  if (!prompt.topic || typeof prompt.topic !== 'string' || !prompt.topic.trim()) {
+    errors.push('topic is mandatory.');
+  }
+
+  if (part === 1 || part === 3) {
+    if (!Array.isArray(prompt.questions) || prompt.questions.length === 0) {
+      errors.push(`Part ${part} prompt must contain an array of questions.`);
+    }
+  }
+
+  if (part === 2) {
+    if (prompt.bulletPoints && (!Array.isArray(prompt.bulletPoints) || prompt.bulletPoints.length === 0)) {
+      errors.push('Part 2 cue card bulletPoints must be a non-empty array when provided.');
+    }
+  }
+
+  if (errors.length > 0) {
+    return { valid: false, errors, value: null };
+  }
+  return { valid: true, errors: [], value: Object.freeze({ ...prompt }) };
+}
+
+export function calculateOverallSpeakingBand(input = {}) {
+  const criteria = input?.criteria || input || {};
+  const fc = Number(criteria.fc ?? 6.0);
+  const lr = Number(criteria.lr ?? 6.0);
+  const gra = Number(criteria.gra ?? 6.0);
+  const pr = Number(criteria.pr ?? 6.0);
+  const rawAverage = (fc + lr + gra + pr) / 4;
+  return roundToNearestHalfBand(rawAverage);
+}
+
+export function evaluateSpeakingRubricCriteria(input = {}) {
+  const criteria = input?.criteria || {};
+  const fc = Number(criteria.fc ?? 6.0);
+  const lr = Number(criteria.lr ?? 6.0);
+  const gra = Number(criteria.gra ?? 6.0);
+  const pr = Number(criteria.pr ?? 6.0);
+  const rawAverage = (fc + lr + gra + pr) / 4;
+  const overallBand = roundToNearestHalfBand(rawAverage);
+
+  return {
+    criteria: {
+      fc,
+      lr,
+      gra,
+      pr
+    },
+    rawAverage,
+    overallBand,
+    strengths: Array.isArray(input.strengths) ? [...input.strengths] : [],
+    improvements: Array.isArray(input.improvements) ? [...input.improvements] : [],
+    disclaimer: SPEAKING_RUBRIC_LABEL,
+    disclaimerPresent: true
+  };
+}
+
 
 
 
