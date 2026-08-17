@@ -930,3 +930,26 @@ Derived state: `CANDIDATE` / `NOT_ACTIVE` before all gates are satisfied; `ACTIV
 Rollback:
 Revert this decision and governance files; prompting returns to Protocol V1. Historical accepted work remains unaffected.
 
+## ADR-052 — Canonical reconciliation of Stage 2 (IELTS Completeness) completion and Stage 3 (Learning / Product Deep Research) transition
+
+Status: CONFIRMED
+
+Context: Stage 2 (IELTS Completeness) has completed all seven authorized Waves (W0–W6), culminating in Wave W6 (`W6-IELTS-MOCK-001`), which delivered the 4-Tier Practice Hierarchy, Multi-Skill Full Mock Orchestrator, Section Practice Mode, and verified 100% of the 18 machine-checkable dimensions under exit gate `IELTS_COMPLETENESS_V1` via `scripts/stage2-gate.mjs`. PR #148 reconciled Wave W6 and closed Stage 2 on `main` at commit `4b15bedbf1513d0eb6f463d6792f65012bbaf085`. `docs/IMPLEMENTATION_STATUS.md` records `STAGE2_STATUS: CANONICALLY_CLOSED`. However, `docs/MASTER_ROADMAP.md` stale-stated Stage 2 as NEXT and Stage 3 as FUTURE. Under Master Roadmap change-control rules (§10), reconciling top-level Stage sequence and state requires an ADR and downstream document reconciliation.
+
+Decision:
+- Reconcile `docs/MASTER_ROADMAP.md` Stage 2 status to `COMPLETE / CANONICALLY_CLOSED` with historical implementation authority.
+- Reconcile `docs/MASTER_ROADMAP.md` Stage 3 status to `NEXT`.
+- Declare Stage 3 execution, research, and implementation authority as `NOT GRANTED`. Stage 3 is next in product sequencing, but remains strictly non-authorized until a separate bounded authorization manifest is authored, independently audited, and merged.
+- Preserve Stage 3 mission without alteration:
+  - Product and Learning Deep Research;
+  - OSS capability research;
+  - transcript and learning pipeline research;
+  - architecture proposals.
+- Explicitly confirm that Stage 3 is not yet decomposed into implementation authority or package tasks, and no external provider, library, or dependency is adopted.
+- Reconcile `docs/IMPLEMENTATION_STATUS.md` with transaction `STAGE2-STAGE3-TRANSITION-001`.
+
+Consequences: `docs/MASTER_ROADMAP.md`, `docs/DECISIONS.md`, and `docs/IMPLEMENTATION_STATUS.md` are 100% synchronized and free of canonical contradictions. The repository advances to Stage 3 as the next product milestone while preserving strict fail-closed authority boundaries against unauthorized execution or research.
+
+Revisit when: The Owner ratifies a Stage 3 research or strategy authorization manifest.
+
+

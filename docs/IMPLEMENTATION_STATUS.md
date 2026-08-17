@@ -1296,3 +1296,28 @@ Stage 2 Wave W6 (`Section Practice, Full Mock Orchestration & Stage 2 Exit Verif
 | Implementation Merge Commit | `73924a55814d3b001306ae788fbbec4048c8df7f` |
 | Push CI Run on Implementation Merge | `32021182302` (`success`) |
 
+## 24. Stage 2 → Stage 3 Canonical Transition Reconciliation
+
+Transaction `STAGE2-STAGE3-TRANSITION-001` cleanly reconciled the top-level canonical Stage state following the verified completion and independent acceptance of Stage 2 Wave W6 (PR #148 / commit `4b15bedbf1513d0eb6f463d6792f65012bbaf085`).
+
+### 1. Reconciled Canonical Documents
+- `docs/MASTER_ROADMAP.md`: Stage 2 updated to `COMPLETE / CANONICALLY_CLOSED`; Stage 3 updated to `NEXT`; summary table and Stage 2 Wave record (§7) updated.
+- `docs/DECISIONS.md`: Ratified ADR-052 documenting the transition rationale and Stage 3 non-authorization.
+- `docs/IMPLEMENTATION_STATUS.md`: Reconciled top-level stage status and transaction ledger.
+
+### 2. State & Authority Ledger
+| Dimension | Resolved Canonical State | Authority Status |
+|---|---|---|
+| **Stage 1 (Core Foundation)** | `COMPLETE` | Historical |
+| **Stage 1.5 (Adversarial Product Jury)** | `COMPLETE` | Historical |
+| **Stage 2 (IELTS Completeness)** | `COMPLETE / CANONICALLY_CLOSED` | Historical (`IELTS_COMPLETENESS_V1` verified 18/18) |
+| **Stage 3 (Learning / Product Deep Research)** | `NEXT` | `NOT_GRANTED` (Execution, Research, Implementation: `NOT_AUTHORIZED`) |
+| **Stages 4–8** | `FUTURE` | `NOT_AUTHORIZED` |
+
+### 3. Stage 3 Bounds & Invariants
+- **Mission Preserved**: Product and Learning Deep Research, OSS capability research, transcript and learning pipeline research, architecture proposals.
+- **Execution Authority**: `NOT_GRANTED`. No research or implementation work is authorized in this transaction.
+- **Provider & Dependency Stance**: Zero external dependencies or AI/ASR providers adopted.
+- **Next Eligible Action**: Bounded Stage 3 Research / Strategy Authorization Manifest (when proposed by Owner).
+
+

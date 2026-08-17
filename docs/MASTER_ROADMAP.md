@@ -4,7 +4,7 @@ Status: **CANONICAL**
 
 Authority: **TOP-LEVEL MASTER PRODUCT ROADMAP**
 
-Last updated: 2026-08-15
+Last updated: 2026-08-17
 
 ## 1. Purpose and authority
 
@@ -18,7 +18,7 @@ It owns:
 
 This document supersedes `docs/ROADMAP.md` as the top-level product roadmap.
 `docs/ROADMAP.md` is reclassified as the subordinate Technical Package Taxonomy
-(Phase 0–7) and retains its full technical knowledge. See §7 below.
+(Phase 0–7) and retains its full technical knowledge. See §8 below.
 
 ### Authority hierarchy
 
@@ -91,22 +91,24 @@ Stage 1.5 does NOT authorize Stage 2 implementation.
 
 ### Stage 2 — IELTS Completeness
 
-**Status: NEXT**
+**Status: COMPLETE / CANONICALLY_CLOSED**
 
-**Implementation authority: NOT AUTHORIZED**
+**Implementation authority: Historical (Waves W0–W6 canonically closed)**
 
 Mission: achieve IELTS learning completeness on the Stage 1 substrate.
 
-This transaction records the Stage 2 mission name only. Wave decomposition,
-package sequence, architecture, IELTS completion criteria, implementation
-allowlists, RED/GREEN predicates and F005 owner semantics belong to the
-separate Stage 2 IELTS Completeness Strategy Reconciliation transaction.
+Stage 2 was delivered across seven Waves (W0–W6, see §7) targeting the Full
+IELTS Platform (Academic and General Training across Listening, Reading,
+Writing, and Speaking). Stage 2 achieved verified completion under exit gate
+`IELTS_COMPLETENESS_V1` (18/18 machine-checkable dimensions verified).
 
 ---
 
 ### Stage 3 — Learning / Product Deep Research
 
-**Status: FUTURE**
+**Status: NEXT**
+
+**Execution authority: NOT GRANTED (Requires separate bounded authorization manifest)**
 
 Mission: broad research including:
 
@@ -115,8 +117,11 @@ Mission: broad research including:
 - transcript and learning pipeline research;
 - architecture proposals.
 
-Stage 3 is the major broad research stage. Stage 2 must NOT silently absorb
-the future broad-research mission that belongs to Stage 3.
+Stage 3 is the major broad research stage. Stage 3 is next in product
+sequencing following the canonical closure of Stage 2. Stage 3 execution,
+research, and implementation authority is NOT GRANTED by this roadmap
+reconciliation and requires a separate bounded authorization manifest. No
+external provider, dependency, or implementation decomposition is yet adopted.
 
 ---
 
@@ -157,8 +162,8 @@ technology.
 |---|---|---|---|
 | Stage 1 | Core Foundation | COMPLETE | Historical |
 | Stage 1.5 | Adversarial Product Jury *(interstage)* | COMPLETE | Historical |
-| Stage 2 | IELTS Completeness | NEXT | NOT AUTHORIZED |
-| Stage 3 | Learning / Product Deep Research | FUTURE | NOT AUTHORIZED |
+| Stage 2 | IELTS Completeness | COMPLETE / CANONICALLY_CLOSED | Historical (Waves W0–W6 closed) |
+| Stage 3 | Learning / Product Deep Research | NEXT | NOT GRANTED |
 | Stage 4 | UX / IA Remake | FUTURE | NOT AUTHORIZED |
 | Stage 5 | AI / Technology Deep Research & Benchmark | FUTURE | NOT AUTHORIZED |
 | Stage 6 | Final Product Remake / Implementation | FUTURE | NOT AUTHORIZED |
@@ -212,7 +217,26 @@ Relevant disposition markers:
 Stage 1.5 findings (including F004, F005) retain their canonical disposition.
 This document does not reinterpret them.
 
-## 7. Relation to technical Phase 0–7 taxonomy
+## 7. Stage 2 Wave record
+
+Stage 2 — IELTS Completeness was delivered through the following ratified Wave sequence:
+
+| Wave | Name | Scope | Status |
+|---|---|---|---|
+| W0 | IELTS Architecture & Track Routing | Product contracts, Academic vs General Training routing, blueprint schemas, storage foundations | CANONICALLY_CLOSED |
+| W1 | Objective Question Kernel Completeness | Multiple Choice Multiple Answer, Option Pool Matching, Section 1/2 objective foundations | CANONICALLY_CLOSED |
+| W2 | IELTS Listening Platform Completeness | 4-part audio player, 40 items, computer-delivered 2-min review, reload recovery | CANONICALLY_CLOSED |
+| W3 | Reading Platform Completeness | 3-passage/section Academic & GT split-pane runner, 15 task families, 60-min timer | CANONICALLY_CLOSED |
+| W4 | Productive Writing Platform | Academic Task 1 visuals, GT Task 1 letters, Task 2 essays, 4-criterion rubric practice evaluation | CANONICALLY_CLOSED |
+| W5 | Interactive Speaking Platform | 3-part guided speaking runner, Web Audio recording/playback, prep/recording timers, rubric feedback | CANONICALLY_CLOSED |
+| W6 | Mock Orchestration & Exit Gate | 4-tier practice hierarchy, 4-skill full mock orchestrator, section practice mode, Stage 2 exit verification | CANONICALLY_CLOSED |
+
+Stage 2 Exit Gate Verification:
+- Exit Gate: `IELTS_COMPLETENESS_V1`
+- Programmatic Verification: 100% of 18 machine-checkable dimensions verified via `scripts/stage2-gate.mjs` (`npm run stage2:gate`).
+- Final Status: `COMPLETE / CANONICALLY_CLOSED` at commit `4b15bedbf1513d0eb6f463d6792f65012bbaf085` (PR #148).
+
+## 8. Relation to technical Phase 0–7 taxonomy
 
 `docs/ROADMAP.md` remains the canonical source for:
 
@@ -238,7 +262,7 @@ Historical accepted package identities, evidence, architecture boundaries and
 acceptance verdicts remain valid. This authority change does not retroactively
 rewrite implementation history.
 
-## 8. Authority boundaries
+## 9. Authority boundaries
 
 This document:
 
@@ -250,7 +274,7 @@ This document:
 - **DOES NOT** own architecture decisions (that is `DECISIONS.md`);
 - **DOES NOT** own repository execution rules (that is `AGENTS.md`).
 
-## 9. Change-control rule
+## 10. Change-control rule
 
 Changes to this Master Roadmap require:
 
