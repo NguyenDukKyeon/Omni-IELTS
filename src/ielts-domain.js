@@ -34,7 +34,7 @@ export const IELTS_STORE_NAMES=Object.freeze({
 
 
 const ERROR_CATEGORIES=new Set([
-  'meaning','spelling','listening','segmentation','word-form','collocation','register','grammar','paraphrase','distractor','reading-strategy','lexical-gap','pronunciation','discourse','other'
+  'meaning','spelling','listening','segmentation','word-form','collocation','register','grammar','paraphrase','distractor','reading-strategy','lexical-gap','pronunciation','discourse','writing-grammar','writing-lexical','writing-cohesion','writing-task-response','other'
 ]);
 const SOURCE_TYPES=new Set(['exercise','card','lexical-set','paraphrase','reading','media','shadowing','retell','manual']);
 const RELATIONS=new Set(['equivalent','contrast','confusable','not-equivalent']);
@@ -712,5 +712,110 @@ export function convertIeltsGeneralReadingRawToBand(rawScore) {
   if (rawScore >= 1) return 1.0;
   return 0.0;
 }
+
+export function calculateWritingWordCount(text = '') {
+  if (typeof text !== 'string') return 0;
+  const trimmed = text.replace(/\r\n?/g, '\n').trim();
+  if (!trimmed) return 0;
+  return trimmed.split(/\s+/u).filter(Boolean).length;
+}
+
+export function validateIeltsWritingPrompt(prompt) {
+  if (!prompt || typeof prompt !== 'object') {
+    return { valid: false, errors: ['Prompt must be an object.'], value: null };
+  }
+  const errors = [];
+  if (!prompt.id || typeof prompt.id !== 'string') errors.push('Missing or invalid prompt ID.');
+  if (prompt.kind !== 'ielts-writing-prompt') errors.push("kind must be 'ielts-writing-prompt'.");
+  if (!['academic', 'general-training'].includes(prompt.track)) errors.push("track must be 'academic' or 'general-training'.");
+  if (![1, 2].includes(prompt.taskNumber)) errors.push('taskNumber must be 1 or 2.');
+
+  if (prompt.taskNumber === 1) {
+    if (prompt.track === 'academic') {
+      const validFamilies = ['line-graph', 'bar-chart', 'pie-chart', 'table', 'process-diagram', 'map-plan', 'mixed-graphics'];
+      if (!validFamilies.includes(prompt.visualFamily)) {
+        errors.push(`visualFamily must be one of: ${validFamilies.join(', ')}.`);
+      }
+    } else {
+      const validRegisters = ['formal', 'semi-formal', 'informal'];
+      if (!validRegisters.includes(prompt.letterRegister)) {
+        errors.push(`letterRegister must be one of: ${validRegisters.join(', ')}.`);
+      }
+      if (!Array.isArray(prompt.bulletPrompts) || prompt.bulletPrompts.length === 0) {
+        errors.push('bulletPrompts must be a non-empty array of strings.');
+      }
+    }
+  } else if (prompt.taskNumber === 2) {
+    const validEssayTypes = ['agree-disagree', 'discuss-both-views', 'advantages-disadvantages', 'problem-solution', 'two-part-questions'];
+    if (!validEssayTypes.includes(prompt.essayType)) {
+      errors.push(`essayType must be one of: ${validEssayTypes.join(', ')}.`);
+    }
+  }
+
+  if (errors.length > 0) {
+    return { valid: false, errors, value: null };
+  }
+  return { valid: true, errors: [], value: Object.freeze({ ...prompt }) };
+}
+
+export function roundToNearestHalfBand(score) {
+  if (typeof score !== 'number' || isNaN(score)) return 0.0;
+  const clamped = Math.max(0, Math.min(9, score));
+  return Math.round(clamped * 2) / 2;
+}
+
+export const WRITING_RUBRIC_LABEL = 'Estimated Band Score & Practice Feedback — Practice Reference';
+
+export function evaluateWritingRubricCriteria(input = {}) {
+  const { taskKind = 'task1-academic', text = '', criteria = {} } = input;
+  const wordCount = calculateWritingWordCount(text);
+  const isTask1 = taskKind.startsWith('task1');
+  const minWords = isTask1 ? 150 : 250;
+  const underLength = wordCount < minWords;
+  const warnings = [];
+  if (underLength) {
+    warnings.push(`Draft is under the recommended minimum of ${minWords} words (current: ${wordCount} words). Penalty applies to Task Achievement/Response.`);
+  }
+
+  const c1 = Number(criteria.ta ?? criteria.tr ?? 6.0);
+  const c2 = Number(criteria.cc ?? 6.0);
+  const c3 = Number(criteria.lr ?? 6.0);
+  const c4 = Number(criteria.gra ?? 6.0);
+
+  const rawAverage = (c1 + c2 + c3 + c4) / 4;
+  const estimatedBand = roundToNearestHalfBand(rawAverage);
+
+  return {
+    taskKind,
+    wordCount,
+    underLength,
+    warnings,
+    criteria: {
+      [isTask1 ? 'ta' : 'tr']: c1,
+      cc: c2,
+      lr: c3,
+      gra: c4
+    },
+    rawAverage,
+    estimatedBand,
+    rubricLabel: WRITING_RUBRIC_LABEL,
+    disclaimerPresent: true
+  };
+}
+
+export function calculateOverallWritingBand(input = {}) {
+  const { task1Band = 6.0, task2Band = 6.0 } = input;
+  const compositeRaw = (1 / 3) * Number(task1Band) + (2 / 3) * Number(task2Band);
+  const overallBand = roundToNearestHalfBand(compositeRaw);
+  return {
+    task1Band: Number(task1Band),
+    task2Band: Number(task2Band),
+    compositeRaw,
+    overallBand,
+    label: WRITING_RUBRIC_LABEL,
+    disclaimerPresent: true
+  };
+}
+
 
 
