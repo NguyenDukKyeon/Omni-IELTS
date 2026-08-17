@@ -1260,11 +1260,21 @@ Stage 2 Wave W5 (`Interactive Speaking Platform`, `W5-IELTS-SPK-001`) has succes
 - **Model Answer & Key Privacy Invariant**: Verified `KEY_LEAK_BEFORE_SUBMIT === 0` across client projections, DOM, and synthetic blueprints.
 - **IELTS Hub Integration**: Mounts IELTS Speaking test launcher in `src/ielts-hub-v2.js` alongside Listening, Reading, and Writing.
 
-### 4. Wave W6 Readiness
-- `W5_STATUS`: `CANONICALLY_CLOSED`
-- `W6_AUTHORIZATION`: `ACCEPTED_AND_CANONICAL` (`STAGE2-W6-IELTS-MOCK-AUTH-001`, PR #145 merge `349aac323bd3e27ab8e97a480a57a58fc4746c33`)
-- `W6_ACTIVATION`: `PENDING_ACCEPTANCE`
-- `W6_AUTHORITY`: `PENDING_ACTIVATION`
+### 4. Wave W6 Closure & Stage 2 Completeness Exit Gate Verification
+
+Stage 2 Wave W6 (`Section Practice, Full Mock Orchestration & Stage 2 Exit Verification`, `W6-IELTS-MOCK-001`) has successfully completed all governed execution phases and is canonically closed on `main`.
+
+- **4-Tier Practice Hierarchy (`GAP-11`)**: Established clear progression from Task Family Practice (atomic exercises) $\to$ Section Practice (single passage/part/task) $\to$ Skill Test (full single-skill exam) $\to$ Full Mock Exam (4-skill timed simulation).
+- **Full Mock Multi-Skill Orchestrator (`IeltsMockOrchestrator`)**: Sequential orchestration through Listening (40Q, 4 parts, ~30 mins) $\to$ Reading (40Q, 3 passages/sections, 60 mins) $\to$ Writing (Task 1 & Task 2, 60 mins) $\to$ Speaking (3 parts, 11–14 mins) across both Academic and General Training tracks.
+- **Section Practice Mode**: Direct access to individual test sections (e.g. Reading Passage 2, Listening Part 1, Writing Task 2, Speaking Part 2) with targeted rubric feedback and timing.
+- **Composite Score Calculation & Honest Reporting (ADR-050)**: Standard composite band calculation with official IELTS half-band rounding ($\ge .25 \to .5$, $\ge .75 \to 1.0$) and explicit honest practice disclaimer `"Estimated Band Score & Practice Feedback — Practice Reference"`. Zero claims of official certification.
+- **Autosave & Reload Checkpoint Recovery (S15-F005)**: Full test session checkpoint serialization (`IELTS_MOCK_CHECKPOINT_SCHEMA = 'ielts-mock-checkpoint-v1'`) and `IeltsMockOrchestrator.restoreFromCheckpoint` for uninterrupted simulation across page refreshes.
+- **Schedule Isolation & Answer Key Privacy**: Enforces `affectsSchedule: false`, `evidenceEligible: false`, and `KEY_LEAK_BEFORE_SUBMIT === 0` across all mock activities and client projections.
+- **Stage 2 Exit Gate Verification (`IELTS_COMPLETENESS_V1`)**: 100% of all 18 machine-checkable dimensions verified passing via `scripts/stage2-gate.mjs` (`npm run stage2:gate`).
+- **Cumulative Stage 2 Status**: All Waves W0–W6 are `CANONICALLY_CLOSED`. Stage 2 is verified complete.
+
+- `W6_STATUS`: `CANONICALLY_CLOSED`
+- `STAGE2_STATUS`: `CANONICALLY_CLOSED` (`IELTS_COMPLETENESS_V1` VERIFIED)
 
 ## AGENT_CONTEXT_AUTH_ACTIVATION_V1 — W6-IELTS-MOCK-001
 
@@ -1279,9 +1289,10 @@ Stage 2 Wave W5 (`Interactive Speaking Platform`, `W5-IELTS-SPK-001`) has succes
 | Independent Authorization Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/145#pullrequestreview-4950577635` |
 | Authorization Merge Commit | `349aac323bd3e27ab8e97a480a57a58fc4746c33` |
 | Push CI Run on Merge Commit | `32019461876` (`success`) |
-| Activation State | `ACTIVE` |
+| Activation State | `CANONICALLY_CLOSED` |
 | Effective Implementation Predecessor | `349aac323bd3e27ab8e97a480a57a58fc4746c33` |
-| Implementation Candidate Head | `PENDING_IMPLEMENTATION_EXECUTION` |
-| Independent Implementation Review | `PENDING_IMPLEMENTATION_AUDIT` |
-| Implementation Merge Commit | `PENDING_IMPLEMENTATION_MERGE` |
-| Push CI Run on Implementation Merge | `PENDING_IMPLEMENTATION_PUSH_CI` |
+| Implementation Candidate Head | `523741920141524dd93074c342942e3a499cd651` |
+| Independent Implementation Review | `https://github.com/NguyenDukKyeon/VocabMaster/pull/147#pullrequestreview-4950724072` |
+| Implementation Merge Commit | `73924a55814d3b001306ae788fbbec4048c8df7f` |
+| Push CI Run on Implementation Merge | `32021182302` (`success`) |
+
