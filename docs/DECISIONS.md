@@ -950,6 +950,33 @@ Decision:
 
 Consequences: `docs/MASTER_ROADMAP.md`, `docs/DECISIONS.md`, and `docs/IMPLEMENTATION_STATUS.md` are 100% synchronized and free of canonical contradictions. The repository advances to Stage 3 as the next product milestone while preserving strict fail-closed authority boundaries against unauthorized execution or research.
 
-Revisit when: The Owner ratifies a Stage 3 research or strategy authorization manifest.
+## ADR-053 — Stage 3 Learning / Product Deep Research Strategy and Bounded Authorization Framework
+
+Status: CONFIRMED
+
+Context: Following the canonical completion of Stage 2 (ADR-052) and the advancing of Stage 3 (`Learning / Product Deep Research`) to NEXT in `docs/MASTER_ROADMAP.md`, a comprehensive research strategy and bounded authorization framework are required to structure and govern Stage 3 research activities. Stage 3 owns broad learning science, learner modeling, open-source and hosted capability discovery, transcript and learning pipeline analysis, and architectural proposals. However, strict boundaries must prevent Stage 3 from encroaching upon Stage 4 (UX / IA Remake), Stage 5 (AI / Technology Deep Research & Benchmark and final concrete technology selection), or implementation (Stage 6).
+
+Decision:
+- Ratify the Stage 3 Research Strategy candidate documented in `docs/STAGE3_RESEARCH_STRATEGY.md`.
+- Authorize the bounded research structure across four distinct lanes:
+  - Lane R1: Learning & Product Deep Research (learning science, learner modeling, 5-skill evidence-based learning systems, diagnostic/adaptive learning, habit loops, product capability gaps).
+  - Lane R2: OSS & Hosted Capability Research (reusable open-source libraries, client algorithms, hosted/free API alternatives, 18 capability domains, capability overlap analysis, 7-valued disposition taxonomy: `BUILD`, `ADOPT_OSS`, `ADOPT_HOSTED_API`, `ADOPT_HOSTED_OSS`, `HYBRID`, `REJECT`, `UNKNOWN / NEEDS_SPIKE`).
+  - Lane R3: Transcript / Learning Pipeline & Architecture Research (audit of current substrate, architectural bottlenecks, integration boundaries, privacy/security, persistence, execution boundaries, target architecture proposals).
+  - Lane R4: Cross-Research Reconciliation & Synthesis (pedagogy-to-capability alignment, contradiction resolution, `VALIDATED`/`CONTRADICTION`/`UNKNOWN` classification, product/architecture recommendations, Owner Decision Ledger, handoffs to Stages 4 and 5).
+- Adopt Owner research constraints and non-canonical preferences in `docs/research/STAGE3_RESEARCH_CONSTRAINTS.md` (lightweight browser-side OSS > free hosted API > free serverless/hosted OSS > heavy local inference as last resort; strong preference for no credit card and no mandatory billing; 14-dimension hosted reporting schema; lightweight deterministic JS/OSS clarification).
+- Adopt the Research Evidence Standard: 3-tier epistemic classification (`VERIFIED`, `INFERENCE`, `UNKNOWN`), primary source mandate, 11-dimension OSS evaluation rubric. GitHub stars and marketing claims are explicitly rejected as authoritative evidence.
+- Formulate Authorization Manifest `docs/authorizations/STAGE3-RESEARCH-AUTH-001.md` under `EXECUTION_PROMPT_PROTOCOL_V2` (ADR-051) with closed docs-only write allowlist.
+- Enforce strict non-authority boundaries:
+  - Zero product source code modification (`src/**`).
+  - Zero dependency adoption in `package.json`.
+  - Zero final AI model, ASR engine, or hosted cloud provider selection (reserved for Stage 5).
+  - Zero UX / IA layout redesign (reserved for Stage 4).
+  - Research recommendations do NOT constitute implementation authority.
+- Pre-authorized fast-forward merge authority for this authorization candidate is granted to the Independent Authorization Auditor upon formal `ACCEPT` verdict.
+
+Consequences: Stage 3 is formally decomposed into an independently auditable, bounded research program with transparent evidence standards, well-defined lanes, and strict non-authority guardrails. Subsequent research transactions can proceed cleanly without authority ambiguity or scope creep.
+
+Revisit when: Lane R4 cross-research reconciliation is completed, or the Owner ratifies Stage 4/5 roadmap milestones.
+
 
 
