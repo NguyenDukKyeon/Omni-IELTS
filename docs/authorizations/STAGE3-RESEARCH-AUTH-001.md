@@ -126,12 +126,19 @@ Writes are strictly confined to the following explicit file allowlist. Zero edit
 docs/STAGE3_RESEARCH_STRATEGY.md
 docs/authorizations/STAGE3-RESEARCH-AUTH-001.md
 docs/research/STAGE3_RESEARCH_CONSTRAINTS.md
+docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md
 docs/research/R1_LEARNING_PRODUCT_RESEARCH.md
 docs/research/R2_OSS_HOSTED_CAPABILITY_RESEARCH.md
 docs/research/R3_PIPELINE_ARCHITECTURE_RESEARCH.md
 docs/research/R4_CROSS_RESEARCH_RECONCILIATION.md
 docs/DECISIONS.md
 ```
+
+> [!CAUTION]
+> **Strict Materialization Constraint on `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md`**:
+> For this research-input target, current authority permits **ONLY** initial materialization of the exact independently accepted artifact whose SHA-256 is:
+> `09faca9252c202811abf9837f77b32b3fe5431fa0ae7cb030d359f5808b712e0` (85,476 bytes).
+> No semantic modification, rewriting, or generic standing write authority is granted by this amendment. Any subsequent modification to this research-input document requires separate explicit authority.
 
 ### 3.3 Authorized External Internet & Web Research Scope
 External web search and documentation retrieval are **EXPLICITLY GRANTED** for:
@@ -232,3 +239,44 @@ Execution halts immediately (`FAIL-CLOSED`) upon encountering any of the followi
 8. `MISSING_INDEPENDENT_AUDIT`: Self-acceptance attempted or independent audit skipped.
 9. `MISSING_MERGE_AUTHORITY`: Executing merge without explicit authorization.
 10. `TRANSACTION_STOP_TRIGGERED`: Any transaction-specific stop condition triggered.
+
+---
+
+## 8. Authorization Amendment: STAGE3-LEARNING-EXPERIENCE-RESEARCH-INPUT-AUTH-001
+
+### 8.1 Amendment Status & Authority Capsule
+- **Amendment ID**: `STAGE3-LEARNING-EXPERIENCE-RESEARCH-INPUT-AUTH-001`
+- **Amendment Status**: `CANDIDATE / NOT_EFFECTIVE_UNTIL_INDEPENDENT_ACCEPT_AND_MERGE`
+- **Base Manifest Status**: `ACCEPTED / CANONICAL / EFFECTIVE` (Base manifest remains active and effective)
+- **Base Predecessor (Base SHA)**: `17d7bbbfff78964006fdb879425848a6fd01aea3`
+- **Authorized Future Target**: `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md`
+- **Authorized Source Artifact**: `STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS_REM-001.md`
+- **Authorized Source SHA-256**: `09faca9252c202811abf9837f77b32b3fe5431fa0ae7cb030d359f5808b712e0`
+- **Authorized Source Bytes**: `85476`
+- **Authorized Operation**: `DOCS_ONLY_EXACT_ACCEPTED_CONTENT_MATERIALIZATION`
+- **Content Edit Authority**: `NONE`
+- **Research Execution Authority**: `NONE`
+- **R3 Scope Expansion**: `NONE`
+- **R4 Scope Expansion**: `NONE`
+- **Implementation Authority**: `NONE`
+- **Dependency Adoption Authority**: `NONE`
+- **Provider Selection Authority**: `NONE`
+- **Stage 5 Execution Authority**: `NONE`
+- **Stage 6 Execution Authority**: `NONE`
+
+### 8.2 Research-Input Status & Non-Absorption Rules
+1. **Research Input Only**:
+   - The target document `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md` is strictly `RESEARCH_INPUT_ONLY`.
+   - It does **NOT** constitute research evidence, architecture specification, or implementation specification.
+   - It is **NOT** a replacement for Lane R1 or Lane R2, and does **NOT** expand the scope of Lane R3 or Lane R4.
+2. **No Silent Lane Creation**:
+   - This amendment does **NOT** create Lane R5, Lane R6, or any new canonical research lane.
+   - Packaging and scheduling of future research activities across requirement dimensions A–H remain subject to subsequent governance reconciliation.
+3. **Requirement Coverage Taxonomy**:
+   - Dimensions A–H represent requirement and coverage taxonomy only.
+   - Preserves the invariant: $\text{IDENTIFIED\_RESEARCH\_NEED} \neq \text{AUTHORITY\_TO\_EXECUTE\_RESEARCH}$.
+   - Requirements marked `ADDITIONAL_STAGE3_RESEARCH_NEEDED`, `AUTHORITY_REVIEW_NEEDED`, or `OWNER_DECISION_REQUIRED` remain unresolved governance/research inputs. This amendment does **NOT** authorize their execution.
+4. **Bounded Materialization Scope**:
+   - Authorizes solely the initial, exact byte-for-byte materialization of the accepted artifact `STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS_REM-001.md` (SHA-256: `09faca9252c202811abf9837f77b32b3fe5431fa0ae7cb030d359f5808b712e0`, 85,476 bytes) into `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md` once this amendment is independently accepted and merged.
+   - No standing authority is created to modify or rewrite the materialized file.
+
