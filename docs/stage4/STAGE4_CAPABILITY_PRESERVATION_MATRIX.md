@@ -1,10 +1,10 @@
 # STAGE 4 PRODUCT CAPABILITY PRESERVATION & RECONCILIATION MATRIX
 
-**Canonical Document ID**: `STAGE4-CAPABILITY-PRESERVATION-MATRIX-V1`  
-**Governing Ratification**: `STAGE4-UXIA-STRATEGY-AUTH-DESIGN-001` (Revision `REV-004`, Ratified by Human Owner)  
-**Controlling Strategy**: [`docs/stage4/STAGE4_UXIA_STRATEGY.md`](STAGE4_UXIA_STRATEGY.md)  
-**Status**: `CANONICAL_AUDIT_LEDGER / AUTHORIZED_FOUNDATION`  
-**Authority Level**: Level 3 (Architecture Specification) under [`AGENTS.md`](../../AGENTS.md)
+**Document Identity**: `STAGE4-CAPABILITY-PRESERVATION-MATRIX-V1`
+**Governing Ratification**: `STAGE4-UXIA-STRATEGY-AUTH-DESIGN-001` (Revision `REV-004`, Ratified by Human Owner)
+**Controlling Strategy**: [`docs/stage4/STAGE4_UXIA_STRATEGY.md`](STAGE4_UXIA_STRATEGY.md)
+**Status**: `OWNER_RATIFIED_DESIGN / CANDIDATE_REPOSITORY_MATERIALIZATION / CANONICAL_UPON_INDEPENDENT_ACCEPTANCE_AND_INTEGRATION`
+**Document Role**: Stage 4 Capability Preservation Specification (subordinate to canonical roadmap and governance authority under [`AGENTS.md`](../../AGENTS.md))
 
 ---
 
@@ -96,7 +96,7 @@
 | **Dom 9** | ASR / VAD / Audio Alignment | `HYBRID` | `PARTIALLY_SUPPORTED` | Visual recording waveform with auto-pause VAD indicator | Benchmark `B-S5-006` (VAD latency & accuracy) | Web Audio VAD processor module | `STAGE4_UX_HOME_REQUIRED` / `STAGE5_BENCHMARK_REQUIRED` |
 | **Dom 10** | Multi-Format Ingestion (PDF/EPUB) | `ADOPT_OSS / BUILD` | `PARTIALLY_SUPPORTED` | Multi-format dropzone with visual page extractor | Benchmark EdgeParse WASM vs PDF.js | Layout-aware document parser | `STAGE4_UX_HOME_REQUIRED` / `STAGE5_BENCHMARK_REQUIRED` |
 | **Dom 11** | Client Search & Embeddings | `ADOPT_OSS` | `PARTIALLY_SUPPORTED` | Global search bar (`Ctrl+K`) with instant fuzzy preview | Benchmark `B-S5-005` (OramaJS vs MiniSearch) | In-memory search index worker | `STAGE4_UX_HOME_REQUIRED` / `STAGE5_BENCHMARK_REQUIRED` |
-| **Dom 12** | Chart & Data Visualization | `ADOPT_OSS / BUILD` | `PARTIALLY_SUPPORTED` | Standardized SVG/Canvas chart container for Writing Task 1 & Analytics (`OSS-024`, `OSS-025`) | `NO_DEDICATED_STAGE5_BENCHMARK_REQUIRED` (Deterministic client-side SVG/Canvas rendering evaluated under standard browser performance) | Lightweight SVG/Canvas chart component | `STAGE4_UX_HOME_REQUIRED` / `STAGE6_IMPLEMENTATION_REQUIRED` |
+| **Dom 12** | Chart & Data Visualization | `ADOPT_OSS / BUILD` | `PARTIALLY_SUPPORTED` | Standardized SVG/Canvas chart container for Writing Task 1 & Analytics (`OSS-024`, `OSS-025`) | `NO_STANDALONE_DOMAIN12_BENCHMARK_REQUIRED` (Generic client-side SVG/Canvas chart rendering capability class does not itself require a standalone Stage 5 benchmark package; evaluation is integrated into composite task/renderer validation under `FUT-009`; candidate rendering engines like uPlot/Chart.js/Native SVG remain candidate classes until future authorized Stage 5 evaluation) | Lightweight SVG/Canvas chart component | `STAGE4_UX_HOME_REQUIRED` / `STAGE5_INTEGRATED_EVALUATION` / `STAGE6_IMPLEMENTATION_REQUIRED` |
 | **Dom 13** | Heatmaps & Activity Grids | `BUILD` | `CURRENTLY_SUPPORTED` | Redesigned 52-week activity heatmap with consistent theme tokens | `NO_DEDICATED_STAGE5_BENCHMARK_REQUIRED` (Deterministic SVG grid implementation) | Refactored SVG activity grid component | `STAGE4_UX_HOME_REQUIRED` / `STAGE6_IMPLEMENTATION_REQUIRED` |
 | **Dom 14** | Skill Radar & Diagnostic Charts | `ADOPT_OSS / BUILD` | `PARTIALLY_SUPPORTED` | 5-Skill Radar chart with confidence intervals on Analytics dashboard | `NO_DEDICATED_STAGE5_BENCHMARK_REQUIRED` (Deterministic SVG radar polygon projection) | Multidimensional radar visualization component | `STAGE4_UX_HOME_REQUIRED` / `STAGE6_IMPLEMENTATION_REQUIRED` |
 | **Dom 15** | Progress & Retention Visualization | `BUILD / ADOPT_OSS` | `PARTIALLY_SUPPORTED` | Visual FSRS memory stability decay curve with target retention line | `NO_DEDICATED_STAGE5_BENCHMARK_REQUIRED` (Deterministic math projection) | FSRS retention decay curve renderer | `STAGE4_UX_HOME_REQUIRED` / `STAGE6_IMPLEMENTATION_REQUIRED` |

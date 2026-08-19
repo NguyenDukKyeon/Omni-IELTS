@@ -1,10 +1,10 @@
 # STAGE 4 UX / IA REMAKE STRATEGY & ARCHITECTURE SPECIFICATION
 
-**Canonical Document ID**: `STAGE4-UXIA-STRATEGY-V1`  
-**Governing Ratification**: `STAGE4-UXIA-STRATEGY-AUTH-DESIGN-001` (Revision `REV-004`, Ratified by Human Owner)  
-**Controlling Authorization Manifest**: [`docs/authorizations/STAGE4-UXIA-AUTH-001.md`](../authorizations/STAGE4-UXIA-AUTH-001.md)  
-**Status**: `CANONICAL_STRATEGY / AUTHORIZED_FOUNDATION`  
-**Authority Level**: Level 3 (Architecture Specification) under [`AGENTS.md`](../../AGENTS.md)
+**Document Identity**: `STAGE4-UXIA-STRATEGY-V1`
+**Governing Ratification**: `STAGE4-UXIA-STRATEGY-AUTH-DESIGN-001` (Revision `REV-004`, Ratified by Human Owner)
+**Controlling Authorization Manifest**: [`docs/authorizations/STAGE4-UXIA-AUTH-001.md`](../authorizations/STAGE4-UXIA-AUTH-001.md)
+**Status**: `OWNER_RATIFIED_DESIGN / CANDIDATE_REPOSITORY_MATERIALIZATION / CANONICAL_UPON_INDEPENDENT_ACCEPTANCE_AND_INTEGRATION`
+**Document Role**: Stage 4 Owner-Ratified Strategy Specification (subordinate to canonical roadmap and governance authority under [`AGENTS.md`](../../AGENTS.md))
 
 ---
 
