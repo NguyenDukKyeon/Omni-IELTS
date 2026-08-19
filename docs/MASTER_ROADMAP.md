@@ -4,7 +4,7 @@ Status: **CANONICAL**
 
 Authority: **TOP-LEVEL MASTER PRODUCT ROADMAP**
 
-Last updated: 2026-08-17
+Last updated: 2026-08-20
 
 ## 1. Purpose and authority
 
@@ -18,7 +18,7 @@ It owns:
 
 This document supersedes `docs/ROADMAP.md` as the top-level product roadmap.
 `docs/ROADMAP.md` is reclassified as the subordinate Technical Package Taxonomy
-(Phase 0–7) and retains its full technical knowledge. See §8 below.
+(Phase 0–7) and retains its full technical knowledge. See §9 below.
 
 ### Authority hierarchy
 
@@ -106,9 +106,9 @@ Writing, and Speaking). Stage 2 achieved verified completion under exit gate
 
 ### Stage 3 — Learning / Product Deep Research
 
-**Status: NEXT**
+**Status: COMPLETE / CANONICALLY_CLOSED**
 
-**Execution authority: NOT GRANTED (Requires separate bounded authorization manifest)**
+**Research execution authority: Historical (Lanes R1–R4 canonically integrated; manifest STAGE3-RESEARCH-AUTH-001 closed)**
 
 Mission: broad research including:
 
@@ -117,17 +117,28 @@ Mission: broad research including:
 - transcript and learning pipeline research;
 - architecture proposals.
 
-Stage 3 is the major broad research stage. Stage 3 is next in product
-sequencing following the canonical closure of Stage 2. Stage 3 execution,
-research, and implementation authority is NOT GRANTED by this roadmap
-reconciliation and requires a separate bounded authorization manifest. No
-external provider, dependency, or implementation decomposition is yet adopted.
+Stage 3 completed all chartered research lanes (R1, R1 Supplement, R2, R3,
+R4) and established the pedagogical, algorithmic, and architectural foundation
+for subsequent stages. Final synthesizing deliverable Lane R4 was independently
+accepted (PR #167 issuecomment-5345592074) and merged into canonical `main` at
+commit `856b3a307b87fd99044692513c01da3e8f681b9f` with post-merge CI
+`32281232389` SUCCESS. Stage 3 research authority is closed. No implementation
+code or dependency was adopted.
 
 ---
 
 ### Stage 4 — UX / IA Remake
 
-**Status: FUTURE**
+**Status: NEXT**
+
+**Execution authority: NOT AUTHORIZED (Requires separate bounded strategy and authorization manifest)**
+
+Mission: comprehensive UX and Information Architecture remake grounded in Stage 3 learning science and interaction requirements.
+
+Stage 4 is next in product sequencing following the canonical closure of
+Stage 3. Stage 4 execution, design, and implementation authority is NOT GRANTED
+by this roadmap reconciliation and requires a separate bounded strategy and
+authorization manifest ratified by the Owner.
 
 ---
 
@@ -163,8 +174,8 @@ technology.
 | Stage 1 | Core Foundation | COMPLETE | Historical |
 | Stage 1.5 | Adversarial Product Jury *(interstage)* | COMPLETE | Historical |
 | Stage 2 | IELTS Completeness | COMPLETE / CANONICALLY_CLOSED | Historical (Waves W0–W6 closed) |
-| Stage 3 | Learning / Product Deep Research | NEXT | NOT GRANTED |
-| Stage 4 | UX / IA Remake | FUTURE | NOT AUTHORIZED |
+| Stage 3 | Learning / Product Deep Research | COMPLETE / CANONICALLY_CLOSED | Historical (Lanes R1–R4 closed) |
+| Stage 4 | UX / IA Remake | NEXT | NOT AUTHORIZED |
 | Stage 5 | AI / Technology Deep Research & Benchmark | FUTURE | NOT AUTHORIZED |
 | Stage 6 | Final Product Remake / Implementation | FUTURE | NOT AUTHORIZED |
 | Stage 7 | Production & Real-User Validation | FUTURE | NOT AUTHORIZED |
@@ -236,7 +247,32 @@ Stage 2 Exit Gate Verification:
 - Programmatic Verification: 100% of 18 machine-checkable dimensions verified via `scripts/stage2-gate.mjs` (`npm run stage2:gate`).
 - Final Status: `COMPLETE / CANONICALLY_CLOSED` at commit `4b15bedbf1513d0eb6f463d6792f65012bbaf085` (PR #148).
 
-## 8. Relation to technical Phase 0–7 taxonomy
+## 8. Stage 3 Research Lane record
+
+Stage 3 — Learning / Product Deep Research was delivered across four bounded research lanes, one research strategy/authorization manifest, one activation transaction, two authorization amendments, and two input/supplement materializations:
+
+| Lane / Package | Transaction ID | Subject PR | Scope & Deliverable | Status |
+|---|---|---|---|---|
+| Strategy & Auth | `STAGE3-RESEARCH-STRATEGY-AUTH-001` | `#150` | `docs/STAGE3_RESEARCH_STRATEGY.md`, `docs/authorizations/STAGE3-RESEARCH-AUTH-001.md`, ADR-053 | `CANONICALLY_CLOSED` (Merged at `ebea8aa01ceb61f13bae1b09b14486397f0d4a4d`) |
+| Auth Activation | `STAGE3-RESEARCH-AUTH-ACTIVATION-001` | `#151` | Canonical activation of Strategy and Bounded Manifest | `CANONICALLY_CLOSED` (Merged at `06ff39360d41fb3e83c98352fe4a9d3093190b45`) |
+| Lane R1 | `STAGE3-R1-MATERIALIZATION-001` | `#152` | `docs/research/R1_LEARNING_PRODUCT_RESEARCH.md` (45 findings, cognitive science, learner modeling, 5-skill acquisition) | `CANONICALLY_CLOSED` (Merged at `507895a70caae8dec581bbeb34128af8142190a8`) |
+| Lane R2 | `STAGE3-R2-MATERIALIZATION-001` | `#154` | `docs/research/R2_OSS_HOSTED_CAPABILITY_RESEARCH.md` (18 capability domains, 82 findings, 7-value dispositions) | `CANONICALLY_CLOSED` (Merged at `17d7bbbfff78964006fdb879425848a6fd01aea3`) |
+| Input Req Auth | `STAGE3-LEARNING-EXPERIENCE-RESEARCH-INPUT-AUTH-001` | `#155` | Authorization amendment for learning experience requirements input | `CANONICALLY_CLOSED` (Merged at `927d20346e9675505a534ae46aacddf53a6a3652`) |
+| Input Req Materialization | `STAGE3-LEARNING-EXPERIENCE-INPUT-MATERIALIZATION-001` | `#156` | `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md` (Dimensions A–H, `REQ-EXP-001`–`010`, `RQ-01`–`15`) | `CANONICALLY_CLOSED` (Merged at `2c451bb702fa04b839d4864f13758d0d17fd663e`) |
+| R1 Supplement Auth | `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-AUTH-001` | `#157` | Authorization amendment for R1 supplemental research | `CANONICALLY_CLOSED` (Merged at `292e2a50a67db3618b1662cea00dd0772cb5e796`) |
+| Lane R1 Supplement | `STAGE3-R1-SUPPLEMENT-QUALITY-REM-001` | `#159` | `docs/research/R1_LEARNING_PRODUCT_RESEARCH_SUPPLEMENT_001.md` (18 supplemental findings, pedagogical methodology) | `CANONICALLY_CLOSED` (Merged at `79cb8ef9dfcbd4493c5191af5cd9845b85784a23`) |
+| Lane R3 | `STAGE3-R3-PIPELINE-ARCHITECTURE-RESEARCH-REM-004` | `#164` | `docs/research/R3_PIPELINE_ARCHITECTURE_RESEARCH.md` (24 findings, 10 structural gaps, 7 Stage 5 handoffs) | `CANONICALLY_CLOSED` (Merged at `8faaa4afb3e71df9f4fbf3ce970ca54d3d46a508`) |
+| Lane R4 | `STAGE3-R4-CROSS-RESEARCH-RECONCILIATION-REM-002` | `#167` | `docs/research/R4_CROSS_RESEARCH_RECONCILIATION.md` (Synthesis, 6 tensions, 7 Owner decisions, Stage 4/5 handoffs) | `COMPLETE / INDEPENDENTLY_ACCEPTED / CANONICALLY_INTEGRATED` (Merged at `856b3a307b87fd99044692513c01da3e8f681b9f`) |
+
+Stage 3 Integration & Closure Verification:
+- Final Canonical Base SHA: `856b3a307b87fd99044692513c01da3e8f681b9f` (Merge PR #167)
+- Accepted Candidate Head: `eebe68d39d51d68785c26000524cb9c29aaeceae`
+- Independent Audit Verdict: ACCEPT (`https://github.com/NguyenDukKyeon/VocabMaster/pull/167#issuecomment-5345592074`)
+- Post-Merge CI Run on `main`: `32281232389` (`success`)
+- Manifest State: `STAGE3-RESEARCH-AUTH-001` marked `HISTORICAL / CONSUMED / CLOSED`
+- Downstream Boundaries: Preserves $\text{RESEARCH} \neq \text{IMPLEMENTATION}$, $\text{ACCEPTANCE} \neq \text{MERGE AUTHORITY}$, $\text{ROADMAP PLACEMENT} \neq \text{EXECUTION AUTHORITY}$. Stage 4 is `NEXT / NOT AUTHORIZED`.
+
+## 9. Relation to technical Phase 0–7 taxonomy
 
 `docs/ROADMAP.md` remains the canonical source for:
 
@@ -257,12 +293,13 @@ and must not be confused:
 | Stage 1 — Core Foundation | Phase 0 through Phase 7 (technical packages) |
 | Stage 2 — IELTS Completeness | *(no implicit Phase mapping)* |
 | Stage 3 — Learning / Product Deep Research | *(no implicit Phase mapping)* |
+| Stage 4 — UX / IA Remake | *(no implicit Phase mapping)* |
 
 Historical accepted package identities, evidence, architecture boundaries and
 acceptance verdicts remain valid. This authority change does not retroactively
 rewrite implementation history.
 
-## 9. Authority boundaries
+## 10. Authority boundaries
 
 This document:
 
@@ -274,7 +311,7 @@ This document:
 - **DOES NOT** own architecture decisions (that is `DECISIONS.md`);
 - **DOES NOT** own repository execution rules (that is `AGENTS.md`).
 
-## 10. Change-control rule
+## 11. Change-control rule
 
 Changes to this Master Roadmap require:
 
