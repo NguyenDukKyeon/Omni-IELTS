@@ -4,8 +4,8 @@ Manifest Identity: **STAGE3-RESEARCH-AUTH-001**
 Stage ID: **STAGE 3 — Learning / Product Deep Research**  
 Transaction ID: **STAGE3-RESEARCH-STRATEGY-AUTH-001**  
 Protocol: **BOUNDED_EXECUTION_CAPSULE_PROTOCOL_V1** (ADR-046) under **EXECUTION_PROMPT_PROTOCOL_V2** (ADR-051)  
-Date: **2026-08-17**  
-Status: **ACCEPTED / CANONICAL / EFFECTIVE**  
+Date: **2026-08-17** (Closure Reconciled: **2026-08-20**)  
+Status: **HISTORICAL / CONSUMED / CLOSED**  
 Canonical Predecessor (Base): **`664ab14bb1415fec0995e80e99369164df28575c`**  
 Candidate Branch: **`strategy/stage3-research-strategy-auth-001`**  
 Authorization Candidate Head: **`066fc999361a105bb00464c6625920564b390d14`**  
@@ -14,6 +14,7 @@ Authorization Merge Commit: **`ebea8aa01ceb61f13bae1b09b14486397f0d4a4d`**
 Push CI Run on Merge: **`32025636999` (`success`)**  
 Effective Research Predecessor: **`ebea8aa01ceb61f13bae1b09b14486397f0d4a4d`**  
 Merge Authority for Authorization Candidate: **EXPLICITLY_GRANTED** (Executed via PR #150 merge)  
+Closure Authority: **ADR-054 / STAGE3-CANONICAL-CLOSURE-STATUS-RECONCILIATION-REM-002**  
 
 ---
 
@@ -29,12 +30,21 @@ This authorization manifest is strictly governed by the canonical 6-tier reposit
 5. `docs/DECISIONS.md` — Architecture Decision Records (ADRs).
 6. `AGENTS.md` — Repository Router & Global Invariants.
 
-*Task-Specific Authorization*: This document (`STAGE3-RESEARCH-AUTH-001`) defines the bounded research authorization parameters for Stage 3 under `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md` and ADR-046. It is strictly subordinate to the canonical 6-tier hierarchy above.
+*Task-Specific Authorization*: This document (`STAGE3-RESEARCH-AUTH-001`) defined the bounded research authorization parameters for Stage 3 under `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md` and ADR-046. Following the canonical integration of all Stage 3 deliverables, it is now `HISTORICAL / CONSUMED / CLOSED`.
 
-### 1.2 Non-Authority & Non-Absorption Invariants
+### 1.2 Manifest Lifecycle & Closure Notice
+> [!NOTE]
+> **Manifest Lifecycle & Closure Status**:
+> Following the verified independent acceptance and canonical integration of all Stage 3 research deliverables (Lane R1, Lane R1 Supplement, Lane R2, Lane R3, and synthesizing Lane R4 at commit `856b3a307b87fd99044692513c01da3e8f681b9f`), this authorization manifest is **HISTORICAL / CONSUMED / CLOSED**.
+> 
+> **THIS CLOSURE DOES NOT RETROACTIVELY INVALIDATE HISTORICAL STAGE 3 EXECUTION.**
+> 
+> All historical research executions performed under this manifest remain canonically valid and accepted. This closure status strictly prevents future execution from treating this consumed manifest as standing authority.
+
+### 1.3 Non-Authority & Non-Absorption Invariants
 > [!IMPORTANT]
 > **Strict Non-Authority & Stage Scope Invariants**:
-> - **RESEARCH AUTHORIZATION ONLY**: This manifest authorizes **ONLY** read-only investigation, capability discovery, algorithm inventory, architectural analysis, and report synthesis across Stage 3 research lanes (R1–R4).
+> - **HISTORICAL RESEARCH AUTHORIZATION ONLY**: This manifest authorized **ONLY** read-only investigation, capability discovery, algorithm inventory, architectural analysis, and report synthesis across Stage 3 research lanes (R1–R4).
 > - **ZERO IMPLEMENTATION AUTHORITY**: This manifest does **NOT** grant authority to write product source code (`src/**`), add npm/system dependencies (`package.json`), modify test suites (`tests/**`), or alter build scripts (`scripts/**`).
 > - **ZERO PROVIDER / DEPENDENCY ADOPTION**: Surveyed open-source libraries, client algorithms, and hosted APIs remain candidates only. No provider or dependency is adopted.
 > - **NON-ABSORPTION OF STAGE 4**: Final UI design, information architecture, wireframing, and component layout remake belong exclusively to Stage 4 (UX / IA Remake).
@@ -200,22 +210,26 @@ Must evaluate against all 14 dimensions in `docs/research/STAGE3_RESEARCH_CONSTR
 ### 5.3 Program Execution Phasing
 ```
 TRANSACTION 1: AUTHORIZATION CANDIDATE (COMPLETE)
-└── Author STAGE3_RESEARCH_STRATEGY.md, STAGE3_RESEARCH_CONSTRAINTS.md, STAGE3-RESEARCH-AUTH-001.md, ADR-053.
-└── Open Draft PR #150, verified natural exact-head CI run 32024352788.
+└── Author STAGE3_RESEARCH_STRATEGY.md, STAGE3_RESEARCH_CONSTRAINTS.md, STAGE3-RESEARCH-AUTH-001.md, ADR-053 (PR #150 / commit ebea8aa01ceb61f13bae1b09b14486397f0d4a4d).
 
-TRANSACTION 2: INDEPENDENT AUTHORIZATION AUDIT & CANONICAL MERGE (COMPLETE)
-└── Independent audit of authorization candidate (Review #4951122496, Verdict: ACCEPT).
-└── Pre-authorized exact-head merge to canonical main (Merge commit ebea8aa01ceb61f13bae1b09b14486397f0d4a4d).
-└── Post-merge push CI run 32025636999 verified SUCCESS.
+TRANSACTION 2: CANONICAL ACTIVATION (COMPLETE)
+└── Reconcile canonical activation status across repository documents (PR #151 / commit 06ff39360d41fb3e83c98352fe4a9d3093190b45).
 
-TRANSACTION 3: CANONICAL STATUS RECONCILIATION & ACTIVATION (Current Transaction)
-└── Reconcile canonical status across docs/STAGE3_RESEARCH_STRATEGY.md, docs/authorizations/STAGE3-RESEARCH-AUTH-001.md, and docs/IMPLEMENTATION_STATUS.md.
-└── Manifest state becomes CANONICALLY EFFECTIVE.
+TRANSACTIONS 3–8: RESEARCH EXECUTION & SUPPLEMENTS (COMPLETE)
+└── Lane R1 materialization (PR #152 / commit 507895a70caae8dec581bbeb34128af8142190a8).
+└── Lane R2 materialization (PR #154 / commit 17d7bbbfff78964006fdb879425848a6fd01aea3).
+└── Input requirements authorization (PR #155 / commit 927d20346e9675505a534ae46aacddf53a6a3652).
+└── Input requirements materialization (PR #156 / commit 2c451bb702fa04b839d4864f13758d0d17fd663e).
+└── R1 supplement authorization (PR #157 / commit 292e2a50a67db3618b1662cea00dd0772cb5e796).
+└── R1 supplement quality remediation (PR #159 / commit 79cb8ef9dfcbd4493c5191af5cd9845b85784a23).
+└── Lane R3 pipeline & architecture research (PR #164 / commit 8faaa4afb3e71df9f4fbf3ce970ca54d3d46a508).
 
-FUTURE TRANSACTIONS: RESEARCH EXECUTION (R1, R2, R3) & R4 SYNTHESIS
-└── Separately executed research transactions or authorized parallel research sessions.
-└── Independent synthesis and R4 cross-reconciliation.
-└── Independent research audit and Owner decision handoff.
+TRANSACTION 9: LANE R4 CROSS-RESEARCH SYNTHESIS & RECONCILIATION (COMPLETE)
+└── Lane R4 cross-research reconciliation deliverable (PR #167 / commit 856b3a307b87fd99044692513c01da3e8f681b9f).
+
+TRANSACTION 10: STAGE 3 CANONICAL CLOSURE & STATUS RECONCILIATION (Current Transaction)
+└── Reconcile canonical closure status across repository documents (ADR-054).
+└── Manifest state becomes HISTORICAL / CONSUMED / CLOSED.
 ```
 
 ---
@@ -223,12 +237,12 @@ FUTURE TRANSACTIONS: RESEARCH EXECUTION (R1, R2, R3) & R4 SYNTHESIS
 ## 6. Pre-Authorized Merge Authority for Authorization Candidate
 
 Under `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md` §3.9 and ADR-051:
-- Merge authority for this authorization manifest transaction candidate is **EXPLICITLY GRANTED** to the Independent Authorization Auditor.
-- The Auditor is authorized to execute an exact-head fast-forward merge into `main` **ONLY AFTER**:
-  1. The candidate passes all repository checks and natural CI on candidate HEAD;
-  2. The candidate passes independent audit with zero findings;
-  3. A formal `ACCEPT` verdict is persisted and verified;
-  4. Candidate HEAD SHA is unchanged from the audited SHA.
+- Merge authority for this authorization manifest transaction candidate was **EXPLICITLY GRANTED** to the Independent Authorization Auditor.
+- The Auditor was authorized to execute an exact-head fast-forward merge into `main` **ONLY AFTER**:
+  1. The candidate passed all repository checks and natural CI on candidate HEAD;
+  2. The candidate passed independent audit with zero findings;
+  3. A formal `ACCEPT` verdict was persisted and verified;
+  4. Candidate HEAD SHA was unchanged from the audited SHA.
 
 ---
 
@@ -253,8 +267,8 @@ Execution halts immediately (`FAIL-CLOSED`) upon encountering any of the followi
 
 ### 8.1 Amendment Status & Authority Capsule
 - **Amendment ID**: `STAGE3-LEARNING-EXPERIENCE-RESEARCH-INPUT-AUTH-001`
-- **Amendment Status**: `CANDIDATE / NOT_EFFECTIVE_UNTIL_INDEPENDENT_ACCEPT_AND_MERGE`
-- **Base Manifest Status**: `ACCEPTED / CANONICAL / EFFECTIVE` (Base manifest remains active and effective)
+- **Amendment Status**: `HISTORICAL / CONSUMED / CLOSED` (Merged in PR #155 at commit `927d20346e9675505a534ae46aacddf53a6a3652`; materialized in PR #156 at commit `2c451bb702fa04b839d4864f13758d0d17fd663e`)
+- **Base Manifest Status**: `HISTORICAL / CONSUMED / CLOSED`
 - **Base Predecessor (Base SHA)**: `17d7bbbfff78964006fdb879425848a6fd01aea3`
 - **Authorized Future Target**: `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md`
 - **Authorized Source Artifact**: `STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS_REM-001.md`
@@ -293,13 +307,13 @@ Execution halts immediately (`FAIL-CLOSED`) upon encountering any of the followi
 
 ### 9.1 Amendment Status & Authority Capsule
 - **Amendment ID**: `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-AUTH-001`
-- **Amendment Status**: `CANDIDATE_NOT_EFFECTIVE_UNTIL_INDEPENDENT_ACCEPT_AND_MERGE`
+- **Amendment Status**: `HISTORICAL / CONSUMED / CLOSED` (Merged in PR #157 at commit `292e2a50a67db3618b1662cea00dd0772cb5e796`; completed in PR #159 at commit `79cb8ef9dfcbd4493c5191af5cd9845b85784a23`)
 - **Authorized Package**: `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-001`
 - **Authorized Output**: `docs/research/R1_LEARNING_PRODUCT_RESEARCH_SUPPLEMENT_001.md`
 - **Package Type**: `R1_LEARNING_PRODUCT_SUPPLEMENTAL_EVIDENCE`
 - **New Research Lane**: `NO`
-- **Supplemental Research Execution Authority**: `GRANTED_ONLY_AFTER_AMENDMENT_EFFECTIVE`
-- **External Research Authority**: `GRANTED_WITH_EXISTING_STAGE3_EVIDENCE_RULES`
+- **Supplemental Research Execution Authority**: `HISTORICAL / CONSUMED / CLOSED`
+- **External Research Authority**: `HISTORICAL / CONSUMED / CLOSED`
 - **R3 Scope Expansion**: `NONE`
 - **R4 Scope Expansion**: `NONE`
 - **Stage 4 Authority**: `NONE`
