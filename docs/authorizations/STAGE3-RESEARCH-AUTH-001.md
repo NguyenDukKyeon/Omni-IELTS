@@ -128,6 +128,7 @@ docs/authorizations/STAGE3-RESEARCH-AUTH-001.md
 docs/research/STAGE3_RESEARCH_CONSTRAINTS.md
 docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md
 docs/research/R1_LEARNING_PRODUCT_RESEARCH.md
+docs/research/R1_LEARNING_PRODUCT_RESEARCH_SUPPLEMENT_001.md
 docs/research/R2_OSS_HOSTED_CAPABILITY_RESEARCH.md
 docs/research/R3_PIPELINE_ARCHITECTURE_RESEARCH.md
 docs/research/R4_CROSS_RESEARCH_RECONCILIATION.md
@@ -139,6 +140,12 @@ docs/DECISIONS.md
 > For this research-input target, current authority permits **ONLY** initial materialization of the exact independently accepted artifact whose SHA-256 is:
 > `09faca9252c202811abf9837f77b32b3fe5431fa0ae7cb030d359f5808b712e0` (85,476 bytes).
 > No semantic modification, rewriting, or generic standing write authority is granted by this amendment. Any subsequent modification to this research-input document requires separate explicit authority.
+
+> [!CAUTION]
+> **Strict Supplemental Output Constraint on `docs/research/R1_LEARNING_PRODUCT_RESEARCH_SUPPLEMENT_001.md`**:
+> This path is designated strictly for supplemental accepted research evidence under `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-001`.
+> It does **NOT** replace `docs/research/R1_LEARNING_PRODUCT_RESEARCH.md`, which remains canonically immutable.
+> Creation and materialization of this file is authorized **ONLY AFTER** amendment `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-AUTH-001` is independently accepted and canonically merged.
 
 ### 3.3 Authorized External Internet & Web Research Scope
 External web search and documentation retrieval are **EXPLICITLY GRANTED** for:
@@ -279,4 +286,190 @@ Execution halts immediately (`FAIL-CLOSED`) upon encountering any of the followi
 4. **Bounded Materialization Scope**:
    - Authorizes solely the initial, exact byte-for-byte materialization of the accepted artifact `STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS_REM-001.md` (SHA-256: `09faca9252c202811abf9837f77b32b3fe5431fa0ae7cb030d359f5808b712e0`, 85,476 bytes) into `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md` once this amendment is independently accepted and merged.
    - No standing authority is created to modify or rewrite the materialized file.
+
+---
+
+## 9. Authorization Amendment: STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-AUTH-001
+
+### 9.1 Amendment Status & Authority Capsule
+- **Amendment ID**: `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-AUTH-001`
+- **Amendment Status**: `CANDIDATE_NOT_EFFECTIVE_UNTIL_INDEPENDENT_ACCEPT_AND_MERGE`
+- **Authorized Package**: `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-001`
+- **Authorized Output**: `docs/research/R1_LEARNING_PRODUCT_RESEARCH_SUPPLEMENT_001.md`
+- **Package Type**: `R1_LEARNING_PRODUCT_SUPPLEMENTAL_EVIDENCE`
+- **New Research Lane**: `NO`
+- **Supplemental Research Execution Authority**: `GRANTED_ONLY_AFTER_AMENDMENT_EFFECTIVE`
+- **External Research Authority**: `GRANTED_WITH_EXISTING_STAGE3_EVIDENCE_RULES`
+- **R3 Scope Expansion**: `NONE`
+- **R4 Scope Expansion**: `NONE`
+- **Stage 4 Authority**: `NONE`
+- **Stage 5 Execution Authority**: `NONE`
+- **Implementation Authority**: `NONE`
+- **Dependency Adoption Authority**: `NONE`
+- **Provider Selection Authority**: `NONE`
+- **Content Modification Authority for Canonical R1**: `NONE`
+- **Merge Authority for Research Output**: `NONE`
+
+### 9.2 Governance Basis, Supplement Identity & Non-Lane Invariants
+1. **Governance Basis**:
+   - In accordance with canonical `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md` §25 (`AUTHORITY_REVIEW_NEEDED`), identifying a research need does NOT authorize its execution:
+     $$\text{IDENTIFYING A RESEARCH NEED} \neq \text{AUTHORIZING ITS EXECUTION}$$
+   - Any proposed execution of `ADDITIONAL_STAGE3_RESEARCH_NEEDED` requires an explicit addendum or fresh authorization manifest.
+   - The broad subject matter belongs to the existing Stage 3 / Lane R1 learning-product research mission; existing R3 scope is architecture/pipeline research; existing R4 scope is cross-reconciliation of evidence.
+   - New execution authority cannot be inferred from broad R1 subject scope alone.
+2. **Supplement Identity & Single-Lane Invariant**:
+   - **PACKAGE_ID**: `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-001`
+   - **SEMANTIC_IDENTITY**: `R1 / LEARNING-PRODUCT SUPPLEMENTAL EVIDENCE`
+   - **LANE_STATUS**: `SUPPLEMENT_TO_EXISTING_R1`
+   - **NEW_LANE**: `NO`
+   - **EXPLICIT INVARIANT**:
+     - **THIS IS NOT R5.**
+     - **THIS IS NOT R6.**
+     - **THIS DOES NOT REOPEN OR REWRITE CANONICAL R1.**
+3. **Supplemental Output Status**:
+   - `docs/research/R1_LEARNING_PRODUCT_RESEARCH_SUPPLEMENT_001.md` is supplemental accepted research evidence.
+   - It does **NOT** replace or invalidate `docs/research/R1_LEARNING_PRODUCT_RESEARCH.md`.
+   - Canonical R1 remains immutable under this transaction and downstream transactions.
+   - Creation and materialization of the supplemental output file is authorized **ONLY AFTER** this authorization amendment candidate achieves independent audit acceptance, valid exact-head merge authority, and canonical merge.
+
+### 9.3 Authorized Supplemental Research Subject Scope
+The authorized supplemental research package is strictly limited to scientific and pedagogical evidence and methodology required by canonical A–H requirements that remain unresolved after canonical R1 and R2. It spans eight semantic research families:
+
+1. **A. Instruction + Remediation Effectiveness**:
+   - Conditions under which explicit instruction, worked examples, guided practice, scaffolding/fading, and related intervention forms are effective.
+   - Feedback typology, timing, and form conditionality (verification vs corrective vs explanatory vs metalinguistic).
+   - Misconception-targeted remediation mechanisms.
+   - Clean retest, delayed retest, and transfer evaluation following remediation.
+   - *Canonical Anchors*: `RQ-04`, `RQ-05`, `REQ-EXP-001`, Cluster G5, Cluster G6.
+
+2. **B. Delayed Retention + Transfer Measurement Methodology**:
+   - Contamination-resistant delayed-retention evaluation designs.
+   - Near vs far/novel-context transfer measurement.
+   - Valid methodology-level relationship between micro/sub-skill gains and broader language / IELTS proficiency.
+   - *Canonical Anchors*: `RQ-01`, `RQ-02`, `RQ-03`, `REQ-EXP-007`, Cluster G1, Cluster G2, Cluster G3, Cluster G4.
+   - *Non-Claim Invariant*: Authorizes general scientific methodology research only. Does **NOT** authorize claiming that VocabMaster itself has already caused learning gains.
+
+3. **C. Diagnostic Validity + Learner-Model Semantics**:
+   - Diagnostic false-positive, false-mastery, and misdiagnosis prevention principles.
+   - Evidence sufficiency, confidence estimation, and uncertainty handling.
+   - Temporary noise vs genuine skill regression methodology.
+   - Conceptual interoperability conditions among distinct memory ($R$), mastery ($P(L)$), item difficulty ($b$), ability ($\theta$), and diagnostic-selection model families.
+   - *Canonical Anchors*: `RQ-08`, `RQ-13`, `REQ-EXP-002`, Cluster G9.
+   - *Distinction Invariant*: Preserves $\text{FSRS} \neq \text{BKT} \neq \text{IRT} \neq \text{CAT}$. Conceptual interoperability research does not constitute mathematical identity or production architecture selection.
+
+4. **D. Curriculum / Placement / Session Evidence**:
+   - Diagnostic placement and diagnostic calibration methodology.
+   - Curriculum sequencing and prerequisite relationship evidence.
+   - Interleaving vs blocking effects and session composition.
+   - Balance between review and new-learning acquisition.
+   - Cognitive load and fatigue conditions.
+   - *Constraint*: Does **NOT** authorize final curriculum schemas, schedules, or prerequisite graphs.
+
+5. **E. Re-entry + Learning Efficiency**:
+   - Non-predatory streak, re-entry, and daily backlog recovery evidence.
+   - Learning gain relative to learner time, effort, and cognitive burden.
+   - Methodological distinction between fast completion speed and durable learning.
+   - *Canonical Anchors*: `RQ-12`, `REQ-EXP-006`, Cluster G12, Cluster G13.
+
+6. **F. Generated-Item Quality Methodology**:
+   - Validity-oriented defect taxonomy for auto-generated items.
+   - Measurement methods for item ambiguity, invalid keys, hallucination/poor grounding, and distractor leakage.
+   - Quality and construct validity evaluation methodology for generated learning items.
+   - *Canonical Anchors*: `REQ-EXP-008`, Cluster G7.
+   - *Constraint*: Does **NOT** authorize benchmarking concrete prompt, model, or filter configurations.
+
+7. **G. Learning-System Effectiveness Methodology**:
+   - Defensible pre/post/delayed evaluation designs.
+   - Control/comparison group methodology and threats to internal/external validity.
+   - Scientifically valid learning-quality indicators.
+   - Methodological distinction between usage/engagement metrics (daily active time, streak count) and verified learning evidence.
+   - *Canonical Anchors*: `RQ-14`, Cluster G14, Cluster G16.
+
+8. **H. Effectiveness-Evidence Provenance Semantics**:
+   - Scientific determination of what contextual attempt provenance is necessary for valid downstream effectiveness analysis.
+   - *Canonical Anchor*: `REQ-EXP-010`.
+   - *Constraint*: Semantic research only. Does **NOT** authorize TypeScript interfaces, persistence objects, database fields, or storage architectures. Storage and runtime execution boundaries remain strictly Lane R3 subjects.
+
+### 9.4 Explicit Exclusions & Non-Decisions
+The future research package is strictly research-only and **EXPLICITLY EXCLUDES**:
+- Broad OSS ecosystem re-survey;
+- Repeating canonical R2 candidate discovery;
+- Concrete AI / model / provider benchmarking;
+- Concrete ASR / speech / writing scorer benchmarking;
+- Concrete prompt configuration benchmarking;
+- Final adaptive algorithm selection;
+- Final FSRS / BKT / IRT / CAT implementation selection;
+- Final readiness formula;
+- Final scoring model;
+- Final acceptable error thresholds;
+- Lane R3 architecture execution within this package;
+- Lane R4 cross-synthesis within this package;
+- Stage 4 UX / Information Architecture work;
+- Stage 5 execution or benchmarking;
+- Stage 6 production implementation;
+- Actual production-user causal efficacy claims;
+- Dependency adoption or package installation (`package.json`);
+- Source code or test suite modification (`src/**`, `tests/**`, `scripts/**`).
+
+### 9.5 Canonical R2 Reuse Boundary
+- The future supplemental research package MUST reconcile canonical R2 (`docs/research/R2_OSS_HOSTED_CAPABILITY_RESEARCH.md`) before any technical-tool discussion.
+- No broad new open-source survey is authorized.
+- Narrow external methods and tool references are permitted **ONLY** when necessary to understand scientific methodology and must **NOT** become candidate adoption recommendations.
+- Preserves the invariant:
+  $$\text{R2\_CAPABILITY\_DISCOVERY} \neq \text{SUPPLEMENTAL\_LEARNING\_EVIDENCE} \neq \text{STAGE5\_BENCHMARK} \neq \text{DEPENDENCY\_ADOPTION}$$
+
+### 9.6 Internet Research & Evidence Standards
+- External research for this package is authorized using existing Stage 3 primary-source standards.
+- Permitted source classes:
+  - Peer-reviewed journal and conference literature (e.g. ERIC, Google Scholar, ACL Anthology, APA, IEEE);
+  - Systematic reviews and meta-analyses;
+  - Primary scholarly papers;
+  - Official educational assessment and framework standards (e.g. CEFR, IELTS, ACTFL);
+  - Primary research reference implementations strictly where needed to inspect methodology.
+- Epistemic classification labels are mandatory: `[VERIFIED]`, `[INFERENCE]`, `[UNKNOWN]`.
+- GitHub stars, popularity metrics, vendor marketing claims, and secondary summaries MUST NOT be converted into scientific evidence.
+
+### 9.7 Parallel R3 Execution & Future R4 Consumption Semantics
+1. **Parallel R3 Execution**:
+   - Lane R3 execution authority remains exactly as canonically defined.
+   - This supplement amendment does NOT expand or narrow Lane R3.
+   - Lane R3 may proceed independently or in parallel subject to repository single-writer governance, its own transaction boundaries, and the constraint that unresolved pedagogical assumptions must not be frozen as permanent architecture.
+   - Lane R3 must NOT treat this future supplement as accepted evidence until the supplement independently passes acceptance.
+2. **Future R4 Consumption**:
+   - Future canonical Lane R4 is authorized to consume `docs/research/R1_LEARNING_PRODUCT_RESEARCH_SUPPLEMENT_001.md` **ONLY IF** that exact supplemental research output has first received:
+     1. Fresh independent research-quality audit;
+     2. Persisted/read-back formal `ACCEPT` verdict;
+     3. Valid canonical materialization and merge.
+   - Lane R4 may synthesize accepted supplemental evidence; Lane R4 may NOT treat an unaudited supplement candidate as evidence.
+
+### 9.8 Evidence Standards & Independent Audit Requirements
+- The future supplemental research transaction MUST:
+  - Ground all claims in primary scientific evidence;
+  - Strictly distinguish general scientific evidence from VocabMaster-specific inferences;
+  - State empirical applicability, boundary conditions, and limitations;
+  - Explicitly map conclusions back to canonical A–H requirements;
+  - Distinguish resolved questions from still-unknown questions;
+  - Preserve canonical R1 finding semantics;
+  - Avoid architecture, implementation, and dependency decisions.
+- **Independent Audit Mandate**: The research author MUST NOT self-audit or self-accept. A fresh independent research-quality audit by an unpolluted auditor agent is strictly required.
+
+### 9.9 Fail-Closed Stop Conditions
+Execution under this amendment halts immediately (`FAIL-CLOSED`) upon encountering any of the following triggers:
+
+1. `SUPPLEMENT_SCOPE_DRIFT`: Research expands beyond the 8 authorized semantic families (§9.3).
+2. `NEW_LANE_CREATION_ATTEMPT`: Attempting to designate this package as Lane R5, Lane R6, or a new research lane.
+3. `R2_DUPLICATIVE_BROAD_RESEARCH`: Repeating broad OSS candidate discovery rather than referencing canonical R2.
+4. `R3_SCOPE_ABSORPTION`: Absorbing pipeline, persistence, streaming, or runtime architecture research into this package.
+5. `R4_EVIDENCE_INVENTION`: Inventing empirical claims or synthesizing ungrounded conclusions.
+6. `STAGE4_SCOPE_ENCROACHMENT`: Attempting UX wireframing, UI component layout, or interaction design.
+7. `STAGE5_SCOPE_ENCROACHMENT`: Attempting concrete AI model benchmarking, prompt tuning, or provider scoring.
+8. `IMPLEMENTATION_ATTEMPT`: Modifying product source code (`src/**`) or test suites (`tests/**`).
+9. `DEPENDENCY_ADOPTION_ATTEMPT`: Adding or modifying npm packages in `package.json`.
+10. `PROVIDER_SELECTION_ATTEMPT`: Selecting final hosted cloud or API vendors.
+11. `UNAUTHORIZED_WRITE_ATTEMPT`: Writing to files outside the authorized output target.
+12. `EVIDENCE_STANDARD_VIOLATION`: Relying on marketing text, blogs, or star counts as evidence.
+13. `SELF_ACCEPTANCE_ATTEMPT`: Research author self-verifying or self-accepting output.
+14. `MISSING_INDEPENDENT_AUDIT`: Skipping fresh independent research-quality audit.
+15. `MISSING_MERGE_AUTHORITY`: Merging candidate without explicit, verified merge authorization.
+
 
