@@ -1,7 +1,7 @@
 # VocabMaster — Stage 3 Learning / Product Deep Research Strategy
 
 Status: **ACCEPTED / CANONICAL / HISTORICAL**  
-Authority: **STAGE 3 PRODUCT AND RESEARCH STRATEGY SPECIFICATION (RATIFIED UNDER ADR-053; CANONICALLY CLOSED UNDER ADR-054)**  
+Authority: **STAGE 3 PRODUCT AND RESEARCH STRATEGY SPECIFICATION (RATIFIED UNDER ADR-053; CLOSURE RECONCILED UNDER ADR-054 [PROPOSED / CONFIRMED UPON MERGE])**  
 Transaction ID: `STAGE3-RESEARCH-STRATEGY-001`  
 Date: **2026-08-17** (Reconciled: **2026-08-20**)  
 Canonical Predecessor: `664ab14bb1415fec0995e80e99369164df28575c`  
@@ -15,7 +15,7 @@ Authorization Manifest: [`docs/authorizations/STAGE3-RESEARCH-AUTH-001.md`](docs
 - **Stage 1 (Core Foundation)**: Independently `ACCEPTED` and `COMPLETE`.
 - **Stage 1.5 (Adversarial Product Jury)**: Independently `ACCEPTED` and `COMPLETE`.
 - **Stage 2 (IELTS Completeness)**: Independently `ACCEPTED` and `COMPLETE / CANONICALLY_CLOSED` under exit gate `IELTS_COMPLETENESS_V1` (18/18 dimensions verified across Listening, Reading, Writing, Speaking, and Full Mock Orchestration).
-- **Stage 3 (Learning / Product Deep Research)**: Complete and canonically closed. Research deliverables across Lanes R1, R1 Supplement, R2, R3, and R4 were independently audited, accepted, and integrated into canonical `main` (synthesizing Lane R4 integrated via PR #167 / commit `856b3a307b87fd99044692513c01da3e8f681b9f`). Strategy ratified under ADR-053; Stage 3 closure ratified under ADR-054.
+- **Stage 3 (Learning / Product Deep Research)**: Complete and canonically closed. Research deliverables across Lanes R1, R1 Supplement, R2, R3, and R4 were independently audited, accepted, and integrated into canonical `main` (synthesizing Lane R4 integrated via PR #167 / commit `856b3a307b87fd99044692513c01da3e8f681b9f`). Strategy ratified under ADR-053; Stage 3 closure reconciliation governed by ADR-054 (PROPOSED / CONFIRMED UPON MERGE).
 - **Stage 3 Research Execution Authority**: `HISTORICAL / CONSUMED / CLOSED` (All chartered research lanes completed; manifest `STAGE3-RESEARCH-AUTH-001` consumed and closed; zero active research or implementation authority).
 
 ### 1.2 Mission Alignment with Master Roadmap

@@ -230,7 +230,7 @@ TRANSACTION 9: LANE R4 CROSS-RESEARCH SYNTHESIS & RECONCILIATION (COMPLETE)
 └── Lane R4 cross-research reconciliation deliverable (PR #167 / commit 856b3a307b87fd99044692513c01da3e8f681b9f).
 
 TRANSACTION 10: STAGE 3 CANONICAL CLOSURE & STATUS RECONCILIATION (Current Transaction)
-└── Reconcile canonical closure status across repository documents (ADR-054).
+└── Reconcile canonical closure status across repository documents (governed by ADR-054 [PROPOSED / CONFIRMED UPON MERGE]).
 └── Manifest state becomes HISTORICAL / CONSUMED / CLOSED.
 ```
 

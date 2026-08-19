@@ -1398,7 +1398,7 @@ Transaction `STAGE3-CANONICAL-CLOSURE-STATUS-RECONCILIATION-REM-003` cleanly rec
 - **Subject**: Stage 3 Canonical Closure & Authority-Lifecycle Reconciliation
 - **Canonical Predecessor Base SHA**: `856b3a307b87fd99044692513c01da3e8f681b9f` (Merge PR #167 / Lane R4 Integration)
 - **Controlling Authority Hierarchy**: `docs/MASTER_ROADMAP.md` (§1, §3, §10, §11), `docs/DECISIONS.md` (ADR-046, ADR-051, ADR-053, ADR-054), `AGENTS.md`, and `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md`.
-- **Ratified ADR**: ADR-054 (*Canonical reconciliation of Stage 3 (Learning / Product Deep Research) completion and Stage 4 (UX / IA Remake) transition*).
+- **Governing Decision Record**: ADR-054 (*Canonical reconciliation of Stage 3 (Learning / Product Deep Research) completion and Stage 4 (UX / IA Remake) transition*; Status: `PROPOSED / CONFIRMED UPON MERGE`). Stage 3 closure reconciliation is governed by ADR-054 and becomes canonical only upon independent ACCEPT followed by authorized canonical merge.
 
 ### 2. Stage 3 Complete Research Lane Integration Ledger
 | Lane / Package | Transaction ID | Subject PR | Candidate Head | Independent Audit Verdict | Merge Commit | Push CI Run on Merge | Status |
