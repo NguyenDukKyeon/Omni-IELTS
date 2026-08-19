@@ -1,6 +1,6 @@
 # VocabMaster — Implementation Status
 
-Last updated: 2026-08-14
+Last updated: 2026-08-20
 
 Phase 0 accepted source commit: d869eb444ea917b6e9ba3d1b7349e323d38560d5
 
@@ -1389,6 +1389,53 @@ Transaction `STAGE3-RESEARCH-AUTH-ACTIVATION-001` reconciles canonical authority
   - **Single-Writer Discipline**: Exactly one authorized writer per transaction; subagents/auditors remain read-only.
   - **Independent Research Audit Separation**: Independent audit required for every research deliverable.
 
+## 26. Stage 3 Research Program Canonical Integration and Closure Reconciliation
 
+Transaction `STAGE3-CANONICAL-CLOSURE-STATUS-RECONCILIATION-REM-003` cleanly reconciles the top-level canonical Stage state and authority lifecycle following the verified completion, independent acceptance, and canonical integration of all Stage 3 research lanes (R1, R1 Supplement, R2, R3, R4), culminating in the integration of synthesizing Lane R4 (PR #167 / commit `856b3a307b87fd99044692513c01da3e8f681b9f`).
 
+### 1. Provenance & Authority Lineage
+- **Transaction ID**: `STAGE3-CANONICAL-CLOSURE-STATUS-RECONCILIATION-REM-003`
+- **Subject**: Stage 3 Canonical Closure & Authority-Lifecycle Reconciliation
+- **Canonical Predecessor Base SHA**: `856b3a307b87fd99044692513c01da3e8f681b9f` (Merge PR #167 / Lane R4 Integration)
+- **Controlling Authority Hierarchy**: `docs/MASTER_ROADMAP.md` (§1, §3, §10, §11), `docs/DECISIONS.md` (ADR-046, ADR-051, ADR-053, ADR-054), `AGENTS.md`, and `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md`.
+- **Governing Decision Record**: ADR-054 (*Canonical reconciliation of Stage 3 (Learning / Product Deep Research) completion and Stage 4 (UX / IA Remake) transition*; Status: `PROPOSED / CONFIRMED UPON MERGE`). Stage 3 closure reconciliation is governed by ADR-054 and becomes canonical only upon independent ACCEPT followed by authorized canonical merge.
 
+### 2. Stage 3 Complete Research Lane Integration Ledger
+| Lane / Package | Transaction ID | Subject PR | Candidate Head | Independent Audit Verdict | Merge Commit | Push CI Run on Merge | Status |
+|---|---|---|---|---|---|---|---|
+| **Strategy & Auth** | `STAGE3-RESEARCH-STRATEGY-AUTH-001` | `#150` | `066fc999361a105bb00464c6625920564b390d14` | Review `PRR_kwDOTmjPCs8AAAABJxwiQA` / `https://github.com/NguyenDukKyeon/VocabMaster/pull/150#issuecomment-5315482188` (`ACCEPT`) | `ebea8aa01ceb61f13bae1b09b14486397f0d4a4d` | `32025636999` (`success`) | `CANONICALLY_CLOSED` |
+| **Auth Activation** | `STAGE3-RESEARCH-AUTH-ACTIVATION-001` | `#151` | `0a820b3a090d45c7ea453d5e0882d4d8b0da4307` | Review `PRR_kwDOTmjPCs8AAAABJx6Q0A` (`ACCEPT`) | `06ff39360d41fb3e83c98352fe4a9d3093190b45` | `32027352548` (`success`) | `CANONICALLY_CLOSED` |
+| **Lane R1** | `STAGE3-R1-MATERIALIZATION-001` | `#152` | `f33a3917c0b00ae1b8452310385eee74eca1eeae` | Review `PRR_kwDOTmjPCs8AAAABJ2vOYA` (`ACCEPT`) | `507895a70caae8dec581bbeb34128af8142190a8` | `32090753505` (`success`) | `CANONICALLY_CLOSED` |
+| **Lane R2** | `STAGE3-R2-MATERIALIZATION-001` | `#154` | `dcbe90b223a8bff2de56946d1f4ea871d38e4ef5` | Review `PRR_kwDOTmjPCs8AAAABJ8umrg` / `https://github.com/NguyenDukKyeon/VocabMaster/pull/154#issuecomment-5330112774` (`ACCEPT`) | `17d7bbbfff78964006fdb879425848a6fd01aea3` | `32152739672` (`success`) | `CANONICALLY_CLOSED` |
+| **Input Req Auth** | `STAGE3-LEARNING-EXPERIENCE-RESEARCH-INPUT-AUTH-001` | `#155` | `ce3c8fc681765d4c147fcd419445ee271d571d8e` | Review `PRR_kwDOTmjPCs8AAAABKCLTSw` / `https://github.com/NguyenDukKyeon/VocabMaster/pull/155#issuecomment-5337408889` (`ACCEPT`) | `927d20346e9675505a534ae46aacddf53a6a3652` | `32214829274` (`success`) | `CANONICALLY_CLOSED` |
+| **Input Req Materialization** | `STAGE3-LEARNING-EXPERIENCE-INPUT-MATERIALIZATION-001` | `#156` | `017b52c7cd8c667c29ddcd2ea3b89928f31bb55e` | Review `PRR_kwDOTmjPCs8AAAABKCOxDg` / `https://github.com/NguyenDukKyeon/VocabMaster/pull/156#issuecomment-5337502291` (`ACCEPT`) | `2c451bb702fa04b839d4864f13758d0d17fd663e` | `32215744227` (`success`) | `CANONICALLY_CLOSED` |
+| **R1 Supplement Auth** | `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-AUTH-001` | `#157` | `ef3f4b1003075eb52c7e9cb605c4c170f7670846` | Review `PRR_kwDOTmjPCs8AAAABKCYi-w` / `https://github.com/NguyenDukKyeon/VocabMaster/pull/157#issuecomment-5337718828` (`ACCEPT`) | `292e2a50a67db3618b1662cea00dd0772cb5e796` | `32217758372` (`success`) | `CANONICALLY_CLOSED` |
+| **Lane R1 Supplement** | `STAGE3-R1-SUPPLEMENT-QUALITY-REM-001` | `#159` | `5ac5f33d5ea4db6edd6b394866e83e7a95c3bed8` | `https://github.com/NguyenDukKyeon/VocabMaster/pull/159#issuecomment-5339934606` (`ACCEPT`) | `79cb8ef9dfcbd4493c5191af5cd9845b85784a23` | `32244649767` (`success`) | `CANONICALLY_CLOSED` |
+| **Lane R3** | `STAGE3-R3-PIPELINE-ARCHITECTURE-RESEARCH-REM-004` | `#164` | `3229d3bcc7a29469fca7b3498db1ebe422cc3292` | `https://github.com/NguyenDukKyeon/VocabMaster/pull/164#issuecomment-5344690480` (`ACCEPT`) | `8faaa4afb3e71df9f4fbf3ce970ca54d3d46a508` | `32273922369` (`success`) | `CANONICALLY_CLOSED` |
+| **Lane R4** | `STAGE3-R4-CROSS-RESEARCH-RECONCILIATION-REM-002` | `#167` | `eebe68d39d51d68785c26000524cb9c29aaeceae` | `https://github.com/NguyenDukKyeon/VocabMaster/pull/167#issuecomment-5345592074` (`ACCEPT`) | `856b3a307b87fd99044692513c01da3e8f681b9f` | `32281232389` (`success`) | `COMPLETE / INDEPENDENTLY_ACCEPTED / CANONICALLY_INTEGRATED` |
+
+### 3. State & Authority Ledger
+| Dimension | Resolved Canonical State | Authority Status |
+|---|---|---|
+| **Stage 1 (Core Foundation)** | `COMPLETE` | Historical |
+| **Stage 1.5 (Adversarial Product Jury)** | `COMPLETE` | Historical |
+| **Stage 2 (IELTS Completeness)** | `COMPLETE / CANONICALLY_CLOSED` | Historical (`IELTS_COMPLETENESS_V1` verified 18/18) |
+| **Stage 3 (Learning / Product Deep Research)** | `COMPLETE / CANONICALLY_CLOSED` | Historical / Consumed / Closed (All lanes R1, R1S, R2, R3, R4 canonically integrated; strategy and manifest `STAGE3-RESEARCH-AUTH-001` closed) |
+| **Stage 4 (UX / IA Remake)** | `NEXT` | `NOT_AUTHORIZED` (Requires separate bounded strategy and authorization manifest) |
+| **Stage 5 (AI / Technology Deep Research & Benchmark)** | `FUTURE` | `NOT_AUTHORIZED` |
+| **Stage 6 (Final Product Remake / Implementation)** | `FUTURE` | `NOT_AUTHORIZED` |
+| **Stages 7–8** | `FUTURE` | `NOT_AUTHORIZED` |
+
+### 4. Stage 3 Closure Verification Summary & Handoff Invariants
+- **Research Program Completion**: All 4 chartered research lanes and supplemental requirements are complete, verified by independent audits, and integrated into `main`.
+- **Authorization Manifest Lifecycle**: Manifest `STAGE3-RESEARCH-AUTH-001` and strategy `STAGE3_RESEARCH_STRATEGY.md` are marked `HISTORICAL / CONSUMED / CLOSED`.
+- **Document Status Note**: Research deliverables (`R1`, `R1 Supplement`, `R2`, `R3`, `R4`) remain immutable. Embedded candidate headers in these files are historical transaction metadata superseded by persisted independent ACCEPT verdicts and canonical merge commits.
+- **Core Governance Invariants Preserved**:
+  - $\text{RESEARCH} \neq \text{IMPLEMENTATION}$: Stage 3 produced empirical research and architectural options; zero product source code or npm dependencies were modified.
+  - $\text{ACCEPTANCE} \neq \text{MERGE AUTHORITY}$: Every integration followed independent audit separation and explicit merge authorization.
+  - $\text{ROADMAP PLACEMENT} \neq \text{EXECUTION AUTHORITY}$: Advancing Stage 4 to `NEXT` does not grant execution or design authority.
+- **No False Closure / Preserved Downstream Boundaries**:
+  - **Owner Decision Ledger**: Tradeoffs `R4-OD001` through `R4-OD007` remain open Owner policy decisions (not decided by Stage 3).
+  - **Stage 5 Benchmark Packages**: Packages `B-S5-001` through `B-S5-009` remain structured measurement protocols for Stage 5 benchmarking (not executed in Stage 3).
+  - **Stage 4 UX / IA Handoff**: Interaction requirements, pedagogical constraints, and data flows are passed to Stage 4 as requirements only (zero wireframes or UI designs produced).
+  - **Future Validation Unknowns**: Real-user efficacy, retention horizons, and long-term learning gains remain empirical unknowns for Stage 7.

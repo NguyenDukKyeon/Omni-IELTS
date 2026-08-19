@@ -978,5 +978,28 @@ Consequences: Stage 3 is formally decomposed into an independently auditable, bo
 
 Revisit when: Lane R4 cross-research reconciliation is completed, or the Owner ratifies Stage 4/5 roadmap milestones.
 
+## ADR-054 — Canonical reconciliation of Stage 3 (Learning / Product Deep Research) completion and Stage 4 (UX / IA Remake) transition
 
+Status: PROPOSED / CONFIRMED UPON MERGE
 
+Context: Stage 3 (Learning / Product Deep Research) has completed all chartered research lanes (R1, R2, R3, R4) along with the R1 supplemental evidence package and learning experience research requirements under authorization manifest `STAGE3-RESEARCH-AUTH-001` (ADR-053). The synthesizing Lane R4 deliverable (`docs/research/R4_CROSS_RESEARCH_RECONCILIATION.md`) was independently audited and accepted (`https://github.com/NguyenDukKyeon/VocabMaster/pull/167#issuecomment-5345592074`), merged into canonical `main` via PR #167 at commit `856b3a307b87fd99044692513c01da3e8f681b9f`, and verified green on post-merge CI run `32281232389`. Under Master Roadmap change-control rules (`docs/MASTER_ROADMAP.md` §11) and `AGENTS.md`, reconciling top-level Stage sequence and lifecycle state derives from Master Roadmap ownership of Stage sequencing, completed Stage 3 ground truth evidence, and Owner transaction STAGE3-CANONICAL-CLOSURE-STATUS-RECONCILIATION-REM-003.
+
+Decision:
+- Reconcile `docs/MASTER_ROADMAP.md` Stage 3 status to `COMPLETE / CANONICALLY_CLOSED` with historical research execution authority.
+- Reconcile `docs/MASTER_ROADMAP.md` Stage 4 status to `NEXT / NOT AUTHORIZED`.
+- Declare Stage 4 execution, UX design, information architecture, and implementation authority as `NOT GRANTED`. Stage 4 is next in product sequencing, but remains strictly non-authorized until separate bounded UX/IA strategy and authorization manifests are proposed, independently audited, and ratified by the Owner.
+- Mark Stage 3 research strategy (`docs/STAGE3_RESEARCH_STRATEGY.md`) and authorization manifest `STAGE3-RESEARCH-AUTH-001` (`docs/authorizations/STAGE3-RESEARCH-AUTH-001.md`) as `HISTORICAL / CONSUMED / CLOSED`.
+- Preserve all Stage 3 research deliverables (`R1`, `R1 Supplement`, `R2`, `R3`, `R4`, `STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md`) as canonical and immutable reference baselines. Note that historical candidate/remediation headers embedded within research artifacts are superseded by their respective persisted independent ACCEPT verdicts and merge commits.
+- Preserve explicit non-authority and downstream handoff boundaries:
+  - $\text{RESEARCH} \neq \text{IMPLEMENTATION}$
+  - $\text{ACCEPTANCE} \neq \text{MERGE AUTHORITY}$
+  - $\text{ROADMAP PLACEMENT} \neq \text{EXECUTION AUTHORITY}$
+  - The R4 Owner Decision Ledger (`R4-OD001` through `R4-OD007`) remains an open set of unmade Owner policy decisions.
+  - Stage 5 benchmark packages (`B-S5-001` through `B-S5-009`) and measurement protocols remain candidate inputs for Stage 5, not executed benchmarks.
+  - Stage 4 UX/IA requirements remain inputs for Stage 4 information architecture, not finished designs or UI layouts.
+  - Future production and real-user validation unknowns remain preserved.
+- Reconcile `docs/IMPLEMENTATION_STATUS.md` with transaction `STAGE3-CANONICAL-CLOSURE-STATUS-RECONCILIATION-REM-003` in Section 26.
+
+Consequences: `docs/MASTER_ROADMAP.md`, `docs/DECISIONS.md`, `docs/STAGE3_RESEARCH_STRATEGY.md`, `docs/authorizations/STAGE3-RESEARCH-AUTH-001.md`, and `docs/IMPLEMENTATION_STATUS.md` are synchronized and reflect verified ground truth evidence. The repository records verified completion and closure of Stage 3 while advancing Stage 4 to NEXT without granting premature execution or implementation authority.
+
+Revisit when: The Owner ratifies a Stage 4 UX / IA strategy and authorization manifest.
