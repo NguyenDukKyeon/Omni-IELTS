@@ -2,10 +2,10 @@
 
 Manifest Identity: **STAGE3-RESEARCH-AUTH-001**  
 Stage ID: **STAGE 3 — Learning / Product Deep Research**  
-Transaction ID: **STAGE3-RESEARCH-STRATEGY-AUTH-001**  
+Transaction ID: **STAGE3-RESEARCH-STRATEGY-AUTH-001** (Closure Reconciled under `STAGE3-CANONICAL-CLOSURE-STATUS-RECONCILIATION-REM-003`)  
 Protocol: **BOUNDED_EXECUTION_CAPSULE_PROTOCOL_V1** (ADR-046) under **EXECUTION_PROMPT_PROTOCOL_V2** (ADR-051)  
-Date: **2026-08-17**  
-Status: **ACCEPTED / CANONICAL / EFFECTIVE**  
+Date: **2026-08-17** (Reconciled & Closed: **2026-08-20**)  
+Status: **HISTORICAL / CONSUMED / CLOSED**  
 Canonical Predecessor (Base): **`664ab14bb1415fec0995e80e99369164df28575c`**  
 Candidate Branch: **`strategy/stage3-research-strategy-auth-001`**  
 Authorization Candidate Head: **`066fc999361a105bb00464c6625920564b390d14`**  
@@ -13,14 +13,26 @@ Independent Authorization Review: **`https://github.com/NguyenDukKyeon/VocabMast
 Authorization Merge Commit: **`ebea8aa01ceb61f13bae1b09b14486397f0d4a4d`**  
 Push CI Run on Merge: **`32025636999` (`success`)**  
 Effective Research Predecessor: **`ebea8aa01ceb61f13bae1b09b14486397f0d4a4d`**  
-Merge Authority for Authorization Candidate: **EXPLICITLY_GRANTED** (Executed via PR #150 merge)  
+Historical Merge Authority for Authorization Candidate: **EXPLICITLY_GRANTED** (Executed via PR #150 merge)  
+
+---
+
+> [!NOTE]
+> **CANONICAL CLOSURE & HISTORICAL AUTHORITY STATUS**:  
+> Following the verified independent acceptance and canonical integration of all Stage 3 research deliverables (Lane R1, Lane R1 Supplement, Lane R2, Lane R3, and synthesizing Lane R4 at commit `856b3a307b87fd99044692513c01da3e8f681b9f`), this authorization manifest is **HISTORICAL / CONSUMED / CLOSED**.  
+>  
+> **THIS CLOSURE DOES NOT RETROACTIVELY INVALIDATE HISTORICAL STAGE 3 EXECUTION.**  
+>  
+> All historical research executions performed under this manifest remain canonically valid and accepted. This closure status strictly prevents future execution from treating this consumed manifest as standing authority.  
+>  
+> **ALL AUTHORIZATION LANGUAGE BELOW RECORDS HISTORICAL STAGE 3 TERMS. NONE OF IT CONSTITUTES CURRENT OR STANDING EXECUTION AUTHORITY.**
 
 ---
 
 ## 1. Executive Summary & Authority Boundaries
 
 ### 1.1 Authority Hierarchy
-This authorization manifest is strictly governed by the canonical 6-tier repository authority hierarchy established in `AGENTS.md` §3 and `docs/MASTER_ROADMAP.md`:
+During active execution, this authorization manifest was strictly governed by the canonical 6-tier repository authority hierarchy established in `AGENTS.md` §3 and `docs/MASTER_ROADMAP.md`:
 
 1. `docs/MASTER_ROADMAP.md` — Master Product Roadmap (Stage 1–8).
 2. `docs/ROADMAP.md` — Technical Package Taxonomy & Phase Dependencies (Phase 0–7).
@@ -29,25 +41,25 @@ This authorization manifest is strictly governed by the canonical 6-tier reposit
 5. `docs/DECISIONS.md` — Architecture Decision Records (ADRs).
 6. `AGENTS.md` — Repository Router & Global Invariants.
 
-*Task-Specific Authorization*: This document (`STAGE3-RESEARCH-AUTH-001`) defines the bounded research authorization parameters for Stage 3 under `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md` and ADR-046. It is strictly subordinate to the canonical 6-tier hierarchy above.
+*Task-Specific Authorization*: This document (`STAGE3-RESEARCH-AUTH-001`) defined the bounded research authorization parameters for Stage 3 under `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md` and ADR-046. It was strictly subordinate to the canonical 6-tier hierarchy above.
 
 ### 1.2 Non-Authority & Non-Absorption Invariants
 > [!IMPORTANT]
 > **Strict Non-Authority & Stage Scope Invariants**:
-> - **RESEARCH AUTHORIZATION ONLY**: This manifest authorizes **ONLY** read-only investigation, capability discovery, algorithm inventory, architectural analysis, and report synthesis across Stage 3 research lanes (R1–R4).
-> - **ZERO IMPLEMENTATION AUTHORITY**: This manifest does **NOT** grant authority to write product source code (`src/**`), add npm/system dependencies (`package.json`), modify test suites (`tests/**`), or alter build scripts (`scripts/**`).
-> - **ZERO PROVIDER / DEPENDENCY ADOPTION**: Surveyed open-source libraries, client algorithms, and hosted APIs remain candidates only. No provider or dependency is adopted.
+> - **HISTORICAL RESEARCH AUTHORIZATION ONLY**: During active Stage 3 execution, this manifest authorized **ONLY** read-only investigation, capability discovery, algorithm inventory, architectural analysis, and report synthesis across Stage 3 research lanes (R1–R4).
+> - **ZERO IMPLEMENTATION AUTHORITY**: This manifest did **NOT** grant authority to write product source code (`src/**`), add npm/system dependencies (`package.json`), modify test suites (`tests/**`), or alter build scripts (`scripts/**`).
+> - **ZERO PROVIDER / DEPENDENCY ADOPTION**: Surveyed open-source libraries, client algorithms, and hosted APIs remained candidates only. No provider or dependency was adopted.
 > - **NON-ABSORPTION OF STAGE 4**: Final UI design, information architecture, wireframing, and component layout remake belong exclusively to Stage 4 (UX / IA Remake).
-> - **NON-ABSORPTION OF STAGE 5**: Concrete AI/model benchmarking, empirical model scoring, and final provider/technology selection belong exclusively to Stage 5 (AI / Technology Deep Research & Benchmark). Stage 3 may inventory candidate capabilities and architectural constraints, but MUST NOT perform or claim final provider/model selection.
+> - **NON-ABSORPTION OF STAGE 5**: Concrete AI/model benchmarking, empirical model scoring, and final provider/technology selection belong exclusively to Stage 5 (AI / Technology Deep Research & Benchmark). Stage 3 inventoried candidate capabilities and architectural constraints, but did not perform or claim final provider/model selection.
 
 ---
 
-## 2. Authorized Research Program & Scope
+## 2. Historical Authorized Research Program & Scope
 
-This manifest authorizes execution across four bounded research lanes defined in `docs/STAGE3_RESEARCH_STRATEGY.md`:
+During Stage 3 execution, this manifest authorized execution across four bounded research lanes defined in `docs/STAGE3_RESEARCH_STRATEGY.md`:
 
 ```
-STAGE 3 AUTHORIZED RESEARCH LANES
+STAGE 3 HISTORICAL AUTHORIZED RESEARCH LANES
 ├── Lane R1: Learning & Product Deep Research (Pedagogy, Learner Modeling & Systems)
 ├── Lane R2: OSS & Hosted Capability Research (Algorithmic Inventory & Capability Dispositions)
 ├── Lane R3: Transcript / Learning Pipeline & Architecture Research (Substrate & Topologies)
@@ -62,7 +74,7 @@ STAGE 3 AUTHORIZED RESEARCH LANES
   - Diagnostic & adaptive learning loops (formative assessment, dynamic item selection, targeted remediation, weakness identification).
   - Motivation, habit, and product engagement loops (micro-learning sessions, BJ Fogg model, progress visualization).
   - Product capability gap analysis against current VocabMaster learning loops.
-- **Authorized Output Target**: `docs/research/R1_LEARNING_PRODUCT_RESEARCH.md`.
+- **Historical Authorized Output Target**: `docs/research/R1_LEARNING_PRODUCT_RESEARCH.md`.
 
 ### 2.2 Lane R2 — OSS & Hosted Capability Research
 - **Scope**:
@@ -89,7 +101,7 @@ STAGE 3 AUTHORIZED RESEARCH LANES
     18. Adaptive-learning algorithms.
   - Evaluation against Owner research constraints (`docs/research/STAGE3_RESEARCH_CONSTRAINTS.md`).
   - Formal capability disposition for every candidate: `BUILD`, `ADOPT_OSS`, `ADOPT_HOSTED_API`, `ADOPT_HOSTED_OSS`, `HYBRID`, `REJECT`, or `UNKNOWN / NEEDS_SPIKE`.
-- **Authorized Output Target**: `docs/research/R2_OSS_HOSTED_CAPABILITY_RESEARCH.md`.
+- **Historical Authorized Output Target**: `docs/research/R2_OSS_HOSTED_CAPABILITY_RESEARCH.md`.
 
 ### 2.3 Lane R3 — Transcript / Learning Pipeline & Architecture Research
 - **Scope**:
@@ -100,7 +112,7 @@ STAGE 3 AUTHORIZED RESEARCH LANES
   - Persistence and storage: IndexedDB capacity, structured cloning bounds, additive migrations, 100% backup coverage.
   - Runtime execution boundaries: Browser Main Thread vs Web Workers vs Serverless Edge Proxy vs Local Companion.
   - Proposed architectural topology alternatives for subsequent Stage 6 implementation.
-- **Authorized Output Target**: `docs/research/R3_PIPELINE_ARCHITECTURE_RESEARCH.md`.
+- **Historical Authorized Output Target**: `docs/research/R3_PIPELINE_ARCHITECTURE_RESEARCH.md`.
 
 ### 2.4 Lane R4 — Cross-Research Reconciliation & Synthesis
 - **Scope**:
@@ -110,17 +122,17 @@ STAGE 3 AUTHORIZED RESEARCH LANES
   - Production of strategic product and architecture recommendations.
   - Structured Owner Decision Ledger documenting key architectural decisions requiring Owner ratification.
   - Handoff package preparation for Stage 4 (UX / IA Remake) and Stage 5 (AI / Technology Benchmark).
-- **Authorized Output Target**: `docs/research/R4_CROSS_RESEARCH_RECONCILIATION.md`.
+- **Historical Authorized Output Target**: `docs/research/R4_CROSS_RESEARCH_RECONCILIATION.md`.
 
 ---
 
-## 3. Read Scope & Write Allowlist
+## 3. Historical Read Scope & Write Allowlist
 
-### 3.1 Authorized Repository Read Scope
-- **Scope**: Full repository read access is granted to inspect existing code, schemas, tests, documentation, and historical ADRs across `src/**`, `tests/**`, `scripts/**`, `docs/**`, and configuration files.
+### 3.1 Historical Repository Read Scope
+- **Scope**: During authorized Stage 3 execution, full repository read access was granted to inspect existing code, schemas, tests, documentation, and historical ADRs across `src/**`, `tests/**`, `scripts/**`, `docs/**`, and configuration files.
 
-### 3.2 Closed Documentation Write Allowlist
-Writes are strictly confined to the following explicit file allowlist. Zero edits outside this list are permitted:
+### 3.2 Historical Closed Documentation Write Allowlist
+Authorized Stage 3 writes were strictly confined to the following explicit file allowlist. Zero edits outside this list were permitted:
 
 ```
 docs/STAGE3_RESEARCH_STRATEGY.md
@@ -136,19 +148,19 @@ docs/DECISIONS.md
 ```
 
 > [!CAUTION]
-> **Strict Materialization Constraint on `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md`**:
-> For this research-input target, current authority permits **ONLY** initial materialization of the exact independently accepted artifact whose SHA-256 is:
+> **Historical Materialization Constraint on `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md`**:
+> For this research-input target, historical Stage 3 authority permitted **ONLY** initial materialization of the exact independently accepted artifact whose SHA-256 is:
 > `09faca9252c202811abf9837f77b32b3fe5431fa0ae7cb030d359f5808b712e0` (85,476 bytes).
-> No semantic modification, rewriting, or generic standing write authority is granted by this amendment. Any subsequent modification to this research-input document requires separate explicit authority.
+> No semantic modification, rewriting, or generic standing write authority was granted by that amendment. Any subsequent modification to this research-input document requires separate explicit authority.
 
 > [!CAUTION]
-> **Strict Supplemental Output Constraint on `docs/research/R1_LEARNING_PRODUCT_RESEARCH_SUPPLEMENT_001.md`**:
-> This path is designated strictly for supplemental accepted research evidence under `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-001`.
-> It does **NOT** replace `docs/research/R1_LEARNING_PRODUCT_RESEARCH.md`, which remains canonically immutable.
-> Creation and materialization of this file is authorized **ONLY AFTER** amendment `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-AUTH-001` is independently accepted and canonically merged.
+> **Historical Supplemental Output Constraint on `docs/research/R1_LEARNING_PRODUCT_RESEARCH_SUPPLEMENT_001.md`**:
+> This path was designated strictly for supplemental accepted research evidence under `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-001`.
+> It did **NOT** replace `docs/research/R1_LEARNING_PRODUCT_RESEARCH.md`, which remains canonically immutable.
+> Creation and materialization of this file was authorized **ONLY AFTER** amendment `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-AUTH-001` was independently accepted and canonically merged.
 
-### 3.3 Authorized External Internet & Web Research Scope
-External web search and documentation retrieval are **EXPLICITLY GRANTED** for:
+### 3.3 Historical External Internet & Web Research Scope
+External web search and documentation retrieval were explicitly granted during Stage 3 execution for:
 - Official open-source repository inspection (GitHub, GitLab);
 - Package registries (npm, PyPI, Crates.io);
 - Official provider documentation, pricing pages, and terms-of-service;
@@ -160,14 +172,14 @@ External web search and documentation retrieval are **EXPLICITLY GRANTED** for:
 ## 4. Research Evidence Standards & Evaluation Rubrics
 
 ### 4.1 Epistemic Classification Standard
-Every finding, conclusion, and factual claim MUST be classified with:
+During research execution, every finding, conclusion, and factual claim was required to be classified with:
 - `[VERIFIED]`: Directly proven by primary documentation, source code inspection, or empirical tests.
 - `[INFERENCE]`: Logical deduction or architectural extrapolation (premises must be stated).
 - `[UNKNOWN]`: Unresolved question or empirical uncertainty requiring future spike.
 
 ### 4.2 Primary Source Mandate
-- Promotional marketing, secondary blog summaries, and GitHub star counts are **NOT** accepted evidence.
-- Primary URLs, dates of access, and source citations must accompany all factual claims.
+- Promotional marketing, secondary blog summaries, and GitHub star counts were **NOT** accepted evidence.
+- Primary URLs, dates of access, and source citations accompanied all factual claims.
 
 ### 4.3 OSS Candidate 11-Dimension Evaluation Rubric
 1. `License Compatibility`
@@ -183,58 +195,62 @@ Every finding, conclusion, and factual claim MUST be classified with:
 11. `Empirical Quality Evidence`
 
 ### 4.4 Hosted Candidate 14-Dimension Evaluation Rubric
-Must evaluate against all 14 dimensions in `docs/research/STAGE3_RESEARCH_CONSTRAINTS.md` §4 (`CARD_REQUIRED`, `BILLING_ACCOUNT_REQUIRED`, `PHONE_REQUIRED`, `FREE_QUOTA`, `RATE_LIMIT`, `FREE_TIER_EXPIRY`, `DATA_RETENTION_POLICY`, `SECRET_HANDLING_REQS`, `BROWSER_DIRECT_CALL`, `LATENCY`, `QUALITY_EVIDENCE`, `MAINTENANCE_STATUS`, `VENDOR_LOCK_IN`, `FALLBACK_OPTIONS`).
+Evaluated against all 14 dimensions in `docs/research/STAGE3_RESEARCH_CONSTRAINTS.md` §4 (`CARD_REQUIRED`, `BILLING_ACCOUNT_REQUIRED`, `PHONE_REQUIRED`, `FREE_QUOTA`, `RATE_LIMIT`, `FREE_TIER_EXPIRY`, `DATA_RETENTION_POLICY`, `SECRET_HANDLING_REQS`, `BROWSER_DIRECT_CALL`, `LATENCY`, `QUALITY_EVIDENCE`, `MAINTENANCE_STATUS`, `VENDOR_LOCK_IN`, `FALLBACK_OPTIONS`).
 
 ---
 
 ## 5. Execution Lifecycle & Governance Rules
 
 ### 5.1 Single-Writer Rule
-- Exactly **ONE** authorized agent/session may write or mutate repository files during any active transaction.
-- Subagents, peer researchers, and independent auditors remain strictly read-only with respect to repository file content and Git history.
+- During active transactions, exactly **ONE** authorized agent/session was permitted to write or mutate repository files.
+- Subagents, peer researchers, and independent auditors remained strictly read-only with respect to repository file content and Git history.
 
 ### 5.2 Independent Audit Separation
-- Researchers cannot independently audit or accept their own research outputs.
-- Every research transaction requires a separate independent audit by an unpolluted auditor agent.
+- Researchers could not independently audit or accept their own research outputs.
+- Every research transaction required a separate independent audit by an unpolluted auditor agent.
 
 ### 5.3 Program Execution Phasing
 ```
 TRANSACTION 1: AUTHORIZATION CANDIDATE (COMPLETE)
-└── Author STAGE3_RESEARCH_STRATEGY.md, STAGE3_RESEARCH_CONSTRAINTS.md, STAGE3-RESEARCH-AUTH-001.md, ADR-053.
-└── Open Draft PR #150, verified natural exact-head CI run 32024352788.
+└── Author STAGE3_RESEARCH_STRATEGY.md, STAGE3_RESEARCH_CONSTRAINTS.md, STAGE3-RESEARCH-AUTH-001.md, ADR-053 (PR #150 / commit ebea8aa01ceb61f13bae1b09b14486397f0d4a4d).
 
-TRANSACTION 2: INDEPENDENT AUTHORIZATION AUDIT & CANONICAL MERGE (COMPLETE)
-└── Independent audit of authorization candidate (Review #4951122496, Verdict: ACCEPT).
-└── Pre-authorized exact-head merge to canonical main (Merge commit ebea8aa01ceb61f13bae1b09b14486397f0d4a4d).
-└── Post-merge push CI run 32025636999 verified SUCCESS.
+TRANSACTION 2: CANONICAL ACTIVATION (COMPLETE)
+└── Reconcile canonical activation status across repository documents (PR #151 / commit 06ff39360d41fb3e83c98352fe4a9d3093190b45).
 
-TRANSACTION 3: CANONICAL STATUS RECONCILIATION & ACTIVATION (Current Transaction)
-└── Reconcile canonical status across docs/STAGE3_RESEARCH_STRATEGY.md, docs/authorizations/STAGE3-RESEARCH-AUTH-001.md, and docs/IMPLEMENTATION_STATUS.md.
-└── Manifest state becomes CANONICALLY EFFECTIVE.
+TRANSACTIONS 3–8: RESEARCH EXECUTION & SUPPLEMENTS (COMPLETE)
+└── Lane R1 materialization (PR #152 / commit 507895a70caae8dec581bbeb34128af8142190a8).
+└── Lane R2 materialization (PR #154 / commit 17d7bbbfff78964006fdb879425848a6fd01aea3).
+└── Input requirements authorization (PR #155 / commit 927d20346e9675505a534ae46aacddf53a6a3652).
+└── Input requirements materialization (PR #156 / commit 2c451bb702fa04b839d4864f13758d0d17fd663e).
+└── R1 supplement authorization (PR #157 / commit 292e2a50a67db3618b1662cea00dd0772cb5e796).
+└── R1 supplement quality remediation (PR #159 / commit 79cb8ef9dfcbd4493c5191af5cd9845b85784a23).
+└── Lane R3 pipeline & architecture research (PR #164 / commit 8faaa4afb3e71df9f4fbf3ce970ca54d3d46a508).
 
-FUTURE TRANSACTIONS: RESEARCH EXECUTION (R1, R2, R3) & R4 SYNTHESIS
-└── Separately executed research transactions or authorized parallel research sessions.
-└── Independent synthesis and R4 cross-reconciliation.
-└── Independent research audit and Owner decision handoff.
+TRANSACTION 9: LANE R4 CROSS-RESEARCH SYNTHESIS & RECONCILIATION (COMPLETE)
+└── Lane R4 cross-research reconciliation deliverable (PR #167 / commit 856b3a307b87fd99044692513c01da3e8f681b9f).
+
+TRANSACTION 10: STAGE 3 CANONICAL CLOSURE & STATUS RECONCILIATION (Current Transaction)
+└── Reconcile canonical closure status across repository documents (ADR-054).
+└── Manifest state becomes HISTORICAL / CONSUMED / CLOSED.
 ```
 
 ---
 
-## 6. Pre-Authorized Merge Authority for Authorization Candidate
+## 6. Pre-Authorized Merge Authority for Authorization Candidate (Historical)
 
 Under `docs/governance/EXECUTION_PROMPT_PROTOCOL_V2.md` §3.9 and ADR-051:
-- Merge authority for this authorization manifest transaction candidate is **EXPLICITLY GRANTED** to the Independent Authorization Auditor.
-- The Auditor is authorized to execute an exact-head fast-forward merge into `main` **ONLY AFTER**:
-  1. The candidate passes all repository checks and natural CI on candidate HEAD;
-  2. The candidate passes independent audit with zero findings;
-  3. A formal `ACCEPT` verdict is persisted and verified;
-  4. Candidate HEAD SHA is unchanged from the audited SHA.
+- Merge authority for this authorization manifest transaction candidate was **EXPLICITLY GRANTED** to the Independent Authorization Auditor.
+- The Auditor was authorized to execute an exact-head fast-forward merge into `main` **ONLY AFTER**:
+  1. The candidate passed all repository checks and natural CI on candidate HEAD;
+  2. The candidate passed independent audit with zero findings;
+  3. A formal `ACCEPT` verdict was persisted and verified;
+  4. Candidate HEAD SHA was unchanged from the audited SHA.
 
 ---
 
-## 7. Fail-Closed Stop Conditions
+## 7. Fail-Closed Stop Conditions (Historical Execution Rules)
 
-Execution halts immediately (`FAIL-CLOSED`) upon encountering any of the following triggers:
+During Stage 3 execution, execution was required to halt immediately (`FAIL-CLOSED`) upon encountering any of the following triggers:
 
 1. `CANONICAL_BASE_DRIFT`: Predecessor base SHA diverges from `664ab14bb1415fec0995e80e99369164df28575c`.
 2. `STAGE3_MISSION_CONFLICT`: Research scope deviates from Master Roadmap Stage 3 mission.
@@ -249,14 +265,14 @@ Execution halts immediately (`FAIL-CLOSED`) upon encountering any of the followi
 
 ---
 
-## 8. Authorization Amendment: STAGE3-LEARNING-EXPERIENCE-RESEARCH-INPUT-AUTH-001
+## 8. Historical Authorization Amendment: STAGE3-LEARNING-EXPERIENCE-RESEARCH-INPUT-AUTH-001
 
 ### 8.1 Amendment Status & Authority Capsule
 - **Amendment ID**: `STAGE3-LEARNING-EXPERIENCE-RESEARCH-INPUT-AUTH-001`
-- **Amendment Status**: `CANDIDATE / NOT_EFFECTIVE_UNTIL_INDEPENDENT_ACCEPT_AND_MERGE`
-- **Base Manifest Status**: `ACCEPTED / CANONICAL / EFFECTIVE` (Base manifest remains active and effective)
+- **Amendment Status**: `HISTORICAL / CONSUMED / CLOSED` (Merged in PR #155 at commit `927d20346e9675505a534ae46aacddf53a6a3652`; materialized in PR #156 at commit `2c451bb702fa04b839d4864f13758d0d17fd663e`)
+- **Base Manifest Status**: `HISTORICAL / CONSUMED / CLOSED`
 - **Base Predecessor (Base SHA)**: `17d7bbbfff78964006fdb879425848a6fd01aea3`
-- **Authorized Future Target**: `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md`
+- **Authorized Output Target**: `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md`
 - **Authorized Source Artifact**: `STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS_REM-001.md`
 - **Authorized Source SHA-256**: `09faca9252c202811abf9837f77b32b3fe5431fa0ae7cb030d359f5808b712e0`
 - **Authorized Source Bytes**: `85476`
@@ -275,31 +291,31 @@ Execution halts immediately (`FAIL-CLOSED`) upon encountering any of the followi
 1. **Research Input Only**:
    - The target document `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md` is strictly `RESEARCH_INPUT_ONLY`.
    - It does **NOT** constitute research evidence, architecture specification, or implementation specification.
-   - It is **NOT** a replacement for Lane R1 or Lane R2, and does **NOT** expand the scope of Lane R3 or Lane R4.
+   - It is **NOT** a replacement for Lane R1 or Lane R2, and did **NOT** expand the scope of Lane R3 or Lane R4.
 2. **No Silent Lane Creation**:
-   - This amendment does **NOT** create Lane R5, Lane R6, or any new canonical research lane.
-   - Packaging and scheduling of future research activities across requirement dimensions A–H remain subject to subsequent governance reconciliation.
+   - This amendment did **NOT** create Lane R5, Lane R6, or any new canonical research lane.
+   - Packaging and scheduling of research activities across requirement dimensions A–H were governed by separate transactions.
 3. **Requirement Coverage Taxonomy**:
    - Dimensions A–H represent requirement and coverage taxonomy only.
    - Preserves the invariant: $\text{IDENTIFIED\_RESEARCH\_NEED} \neq \text{AUTHORITY\_TO\_EXECUTE\_RESEARCH}$.
-   - Requirements marked `ADDITIONAL_STAGE3_RESEARCH_NEEDED`, `AUTHORITY_REVIEW_NEEDED`, or `OWNER_DECISION_REQUIRED` remain unresolved governance/research inputs. This amendment does **NOT** authorize their execution.
+   - Requirements marked `ADDITIONAL_STAGE3_RESEARCH_NEEDED`, `AUTHORITY_REVIEW_NEEDED`, or `OWNER_DECISION_REQUIRED` remained unresolved governance/research inputs until separately authorized or remained inputs for subsequent stages.
 4. **Bounded Materialization Scope**:
-   - Authorizes solely the initial, exact byte-for-byte materialization of the accepted artifact `STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS_REM-001.md` (SHA-256: `09faca9252c202811abf9837f77b32b3fe5431fa0ae7cb030d359f5808b712e0`, 85,476 bytes) into `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md` once this amendment is independently accepted and merged.
-   - No standing authority is created to modify or rewrite the materialized file.
+   - Authorized solely the initial, exact byte-for-byte materialization of the accepted artifact `STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS_REM-001.md` (SHA-256: `09faca9252c202811abf9837f77b32b3fe5431fa0ae7cb030d359f5808b712e0`, 85,476 bytes) into `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md` (executed via PR #156).
+   - No standing authority was created to modify or rewrite the materialized file.
 
 ---
 
-## 9. Authorization Amendment: STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-AUTH-001
+## 9. Historical Authorization Amendment: STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-AUTH-001
 
 ### 9.1 Amendment Status & Authority Capsule
 - **Amendment ID**: `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-AUTH-001`
-- **Amendment Status**: `CANDIDATE_NOT_EFFECTIVE_UNTIL_INDEPENDENT_ACCEPT_AND_MERGE`
+- **Amendment Status**: `HISTORICAL / CONSUMED / CLOSED` (Merged in PR #157 at commit `292e2a50a67db3618b1662cea00dd0772cb5e796`; completed in PR #159 at commit `79cb8ef9dfcbd4493c5191af5cd9845b85784a23`)
 - **Authorized Package**: `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-001`
 - **Authorized Output**: `docs/research/R1_LEARNING_PRODUCT_RESEARCH_SUPPLEMENT_001.md`
 - **Package Type**: `R1_LEARNING_PRODUCT_SUPPLEMENTAL_EVIDENCE`
 - **New Research Lane**: `NO`
-- **Supplemental Research Execution Authority**: `GRANTED_ONLY_AFTER_AMENDMENT_EFFECTIVE`
-- **External Research Authority**: `GRANTED_WITH_EXISTING_STAGE3_EVIDENCE_RULES`
+- **Supplemental Research Execution Authority**: `HISTORICAL / CONSUMED / CLOSED`
+- **External Research Authority**: `HISTORICAL / CONSUMED / CLOSED`
 - **R3 Scope Expansion**: `NONE`
 - **R4 Scope Expansion**: `NONE`
 - **Stage 4 Authority**: `NONE`
@@ -312,28 +328,28 @@ Execution halts immediately (`FAIL-CLOSED`) upon encountering any of the followi
 
 ### 9.2 Governance Basis, Supplement Identity & Non-Lane Invariants
 1. **Governance Basis**:
-   - In accordance with canonical `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md` §25 (`AUTHORITY_REVIEW_NEEDED`), identifying a research need does NOT authorize its execution:
+   - In accordance with canonical `docs/research/STAGE3_LEARNING_EXPERIENCE_RESEARCH_REQUIREMENTS.md` §25 (`AUTHORITY_REVIEW_NEEDED`), identifying a research need did NOT authorize its execution:
      $$\text{IDENTIFYING A RESEARCH NEED} \neq \text{AUTHORIZING ITS EXECUTION}$$
-   - Any proposed execution of `ADDITIONAL_STAGE3_RESEARCH_NEEDED` requires an explicit addendum or fresh authorization manifest.
-   - The broad subject matter belongs to the existing Stage 3 / Lane R1 learning-product research mission; existing R3 scope is architecture/pipeline research; existing R4 scope is cross-reconciliation of evidence.
-   - New execution authority cannot be inferred from broad R1 subject scope alone.
+   - Execution of `ADDITIONAL_STAGE3_RESEARCH_NEEDED` required an explicit addendum or fresh authorization manifest.
+   - The broad subject matter belonged to the Stage 3 / Lane R1 learning-product research mission; R3 scope was architecture/pipeline research; R4 scope was cross-reconciliation of evidence.
+   - Execution authority could not be inferred from broad R1 subject scope alone.
 2. **Supplement Identity & Single-Lane Invariant**:
    - **PACKAGE_ID**: `STAGE3-R1-LEARNING-PRODUCT-SUPPLEMENT-001`
    - **SEMANTIC_IDENTITY**: `R1 / LEARNING-PRODUCT SUPPLEMENTAL EVIDENCE`
    - **LANE_STATUS**: `SUPPLEMENT_TO_EXISTING_R1`
    - **NEW_LANE**: `NO`
    - **EXPLICIT INVARIANT**:
-     - **THIS IS NOT R5.**
-     - **THIS IS NOT R6.**
-     - **THIS DOES NOT REOPEN OR REWRITE CANONICAL R1.**
+     - **THIS WAS NOT R5.**
+     - **THIS WAS NOT R6.**
+     - **THIS DID NOT REOPEN OR REWRITE CANONICAL R1.**
 3. **Supplemental Output Status**:
    - `docs/research/R1_LEARNING_PRODUCT_RESEARCH_SUPPLEMENT_001.md` is supplemental accepted research evidence.
-   - It does **NOT** replace or invalidate `docs/research/R1_LEARNING_PRODUCT_RESEARCH.md`.
-   - Canonical R1 remains immutable under this transaction and downstream transactions.
-   - Creation and materialization of the supplemental output file is authorized **ONLY AFTER** this authorization amendment candidate achieves independent audit acceptance, valid exact-head merge authority, and canonical merge.
+   - It did **NOT** replace or invalidate `docs/research/R1_LEARNING_PRODUCT_RESEARCH.md`.
+   - Canonical R1 remains immutable.
+   - Creation and materialization of the supplemental output file was authorized subject to independent audit acceptance, valid exact-head merge authority, and canonical merge (executed via PR #159).
 
-### 9.3 Authorized Supplemental Research Subject Scope
-The authorized supplemental research package is strictly limited to scientific and pedagogical evidence and methodology required by canonical A–H requirements that remain unresolved after canonical R1 and R2. It spans eight semantic research families:
+### 9.3 Historical Authorized Supplemental Research Subject Scope
+The historically authorized supplemental research package was strictly limited to scientific and pedagogical evidence and methodology required by canonical A–H requirements that remained unresolved after canonical R1 and R2. It spanned eight semantic research families:
 
 1. **A. Instruction + Remediation Effectiveness**:
    - Conditions under which explicit instruction, worked examples, guided practice, scaffolding/fading, and related intervention forms are effective.
@@ -347,7 +363,7 @@ The authorized supplemental research package is strictly limited to scientific a
    - Near vs far/novel-context transfer measurement.
    - Valid methodology-level relationship between micro/sub-skill gains and broader language / IELTS proficiency.
    - *Canonical Anchors*: `RQ-01`, `RQ-02`, `RQ-03`, `REQ-EXP-007`, Cluster G1, Cluster G2, Cluster G3, Cluster G4.
-   - *Non-Claim Invariant*: Authorizes general scientific methodology research only. Does **NOT** authorize claiming that VocabMaster itself has already caused learning gains.
+   - *Non-Claim Invariant*: Authorized general scientific methodology research only. Did **NOT** authorize claiming that VocabMaster itself had already caused learning gains.
 
 3. **C. Diagnostic Validity + Learner-Model Semantics**:
    - Diagnostic false-positive, false-mastery, and misdiagnosis prevention principles.
@@ -355,7 +371,7 @@ The authorized supplemental research package is strictly limited to scientific a
    - Temporary noise vs genuine skill regression methodology.
    - Conceptual interoperability conditions among distinct memory ($R$), mastery ($P(L)$), item difficulty ($b$), ability ($\theta$), and diagnostic-selection model families.
    - *Canonical Anchors*: `RQ-08`, `RQ-13`, `REQ-EXP-002`, Cluster G9.
-   - *Distinction Invariant*: Preserves $\text{FSRS} \neq \text{BKT} \neq \text{IRT} \neq \text{CAT}$. Conceptual interoperability research does not constitute mathematical identity or production architecture selection.
+   - *Distinction Invariant*: Preserved $\text{FSRS} \neq \text{BKT} \neq \text{IRT} \neq \text{CAT}$. Conceptual interoperability research did not constitute mathematical identity or production architecture selection.
 
 4. **D. Curriculum / Placement / Session Evidence**:
    - Diagnostic placement and diagnostic calibration methodology.
@@ -363,7 +379,7 @@ The authorized supplemental research package is strictly limited to scientific a
    - Interleaving vs blocking effects and session composition.
    - Balance between review and new-learning acquisition.
    - Cognitive load and fatigue conditions.
-   - *Constraint*: Does **NOT** authorize final curriculum schemas, schedules, or prerequisite graphs.
+   - *Constraint*: Did **NOT** authorize final curriculum schemas, schedules, or prerequisite graphs.
 
 5. **E. Re-entry + Learning Efficiency**:
    - Non-predatory streak, re-entry, and daily backlog recovery evidence.
@@ -376,7 +392,7 @@ The authorized supplemental research package is strictly limited to scientific a
    - Measurement methods for item ambiguity, invalid keys, hallucination/poor grounding, and distractor leakage.
    - Quality and construct validity evaluation methodology for generated learning items.
    - *Canonical Anchors*: `REQ-EXP-008`, Cluster G7.
-   - *Constraint*: Does **NOT** authorize benchmarking concrete prompt, model, or filter configurations.
+   - *Constraint*: Did **NOT** authorize benchmarking concrete prompt, model, or filter configurations.
 
 7. **G. Learning-System Effectiveness Methodology**:
    - Defensible pre/post/delayed evaluation designs.
@@ -388,10 +404,10 @@ The authorized supplemental research package is strictly limited to scientific a
 8. **H. Effectiveness-Evidence Provenance Semantics**:
    - Scientific determination of what contextual attempt provenance is necessary for valid downstream effectiveness analysis.
    - *Canonical Anchor*: `REQ-EXP-010`.
-   - *Constraint*: Semantic research only. Does **NOT** authorize TypeScript interfaces, persistence objects, database fields, or storage architectures. Storage and runtime execution boundaries remain strictly Lane R3 subjects.
+   - *Constraint*: Semantic research only. Did **NOT** authorize TypeScript interfaces, persistence objects, database fields, or storage architectures. Storage and runtime execution boundaries remained strictly Lane R3 subjects.
 
-### 9.4 Explicit Exclusions & Non-Decisions
-The future research package is strictly research-only and **EXPLICITLY EXCLUDES**:
+### 9.4 Historical Explicit Exclusions & Non-Decisions
+The historical research package was strictly research-only and **EXPLICITLY EXCLUDED**:
 - Broad OSS ecosystem re-survey;
 - Repeating canonical R2 candidate discovery;
 - Concrete AI / model / provider benchmarking;
@@ -402,8 +418,8 @@ The future research package is strictly research-only and **EXPLICITLY EXCLUDES*
 - Final readiness formula;
 - Final scoring model;
 - Final acceptable error thresholds;
-- Lane R3 architecture execution within this package;
-- Lane R4 cross-synthesis within this package;
+- Lane R3 architecture execution within that package;
+- Lane R4 cross-synthesis within that package;
 - Stage 4 UX / Information Architecture work;
 - Stage 5 execution or benchmarking;
 - Stage 6 production implementation;
@@ -411,39 +427,39 @@ The future research package is strictly research-only and **EXPLICITLY EXCLUDES*
 - Dependency adoption or package installation (`package.json`);
 - Source code or test suite modification (`src/**`, `tests/**`, `scripts/**`).
 
-### 9.5 Canonical R2 Reuse Boundary
-- The future supplemental research package MUST reconcile canonical R2 (`docs/research/R2_OSS_HOSTED_CAPABILITY_RESEARCH.md`) before any technical-tool discussion.
-- No broad new open-source survey is authorized.
-- Narrow external methods and tool references are permitted **ONLY** when necessary to understand scientific methodology and must **NOT** become candidate adoption recommendations.
-- Preserves the invariant:
+### 9.5 Historical Canonical R2 Reuse Boundary
+- The supplemental research package was required to reconcile canonical R2 (`docs/research/R2_OSS_HOSTED_CAPABILITY_RESEARCH.md`) before any technical-tool discussion.
+- No broad new open-source survey was authorized.
+- Narrow external methods and tool references were permitted **ONLY** when necessary to understand scientific methodology and did **NOT** become candidate adoption recommendations.
+- Preserved the invariant:
   $$\text{R2\_CAPABILITY\_DISCOVERY} \neq \text{SUPPLEMENTAL\_LEARNING\_EVIDENCE} \neq \text{STAGE5\_BENCHMARK} \neq \text{DEPENDENCY\_ADOPTION}$$
 
-### 9.6 Internet Research & Evidence Standards
-- External research for this package is authorized using existing Stage 3 primary-source standards.
+### 9.6 Historical Internet Research & Evidence Standards
+- External research for that package was authorized using Stage 3 primary-source standards.
 - Permitted source classes:
   - Peer-reviewed journal and conference literature (e.g. ERIC, Google Scholar, ACL Anthology, APA, IEEE);
   - Systematic reviews and meta-analyses;
   - Primary scholarly papers;
   - Official educational assessment and framework standards (e.g. CEFR, IELTS, ACTFL);
   - Primary research reference implementations strictly where needed to inspect methodology.
-- Epistemic classification labels are mandatory: `[VERIFIED]`, `[INFERENCE]`, `[UNKNOWN]`.
-- GitHub stars, popularity metrics, vendor marketing claims, and secondary summaries MUST NOT be converted into scientific evidence.
+- Epistemic classification labels were mandatory: `[VERIFIED]`, `[INFERENCE]`, `[UNKNOWN]`.
+- GitHub stars, popularity metrics, vendor marketing claims, and secondary summaries were NOT converted into scientific evidence.
 
-### 9.7 Parallel R3 Execution & Future R4 Consumption Semantics
+### 9.7 Historical Parallel R3 Execution & R4 Consumption Semantics
 1. **Parallel R3 Execution**:
-   - Lane R3 execution authority remains exactly as canonically defined.
-   - This supplement amendment does NOT expand or narrow Lane R3.
-   - Lane R3 may proceed independently or in parallel subject to repository single-writer governance, its own transaction boundaries, and the constraint that unresolved pedagogical assumptions must not be frozen as permanent architecture.
-   - Lane R3 must NOT treat this future supplement as accepted evidence until the supplement independently passes acceptance.
-2. **Future R4 Consumption**:
-   - Future canonical Lane R4 is authorized to consume `docs/research/R1_LEARNING_PRODUCT_RESEARCH_SUPPLEMENT_001.md` **ONLY IF** that exact supplemental research output has first received:
+   - Lane R3 execution authority remained exactly as canonically defined.
+   - That supplement amendment did NOT expand or narrow Lane R3.
+   - Lane R3 was permitted to proceed independently or in parallel subject to repository single-writer governance, its own transaction boundaries, and the constraint that unresolved pedagogical assumptions must not be frozen as permanent architecture.
+   - Lane R3 was prohibited from treating the supplement as accepted evidence until the supplement independently passed acceptance.
+2. **R4 Consumption**:
+   - Canonical Lane R4 was authorized to consume `docs/research/R1_LEARNING_PRODUCT_RESEARCH_SUPPLEMENT_001.md` **ONLY AFTER** that exact supplemental research output first received:
      1. Fresh independent research-quality audit;
      2. Persisted/read-back formal `ACCEPT` verdict;
-     3. Valid canonical materialization and merge.
-   - Lane R4 may synthesize accepted supplemental evidence; Lane R4 may NOT treat an unaudited supplement candidate as evidence.
+     3. Valid canonical materialization and merge (executed via PR #159).
+   - Lane R4 synthesized accepted supplemental evidence.
 
-### 9.8 Evidence Standards & Independent Audit Requirements
-- The future supplemental research transaction MUST:
+### 9.8 Historical Evidence Standards & Independent Audit Requirements
+- The supplemental research transaction was required to:
   - Ground all claims in primary scientific evidence;
   - Strictly distinguish general scientific evidence from VocabMaster-specific inferences;
   - State empirical applicability, boundary conditions, and limitations;
@@ -451,10 +467,10 @@ The future research package is strictly research-only and **EXPLICITLY EXCLUDES*
   - Distinguish resolved questions from still-unknown questions;
   - Preserve canonical R1 finding semantics;
   - Avoid architecture, implementation, and dependency decisions.
-- **Independent Audit Mandate**: The research author MUST NOT self-audit or self-accept. A fresh independent research-quality audit by an unpolluted auditor agent is strictly required.
+- **Independent Audit Mandate**: The research author could not self-audit or self-accept. A fresh independent research-quality audit by an unpolluted auditor agent was strictly required.
 
-### 9.9 Fail-Closed Stop Conditions
-Execution under this amendment halts immediately (`FAIL-CLOSED`) upon encountering any of the following triggers:
+### 9.9 Fail-Closed Stop Conditions (Historical Execution Rules)
+During execution under that amendment, execution was required to halt immediately (`FAIL-CLOSED`) upon encountering any of the following triggers:
 
 1. `SUPPLEMENT_SCOPE_DRIFT`: Research expands beyond the 8 authorized semantic families (§9.3).
 2. `NEW_LANE_CREATION_ATTEMPT`: Attempting to designate this package as Lane R5, Lane R6, or a new research lane.

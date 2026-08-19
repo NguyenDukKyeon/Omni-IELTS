@@ -1,11 +1,11 @@
 # VocabMaster — Stage 3 Learning / Product Deep Research Strategy
 
-Status: **ACCEPTED / CANONICAL**  
-Authority: **STAGE 3 PRODUCT AND RESEARCH STRATEGY SPECIFICATION (RATIFIED UNDER ADR-053)**  
+Status: **ACCEPTED / CANONICAL / HISTORICAL**  
+Authority: **STAGE 3 PRODUCT AND RESEARCH STRATEGY SPECIFICATION (RATIFIED UNDER ADR-053; CANONICALLY CLOSED UNDER ADR-054)**  
 Transaction ID: `STAGE3-RESEARCH-STRATEGY-001`  
-Date: **2026-08-17**  
+Date: **2026-08-17** (Reconciled: **2026-08-20**)  
 Canonical Predecessor: `664ab14bb1415fec0995e80e99369164df28575c`  
-Authorization Manifest: [`docs/authorizations/STAGE3-RESEARCH-AUTH-001.md`](docs/authorizations/STAGE3-RESEARCH-AUTH-001.md) (**ACCEPTED / CANONICAL / EFFECTIVE**)  
+Authorization Manifest: [`docs/authorizations/STAGE3-RESEARCH-AUTH-001.md`](docs/authorizations/STAGE3-RESEARCH-AUTH-001.md) (**HISTORICAL / CONSUMED / CLOSED**)  
 
 ---
 
@@ -15,8 +15,8 @@ Authorization Manifest: [`docs/authorizations/STAGE3-RESEARCH-AUTH-001.md`](docs
 - **Stage 1 (Core Foundation)**: Independently `ACCEPTED` and `COMPLETE`.
 - **Stage 1.5 (Adversarial Product Jury)**: Independently `ACCEPTED` and `COMPLETE`.
 - **Stage 2 (IELTS Completeness)**: Independently `ACCEPTED` and `COMPLETE / CANONICALLY_CLOSED` under exit gate `IELTS_COMPLETENESS_V1` (18/18 dimensions verified across Listening, Reading, Writing, Speaking, and Full Mock Orchestration).
-- **Stage 3 (Learning / Product Deep Research)**: Active research stage. Strategy independently `ACCEPTED` (PR #150 / Review #4951122496) and ratified via ADR-053; bounded research execution authorized under manifest `STAGE3-RESEARCH-AUTH-001`.
-- **Research Execution Authority**: `AUTHORIZED` (Bounded strictly to closed documentation allowlist across lanes R1–R4; zero implementation authority).
+- **Stage 3 (Learning / Product Deep Research)**: Complete and canonically closed. Research deliverables across Lanes R1, R1 Supplement, R2, R3, and R4 were independently audited, accepted, and integrated into canonical `main` (synthesizing Lane R4 integrated via PR #167 / commit `856b3a307b87fd99044692513c01da3e8f681b9f`). Strategy ratified under ADR-053; Stage 3 closure ratified under ADR-054.
+- **Stage 3 Research Execution Authority**: `HISTORICAL / CONSUMED / CLOSED` (All chartered research lanes completed; manifest `STAGE3-RESEARCH-AUTH-001` consumed and closed; zero active research or implementation authority).
 
 ### 1.2 Mission Alignment with Master Roadmap
 This strategy specifies the broad learning, capability, and architectural research program owned by Stage 3 as defined in `docs/MASTER_ROADMAP.md` §3:
@@ -28,8 +28,8 @@ This strategy specifies the broad learning, capability, and architectural resear
 ### 1.3 Strict Non-Authority & Non-Absorption Boundaries
 > [!IMPORTANT]
 > **Explicit Non-Authority Notice**:
-> This document is a **CANONICAL RESEARCH STRATEGY**.
-> - It authorizes **ONLY** bounded research execution under manifest `STAGE3-RESEARCH-AUTH-001`.
+> This document is the **CANONICAL HISTORICAL RESEARCH STRATEGY** for Stage 3.
+> - Historical bounded research execution was governed by manifest `STAGE3-RESEARCH-AUTH-001` (now `HISTORICAL / CONSUMED / CLOSED`).
 > - It does **NOT** authorize product code implementation (`src/**`).
 > - It does **NOT** adopt any third-party library, package, or dependency in `package.json`.
 > - It does **NOT** select a final AI model, ASR engine, or hosted cloud provider (reserved for Stage 5).
@@ -82,7 +82,7 @@ All Stage 3 activities are strictly governed by the canonical 6-tier repository 
 | **Tier 5** | `docs/DECISIONS.md` | Architecture Decision Records (ADRs). |
 | **Tier 6** | `AGENTS.md` | Router, global invariants, evidence policies, single-writer discipline, safety rules. |
 
-*Task-Specific Authorization*: `docs/authorizations/STAGE3-RESEARCH-AUTH-001.md` provides bounded research authorization when accepted, remaining strictly subordinate to the 6-tier hierarchy above.
+*Task-Specific Authorization*: `docs/authorizations/STAGE3-RESEARCH-AUTH-001.md` provided bounded research authorization during Stage 3 execution (now `HISTORICAL / CONSUMED / CLOSED`), remaining strictly subordinate to the 6-tier hierarchy above.
 
 ---
 
