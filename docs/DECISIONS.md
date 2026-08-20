@@ -1003,3 +1003,35 @@ Decision:
 Consequences: `docs/MASTER_ROADMAP.md`, `docs/DECISIONS.md`, `docs/STAGE3_RESEARCH_STRATEGY.md`, `docs/authorizations/STAGE3-RESEARCH-AUTH-001.md`, and `docs/IMPLEMENTATION_STATUS.md` are synchronized and reflect verified ground truth evidence. The repository records verified completion and closure of Stage 3 while advancing Stage 4 to NEXT without granting premature execution or implementation authority.
 
 Revisit when: The Owner ratifies a Stage 4 UX / IA strategy and authorization manifest.
+
+## ADR-055 — Stage 4 UX/IA Strategy, Product Capability Preservation, and Wave Authorization Architecture
+
+Status: PROPOSED / CONFIRMED UPON MERGE
+
+Context: Following the canonical closure of Stage 3 (ADR-054) and the advancing of Stage 4 (`UX / IA Remake`) to NEXT in `docs/MASTER_ROADMAP.md`, a comprehensive UX/IA strategy, product capability preservation matrix, and bounded Wave authorization architecture were proposed in transaction `STAGE4-UXIA-STRATEGY-AUTH-DESIGN-001` (Revision `REV-004`) and formally ratified by the Human Owner. A rigorous framework is required to remake OmniIELTS information architecture, preserve 100% of existing product capabilities across all modules, enforce authentic IELTS computer-delivered exam simulation behavior, adopt a local deterministic generation model for Academic Writing Task 1, and govern future Stage 4 Waves (W0–W6) under a low-handoff operational model while strictly preserving downstream Stage 5 (AI/tech benchmarks) and Stage 6 (implementation) boundaries.
+
+Decision:
+- Ratify and canonicalize the Stage 4 UX/IA Remake Strategy in `docs/stage4/STAGE4_UXIA_STRATEGY.md`.
+- Ratify and canonicalize the Product Capability Preservation Matrix in `docs/stage4/STAGE4_CAPABILITY_PRESERVATION_MATRIX.md`, auditing and guaranteeing preservation of all 48 current material capabilities, itemizing all 18 R2 capability domains, and routing all 20 Stage 3 future research handoffs with zero silent deletions.
+- Adopt the Mandatory Dual Experience Architecture:
+  $$\text{OMNIIELTS\_LEARNING\_UI} \neq \text{IELTS\_EXAM\_SIMULATION\_UI}$$
+  Exam Simulation Mode strictly strips all hints, transcripts, AI coaching, gamification widgets, and extraneous chrome to deliver true computer-delivered test fidelity.
+- Adopt the Owner product decision for IELTS Academic Writing Task 1 visual generation:
+  $$\text{CORE\_WRITING\_TASK1\_GENERATION} = \text{LOCAL / DETERMINISTIC}$$
+  $$\text{AI\_API\_CORE\_DEPENDENCY} = \text{NO}$$
+  Core task specifications, synthetic datasets, and visual charts operate via seeded procedural generators or curated datasets validated through a fail-closed validator and rendered browser-side via lightweight local engines (uPlot, Chart.js, Native SVG) without external AI API dependencies.
+- Authorize the bounded 7-Wave Stage 4 execution sequence (W0–W6) under manifest `docs/authorizations/STAGE4-UXIA-AUTH-001.md`:
+  - W0: Canonical Strategy & Authorization Foundation (`AUTHORIZED_CURRENT_TRANSACTION`).
+  - W1–W6: `DEFINED_BY_RATIFIED_STRATEGY / REQUIRES_EXPLICIT_WAVE_ACTIVATION`.
+- Enforce the 15 Representative Screen Set (including Screen 14: IELTS Full Mock Exam Shell) to validate the design system.
+- Enforce strict governance and role boundaries:
+  - $\text{EXECUTOR\_SESSION} \neq \text{FRESH\_INDEPENDENT\_AUDITOR\_SESSION}$
+  - $\text{CI\_GREEN} \neq \text{ACCEPT}$
+  - $\text{ACCEPT} \neq \text{MERGE\_AUTHORITY}$
+  - $\text{MERGE\_AUTHORITY} = \text{NOT\_GRANTED\_BY\_W0\_EXECUTOR}$
+  - Wave W6 compiles candidate exit evidence (`STAGE4_DESIGN_EXECUTION: COMPLETE_PENDING_INDEPENDENT_ACCEPTANCE`, `STAGE4_CANONICAL_STATUS: NOT_YET_CLOSED`); canonical Stage 4 closure requires fresh independent audit acceptance.
+  - Zero modification of production source (`src/**`), tests (`tests/**`), dependencies (`package.json`), or CI workflows (`.github/**`).
+
+Consequences: Stage 4 UX/IA Remake has a canonical, auditable strategy and governance foundation. Future Wave execution can proceed systematically with early visual visibility (W3 wireframes), strict capability preservation, and clear trust boundaries.
+
+Revisit when: Stage 4 Wave W6 compiles candidate exit evidence for final Stage 4 design acceptance.
