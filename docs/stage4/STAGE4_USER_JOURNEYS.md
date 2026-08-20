@@ -5,7 +5,7 @@
 **Controlling Authorization Manifest**: [`docs/authorizations/STAGE4-UXIA-AUTH-001.md`](../authorizations/STAGE4-UXIA-AUTH-001.md)  
 **Controlling Strategy**: [`docs/stage4/STAGE4_UXIA_STRATEGY.md`](STAGE4_UXIA_STRATEGY.md)  
 **Status**: `CANDIDATE_USER_JOURNEYS / PENDING_INDEPENDENT_AUDIT`  
-**Document Role**: Canonical Stage 4 User Journeys Specification (subordinate to repository authority hierarchy under [`AGENTS.md`](../../AGENTS.md))  
+**Document Role**: Candidate Stage 4 User Journeys Specification (subordinate to repository authority hierarchy under [`AGENTS.md`](../../AGENTS.md))
 
 ---
 
@@ -23,6 +23,12 @@
    Scaffolded learning and practice runs do not pollute FSRS memory stability. Exam simulations and section practice maintain `affectsSchedule: false` and `evidenceEligible: false`.
 5. **Authentic Official Format Fidelity**:
    Computer-delivered Listening (~30–34m + 2m check), Writing (60m shared timer), and Reading (60m split-pane) faithfully reflect official test parameters.
+6. **Learner Agency & Direct Access Contract**:
+   $$\text{RECOMMENDED\_PATH} \neq \text{REQUIRED\_PATH}$$
+   $$\text{CURRICULUM\_PATH} \neq \text{NAVIGATION\_LOCK}$$
+   $$\text{GUIDED\_SEQUENCE} \neq \text{MANDATORY\_GLOBAL\_SEQUENCE}$$
+   $$\text{ACTIVITY\_INTEGRITY\_LOCK} \neq \text{CURRICULUM\_LOCK}$$
+   OmniIELTS operates on the principle of $\text{SYSTEM\_GUIDES\_STRONGLY} + \text{LEARNER\_RETAINS\_CONTROL}$. Guided sessions, daily plans, and curriculum progressions provide expert pedagogical direction, but do not impose mandatory unlock gates or access control locks on major product destinations.
 
 ---
 
@@ -58,9 +64,11 @@
 - **Entry Point**: Application launch or navigating to `#/today`.
 - **Preconditions**: User has active study cards scheduled via FSRS in local IndexedDB.
 - **Step-by-Step Primary Flow**:
-  1. Learner opens Today Dashboard and views daily summary card: due review count, new items available, current streak counter.
+  1. Learner opens Today Dashboard and views daily summary card: due review count, new items available, current streak counter, and primary recommended action.
   2. If due queue exceeds 50 cards, Today runner surfaces **Backlog Triage Banner**: learner chooses between `"Quick Catch-up Drill"` (20 most urgent cards) and `"Full Due Queue"`.
-  3. Learner clicks `"Start Daily Study"`: system initiates study session with single-lease lock (preventing multi-tab race conditions).
+  3. **Learner Agency & Direct Access**:
+     - *Primary Path*: Learner clicks `"Start Daily Study"`: system initiates study session with single-lease lock (preventing multi-tab race conditions).
+     - *Autonomous Navigation Path*: The learner may bypass the daily recommendation entirely ($\text{TODAY\_RECOMMENDATION} \neq \text{FORCED\_SESSION}$) and navigate directly to Learn Workspaces, IELTS Practice/Mock runners, or Library via the global navigation rail.
   4. Cards execute sequentially via `Screen 2 (Vocabulary Spaced Review)`.
   5. Upon completing daily target, Today Dashboard updates streak counter, displays celebration badge, and unlocks `"Next Recommended Action"` (targeted weakness drill).
 - **Secondary States & Subviews**:
@@ -103,19 +111,24 @@
 - **Step-by-Step Primary Flow**:
   1. Learner loads video (YouTube URL or local audio/video file).
   2. Video player embeds on the left; synchronized virtualized transcript rail mounts on the right.
-  3. Learner selects one of **6 Study Modes**:
-     - *Mode 1 (Normal)*: Video plays with auto-scrolling synchronized subtitle cues.
-     - *Mode 2 (Noticing)*: Transcript highlights thought groups, weak forms, stressed syllables, and IPA.
-     - *Mode 3 (Shadowing)*: Pauses after each sentence for learner vocal repetition and recording comparison.
-     - *Mode 4 (Strict Dictation)*: Video plays audio only; transcript text is strictly masked in DOM/ARIA; learner types exact sentence.
-     - *Mode 5 (Practice Dictation)*: Word-length masks and optional first-letter hints provided.
-     - *Mode 6 (Retell & Synthesis)*: Learner records oral summary or drafts written synthesis.
-  4. Learner steps through the **7-Step Sentence Learning Loop**:
+  3. **Media Mode Independence**:
+     - The 7-Step Sentence Learning Loop is a **guided pedagogical workflow**, NOT a mandatory mode unlock chain:
+       $$\text{GUIDED\_PEDAGOGICAL\_WORKFLOW} \neq \text{MANDATORY\_MODE\_UNLOCK\_CHAIN}$$
+     - Learner may directly choose and launch any of the **6 Study Modes** without completing predecessor steps:
+       - *Mode 1 (Normal)*: Video plays with auto-scrolling synchronized subtitle cues.
+       - *Mode 2 (Noticing)*: Transcript highlights thought groups, weak forms, stressed syllables, and IPA.
+       - *Mode 3 (Shadowing)*: Pauses after each sentence for learner vocal repetition and recording comparison (directly accessible without completing Dictation).
+       - *Mode 4 (Strict Dictation)*: Video plays audio only; transcript text is strictly masked in DOM/ARIA; learner types exact sentence (directly accessible without completing Retell).
+       - *Mode 5 (Practice Dictation)*: Word-length masks and optional first-letter hints provided.
+       - *Mode 6 (Retell & Synthesis)*: Learner records oral summary or drafts written synthesis.
+     - A learner may also compose custom partial journeys (e.g. *Noticing $\to$ Shadowing*).
+  4. In guided sequence mode, learner steps through the **7-Step Sentence Learning Loop**:
      - *Step 1 (Listen)* $\to$ *Step 2 (Dictate)* $\to$ *Step 3 (Verify)* $\to$ *Step 4 (Notice)* $\to$ *Step 5 (Shadow)* $\to$ *Step 6 (Vocab)* $\to$ *Step 7 (Retell)*.
+     - Accessible `Skip Step`, `Change Mode`, and `Exit Loop` controls remain available at every step.
   5. In Step 6, learner 1-clicks unknown collocations to add them directly to Capture Inbox (`S4-OMIT-001`).
   6. In Step 7, typed retell drafts autosave to localStorage (`DRAFT_JOURNAL_PREFIX`) for complete crash recovery (`S4-OMIT-002`).
 - **Secondary States & Subviews**:
-  - `strict_dictation_view`: Complete DOM/ARIA answer concealment (`KEY_LEAK_BEFORE_SUBMIT === 0`).
+  - `strict_dictation_view`: Complete DOM/ARIA answer concealment (`KEY_LEAK_BEFORE_SUBMIT === 0`; activity-integrity lock).
   - `noticing_ipa_drawer`: Acoustic decoding breakdown with phonetic symbols and chunk boundaries.
   - `waveform_recording_view`: Real-time Web Audio waveform comparing native speaker audio to learner recording.
   - `retell_journal_view`: Formative drafting area with autosave recovery banner.
@@ -129,19 +142,19 @@
 
 ### Journey J-04: Article / Source-to-Learning
 - **Owning Screen**: **Screen 4 (Article & Passage Reader Workspace)**
-- **Learner Persona & Intent**: A student reading authentic scholarly articles or imported ebooks to expand academic vocabulary and reading speed.
+- **Learner Persona & Intent**: A student reading authentic scholarly articles or imported texts to expand academic vocabulary and reading speed.
 - **Entry Point**: `Library -> Sources` (`#/library/sources`) $\to$ `Learn: Reader` (`#/learn/reader`).
 - **Step-by-Step Primary Flow**:
-  1. Learner drops file into multi-format dropzone (PDF, EPUB, SRT, Text) or pastes article text.
-  2. Reader parses layout into clean, legible paragraphs with heading anchors.
-  3. Learner reads with paragraph highlighter; clicking any word/collocation triggers instant definition popover.
-  4. Learner clicks `"Add to Inbox"`: term, definition, sentence context, and source document citation are staged in Capture Inbox.
-  5. Learner launches `"Practice This Article"`: system generates interactive Cloze and reading comprehension checks from the source text.
+  1. `[CURRENT]` Learner loads source text via Private Source Library (pasted text, text file, SRT transcript) or `[FUTURE_UX_RESERVED]` drops structured documents into multi-format parser dropzone (PDF, EPUB; `FUT-011`).
+  2. `[CURRENT]` Reader formats text into clean, legible paragraphs with heading anchors.
+  3. `[CURRENT]` Learner reads with paragraph highlighter; clicking any word/collocation triggers instant definition popover.
+  4. `[CURRENT]` Learner clicks `"Add to Inbox"`: term, definition, sentence context, and source document citation are staged in Capture Inbox (`CAP-012`).
+  5. `[CURRENT]` Learner launches flashcard practice on extracted vocabulary, or `[FUTURE_UX_RESERVED]` launches automated contextual Cloze and reading comprehension checks generated from the source text (`FUT-008`).
 - **Secondary States & Subviews**:
-  - `document_dropzone_uploader`: Multi-format drag-and-drop file uploader with parsing progress indicator.
-  - `cefr_level_pill_breakdown`: Future readability rating pill (A1–C2) with vocabulary distribution chart (`FUT-006`).
-  - `in_text_capture_popover`: Context-aware lexical lookup modal with 1-click stage action.
-  - `cloze_exercise_view`: Instant retrieval practice generated from high-frequency academic vocabulary in the text.
+  - `document_dropzone_uploader`: Multi-format drag-and-drop file uploader with parsing progress indicator (`[FUTURE_UX_RESERVED]` / `FUT-011`).
+  - `cefr_level_pill_breakdown`: Readability rating pill (A1–C2) with vocabulary distribution chart (`[FUTURE_UX_RESERVED]` / `FUT-006`).
+  - `in_text_capture_popover`: Context-aware lexical lookup modal with 1-click stage action (`[CURRENT]`).
+  - `cloze_exercise_view`: Instant retrieval practice generated from high-frequency academic vocabulary in the text (`[FUTURE_UX_RESERVED]` / `FUT-008`).
 - **Evidence & Schedule Gateway**:
   - Reading drills are formative; captured words graduate to FSRS only after confirmation in Inbox (`J-05`).
 
@@ -172,17 +185,17 @@
 - **Learner Persona & Intent**: A student analyzing persistent mistakes across writing, speaking, and reading, and executing targeted drills to eliminate recurring errors.
 - **Entry Point**: `Library -> Error Notebook` (`#/library/errors`) or `Today: Next Action`.
 - **Step-by-Step Primary Flow**:
-  1. Learner opens Error Notebook and views 23-category diagnostic heatmap (ERRANT-aligned taxonomy).
-  2. Heatmap visualizes error frequency and recurrence decay weighting (distinguishing fresh mistakes from resolved ones).
-  3. Learner filters by skill (e.g. `Writing - Lexical Resource`) and clicks a specific error card.
-  4. Error card displays original task prompt, learner's incorrect input, ground truth correction, and refutational grammatical rule explanation.
-  5. Learner clicks `"Launch Targeted Remediation"`: system generates focused micro-drills targeting that specific misconception.
-  6. Upon successful completion, error status transitions to `"Reviewing"` or `"Resolved"`.
+  1. `[CURRENT]` Learner opens Error Notebook and views 23-category diagnostic heatmap (ERRANT-aligned taxonomy) and active error repository (`CAP-014`).
+  2. `[CURRENT]` Heatmap visualizes error frequency and recurrence decay weighting (distinguishing fresh mistakes from resolved ones).
+  3. `[CURRENT]` Learner filters by skill (e.g. `Writing - Lexical Resource`) and clicks a specific error card.
+  4. `[CURRENT]` Error card displays original task prompt, learner's incorrect input, and ground truth correction; `[FUTURE_UX_RESERVED]` displays automated refutational grammatical rule explanation (`R1S-F003` / `FUT-017`).
+  5. `[CURRENT]` Learner launches repair queue practice, or `[FUTURE_UX_RESERVED]` launches dynamic isomorphic remediation micro-drills targeting that specific misconception (`FUT-008`).
+  6. `[CURRENT]` Upon successful completion, error status transitions to `"Reviewing"` or `"Resolved"`.
 - **Secondary States & Subviews**:
-  - `error_heatmap_grid`: 23-category visual matrix mapping weakness density across skills.
-  - `error_context_drawer`: Deep view showing original test item context, timestamps, and mistake history.
-  - `refutational_explanation_view`: Pedagogical card explaining *why* the error occurred and how to avoid it (`R1S-F003`).
-  - `targeted_remediation_launcher`: Immediate launchpad for focused corrective exercises.
+  - `error_heatmap_grid`: 23-category visual matrix mapping weakness density across skills (`[CURRENT]`).
+  - `error_context_drawer`: Deep view showing original test item context, timestamps, and mistake history (`[CURRENT]`).
+  - `refutational_explanation_view`: Pedagogical card explaining *why* the error occurred and how to avoid it (`[FUTURE_UX_RESERVED]` / `R1S-F003`, `FUT-017`).
+  - `targeted_remediation_launcher`: Immediate launchpad for focused corrective exercises (`[CURRENT]` / `[FUTURE_UX_RESERVED]`).
 - **Evidence & Schedule Gateway**:
   - Error candidate emission maintains `affectsSchedule: false`; remediation drills provide formative mastery without biasing baseline test scores.
 
@@ -193,18 +206,18 @@
 - **Learner Persona & Intent**: A student auditing their overall study progress, memory retrievability, 5-skill competence, and estimated IELTS band readiness.
 - **Entry Point**: `Nav: Analytics` (`#/analytics`).
 - **Step-by-Step Primary Flow**:
-  1. Learner opens Analytics Dashboard and views Tri-Dimensional Learner State:
-     - **Memory / Retention**: FSRS memory stability decay curve with target retention reference line ($R$).
-     - **Skill Mastery Estimate**: 5-Skill Competence Radar (Listening, Reading, Writing, Speaking, Lexical) with confidence intervals.
-     - **IELTS Performance Estimate**: Estimated practice band range with practice disclaimer.
-  2. Learner inspects 52-week activity heatmap and habit consistency timeline.
-  3. Learner checks **Exam Pacing Calculator**: displays daily target review and practice requirements to achieve goal score by target exam date (`S4-OMIT-008`).
-  4. Learner clicks `"Execute Recommended Action"`: launches the highest-leverage weakness remediation drill.
+  1. Learner opens Analytics Dashboard and views Multi-Dimensional Learner State:
+     - `[CURRENT]` **Memory / Retention**: FSRS memory stability decay curve with target retention reference line ($R$) and skill coverage (`CAP-013`).
+     - `[FUTURE_UX_RESERVED / PARTIALLY_SUPPORTED]` **Skill Mastery Estimate**: 5-Skill Competence Radar (Listening, Reading, Writing, Speaking, Lexical) with confidence intervals (`FUT-014`).
+     - `[FUTURE_UX_RESERVED / PARTIALLY_SUPPORTED]` **IELTS Performance Estimate**: Calibrated practice band range with practice disclaimer (`FUT-014`).
+  2. `[CURRENT]` Learner inspects 52-week activity heatmap and habit consistency timeline (`src/progress.js`).
+  3. `[CURRENT]` Learner checks **Exam Pacing Calculator**: displays daily target review and practice requirements to achieve goal score by target exam date (`S4-OMIT-008`).
+  4. `[CURRENT]` Learner clicks `"Execute Recommended Action"`: launches the highest-leverage weakness remediation drill.
 - **Secondary States & Subviews**:
-  - `retention_decay_curve`: Visual decay projection showing memory retrievability over time.
-  - `radar_confidence_bounds`: 5-skill polygon display showing competence estimates with uncertainty margins.
-  - `attempt_provenance_audit_drawer`: Audit drawer displaying all 9 contextual provenance fields for any recorded attempt (`FUT-016`).
-  - `pacing_calculator_drawer`: Interactive slider adjusting daily target workload based on remaining study days.
+  - `retention_decay_curve`: Visual decay projection showing memory retrievability over time (`[CURRENT]`).
+  - `radar_confidence_bounds`: 5-skill polygon display showing competence estimates with uncertainty margins (`[FUTURE_UX_RESERVED / PARTIALLY_SUPPORTED]` / `FUT-014`).
+  - `attempt_provenance_audit_drawer`: Audit drawer displaying all 9 contextual provenance fields for any recorded attempt (`[FUTURE_UX_RESERVED]` / `FUT-016`).
+  - `pacing_calculator_drawer`: Interactive slider adjusting daily target workload based on remaining study days (`[CURRENT]`).
 - **Evidence & Schedule Gateway**:
   - Analytics aggregate historical attempt receipts without executing direct schema or schedule mutations.
 
@@ -213,12 +226,13 @@
 ### Journey J-08: IELTS Listening Exam & Practice
 - **Owning Screen**: **Screen 8 (IELTS Listening Runner)**
 - **Learner Persona & Intent**: A student completing a 4-part IELTS Listening test under authentic computer-delivered conditions or practicing specific parts with audio scrubbing and transcripts.
-- **Entry Point**: `IELTS Hub -> Listening` (`#/ielts/listening`).
+- **Entry Point**: `IELTS Hub -> Listening` (`#/ielts/listening`) or direct URL anchor.
+- **Learner Agency & Direct Access**: Directly accessible at any time without completing prior curriculum or practice modules. If diagnostic evidence suggests prior skill review, non-blocking guidance (`"Recommended first"`) is presented alongside `"Continue anyway"` / `"Start Listening"`.
 - **Step-by-Step Primary Flow**:
   1. Learner selects Track (`Academic` vs `General Training`) and Mode:
      - **Mode A: Exam Simulation**:
        - 4 parts, 40 items, ~30–34 minutes of uninterrupted audio playback.
-       - Audio plays strictly once; pause and scrubbing are completely locked.
+       - Audio plays strictly once; pause and scrubbing are completely locked (activity-integrity lock).
        - Question palette displays 1–40 items with Answered, Unanswered, and Review Flag states.
        - Concludes with exactly **2-minute final answer-check period** (no 10-minute paper transfer time).
        - Autosave records every input (`IELTS_LISTENING_CHECKPOINT_V1`); crash reload restores exact question and timer.
@@ -230,7 +244,7 @@
   2. Upon submission, system computes raw score (out of 40) and converts to estimated IELTS Band (0.0–9.0).
   3. Incorrect items are automatically staged as `ErrorCandidate` records in Error Notebook.
 - **Secondary States & Subviews**:
-  - `exam_single_play_lock`: Authentic single-play audio state with disabled scrubbing.
+  - `exam_single_play_lock`: Authentic single-play audio state with disabled scrubbing (activity-integrity lock).
   - `2m_check_timer`: Final 2-minute countdown timer dedicated to checking answers.
   - `practice_scrub_bar`: Interactive audio scrubber with A-B loop handles for practice mode.
   - `transcript_reveal_drawer`: Post-submission synchronized transcript view with answer key highlights.
@@ -286,17 +300,17 @@
 - **Learner Persona & Intent**: An Academic candidate drafting a 150-word report describing visual data (graph, chart, table, map, or process) within recommended 20 minutes.
 - **Entry Point**: `IELTS Hub -> Writing -> Task 1` (`#/ielts/writing/task1`).
 - **Step-by-Step Primary Flow**:
-  1. Learner opens Task 1: left pane renders deterministic visual data container; right pane renders distraction-free text editor.
-  2. Visual container displays one of 7 visual configurations (Line Graph, Bar Chart, Pie Chart, Table, Process Diagram, Map / Plan, Mixed Graphics) generated locally without cloud AI.
-  3. Learner uses zoom/pan controls to inspect complex chart elements, or toggles **Tabular Data Fallback** for accessible data table inspection.
-  4. Learner drafts report in text editor: live word counter updates continuously with under-length warning if $< 150$ words.
-  5. Autosave creates immutable revision digests (`learner-text-artifact-revision`) every 30 seconds.
-  6. Upon submission, system evaluates 4 writing criteria (TA, CC, LR, GRA) and outputs practice feedback with diagnostic pointers.
+  1. `[CURRENT]` Learner opens Task 1: left pane renders structured visual data container (`CAP-022`); right pane renders distraction-free text editor.
+  2. `[CURRENT]` Visual container displays chart prompt; `[FUTURE_UX_RESERVED]` visual container renders one of 7 procedural visual configurations (Line Graph, Bar Chart, Pie Chart, Table, Process Diagram, Map / Plan, Mixed Graphics) generated deterministically via local client engines (`FUT-009`).
+  3. `[CURRENT]` Learner uses zoom/pan controls to inspect complex chart elements, or toggles **Tabular Data Fallback** for accessible data table inspection.
+  4. `[CURRENT]` Learner drafts report in text editor: live word counter updates continuously with under-length warning if $< 150$ words.
+  5. `[CURRENT]` Autosave creates immutable revision digests (`learner-text-artifact-revision`) every 30 seconds.
+  6. `[CURRENT]` Upon submission, system evaluates 4 writing criteria (TA, CC, LR, GRA) and outputs practice feedback with diagnostic pointers.
 - **Secondary States & Subviews**:
-  - `chart_zoom_pan_controls`: Interactive canvas/SVG navigation controls for dense multi-series charts.
-  - `table_fallback_toggle`: Accessible semantic HTML table view mirroring chart data.
-  - `live_word_counter`: Real-time word count display with dynamic color indicators (<150w warning).
-  - `rubric_feedback_modal`: 4-criterion practice report detailing Task Achievement and Coherence strengths and gaps.
+  - `chart_zoom_pan_controls`: Interactive canvas/SVG navigation controls for dense multi-series charts (`[CURRENT]`).
+  - `table_fallback_toggle`: Accessible semantic HTML table view mirroring chart data (`[CURRENT]`).
+  - `live_word_counter`: Real-time word count display with dynamic color indicators (<150w warning) (`[CURRENT]`).
+  - `rubric_feedback_modal`: 4-criterion practice report detailing Task Achievement and Coherence strengths and gaps (`[CURRENT]`).
 - **Evidence & Schedule Gateway**:
   - Feedback is explicitly labeled `"Estimated Band Score & Practice Feedback — Practice Reference"`. Schedule isolated.
 
@@ -351,9 +365,14 @@
 ### Journey J-14: IELTS Full Mock Simulation
 - **Owning Screen**: **Screen 14 (IELTS Full Mock Exam Shell)**
 - **Learner Persona & Intent**: A candidate taking a complete 4-skill timed simulation under strict exam-day pressure to evaluate their composite readiness.
-- **Entry Point**: `IELTS Hub -> Full Mock Exam` (`#/ielts/mock`).
+- **Entry Point**: `IELTS Hub -> Full Mock Exam` (`#/ielts/mock`) or direct URL anchor.
+- **Learner Agency & Direct Access**:
+  - The learner MAY directly enter the Full Mock Simulation at any time without completing `Learn -> Practice -> Mock` in sequence.
+  - Progression from Learn to Practice to Mock is a **recommended pedagogical trajectory**, NOT a mandatory unlock chain:
+    $$\text{RECOMMENDED\_PROGRESSION} \neq \text{MANDATORY\_UNLOCK\_CHAIN}$$
+  - If diagnostic evidence suggests preparatory section practice, the UX surfaces non-blocking suggestions (`"Suggested preparation before Full Mock"`) while always preserving direct action triggers (`"Start Mock"`, `"Continue anyway"`).
 - **Step-by-Step Primary Flow**:
-  1. Learner enters Full Mock: interface enters full-screen simulation mode with complete OmniIELTS chrome removal.
+  1. Learner enters Full Mock: interface enters full-screen simulation mode with complete OmniIELTS chrome removal (activity-integrity lock).
   2. Pre-exam equipment check validates headphones, microphone, and audio levels.
   3. **Authentic LRW Test Session Simulation**:
      - *Section 1: Listening*: ~30–34 minutes audio + 2-minute answer-check period. Single-play only.
@@ -439,10 +458,11 @@
 
 ---
 
-## 6. Downstream Wave Handoffs
+## 6. Downstream Wave Handoffs (W2–W6) & Governance Boundaries
 
-- **Wave W2 (Interaction Architecture & State Machines)**: Translate the 15 core journeys and their secondary states into formal state machines, transition guards, and Assistance Contracts.
-- **Wave W3 (Wireframe Blueprints & Representative Layouts)**: Produce actual viewable wireframe blueprints across desktop and mobile form factors for all 15 screens.
-- **Wave W4 (Visual Design System & Tokens)**: Establish design tokens, typography, and component styling preserving a premium learning environment.
-- **Wave W5 (High-Fidelity UI Specifications)**: Specify pixel-exact component contracts and accessibility specs.
-- **Wave W6 (Interactive Cross-Surface Prototype)**: Deliver clickable prototype validating the 15 user journeys end-to-end.
+- **Wave W1 (Information Architecture & User Journeys)**: Encoded navigation freedom, direct-access relationships, and the recommended-vs-required distinction across all 15 core journeys.
+- **Wave W2 (Interaction Architecture & State Machines)**: Translate the 15 core journeys and their secondary states into formal state machines, transition guards, explicit `Skip` / `Change Activity` / `Exit` states, and Assistance Contracts without creating navigation barriers.
+- **Waves W3–W5 (Wireframe Blueprints, Design System & Hi-Fi UI Specs)**: Produce viewable wireframes and visual specs that clearly distinguish Recommended actions from Locked/Unavailable states; strictly avoid visual patterns (e.g. padlock icons, disabled tabs) that imply false curriculum prerequisite locks.
+- **Wave W6 (Interactive Cross-Surface Prototype & Exit Report)**: Deliver clickable prototype validating the 15 user journeys end-to-end, confirming learner agency across all surfaces.
+- **Stage 5 Boundary**: Stage 5 owns research and benchmark packages for candidate recommendation and adaptive technologies; no adaptive engine technology is prematurely selected in Stage 4 design.
+- **Stage 6 Boundary**: Implementation of navigation, workspaces, and UI runners proceeds strictly under later authorized wave manifests.

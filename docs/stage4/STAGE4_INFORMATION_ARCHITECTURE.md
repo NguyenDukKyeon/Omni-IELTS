@@ -5,7 +5,7 @@
 **Controlling Authorization Manifest**: [`docs/authorizations/STAGE4-UXIA-AUTH-001.md`](../authorizations/STAGE4-UXIA-AUTH-001.md)  
 **Controlling Strategy**: [`docs/stage4/STAGE4_UXIA_STRATEGY.md`](STAGE4_UXIA_STRATEGY.md)  
 **Status**: `CANDIDATE_INFORMATION_ARCHITECTURE / PENDING_INDEPENDENT_AUDIT`  
-**Document Role**: Canonical Stage 4 Information Architecture & Navigation Grammar Specification (subordinate to repository authority hierarchy under [`AGENTS.md`](../../AGENTS.md))  
+**Document Role**: Candidate Stage 4 Information Architecture Specification (subordinate to repository authority hierarchy under [`AGENTS.md`](../../AGENTS.md))
 
 ---
 
@@ -39,6 +39,15 @@
    Zero product-facing commitments to internal psychometric formulas ($P(L)$, $\theta$, BKT/IRT/CAT equations). UI cleanly displays Memory Retention ($R$), Skill Mastery Estimate + Uncertainty, IELTS Practice Performance Estimate + Confidence, Diagnostic Weakness State, and Transfer Evidence.
 6. **Evidence Gateway Integrity**:
    Full Mock Exams and Section Practice runs operate under `affectsSchedule: false` and `evidenceEligible: false` (ADR-004, ADR-050). Practice results yield diagnostic and summative performance estimates, never direct FSRS schedule mutations.
+7. **Learner Agency & Recommendation-vs-Lock Invariant**:
+   $$\text{RECOMMENDED\_PATH} \neq \text{REQUIRED\_PATH}$$
+   $$\text{CURRICULUM\_PATH} \neq \text{NAVIGATION\_LOCK}$$
+   $$\text{GUIDED\_SEQUENCE} \neq \text{MANDATORY\_GLOBAL\_SEQUENCE}$$
+   $$\text{RECOMMENDATION} \neq \text{ACCESS\_CONTROL}$$
+   $$\text{ACTIVITY\_INTEGRITY\_LOCK} \neq \text{CURRICULUM\_LOCK}$$
+   OmniIELTS is an opinionated learning system that absorbs decision complexity while strictly preserving learner agency.
+   $$\text{SYSTEM\_GUIDES\_STRONGLY} + \text{LEARNER\_RETAINS\_CONTROL}$$
+   The system recommends the highest-value next action based on available learner evidence, but MUST NOT become a mandatory linear unlock system. The learner retains direct access to all major product destinations unless a temporary activity-integrity lock is required to preserve the validity of an explicitly chosen assessment.
 
 ---
 
@@ -83,7 +92,7 @@ OMNIIELTS UNIFIED 5-PILLAR ARCHITECTURE
 │       ├── [CURRENT] Noticing & Thought Groups Drawer (IPA, Weak Forms, Stress Chunks)
 │       └── [CURRENT] Guided Oral Retell Workspace (Draft Journaling Recovery)
 │
-├── 3. IELTS HUB (Official Preparation & Exam Simulation)
+├── 3. IELTS HUB (IELTS Preparation & Exam Simulation)
 │   ├── [CURRENT] Global Track Switcher (Academic Track ↔ General Training Track)
 │   ├── [STAGE4_LEARNING_SYSTEM_REQUIREMENT / NOT_CURRENT_IMPLEMENTATION] IELTS Skills Curriculum
 │   │   ├── [STAGE4_LEARNING_SYSTEM_REQUIREMENT / NOT_CURRENT_IMPLEMENTATION] Listening Knowledge & Skills Module
@@ -190,6 +199,28 @@ OMNIIELTS UNIFIED 5-PILLAR ARCHITECTURE
 3. **Responsive Drawers & Bottom Sheets**:
    - Complex panels (Transcript Rails, Question Palettes, Notes Scratchpads, Error Context Cards) render as swipeable bottom sheets (`Swipe Up` to expand, `Swipe Down` to dismiss).
 
+### 3.3 Learner Agency & Three Levels of Constraint
+OmniIELTS enforces a strict 3-tier hierarchy of navigation and activity constraints to ensure that pedagogical guidance never devolves into artificial access locks:
+
+1. **Level 1 — Global Navigation (Learner-Controlled)**:
+   - Default state is 100% learner-controlled.
+   - Zero curriculum prerequisite locks for major product destinations (Today, Learn Labs, IELTS Hub, Curriculum, Section Practice, Mock Exam, Library, Analytics).
+   - The learner may navigate freely between pillars at any time without completing arbitrary prerequisite unlock chains.
+2. **Level 2 — Guided Session (Pedagogical Flow with Full Control)**:
+   - Provides an ordered, recommended flow based on learner evidence (e.g., Recommended Next Action, Daily Plan).
+   - Must provide prominent, accessible `Skip`, `Change Activity`, and `Exit` affordances at every step.
+   - The learner is never trapped inside a mandatory linear sequence unless explicitly engaged in a timed assessment.
+3. **Level 3 — Activity-Integrity Lock (Temporary Activity-Specific Bounds)**:
+   - Temporary restrictions ARE allowed and strictly enforced ONLY where required to preserve the measurement validity of the specific activity explicitly chosen by the learner.
+   - *Strict Invariant*:
+     $$\text{ACTIVITY\_INTEGRITY\_LOCK} \neq \text{CURRICULUM\_LOCK}$$
+   - *Scope of Locks*:
+     - *Strict Dictation*: Conceals target text in DOM/ARIA until submission.
+     - *IELTS Listening Exam Simulation*: Prohibits audio pause and scrubbing during test playback.
+     - *IELTS Speaking Part 2*: Enforces 60-second preparation countdown and timed recording turn.
+     - *Unassisted Assessment Mode*: Disables in-line hints and transcript views while recording unassisted evidence.
+   - These integrity locks apply strictly *inside* the active activity and terminate immediately upon submission or explicit session cancellation.
+
 ---
 
 ## 4. First-Class IELTS Skills Curriculum Architecture
@@ -282,6 +313,43 @@ SOURCE-TO-LEARNING INSTRUCTIONAL LIFECYCLE:
 | **Scoring & Rubrics** | Formative coaching & worked examples | Section score + detailed explanations | Formal diagnostic scorecard (Practice estimate) |
 | **Evidence Gateway** | Formative; FSRS stability update suppressed | `affectsSchedule: false`, `evidenceEligible: false` | `affectsSchedule: false`, `evidenceEligible: false` |
 
+### 6.1 IELTS Access Contract & Progression Model
+OmniIELTS models the progression across learning tiers as a **recommended pedagogical trajectory**, NOT a mandatory unlock chain:
+$$\text{Learn} \longrightarrow \text{Practice} \longrightarrow \text{Mock} \quad (\text{RECOMMENDED\_PROGRESSION} \neq \text{MANDATORY\_UNLOCK\_CHAIN})$$
+
+1. **Direct Entry Guarantee**:
+   - The learner MAY directly enter any of the following without prior completions:
+     - IELTS Skills Curriculum (`#/ielts/curriculum`)
+     - Section Practice (`#/ielts/practice`)
+     - Individual Skill Practice (`#/ielts/listening`, `#/ielts/reading`, `#/ielts/writing`, `#/ielts/speaking`)
+     - IELTS Full Mock Simulation (`#/ielts/mock`)
+2. **Recommendation vs Access Control**:
+   - When evidence suggests preparatory study is advantageous, the UX surfaces non-blocking contextual guidance:
+     - `"Recommended first: Task 1 Visual Family Masterclass"`
+     - `"Best next step: Complete Section 2 Practice"`
+     - `"Suggested preparation before Full Mock"`
+   - The UX MUST concurrently provide immediate, unblocked action triggers:
+     - `"Continue anyway"`
+     - `"Start Practice"`
+     - `"Start Mock"`
+
+### 6.2 Media Mode Independence Contract
+The Media Sentence Learning system preserves independent direct access to all supported study modes:
+$$\text{7-Step Sentence Learning Loop} = \text{GUIDED\_PEDAGOGICAL\_WORKFLOW} \neq \text{MANDATORY\_MODE\_UNLOCK\_CHAIN}$$
+
+1. **Mode Autonomy**:
+   - A learner MAY launch any mode directly without preceding prerequisites:
+     - `Video -> Shadowing` (without completing Dictation)
+     - `Video -> Dictation` (without completing Retell)
+     - `Video -> Noticing -> Shadowing` (custom partial path)
+2. **Contextual Recommendation**:
+   - The system tracks learner error patterns and recommends specific modes (e.g. Dictation for acoustic gaps, Shadowing for prosody), but all supported modes remain directly operable.
+
+### 6.3 Today Command Center Recommendation Contract
+$$\text{TODAY\_RECOMMENDATION} \neq \text{FORCED\_SESSION}$$
+1. **Strong Guidance**: The Today Command Center computes and recommends the highest-leverage primary action (e.g. Spaced Review Queue, Targeted Error Repair Sprint).
+2. **Learner Control**: The learner retains complete freedom to bypass the daily recommendation and navigate directly to any workspace, curriculum unit, media session, or mock test.
+
 ---
 
 ## 7. Comprehensive Speaking Architecture
@@ -356,10 +424,11 @@ All 7 Owner decisions from Stage 3 Lane R4 are routed with strict canonical dead
 
 ---
 
-## 10. Downstream Wave Handoffs (W2–W6)
+## 10. Downstream Wave Handoffs (W2–W6) & Governance Boundaries
 
-- **Wave W2 (Interaction Architecture & State Machines)**: Author interaction contracts and state machines for all 15 screens, including Guided Speaking, Examiner Dialogue, Writing Autosave, and Sentence Learning Loop.
-- **Wave W3 (Wireframe Blueprints & Layouts)**: Produce viewable wireframes across desktop and mobile viewports for all 15 representative screens and their secondary states.
-- **Wave W4 (Visual Design System & Tokens)**: Specify typographic scales, color tokens, and accessible component primitives.
-- **Wave W5 (High-Fidelity Screen Specifications)**: Author high-fidelity visual specifications and accessible component contracts.
-- **Wave W6 (Interactive Prototype & Candidate Exit Report)**: Reconcile all artifacts and compile the Stage 4 Exit Report.
+- **Wave W1 (Information Architecture & User Journeys)**: Encode navigation freedom, direct-access relationships, and the recommended-vs-required distinction across all 5 pillars and 15 core journeys.
+- **Wave W2 (Interaction Architecture & State Machines)**: Specify interaction contracts and state machines for all 15 screens, including explicit `Skip`, `Change Activity`, and `Exit` states; recommendation presentation mechanics; temporary activity-integrity locks; and the evidence consequences of assistance.
+- **Waves W3–W5 (Wireframes, Design System & Hi-Fi UI Specs)**: Visually distinguish Recommended actions from Locked/Unavailable states; strictly avoid UI/visual patterns (e.g. padlocks, grayed-out destination pills) that suggest false curriculum prerequisite locks on major destinations.
+- **Wave W6 (Interactive Prototype & Candidate Exit Report)**: Reconcile all design artifacts against the Learner Agency Invariant and compile the Stage 4 Exit Report.
+- **Stage 5 Boundary**: Stage 5 may research and benchmark candidate recommendation and adaptive engines; no adaptive engine technology is prematurely selected or hardcoded during Stage 4.
+- **Stage 6 Boundary**: Implementation of navigation, workspaces, and UI runners proceeds strictly under later authorized wave manifests.
