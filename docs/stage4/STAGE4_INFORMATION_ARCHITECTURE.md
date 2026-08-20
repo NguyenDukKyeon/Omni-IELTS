@@ -132,8 +132,10 @@ OMNIIELTS UNIFIED 5-PILLAR ARCHITECTURE
 │
 ├── 4. KNOWLEDGE & LIBRARY (Learner Assets & Curriculum)
 │   ├── Vocabulary & Collocation Bank
-│   │   ├── [CURRENT] Search, Advanced Filters, and CEFR Difficulty Ordering
-│   │   ├── [CURRENT] Card Lifecycle Status Manager (New, Learning, Review, Mastered, Suspended)
+│   │   ├── [CURRENT] Search, Advanced Filters (All, Mastered, Weak, Suspended, Type), and CEFR Ordering
+│   │   ├── [CURRENT] Card Lifecycle Status Manager (New, Learning, Familiar, Review, Mastered, Suspended, Archived)
+│   │   ├── [CURRENT] Learning Goal & Target Skills Inspector (Active [5 Skills] vs Passive [3 Skills])
+│   │   ├── [CURRENT] Multi-Format Card Import Parser (CSV, TSV, JSON, Semicolon, Dash)
 │   │   └── [CURRENT] Lexical Relations Drawer (Synonyms, Collocations, Example Sentences, Audio)
 │   ├── [FUTURE_UX_RESERVED] Interactive Lexical Knowledge Graph Explorer
 │   ├── [CURRENT] Unified Capture Inbox (Staged Items, Context Sentences, Batch Confirm/Discard)
@@ -278,9 +280,9 @@ The Source-to-Learning architecture integrates private materials into active stu
 ```text
 SOURCE-TO-LEARNING INSTRUCTIONAL LIFECYCLE:
 1. INGESTION (Library -> Sources):
-   [CURRENT] File Ingestion: PDF, EPUB, SRT, Text (`CAP-011` / `src/private-source-library-ui.js`)
+   [CURRENT] Ingestion: Pasted Text, Raw Text, and SRT Transcripts (`CAP-011` / `src/private-source-library-ui.js`)
    [CURRENT] Saved Video Transcripts & URL Ingestion
-   [FUTURE_UX_RESERVED] Multi-Format Layout Parser (PDF, EPUB, DOCX Dropzone)
+   [FUTURE_UX_RESERVED] Multi-Format Layout Parser (PDF, EPUB, DOCX Dropzone; `FUT-011`)
 
 2. ACTIVE READING (Learn -> Reading Workspace):
    [CURRENT] High-legibility typography, split view, paragraph highlighter
@@ -349,6 +351,15 @@ $$\text{7-Step Sentence Learning Loop} = \text{GUIDED\_PEDAGOGICAL\_WORKFLOW} \n
 $$\text{TODAY\_RECOMMENDATION} \neq \text{FORCED\_SESSION}$$
 1. **Strong Guidance**: The Today Command Center computes and recommends the highest-leverage primary action (e.g. Spaced Review Queue, Targeted Error Repair Sprint).
 2. **Learner Control**: The learner retains complete freedom to bypass the daily recommendation and navigate directly to any workspace, curriculum unit, media session, or mock test.
+
+### 6.4 Vocabulary Learning & Practice Independence Contract
+$$\text{RECOMMENDED\_VOCAB\_ACTIVITY} \neq \text{REQUIRED\_VOCAB\_ACTIVITY}$$
+$$\text{VOCABULARY\_SYSTEM} \neq \text{FLASHCARD\_ONLY\_REVIEW}$$
+1. **Multi-Modal Practice Autonomy**:
+   - The Vocabulary Practice & Review Canvas supports multiple distinct exercise modalities (Cued Recall Flip, Meaning Discrimination Choice, Typing with Levenshtein near-miss analysis, Collocation/Sentence Cloze, Audio Listening Choice, Dictation, Pronunciation Speech Check, Multi-Word Output Synthesis, and Transfer Checks).
+   - The learner MAY directly launch any supported deliberate practice mode from the Library (`#/library/drill`) or Quick Practice Station without being forced through a single fixed flashcard sequence.
+2. **Pedagogical Recommendation with Full Control**:
+   - The FSRS scheduling engine recommends the optimal target skill and exercise for due items, but the learner retains full agency to select specific exercise formats and study modes.
 
 ---
 

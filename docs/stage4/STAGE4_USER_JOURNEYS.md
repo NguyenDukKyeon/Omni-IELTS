@@ -37,7 +37,7 @@
 | JOURNEY_ID | JOURNEY_NAME | OWNING SCREEN | PRIMARY GOAL | ENTRY POINT | PRIMARY WORKFLOW |
 |---|---|---|---|---|---|
 | **`J-01`** | **Today / Daily Command Center** | Screen 1 | Complete due spaced reviews and maintain habit | `Nav: Today` (`#/today`) | Review due queue $\to$ Rate recall $\to$ Complete session $\to$ Inspect updated streak |
-| **`J-02`** | **Vocabulary Spaced Review** | Screen 2 | Master lexical items via FSRS cued recall | Today Runner or Deck Drill | Cued prompt $\to$ Recall $\to$ Flip $\to$ Rate (Again/Hard/Good/Easy) $\to$ 4-tier feedback |
+| **`J-02`** | **Vocabulary Spaced Review & Practice** | Screen 2 | Master lexical items via multi-modal FSRS practice & cued recall | Today Runner, Library Drill, or Quick Station | Multi-modal prompt (Flip, Choice, Typing, Cloze, Audio, Output) $\to$ Recall $\to$ Rate/Feedback $\to$ Next card |
 | **`J-03`** | **Video / Media Learning** | Screen 3 | Deep audio-visual pedagogical mastery | `Learn: Video Workspace` | Load media $\to$ Choose mode $\to$ Step 1–7 loop (Listen $\to$ Dictate $\to$ Shadow $\to$ Retell) |
 | **`J-04`** | **Article / Source-to-Learning** | Screen 4 | Read authentic text & extract new vocabulary | `Library: Sources` $\to$ `Learn: Reader` | Load source $\to$ Active reading $\to$ In-text word selection $\to$ Capture $\to$ Cloze drill |
 | **`J-05`** | **Capture Inbox → Confirmed Knowledge** | Screen 5 | Triage staged words into active FSRS deck | `Global Action` or `Nav: Library/Capture` | Open Inbox $\to$ Inspect context snippets $\to$ Edit definitions $\to$ Batch import to deck |
@@ -83,24 +83,37 @@
 
 ---
 
-### Journey J-02: Vocabulary Spaced Review
-- **Owning Screen**: **Screen 2 (Vocabulary Spaced Review Workspace)**
-- **Learner Persona & Intent**: A student reviewing flashcards to build long-term lexical retrievability for IELTS reading and writing.
-- **Entry Point**: Launched from Today runner (`J-01`) or Library deck view.
+### Journey J-02: Vocabulary Spaced Review & Practice Canvas
+- **Owning Screen**: **Screen 2 (Vocabulary Spaced Review & Practice Canvas)**
+- **Learner Persona & Intent**: A student clearing scheduled FSRS memory reviews and executing deliberate lexical practice across 5 target skills (recognition, recall, listening, collocation, production).
+- **Entry Point**: Launched from Today runner (`J-01`) or Library deck drill selector (`#/library/drill`).
 - **Step-by-Step Primary Flow**:
-  1. Card prompt presents target word/collocation in context with audio pronunciation trigger.
-  2. Learner engages in active retrieval (thinking or typing response).
-  3. Learner clicks `"Show Answer"` (or presses `Space`): reveals definition, IPA transcription, usage notes, and collocation examples.
-  4. Learner rates recall difficulty using 4 FSRS rating buttons: `Again` (1), `Hard` (2), `Good` (3), `Easy` (4). Button labels preview next scheduled interval.
-  5. If response was incorrect, UI surfaces **4-Tier Feedback Card** (`Verify`, `Elaborate`, `Refute`, `Scaffold`) explaining common pitfalls.
-  6. Next card loads instantly; progress bar advances.
+  1. System initializes session queue with single-lease lock, matching card learning goals (`active` [5 skills] vs `passive` [3 skills]) and scheduled skill items (`getDueSkillItems`).
+  2. Canvas renders the appropriate **Exercise Modality** based on scheduled skill and mode:
+     - *Modality A: Cued Recall Flip Card* (`skill: recognition`): Word/collocation prompt in context with audio trigger $\to$ Active recall $\to$ `"Show Answer"` reveals definition, IPA, usage notes, and collocation examples $\to$ 4 FSRS rating buttons (`Again`, `Hard`, `Good`, `Easy`) with interval previews.
+     - *Modality B: Meaning Discrimination Choice* (`skill: recognition`): Target prompt presents definition/word with 4 dynamically generated distractors sorted by CEFR level and length penalty.
+     - *Modality C: Typing & Spelling Recall* (`skill: recall`): Definition prompt $\to$ Learner types exact lemma $\to$ Real-time Levenshtein distance check distinguishes exact match, near-miss spelling errors ($\le 12\%$ edits), and wrong answers.
+     - *Modality D: Sentence & Collocation Cloze* (`skill: collocation / recall`): Sentence context with target collocation masked (`collocationCloze`) $\to$ Learner completes the missing lexical head/dependent.
+     - *Modality E: Listening Choice & Dictation* (`skill: listening`): Audio-only prompt $\to$ Learner selects meaning or types heard expression.
+     - *Modality F: Pronunciation Speech Check* (`skill: production`): Native reference audio $\to$ Learner speaks aloud $\to$ Speech evaluation feedback.
+     - *Modality G: Multi-Word Output Synthesis* (`skill: production`): 3–5 terms presented $\to$ Learner writes a coherent 2–3 sentence paragraph applying the terms.
+     - *Modality H: Novel Transfer Check* (`skill: transfer`): Prompt requires applying the term in a completely new context, unassisted.
+  3. If a response is incorrect, UI surfaces **4-Tier Feedback Card** (`Verify`, `Elaborate`, `Refute`, `Scaffold`) explaining misconceptions and root rules (`R1S-F001`, `R1S-F003`).
+  4. **Learner Agency & Deliberate Mode Switching**:
+     - *Autonomy Invariant*:
+       $$\text{RECOMMENDED\_VOCAB\_ACTIVITY} \neq \text{REQUIRED\_VOCAB\_ACTIVITY}$$
+     - Learner retains full freedom to switch deliberate practice modes (`Matching`, `Typing`, `Cloze`, `Listening`, `Collocation`, `Production`, `Output`, `Weak/Mistakes`, `Transfer`) directly from the canvas toolbar without completing prerequisite chains.
+  5. Upon completing daily target, canvas updates card stability and difficulty parameters, displays session retention summary, and transitions back to Today or Library.
 - **Secondary States & Subviews**:
   - `card_flip_reveal`: Animated transition separating cued prompt from definition and examples.
+  - `typing_levenshtein_feedback`: Real-time feedback distinguishing spelling typos from lexical mismatches.
+  - `matching_pair_grid`: Interactive 6-to-10 pair matching warmup and speed drill.
   - `4_tier_feedback_card`: Pedagogical feedback explaining misconceptions and root rules (`R1S-F001`, `R1S-F003`).
-  - `edit_card_modal`: In-line editor allowing learner to customize example sentences or personal mnemonics.
+  - `deliberate_mode_selector`: Direct launcher for specific skill drills (Typing, Cloze, Listening, Output).
+  - `edit_card_modal`: In-line editor allowing learner to customize example sentences, mnemonics, or acceptable answer variants.
   - `suspend_card_toggle`: Instant suspension toggle for irrelevant or mastered cards (`S4-OMIT-007`).
 - **Evidence & Schedule Gateway**:
-  - Unassisted reviews update FSRS memory parameters ($S, D, R$). If hints were viewed, `EvidencePolicy` suppresses stability progression.
+  - Unassisted reviews update FSRS memory parameters ($S, D, R$). If hints or scaffolds were viewed, `EvidencePolicy` suppresses stability progression.
 
 ---
 
@@ -123,12 +136,15 @@
        - *Mode 6 (Retell & Synthesis)*: Learner records oral summary or drafts written synthesis.
      - A learner may also compose custom partial journeys (e.g. *Noticing $\to$ Shadowing*).
   4. In guided sequence mode, learner steps through the **7-Step Sentence Learning Loop**:
-     - *Step 1 (Listen)* $\to$ *Step 2 (Dictate)* $\to$ *Step 3 (Verify)* $\to$ *Step 4 (Notice)* $\to$ *Step 5 (Shadow)* $\to$ *Step 6 (Vocab)* $\to$ *Step 7 (Retell)*.
+     - *Step 1 (Listen)* $\to$ *Step 2 (Dictate)* $\to$ *Step 3 (Verify & Classify)* $\to$ *Step 4 (Notice)* $\to$ *Step 5 (Shadow)* $\to$ *Step 6 (Vocab)* $\to$ *Step 7 (Retell)*.
+     - In *Step 3 (Verify & Classify)*, UI displays word-level token diff (`wordDiff`) and accuracy metric, prompting the learner to classify the mistake root cause across 6 specific reasons (`not-heard`, `misheard`, `missing-word`, `spelling-only`, `word-form`, `transcript-source`). Spelling-only errors are decoupled from listening perception and do not penalize Listening FSRS stability.
      - Accessible `Skip Step`, `Change Mode`, and `Exit Loop` controls remain available at every step.
   5. In Step 6, learner 1-clicks unknown collocations to add them directly to Capture Inbox (`S4-OMIT-001`).
   6. In Step 7, typed retell drafts autosave to localStorage (`DRAFT_JOURNAL_PREFIX`) for complete crash recovery (`S4-OMIT-002`).
 - **Secondary States & Subviews**:
   - `strict_dictation_view`: Complete DOM/ARIA answer concealment (`KEY_LEAK_BEFORE_SUBMIT === 0`; activity-integrity lock).
+  - `practice_dictation_view`: Masked word hints with first-letter cues.
+  - `correction_diff_view`: Word-level token diff, accuracy metric, and 6-reason error classification selector (`not-heard`, `misheard`, `missing-word`, `spelling-only`, `word-form`, `transcript-source`).
   - `noticing_ipa_drawer`: Acoustic decoding breakdown with phonetic symbols and chunk boundaries.
   - `waveform_recording_view`: Real-time Web Audio waveform comparing native speaker audio to learner recording.
   - `retell_journal_view`: Formative drafting area with autosave recovery banner.
@@ -167,12 +183,12 @@
 - **Step-by-Step Primary Flow**:
   1. Learner opens Capture Inbox to view staged terms captured during study sessions.
   2. Table displays term lemma, captured context sentence, source tag, and provisional CEFR tag.
-  3. Learner edits definitions, adds personal notes, or selects target collocations in-line.
+  3. Learner edits definitions, adds personal notes, selects target collocations in-line, and inspects/configures card metadata (learning goal: `active` [5 skills] vs `passive` [3 skills]; target skill overrides; acceptable answer variants).
   4. Learner selects items and clicks `"Confirm & Import to Deck"`: cards are created with FSRS initial state and added to Today review queue.
   5. Discarded items trigger a 5-second non-blocking `"Undo"` toast (`CAP-046`).
 - **Secondary States & Subviews**:
   - `mobile_bottom_sheet`: Accessible bottom-sheet capture interface for mobile devices.
-  - `in_line_editor`: Immediate in-place editing of definitions, tags, and translation glosses.
+  - `in_line_editor`: Immediate in-place editing of definitions, tags, translation glosses, and target skill configurations.
   - `batch_selection_toolbar`: Bulk actions (`Select All`, `Confirm Selected`, `Delete Selected`).
   - `5s_undo_toast`: Accidental deletion protection primitive.
 - **Evidence & Schedule Gateway**:
@@ -185,17 +201,19 @@
 - **Learner Persona & Intent**: A student analyzing persistent mistakes across writing, speaking, and reading, and executing targeted drills to eliminate recurring errors.
 - **Entry Point**: `Library -> Error Notebook` (`#/library/errors`) or `Today: Next Action`.
 - **Step-by-Step Primary Flow**:
-  1. `[CURRENT]` Learner opens Error Notebook and views 23-category diagnostic heatmap (ERRANT-aligned taxonomy) and active error repository (`CAP-014`).
+  1. `[CURRENT]` Learner opens Error Notebook and views 23-category diagnostic heatmap (ERRANT-aligned taxonomy) and active error repository partitioned across 5 lifecycle statuses (`open`, `practicing`, `monitoring`, `resolved`, `ignored`) (`CAP-014`, `src/ielts-domain.js`).
   2. `[CURRENT]` Heatmap visualizes error frequency and recurrence decay weighting (distinguishing fresh mistakes from resolved ones).
-  3. `[CURRENT]` Learner filters by skill (e.g. `Writing - Lexical Resource`) and clicks a specific error card.
+  3. `[CURRENT]` Learner filters by skill (e.g. `Writing - Lexical Resource`) or status tab and clicks a specific error card.
   4. `[CURRENT]` Error card displays original task prompt, learner's incorrect input, and ground truth correction; `[FUTURE_UX_RESERVED]` displays automated refutational grammatical rule explanation (`R1S-F003` / `FUT-017`).
   5. `[CURRENT]` Learner launches repair queue practice, or `[FUTURE_UX_RESERVED]` launches dynamic isomorphic remediation micro-drills targeting that specific misconception (`FUT-008`).
-  6. `[CURRENT]` Upon successful completion, error status transitions to `"Reviewing"` or `"Resolved"`.
+  6. `[CURRENT]` Upon successful remediation, error status transitions from `open` / `practicing` to `monitoring` or `resolved`. Duplicate errors with matching normalized keys automatically reconcile and increment occurrence counts (`mergeErrorRecords`).
 - **Secondary States & Subviews**:
   - `error_heatmap_grid`: 23-category visual matrix mapping weakness density across skills (`[CURRENT]`).
+  - `lifecycle_status_tabs`: Filterable views for `Open`, `Practicing`, `Monitoring`, `Resolved`, and `Ignored` error records (`[CURRENT]`).
   - `error_context_drawer`: Deep view showing original test item context, timestamps, and mistake history (`[CURRENT]`).
   - `refutational_explanation_view`: Pedagogical card explaining *why* the error occurred and how to avoid it (`[FUTURE_UX_RESERVED]` / `R1S-F003`, `FUT-017`).
   - `targeted_remediation_launcher`: Immediate launchpad for focused corrective exercises (`[CURRENT]` / `[FUTURE_UX_RESERVED]`).
+  - `manual_error_entry_modal`: Interface for manually recording off-platform errors with linked lexical cards (`[CURRENT]`).
 - **Evidence & Schedule Gateway**:
   - Error candidate emission maintains `affectsSchedule: false`; remediation drills provide formative mastery without biasing baseline test scores.
 
@@ -295,22 +313,28 @@
 
 ---
 
-### Journey J-11: IELTS Academic Writing Task 1 Lab
-- **Owning Screen**: **Screen 11 (IELTS Writing Academic Task 1 Visual Workspace)**
-- **Learner Persona & Intent**: An Academic candidate drafting a 150-word report describing visual data (graph, chart, table, map, or process) within recommended 20 minutes.
+### Journey J-11: IELTS Writing Task 1 Lab (Academic & General Training)
+- **Owning Screen**: **Screen 11 (IELTS Writing Task 1 Lab)**
+- **Learner Persona & Intent**: A candidate drafting a 150-word report describing visual data (Academic) or formal/informal letter (General Training) within recommended 20 minutes.
 - **Entry Point**: `IELTS Hub -> Writing -> Task 1` (`#/ielts/writing/task1`).
 - **Step-by-Step Primary Flow**:
-  1. `[CURRENT]` Learner opens Task 1: left pane renders structured visual data container (`CAP-022`); right pane renders distraction-free text editor.
-  2. `[CURRENT]` Visual container displays chart prompt; `[FUTURE_UX_RESERVED]` visual container renders one of 7 procedural visual configurations (Line Graph, Bar Chart, Pie Chart, Table, Process Diagram, Map / Plan, Mixed Graphics) generated deterministically via local client engines (`FUT-009`).
-  3. `[CURRENT]` Learner uses zoom/pan controls to inspect complex chart elements, or toggles **Tabular Data Fallback** for accessible data table inspection.
-  4. `[CURRENT]` Learner drafts report in text editor: live word counter updates continuously with under-length warning if $< 150$ words.
-  5. `[CURRENT]` Autosave creates immutable revision digests (`learner-text-artifact-revision`) every 30 seconds.
-  6. `[CURRENT]` Upon submission, system evaluates 4 writing criteria (TA, CC, LR, GRA) and outputs practice feedback with diagnostic pointers.
+  1. `[CURRENT]` Learner opens Task 1: layout initializes based on active IELTS Track (`Academic` vs `General Training`):
+     - **Track A: Academic Task 1 Visual Workspace**:
+       - Left pane renders structured visual data container (`CAP-022`); right pane renders distraction-free text editor.
+       - Visual container displays chart prompt; `[FUTURE_UX_RESERVED]` renders one of 7 procedural visual configurations (Line Graph, Bar Chart, Pie Chart, Table, Process Diagram, Map / Plan, Mixed Graphics) generated deterministically via local client engines (`FUT-009`).
+       - Learner uses zoom/pan controls to inspect complex chart elements, or toggles **Tabular Data Fallback** for accessible data table inspection.
+     - **Track B: General Training Task 1 Letter Workspace**:
+       - Left pane presents letter situation prompt, letter register selector (`Formal`, `Semi-Formal`, `Informal`), and **3-Bullet Requirement Checklist** (`CAP-023`).
+       - Right pane renders distraction-free letter editor with real-time prompt coverage tracking.
+  2. `[CURRENT]` Learner drafts response in text editor: live word counter updates continuously with under-length warning if $< 150$ words.
+  3. `[CURRENT]` Autosave creates immutable revision digests (`learner-text-artifact-revision`) every 30 seconds.
+  4. `[CURRENT]` Upon submission, system evaluates 4 writing criteria (TA/TR, CC, LR, GRA) and outputs practice feedback with diagnostic pointers.
 - **Secondary States & Subviews**:
   - `chart_zoom_pan_controls`: Interactive canvas/SVG navigation controls for dense multi-series charts (`[CURRENT]`).
   - `table_fallback_toggle`: Accessible semantic HTML table view mirroring chart data (`[CURRENT]`).
+  - `gt_letter_situation_view`: Letter prompt with 3-bullet requirement checklist and register selector (`[CURRENT]`).
   - `live_word_counter`: Real-time word count display with dynamic color indicators (<150w warning) (`[CURRENT]`).
-  - `rubric_feedback_modal`: 4-criterion practice report detailing Task Achievement and Coherence strengths and gaps (`[CURRENT]`).
+  - `rubric_feedback_modal`: 4-criterion practice report detailing Task Achievement / Response and Coherence strengths and gaps (`[CURRENT]`).
 - **Evidence & Schedule Gateway**:
   - Feedback is explicitly labeled `"Estimated Band Score & Practice Feedback — Practice Reference"`. Schedule isolated.
 
@@ -441,16 +465,16 @@
 | SCREEN CLASS | PRIMARY SCREEN NAME | OWNING JOURNEY | PRIMARY VIEWPORT COMPONENT | REQUIRED SECONDARY STATES, VARIANTS & SUBVIEWS |
 |---|---|---|---|---|
 | **Screen 1** | **Today / Command Center** | `J-01` | Daily study card, review queue counter, streak card, next action launcher | `backlog_catchup_triage`, `workload_estimator_drawer`, `provisional_grace_freeze_badge`, `quick_micro_drill_overlay` |
-| **Screen 2** | **Vocabulary Spaced Review** | `J-02` | Cued recall card, FSRS rating buttons (1–4), audio trigger, interval preview | `card_flip_reveal`, `4_tier_feedback_card` (Verify, Elaborate, Refute, Scaffold), `edit_card_modal`, `suspend_card_toggle` |
-| **Screen 3** | **Video & Media Study Workspace** | `J-03` | Responsive video player, synchronized transcript rail, 7-step loop toolbar | `strict_dictation_view` (DOM masked), `practice_dictation_view` (hints), `noticing_ipa_drawer`, `waveform_recording_view`, `retell_journal_view`, `transcript_slicer_drawer`, `topic_chapters_bar` |
+| **Screen 2** | **Vocabulary Spaced Review & Practice** | `J-02` | Multi-modal cued recall card, FSRS rating buttons (1–4), audio trigger, interval preview | `card_flip_reveal`, `typing_levenshtein_feedback`, `matching_pair_grid`, `4_tier_feedback_card` (Verify, Elaborate, Refute, Scaffold), `deliberate_mode_selector`, `edit_card_modal`, `suspend_card_toggle` |
+| **Screen 3** | **Video & Media Study Workspace** | `J-03` | Responsive video player, synchronized transcript rail, 7-step loop toolbar | `strict_dictation_view` (DOM masked), `practice_dictation_view` (hints), `correction_diff_view` (word diff, accuracy, 6-reason error classification), `noticing_ipa_drawer`, `waveform_recording_view`, `retell_journal_view`, `transcript_slicer_drawer`, `topic_chapters_bar` |
 | **Screen 4** | **Article & Passage Reader** | `J-04` | Clean typography reader, layout navigation, in-text word highlight | `document_dropzone_uploader`, `parsing_progress_indicator`, `cefr_level_pill_breakdown`, `in_text_capture_popover`, `cloze_exercise_view` |
 | **Screen 5** | **Unified Capture Inbox** | `J-05` | Staged capture table, context snippet, lemma, part-of-speech, CEFR pill | `mobile_bottom_sheet`, `in_line_editor`, `batch_selection_toolbar`, `5s_undo_toast` |
-| **Screen 6** | **Error Notebook & Weaknesses** | `J-06` | 23-category error heatmap grid, recurrence decay filter, mistake cards | `error_context_drawer`, `refutational_explanation_view`, `targeted_remediation_launcher`, `resolved_filter_tab` |
+| **Screen 6** | **Error Notebook & Weaknesses** | `J-06` | 23-category error heatmap grid, recurrence decay filter, mistake cards | `error_heatmap_grid`, `lifecycle_status_tabs` (open, practicing, monitoring, resolved, ignored), `error_context_drawer`, `refutational_explanation_view`, `targeted_remediation_launcher`, `manual_error_entry_modal` |
 | **Screen 7** | **Multi-Dimensional Analytics** | `J-07` | Tri-dimensional state ($R$, Mastery Estimate, Band Estimate), Skill radar, 52w grid | `fsrs_stability_decay_curve`, `radar_confidence_bounds`, `exam_pacing_calculator`, `attempt_provenance_audit_drawer` (9 fields) |
 | **Screen 8** | **IELTS Listening Runner** | `J-08` | 4-part audio player, 40-item question container, question palette | **Exam**: `single_play_lock`, `2m_check_timer`. **Practice**: `scrub_enabled`, `transcript_reveal_drawer`, `instant_feedback_card` |
 | **Screen 9** | **IELTS Reading Academic Split** | `J-09` | 3 academic passages, split-pane layout with draggable bar, question list | `draggable_split_divider`, `highlighter_toolbar`, `question_palette_drawer`, `paragraph_quick_jump`, `passage_explanation_popover` |
 | **Screen 10** | **IELTS Reading GT Split** | `J-10` | 3 GT sections (workplace/social), multi-document tabs, split-pane | `section_1_multi_text_tabs`, `workplace_text_layout`, `highlighter_toolbar`, `gt_score_converter` |
-| **Screen 11** | **IELTS Writing Task 1 Lab** | `J-11` | Task prompt, deterministic chart container, 150w distraction-free editor | `chart_zoom_pan_controls`, `tabular_data_fallback_toggle`, `live_word_counter`, `150w_warning_badge`, `rubric_feedback_modal` |
+| **Screen 11** | **IELTS Writing Task 1 Lab** | `J-11` | Task prompt, deterministic chart / letter container, 150w distraction-free editor | `chart_zoom_pan_controls`, `tabular_data_fallback_toggle`, `gt_letter_situation_view`, `live_word_counter`, `150w_warning_badge`, `rubric_feedback_modal` |
 | **Screen 12** | **IELTS Writing Task 2 Lab** | `J-12` | Discursive essay prompt, 250w text editor, structure notes scratchpad | `outline_scratchpad_drawer`, `live_word_counter`, `250w_warning_badge`, `rubric_self_check_sheet`, `4_criterion_feedback_modal` |
 | **Screen 13** | **IELTS Speaking Center** | `J-13` | 3-part guided launcher, audio recorder, cue card display, notes scratchpad | `part1_interview_flow`, `part2_prep_timer_scratchpad`, `part2_speaking_warning`, `part3_discussion_flow`, `interactive_examiner_dialogue`, `4_criterion_feedback_view` |
 | **Screen 14** | **IELTS Full Mock Exam Shell** | `J-14` | Fullscreen simulation, 4-skill sequential test engine, timer coordination | `equipment_mic_check`, `authentic_transition_screen`, `reload_recovery_banner`, `final_multi_skill_scorecard`, `remediation_plan_handoff` |
